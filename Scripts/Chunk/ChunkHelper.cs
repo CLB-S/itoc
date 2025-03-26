@@ -17,15 +17,13 @@ public struct FaceRect
     public int Width;        // 面在第一个副轴方向的扩展
     public int Height;       // 面在第二个副轴方向的扩展
     public int Material;    // 材质ID
-    public Direction FaceDirection; // 面朝向
 
-    public FaceRect(Vector3I start, int width, int height, int material, Direction dir)
+    public FaceRect(Vector3I start, int width, int height, int material)
     {
         Start = start;
         Width = width;
         Height = height;
         Material = material;
-        FaceDirection = dir;
     }
 }
 

@@ -53,7 +53,7 @@ public static class ChunkMeshPreGenerator
         return chunk.GetVoxel(facePos.X, facePos.Y, facePos.Z) == 0;
     }
 
-    private static void GreedyMerge(int[,] matrix, Direction dir, int layer, FaceData faceData)
+    private static void GreedyMerge(int[,] matrix, Direction dir, int layer, ChunkFaceData faceData)
     {
         bool[,] merged = new bool[SIZE, SIZE];
 
@@ -69,8 +69,8 @@ public static class ChunkMeshPreGenerator
                     width++;
 
                 int height = 1;
-                bool canExpand = y + height < SIZE;
-                while (canExpand)
+                bool canExpand = true;
+                while (y + height < SIZE && canExpand)
                 {
                     for (int i = 0; i < width; i++)
                     {
@@ -85,7 +85,7 @@ public static class ChunkMeshPreGenerator
 
                 // 记录合并后的面
                 Vector3I startPos = ChunkHelper.GetFaceStartPosition(dir, layer, x, y);
-                faceData.Rects.Add(new FaceRect(startPos, width, height, currentMat, dir));
+                faceData.Rects.Add(new FaceRect(startPos, width, height, currentMat));
 
                 // 标记已合并区域
                 for (int h = 0; h < height; h++)
