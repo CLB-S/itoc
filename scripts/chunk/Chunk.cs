@@ -41,7 +41,6 @@ public partial class Chunk : Node3D
         {
             var faceMesh = new ChunkFaceMesh();
             faceMesh.Initialize(this, dir);
-            faceMesh.Mesh.SurfaceSetMaterial(0, ChunkMaterial);
             AddChild(faceMesh);
         }
     }

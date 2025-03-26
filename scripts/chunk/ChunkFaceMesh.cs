@@ -62,10 +62,25 @@ public partial class ChunkFaceMesh : MeshInstance3D
             normals.Add(normal);
 
             // 标准UV映射
+            // if (DirectionHelper.IsPositive(_faceDirection))
+            // {
+            //     uvs.Add(new Vector2(0, rect.Width));
+            //     uvs.Add(new Vector2(rect.Height, rect.Width));
+            //     uvs.Add(new Vector2(rect.Height, 0));
+            //     uvs.Add(new Vector2(0, 0));
+            // }
+            // else
+            // {
+            //     uvs.Add(new Vector2(rect.Width, 0));
+            //     uvs.Add(new Vector2(0, 0));
+            //     uvs.Add(new Vector2(0, rect.Height));
+            //     uvs.Add(new Vector2(rect.Width, rect.Height));
+            // }
+
+            uvs.Add(new Vector2(0, rect.Width));
+            uvs.Add(new Vector2(rect.Height, rect.Width));
+            uvs.Add(new Vector2(rect.Height, 0));
             uvs.Add(new Vector2(0, 0));
-            uvs.Add(new Vector2(1, 0));
-            uvs.Add(new Vector2(1, 1));
-            uvs.Add(new Vector2(0, 1));
 
             // 三角形索引（顺时针顺序）
             indices.Add(baseIndex + 0);
@@ -83,6 +98,19 @@ public partial class ChunkFaceMesh : MeshInstance3D
 
         var arrayMesh = new ArrayMesh();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArray);
+
+        var block = BlockManager.Instance.GetBlock(2);
+        var material = new StandardMaterial3D()
+        {
+            Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
+            TextureRepeat = true,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
+            AlbedoTexture = block.GetTexture(),
+            // CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+        };
+
+        arrayMesh.SurfaceSetMaterial(0, material);
+
         Mesh = arrayMesh;
     }
 

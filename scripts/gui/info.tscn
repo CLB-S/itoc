@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cvsmxmm442rcn"]
 
-[ext_resource type="Script" uid="uid://dg6i38rpoai6g" path="res://Scripts/GUI/GuiInfo.cs" id="1_s7ei6"]
+[ext_resource type="Script" uid="uid://dg6i38rpoai6g" path="res://scripts/gui/GuiInfo.cs" id="1_s7ei6"]
 
 [node name="Info" type="Control"]
 layout_mode = 3

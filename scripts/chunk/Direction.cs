@@ -75,4 +75,15 @@ public static class DirectionHelper
         };
     }
 
+    public static bool IsPositive(Direction dir)
+    {
+        return dir switch
+        {
+            Direction.PositiveX => true,
+            Direction.PositiveY => true,
+            Direction.PositiveZ => true,
+            _ => false
+        };
+    }
+
 }

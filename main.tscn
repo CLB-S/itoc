@@ -1,10 +1,25 @@
-[gd_scene load_steps=4 format=3 uid="uid://g8ki650u2whs"]
+[gd_scene load_steps=7 format=3 uid="uid://g8ki650u2whs"]
 
-[ext_resource type="PackedScene" uid="uid://dow13p3u55e61" path="res://Scripts/Chunk/chunk.tscn" id="1_ig7tw"]
-[ext_resource type="Script" uid="uid://c2qfpfy2m41sn" path="res://Scripts/Camera/FreeLookCameraBase.cs" id="2_0xm2m"]
-[ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://Scripts/GUI/info.tscn" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://dow13p3u55e61" path="res://scripts/chunk/chunk.tscn" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://c2qfpfy2m41sn" path="res://scripts/camera/FreeLookCameraBase.cs" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scripts/gui/info.tscn" id="3_h2yge"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h2yge"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_1bvp3"]
+sky_material = SubResource("ProceduralSkyMaterial_h2yge")
+
+[sub_resource type="Environment" id="Environment_lquwl"]
+background_mode = 2
+sky = SubResource("Sky_1bvp3")
+tonemap_mode = 2
 
 [node name="Main" type="Node"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_lquwl")
 
 [node name="Chunk" parent="." instance=ExtResource("1_ig7tw")]
 
