@@ -7,21 +7,33 @@ public partial class ChunkFaceMesh : MeshInstance3D
     private Chunk _targetChunk;
     private ChunkFaceData _faceData;
     private Direction _faceDirection;
+    private Vector3 _faceNormal;
 
     public void Initialize(Chunk chunk, Direction faceDirection)
     {
         _targetChunk = chunk;
         _faceDirection = faceDirection;
+        _faceNormal = DirectionHelper.GetDirectionNormal(faceDirection);
         _faceData = chunk.Faces[faceDirection];
         GenerateMesh();
     }
 
-    public override void _Ready()
+    public override void _Process(double delta)
     {
-        // Initialize(ChunkGenerator.GenerateBallChunk());
-        // Initialize(ChunkGenerator.GenerateDebugChunk());
-        // Initialize(ChunkGenerator.GenerateChunkRandom(0.01f));
+        base._Process(delta);
+
+        this.Visible = IsFaceVisible();
     }
+
+    private bool IsFaceVisible()
+    {
+        var cameraPosition = CameraHelper.Instance.GetCameraPosition();
+        var chunkFacePosition = (_targetChunk.ChunkID +
+            DirectionHelper.GetDirectionAntiOffset(_faceDirection)) * Chunk.SIZE;
+
+        return _faceNormal.Dot(cameraPosition - chunkFacePosition) > 0;
+    }
+
 
     private void GenerateMesh()
     {
@@ -33,7 +45,7 @@ public partial class ChunkFaceMesh : MeshInstance3D
         var normals = new List<Vector3>();
         var indices = new List<int>();
 
-        var normal = ChunkHelper.GetDirectionNormal(_faceDirection);
+        var normal = DirectionHelper.GetDirectionNormal(_faceDirection);
 
         foreach (FaceRect rect in _faceData.Rects)
         {

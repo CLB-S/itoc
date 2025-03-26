@@ -1,13 +1,4 @@
 using Godot;
-using System;
-
-
-public enum Direction
-{
-    PositiveX, NegativeX,
-    PositiveY, NegativeY,
-    PositiveZ, NegativeZ
-}
 
 public enum Axis { X, Y, Z }
 
@@ -56,7 +47,7 @@ public static class ChunkHelper
 
     public static Vector3I GetFacePosition(Vector3I voxelPos, Direction dir)
     {
-        return voxelPos + GetDirectionNormal(dir);
+        return voxelPos + DirectionHelper.GetDirectionNormal(dir);
     }
 
     public static Vector3I GetFaceStartPosition(Direction dir, int layer, int x, int y)
@@ -69,19 +60,6 @@ public static class ChunkHelper
             Direction.NegativeY => new Vector3I(y, layer, x),
             Direction.PositiveZ => new Vector3I(y, x, layer + 1),
             _ => new Vector3I(y, x, layer)
-        };
-    }
-
-    public static Vector3I GetDirectionNormal(Direction dir)
-    {
-        return dir switch
-        {
-            Direction.PositiveX => Vector3I.Right,
-            Direction.NegativeX => Vector3I.Left,
-            Direction.PositiveY => Vector3I.Up,
-            Direction.NegativeY => Vector3I.Down,
-            Direction.PositiveZ => Vector3I.Back,
-            _ => Vector3I.Forward
         };
     }
 }

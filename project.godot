@@ -15,6 +15,14 @@ run/main_scene="uid://g8ki650u2whs"
 config/features=PackedStringArray("4.4", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+CameraHelper="*res://Scripts/Camera/CameraHelper.cs"
+
+[display]
+
+window/vsync/vsync_mode=0
+
 [dotnet]
 
 project/assembly_name="itoc"

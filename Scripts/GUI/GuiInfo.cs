@@ -3,13 +3,6 @@ using System;
 
 public partial class GuiInfo : RichTextLabel
 {
-    private Camera3D _camera;
-
-    public override void _Ready()
-    {
-        _camera = GetViewport().GetCamera3D();
-    }
-
     public override void _Process(double delta)
     {
         if (Input.IsActionJustPressed("info"))
@@ -27,19 +20,10 @@ public partial class GuiInfo : RichTextLabel
         var staticMemMax = Performance.GetMonitor(Performance.Monitor.MemoryStaticMax);
 
         // 更新摄像机信息
-        Vector3 camPos = Vector3.Zero;
-        Vector3 camFacing = Vector3.Zero;
-
-        if (_camera != null && _camera.IsInsideTree())
-        {
-            camPos = _camera.GlobalTransform.Origin;
-            camFacing = -_camera.GlobalTransform.Basis.Z;
-        }
-        else
-        {
-            // 如果摄像机不存在或不在场景中，尝试重新获取
-            _camera = GetViewport().GetCamera3D();
-        }
+        Vector3 camPos = CameraHelper.Instance.GetCameraPosition();
+        Vector3 camFacing = CameraHelper.Instance.GetCameraFacing();
+        Direction camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
+        string camFacingDirName = DirectionHelper.GetDirectionName(camFacingDir);
 
         // 构建调试信息文本
         string debugText = $"[b]Debug Info[/b]\n";
@@ -48,7 +32,7 @@ public partial class GuiInfo : RichTextLabel
         debugText += $"[color=yellow]Vertices:[/color] {vertices}\n";
         debugText += $"[color=yellow]Static Mem:[/color] {BytesToString(staticMem)}/{BytesToString(staticMemMax)}\n";
         debugText += $"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}\n";
-        debugText += $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00}";
+        debugText += $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})";
 
         this.Text = debugText;
     }
