@@ -1,3 +1,16 @@
-[gd_scene format=3 uid="uid://g8ki650u2whs"]
+[gd_scene load_steps=3 format=3 uid="uid://g8ki650u2whs"]
+
+[ext_resource type="PackedScene" uid="uid://dow13p3u55e61" path="res://Scripts/Chunk/chunk.tscn" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://c2qfpfy2m41sn" path="res://Scripts/Camera/FreeLookCameraBase.cs" id="2_0xm2m"]
 
 [node name="Main" type="Node"]
+
+[node name="Chunk" parent="." instance=ExtResource("1_ig7tw")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-0.483038, 0, -0.875599, 0, 1, 0, 0.875599, 0, -0.483038, -2.26609, 1.03028, -2.55)
+current = true
+script = ExtResource("2_0xm2m")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.291577, 0.670504, -0.682207, 0.263516, 0.741906, 0.616551, 0.919534, 0, -0.393011, -1.36823, 0, 0)

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://dow13p3u55e61"]
+
+[ext_resource type="Script" uid="uid://dmt1m1hc4x452" path="res://Scripts/Chunk/ChunkMesh.cs" id="1_rps4x"]
+[ext_resource type="Material" uid="uid://cfnidhkhnbkyk" path="res://Scripts/Chunk/chunk_debug_shader_material.tres" id="2_ut6b0"]
+
+[node name="Chunk" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+script = ExtResource("1_rps4x")
+Material = ExtResource("2_ut6b0")
