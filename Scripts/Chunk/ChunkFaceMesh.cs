@@ -2,25 +2,38 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public partial class ChunkMesh : MeshInstance3D
+public partial class ChunkFaceMesh : MeshInstance3D
 {
-    [Export]
-    public ShaderMaterial Material;
-
     private Chunk _targetChunk;
+    private ChunkFaceData _faceData;
+    private Direction _faceDirection;
+    private Vector3 _faceNormal;
 
-    public void Initialize(Chunk chunk)
+    public void Initialize(Chunk chunk, Direction faceDirection)
     {
         _targetChunk = chunk;
+        _faceDirection = faceDirection;
+        _faceNormal = DirectionHelper.GetDirectionNormal(faceDirection);
+        _faceData = chunk.Faces[faceDirection];
         GenerateMesh();
     }
 
-    public override void _Ready()
+    public override void _Process(double delta)
     {
-        Initialize(ChunkGenerator.GenerateBallChunk());
-        // Initialize(ChunkGenerator.GenerateDebugChunk());
-        // Initialize(ChunkGenerator.GenerateChunkRandom(0.01f));
+        base._Process(delta);
+
+        this.Visible = IsFaceVisible();
     }
+
+    private bool IsFaceVisible()
+    {
+        var cameraPosition = CameraHelper.Instance.GetCameraPosition();
+        var chunkFacePosition = (_targetChunk.ChunkID +
+            DirectionHelper.GetDirectionAntiOffset(_faceDirection)) * Chunk.SIZE;
+
+        return _faceNormal.Dot(cameraPosition - chunkFacePosition) > 0;
+    }
+
 
     private void GenerateMesh()
     {
@@ -32,31 +45,9 @@ public partial class ChunkMesh : MeshInstance3D
         var normals = new List<Vector3>();
         var indices = new List<int>();
 
-        foreach (Direction direction in Enum.GetValues(typeof(Direction)))
-        {
-            ProcessDirection(direction, vertices, uvs, normals, indices);
-        }
+        var normal = DirectionHelper.GetDirectionNormal(_faceDirection);
 
-        surfaceArray[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
-        surfaceArray[(int)Mesh.ArrayType.TexUV] = uvs.ToArray();
-        surfaceArray[(int)Mesh.ArrayType.Normal] = normals.ToArray();
-        surfaceArray[(int)Mesh.ArrayType.Index] = indices.ToArray();
-
-        var arrayMesh = new ArrayMesh();
-        arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArray);
-        arrayMesh.SurfaceSetMaterial(0, Material);
-        Mesh = arrayMesh;
-
-        GD.Print("Mesh generated");
-    }
-
-    private void ProcessDirection(Direction dir, List<Vector3> vertices,
-        List<Vector2> uvs, List<Vector3> normals, List<int> indices)
-    {
-        var normal = ChunkHelper.GetDirectionNormal(dir);
-        var faceData = _targetChunk.Faces[dir];
-
-        foreach (FaceRect rect in faceData.Rects)
+        foreach (FaceRect rect in _faceData.Rects)
         {
             var baseIndex = vertices.Count;
             var corners = GetQuadCorners(rect);
@@ -84,11 +75,20 @@ public partial class ChunkMesh : MeshInstance3D
             indices.Add(baseIndex + 2);
             indices.Add(baseIndex + 3);
         }
+
+        surfaceArray[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
+        surfaceArray[(int)Mesh.ArrayType.TexUV] = uvs.ToArray();
+        surfaceArray[(int)Mesh.ArrayType.Normal] = normals.ToArray();
+        surfaceArray[(int)Mesh.ArrayType.Index] = indices.ToArray();
+
+        var arrayMesh = new ArrayMesh();
+        arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArray);
+        Mesh = arrayMesh;
     }
 
     private Vector3[] GetQuadCorners(FaceRect rect)
     {
-        switch (rect.FaceDirection)
+        switch (_faceDirection)
         {
             case Direction.PositiveX:
                 return new Vector3[]

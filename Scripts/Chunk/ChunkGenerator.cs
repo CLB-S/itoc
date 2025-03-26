@@ -26,7 +26,6 @@ public static class ChunkGenerator
             }
         }
 
-        chunk.GenerateMeshes();
         return chunk;
     }
 
@@ -51,7 +50,6 @@ public static class ChunkGenerator
         // chunk.SetVoxel(0, 2, 0, 1);
         // chunk.SetVoxel(0, 2, 2, 1);
 
-        chunk.GenerateMeshes();
         return chunk;
     }
 
@@ -76,7 +74,6 @@ public static class ChunkGenerator
             }
         }
 
-        chunk.GenerateMeshes();
         GD.Print($"Chunk generated with {count} voxels");
         return chunk;
     }

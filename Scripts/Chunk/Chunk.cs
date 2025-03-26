@@ -2,22 +2,47 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public class FaceData
+public class ChunkFaceData
 {
     public List<FaceRect> Rects { get; } = new List<FaceRect>();
 }
 
-public class Chunk
+public partial class Chunk : Node3D
 {
     public const int SIZE = 32;
-    private int[,,] voxels = new int[SIZE, SIZE, SIZE];
-    public readonly Dictionary<Direction, FaceData> Faces = new Dictionary<Direction, FaceData>();
+    public readonly Dictionary<Direction, ChunkFaceData> Faces = new Dictionary<Direction, ChunkFaceData>();
+    public ShaderMaterial ChunkMaterial;
 
-    public Chunk()
+
+    private readonly int[,,] _voxels = new int[SIZE, SIZE, SIZE];
+
+    private Vector3I _chunkID;
+    public Vector3I ChunkID
+    {
+        get { return _chunkID; }
+        set
+        {
+            Position = value * SIZE;
+            _chunkID = value;
+        }
+    }
+
+
+    public override void _Ready()
     {
         foreach (Direction dir in Enum.GetValues(typeof(Direction)))
         {
-            Faces[dir] = new FaceData();
+            Faces[dir] = new ChunkFaceData();
+        }
+
+        GenerateMeshes();
+
+        foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+        {
+            var faceMesh = new ChunkFaceMesh();
+            faceMesh.Initialize(this, dir);
+            faceMesh.Mesh.SurfaceSetMaterial(0, ChunkMaterial);
+            AddChild(faceMesh);
         }
     }
 
@@ -25,14 +50,14 @@ public class Chunk
     {
         if (x < 0 || x >= SIZE || y < 0 || y >= SIZE || z < 0 || z >= SIZE)
             return 0;
-        return voxels[x, y, z];
+        return _voxels[x, y, z];
     }
 
     public void SetVoxel(int x, int y, int z, int value)
     {
         if (x < 0 || x >= SIZE || y < 0 || y >= SIZE || z < 0 || z >= SIZE)
             throw new IndexOutOfRangeException();
-        voxels[x, y, z] = value;
+        _voxels[x, y, z] = value;
     }
 
     public void GenerateMeshes()
