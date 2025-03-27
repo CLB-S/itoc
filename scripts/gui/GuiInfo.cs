@@ -23,7 +23,7 @@ public partial class GuiInfo : RichTextLabel
         Vector3 camPos = CameraHelper.Instance.GetCameraPosition();
         Vector3 camFacing = CameraHelper.Instance.GetCameraFacing();
         Direction camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
-        string camFacingDirName = DirectionHelper.GetDirectionName(camFacingDir);
+        string camFacingDirName = camFacingDir.Name();
 
         // 构建调试信息文本
         string debugText = $"[b]Debug Info[/b]\n";

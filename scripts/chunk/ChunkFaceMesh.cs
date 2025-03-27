@@ -13,7 +13,7 @@ public partial class ChunkFaceMesh : MeshInstance3D
     {
         _targetChunk = chunk;
         _faceDirection = faceDirection;
-        _faceNormal = DirectionHelper.GetDirectionNormal(faceDirection);
+        _faceNormal = faceDirection.Norm();
         _faceData = chunk.Faces[faceDirection];
         GenerateMesh();
     }
@@ -29,7 +29,7 @@ public partial class ChunkFaceMesh : MeshInstance3D
     {
         var cameraPosition = CameraHelper.Instance.GetCameraPosition();
         var chunkFacePosition = (_targetChunk.ChunkID +
-            DirectionHelper.GetDirectionAntiOffset(_faceDirection)) * Chunk.SIZE;
+            _faceDirection.AntiOffset()) * Chunk.SIZE;
 
         return _faceNormal.Dot(cameraPosition - chunkFacePosition) > 0;
     }
@@ -45,7 +45,7 @@ public partial class ChunkFaceMesh : MeshInstance3D
         var normals = new List<Vector3>();
         var indices = new List<int>();
 
-        var normal = DirectionHelper.GetDirectionNormal(_faceDirection);
+        var normal = _faceDirection.Norm();
 
         foreach (FaceRect rect in _faceData.Rects)
         {
@@ -62,25 +62,22 @@ public partial class ChunkFaceMesh : MeshInstance3D
             normals.Add(normal);
 
             // 标准UV映射
-            // if (DirectionHelper.IsPositive(_faceDirection))
-            // {
-            //     uvs.Add(new Vector2(0, rect.Width));
-            //     uvs.Add(new Vector2(rect.Height, rect.Width));
-            //     uvs.Add(new Vector2(rect.Height, 0));
-            //     uvs.Add(new Vector2(0, 0));
-            // }
-            // else
-            // {
-            //     uvs.Add(new Vector2(rect.Width, 0));
-            //     uvs.Add(new Vector2(0, 0));
-            //     uvs.Add(new Vector2(0, rect.Height));
-            //     uvs.Add(new Vector2(rect.Width, rect.Height));
-            // }
-
-            uvs.Add(new Vector2(0, rect.Width));
-            uvs.Add(new Vector2(rect.Height, rect.Width));
-            uvs.Add(new Vector2(rect.Height, 0));
-            uvs.Add(new Vector2(0, 0));
+            if ((_faceDirection == Direction.PositiveZ) ||
+                (_faceDirection == Direction.NegativeZ) ||
+                (_faceDirection == Direction.NegativeY))
+            {
+                uvs.Add(new Vector2(0, rect.Width));
+                uvs.Add(new Vector2(0, 0));
+                uvs.Add(new Vector2(rect.Height, 0));
+                uvs.Add(new Vector2(rect.Height, rect.Width));
+            }
+            else
+            {
+                uvs.Add(new Vector2(0, rect.Height));
+                uvs.Add(new Vector2(0, 0));
+                uvs.Add(new Vector2(rect.Width, 0));
+                uvs.Add(new Vector2(rect.Width, rect.Height));
+            }
 
             // 三角形索引（顺时针顺序）
             indices.Add(baseIndex + 0);
@@ -99,13 +96,13 @@ public partial class ChunkFaceMesh : MeshInstance3D
         var arrayMesh = new ArrayMesh();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArray);
 
-        var block = BlockManager.Instance.GetBlock(2);
+        var block = BlockManager.Instance.GetBlock(4);
         var material = new StandardMaterial3D()
         {
             Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
             TextureRepeat = true,
             TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-            AlbedoTexture = block.GetTexture(),
+            AlbedoTexture = block.GetTexture(_faceDirection),
             // CullMode = BaseMaterial3D.CullModeEnum.Disabled,
         };
 
@@ -121,10 +118,10 @@ public partial class ChunkFaceMesh : MeshInstance3D
             case Direction.PositiveX:
                 return new Vector3[]
                 {
-                    rect.Start,
                     new Vector3(rect.Start.X, rect.Start.Y, rect.Start.Z + rect.Width),
                     new Vector3(rect.Start.X, rect.Start.Y + rect.Height, rect.Start.Z + rect.Width),
                     new Vector3(rect.Start.X, rect.Start.Y + rect.Height, rect.Start.Z),
+                    rect.Start,
                 };
             case Direction.NegativeX:
                 return new Vector3[]
@@ -161,10 +158,10 @@ public partial class ChunkFaceMesh : MeshInstance3D
             case Direction.NegativeZ:
                 return new Vector3[]
                 {
-                    rect.Start,
                     new Vector3(rect.Start.X + rect.Height, rect.Start.Y, rect.Start.Z),
                     new Vector3(rect.Start.X + rect.Height, rect.Start.Y + rect.Width, rect.Start.Z),
                     new Vector3(rect.Start.X, rect.Start.Y + rect.Width, rect.Start.Z),
+                    rect.Start,
                 };
 
             default:

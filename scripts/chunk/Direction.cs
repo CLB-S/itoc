@@ -10,7 +10,7 @@ public enum Direction
 
 public static class DirectionHelper
 {
-    public static Vector3I GetDirectionNormal(Direction dir)
+    public static Vector3I Norm(this Direction dir)
     {
         return dir switch
         {
@@ -23,7 +23,7 @@ public static class DirectionHelper
         };
     }
 
-    public static Vector3I GetDirectionOffset(Direction dir)
+    public static Vector3I Offset(this Direction dir)
     {
         return dir switch
         {
@@ -34,7 +34,7 @@ public static class DirectionHelper
         };
     }
 
-    public static Vector3I GetDirectionAntiOffset(Direction dir)
+    public static Vector3I AntiOffset(this Direction dir)
     {
         return dir switch
         {
@@ -61,7 +61,7 @@ public static class DirectionHelper
         }
     }
 
-    public static string GetDirectionName(Direction dir)
+    public static string Name(this Direction dir)
     {
         return dir switch
         {
@@ -75,7 +75,7 @@ public static class DirectionHelper
         };
     }
 
-    public static bool IsPositive(Direction dir)
+    public static bool IsPositive(this Direction dir)
     {
         return dir switch
         {
@@ -83,6 +83,19 @@ public static class DirectionHelper
             Direction.PositiveY => true,
             Direction.PositiveZ => true,
             _ => false
+        };
+    }
+
+    public static Direction Opposite(this Direction dir)
+    {
+        return dir switch
+        {
+            Direction.PositiveX => Direction.NegativeX,
+            Direction.NegativeX => Direction.PositiveX,
+            Direction.PositiveY => Direction.NegativeY,
+            Direction.NegativeY => Direction.PositiveY,
+            Direction.PositiveZ => Direction.NegativeZ,
+            _ => Direction.PositiveZ
         };
     }
 

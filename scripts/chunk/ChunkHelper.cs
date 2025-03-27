@@ -47,7 +47,7 @@ public static class ChunkHelper
 
     public static Vector3I GetFacePosition(Vector3I voxelPos, Direction dir)
     {
-        return voxelPos + DirectionHelper.GetDirectionNormal(dir);
+        return voxelPos + dir.Norm();
     }
 
     public static Vector3I GetFaceStartPosition(Direction dir, int layer, int x, int y)
