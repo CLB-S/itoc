@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public class ChunkFaceData
 {
-    public List<FaceRect> Rects { get; } = new List<FaceRect>();
+    public Dictionary<int, List<FaceRect>> BlockRects { get; } = new Dictionary<int, List<FaceRect>>();
+    // public List<FaceRect> Rects { get; } = new List<FaceRect>();
 }
 
 public partial class Chunk : Node3D
@@ -39,9 +40,8 @@ public partial class Chunk : Node3D
 
         foreach (Direction dir in Enum.GetValues(typeof(Direction)))
         {
-            var faceMesh = new ChunkFaceMesh();
+            var faceMesh = new ChunkFace();
             faceMesh.Initialize(this, dir);
-            faceMesh.Mesh.SurfaceSetMaterial(0, ChunkMaterial);
             AddChild(faceMesh);
         }
     }

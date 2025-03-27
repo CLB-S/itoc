@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 public static class ChunkMeshPreGenerator
@@ -85,7 +86,11 @@ public static class ChunkMeshPreGenerator
 
                 // 记录合并后的面
                 Vector3I startPos = ChunkHelper.GetFaceStartPosition(dir, layer, x, y);
-                faceData.Rects.Add(new FaceRect(startPos, width, height, currentMat));
+
+                if (faceData.BlockRects.ContainsKey(currentMat) == false)
+                    faceData.BlockRects[currentMat] = new List<FaceRect>();
+
+                faceData.BlockRects[currentMat].Add(new FaceRect(startPos, width, height));
 
                 // 标记已合并区域
                 for (int h = 0; h < height; h++)

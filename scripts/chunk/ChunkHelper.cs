@@ -7,14 +7,14 @@ public struct FaceRect
     public Vector3I Start; // 面起始坐标（根据方向确定主轴位置）
     public int Width;        // 面在第一个副轴方向的扩展
     public int Height;       // 面在第二个副轴方向的扩展
-    public int Material;    // 材质ID
+    // public int Material;    // 材质ID
 
-    public FaceRect(Vector3I start, int width, int height, int material)
+    public FaceRect(Vector3I start, int width, int height)
     {
         Start = start;
         Width = width;
         Height = height;
-        Material = material;
+        // Material = material;
     }
 }
 
@@ -47,7 +47,7 @@ public static class ChunkHelper
 
     public static Vector3I GetFacePosition(Vector3I voxelPos, Direction dir)
     {
-        return voxelPos + DirectionHelper.GetDirectionNormal(dir);
+        return voxelPos + dir.Norm();
     }
 
     public static Vector3I GetFaceStartPosition(Direction dir, int layer, int x, int y)
