@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 public class DirectionalBlock : Block
 {
-    public Texture2D TextureTop { get; private set; }
-    public Texture2D TextureRound { get; private set; }
-    public Texture2D TextureBottom { get; private set; }
+    private Material _materialTop;
+    private Material _materialRound;
+    private Material _materialBottom;
 
     public Direction? FreezeDirection { get; private set; }
 
@@ -33,25 +33,17 @@ public class DirectionalBlock : Block
 
     public override void LoadResources()
     {
-        TextureTop = ResourceLoader.Load(_textureTopPath) as Texture2D;
-        TextureRound = ResourceLoader.Load(_textureRoundPath) as Texture2D;
-        TextureBottom = ResourceLoader.Load(_textureBottomPath) as Texture2D;
+        _materialTop = BlockHelper.GetMaterial(_textureTopPath);
+        _materialRound = BlockHelper.GetMaterial(_textureRoundPath);
+        _materialBottom = BlockHelper.GetMaterial(_textureBottomPath);
     }
 
-    public override Texture2D GetTexture(Direction face = Direction.PositiveX)
+    public override Material GetMaterial(Direction face = Direction.PositiveX)
     {
-
-        if (face == this.Direction)
-        {
-            return TextureTop;
-        }
-        else if (face == this.Direction.Opposite())
-        {
-            return TextureBottom;
-        }
-        else
-        {
-            return TextureRound;
-        }
+        if (face == Direction.PositiveY)
+            return _materialTop;
+        if (face == Direction.NegativeY)
+            return _materialBottom;
+        return _materialRound;
     }
 }

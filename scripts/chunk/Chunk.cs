@@ -10,7 +10,7 @@ public class ChunkFaceData
 
 public partial class Chunk : Node3D
 {
-    public const int SIZE = 32;
+    public static readonly int SIZE = 32;
     public readonly Dictionary<Direction, ChunkFaceData> Faces = new Dictionary<Direction, ChunkFaceData>();
     public ShaderMaterial ChunkMaterial;
 
@@ -58,6 +58,20 @@ public partial class Chunk : Node3D
         if (x < 0 || x >= SIZE || y < 0 || y >= SIZE || z < 0 || z >= SIZE)
             throw new IndexOutOfRangeException();
         _voxels[x, y, z] = value;
+    }
+
+    public void Fill(int value)
+    {
+        for (int x = 0; x < SIZE; x++)
+        {
+            for (int y = 0; y < SIZE; y++)
+            {
+                for (int z = 0; z < SIZE; z++)
+                {
+                    _voxels[x, y, z] = value;
+                }
+            }
+        }
     }
 
     public void GenerateMeshes()

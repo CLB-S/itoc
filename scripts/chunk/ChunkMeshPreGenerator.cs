@@ -5,8 +5,6 @@ using System.Diagnostics;
 
 public static class ChunkMeshPreGenerator
 {
-    public const int SIZE = 32;
-
     public static void GenerateAllFaces(Chunk chunk)
     {
         ProcessDirection(chunk, Axis.X, Direction.PositiveX, Direction.NegativeX);
@@ -18,14 +16,14 @@ public static class ChunkMeshPreGenerator
     {
 
         // 遍历主轴的每个层
-        for (int layer = 0; layer <= SIZE; layer++)
+        for (int layer = 0; layer <= Chunk.SIZE; layer++)
         {
             // 构建当前层的材质矩阵
-            int[,] materialMatrixPos = new int[SIZE, SIZE];
-            int[,] materialMatrixNeg = new int[SIZE, SIZE];
-            for (int a = 0; a < SIZE; a++)
+            int[,] materialMatrixPos = new int[Chunk.SIZE, Chunk.SIZE];
+            int[,] materialMatrixNeg = new int[Chunk.SIZE, Chunk.SIZE];
+            for (int a = 0; a < Chunk.SIZE; a++)
             {
-                for (int b = 0; b < SIZE; b++)
+                for (int b = 0; b < Chunk.SIZE; b++)
                 {
                     Vector3I voxelPos = ChunkHelper.GetVoxelPosition(axis, layer, a, b);
                     if (IsFaceVisible(chunk, voxelPos, dirPos))
@@ -56,22 +54,22 @@ public static class ChunkMeshPreGenerator
 
     private static void GreedyMerge(int[,] matrix, Direction dir, int layer, ChunkFaceData faceData)
     {
-        bool[,] merged = new bool[SIZE, SIZE];
+        bool[,] merged = new bool[Chunk.SIZE, Chunk.SIZE];
 
-        for (int y = 0; y < SIZE; y++)
+        for (int y = 0; y < Chunk.SIZE; y++)
         {
-            for (int x = 0; x < SIZE; x++)
+            for (int x = 0; x < Chunk.SIZE; x++)
             {
                 int currentMat = matrix[y, x];
                 if (merged[y, x] || currentMat == 0) continue;
 
                 int width = 1;
-                while (x + width < SIZE && matrix[y, x + width] == currentMat && !merged[y, x + width])
+                while (x + width < Chunk.SIZE && matrix[y, x + width] == currentMat && !merged[y, x + width])
                     width++;
 
                 int height = 1;
                 bool canExpand = true;
-                while (y + height < SIZE && canExpand)
+                while (y + height < Chunk.SIZE && canExpand)
                 {
                     for (int i = 0; i < width; i++)
                     {

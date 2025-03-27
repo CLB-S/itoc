@@ -7,7 +7,7 @@ public partial class ChunkDebugger : Node
     [Export]
     public ShaderMaterial ChunkMaterial;
 
-    public override void _Ready()
+    private void DebugChunks()
     {
         var chunk = ChunkGenerator.GenerateBallChunk();
         AddChild(chunk);
@@ -47,5 +47,31 @@ public partial class ChunkDebugger : Node
 
         chunk6.ChunkID = new Vector3I(-2, -1, 0);
         AddChild(chunk6);
+    }
+
+    private void DebugTerrain()
+    {
+        var generator = new TerrainGenerator();
+        for (int x = -10; x < 10; x++)
+        {
+            for (int z = -10; z < 10; z++)
+            {
+                var chunk = new Chunk();
+                chunk.ChunkID = new Vector3I(x, -1, z);
+                float[,] heightmap = generator.GenerateChunkHeightmap(x, z);
+                TerrainGenerator.GenerateVoxelsFromHeightmap(heightmap, chunk);
+                AddChild(chunk);
+
+                var chunk1 = new Chunk();
+                chunk1.ChunkID = new Vector3I(x, -2, z);
+                chunk1.Fill(2);
+                AddChild(chunk1);
+            }
+        }
+    }
+
+    public override void _Ready()
+    {
+        DebugTerrain();
     }
 }

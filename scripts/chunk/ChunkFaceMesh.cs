@@ -15,7 +15,13 @@ public partial class ChunkFaceMesh : MeshInstance3D
         ChunkFace = chunkFace;
         _blockID = BlockID;
         _faceRects = faceRects;
+
         GenerateMesh();
+
+        var block = BlockManager.Instance.GetBlock(_blockID);
+        var material = block.GetMaterial(ChunkFace.Direction);
+        // var material = ResourceLoader.Load($"res://scripts/chunk/chunk_debug_shader_material.tres") as ShaderMaterial;
+        SetSurfaceOverrideMaterial(0, material);
     }
 
     private void GenerateMesh()
@@ -77,19 +83,6 @@ public partial class ChunkFaceMesh : MeshInstance3D
 
         var arrayMesh = new ArrayMesh();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArray);
-
-        var block = BlockManager.Instance.GetBlock(_blockID);
-        var material = new StandardMaterial3D()
-        {
-            Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
-            TextureRepeat = true,
-            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-            AlbedoTexture = block.GetTexture(ChunkFace.Direction),
-            // CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-        };
-
-        arrayMesh.SurfaceSetMaterial(0, material);
-
         Mesh = arrayMesh;
     }
 

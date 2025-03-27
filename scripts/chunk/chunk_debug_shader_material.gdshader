@@ -1,4 +1,5 @@
 shader_type spatial;
+render_mode wireframe;
 
 void vertex() {
 	// Called for every vertex the material is visible on.

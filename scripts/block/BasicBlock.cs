@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class BasicBlock : Block
 {
     public Texture2D Texture;
+    private Material _material;
 
     public BasicBlock(int id, string name)
     {
@@ -15,11 +16,8 @@ public class BasicBlock : Block
     public override void LoadResources()
     {
         string path = $"res://assets/blocks/{BlockName}.png";
-        Texture = ResourceLoader.Load(path) as Texture2D;
+        _material = BlockHelper.GetMaterial(path);
     }
 
-    public override Texture2D GetTexture(Direction face = Direction.PositiveX)
-    {
-        return Texture;
-    }
+    public override Material GetMaterial(Direction face = Direction.PositiveX) => _material;
 }
