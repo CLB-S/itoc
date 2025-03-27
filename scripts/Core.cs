@@ -8,7 +8,7 @@ public partial class Core : Node
     public override void _Ready()
     {
         Instance = this;
-
+        GD.Seed(1212);
         LoadBlocks();
     }
 

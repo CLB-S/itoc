@@ -3,7 +3,7 @@ using System;
 
 public abstract class Block
 {
-    public ushort BlockID { get; protected set; }
+    public int BlockID { get; protected set; }
     public string BlockName { get; protected set; }
     public Color Color { get; protected set; } = Colors.White;
     public float Hardness { get; protected set; } = 1.0f;

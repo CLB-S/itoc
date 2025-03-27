@@ -4,36 +4,19 @@ using System.Collections.Generic;
 
 public partial class ChunkFaceMesh : MeshInstance3D
 {
-    private Chunk _targetChunk;
-    private ChunkFaceData _faceData;
-    private Direction _faceDirection;
-    private Vector3 _faceNormal;
+    public ChunkFace ChunkFace { get; private set; }
 
-    public void Initialize(Chunk chunk, Direction faceDirection)
+    private int _blockID;
+    private List<FaceRect> _faceRects;
+
+
+    public void Initialize(ChunkFace chunkFace, int BlockID, List<FaceRect> faceRects)
     {
-        _targetChunk = chunk;
-        _faceDirection = faceDirection;
-        _faceNormal = faceDirection.Norm();
-        _faceData = chunk.Faces[faceDirection];
+        ChunkFace = chunkFace;
+        _blockID = BlockID;
+        _faceRects = faceRects;
         GenerateMesh();
     }
-
-    public override void _Process(double delta)
-    {
-        base._Process(delta);
-
-        this.Visible = IsFaceVisible();
-    }
-
-    private bool IsFaceVisible()
-    {
-        var cameraPosition = CameraHelper.Instance.GetCameraPosition();
-        var chunkFacePosition = (_targetChunk.ChunkID +
-            _faceDirection.AntiOffset()) * Chunk.SIZE;
-
-        return _faceNormal.Dot(cameraPosition - chunkFacePosition) > 0;
-    }
-
 
     private void GenerateMesh()
     {
@@ -45,9 +28,8 @@ public partial class ChunkFaceMesh : MeshInstance3D
         var normals = new List<Vector3>();
         var indices = new List<int>();
 
-        var normal = _faceDirection.Norm();
 
-        foreach (FaceRect rect in _faceData.Rects)
+        foreach (FaceRect rect in _faceRects)
         {
             var baseIndex = vertices.Count;
             var corners = GetQuadCorners(rect);
@@ -56,15 +38,15 @@ public partial class ChunkFaceMesh : MeshInstance3D
             vertices.AddRange(corners);
 
             // 统一法线方向
-            normals.Add(normal);
-            normals.Add(normal);
-            normals.Add(normal);
-            normals.Add(normal);
+            normals.Add(ChunkFace.Normal);
+            normals.Add(ChunkFace.Normal);
+            normals.Add(ChunkFace.Normal);
+            normals.Add(ChunkFace.Normal);
 
             // 标准UV映射
-            if ((_faceDirection == Direction.PositiveZ) ||
-                (_faceDirection == Direction.NegativeZ) ||
-                (_faceDirection == Direction.NegativeY))
+            if ((ChunkFace.Direction == Direction.PositiveZ) ||
+                (ChunkFace.Direction == Direction.NegativeZ) ||
+                (ChunkFace.Direction == Direction.NegativeY))
             {
                 uvs.Add(new Vector2(0, rect.Width));
                 uvs.Add(new Vector2(0, 0));
@@ -96,13 +78,13 @@ public partial class ChunkFaceMesh : MeshInstance3D
         var arrayMesh = new ArrayMesh();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArray);
 
-        var block = BlockManager.Instance.GetBlock(4);
+        var block = BlockManager.Instance.GetBlock(_blockID);
         var material = new StandardMaterial3D()
         {
             Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
             TextureRepeat = true,
             TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-            AlbedoTexture = block.GetTexture(_faceDirection),
+            AlbedoTexture = block.GetTexture(ChunkFace.Direction),
             // CullMode = BaseMaterial3D.CullModeEnum.Disabled,
         };
 
@@ -113,7 +95,7 @@ public partial class ChunkFaceMesh : MeshInstance3D
 
     private Vector3[] GetQuadCorners(FaceRect rect)
     {
-        switch (_faceDirection)
+        switch (ChunkFace.Direction)
         {
             case Direction.PositiveX:
                 return new Vector3[]

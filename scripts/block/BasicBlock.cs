@@ -6,7 +6,7 @@ public class BasicBlock : Block
 {
     public Texture2D Texture;
 
-    public BasicBlock(ushort id, string name)
+    public BasicBlock(int id, string name)
     {
         BlockID = id;
         BlockName = name;

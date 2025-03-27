@@ -7,8 +7,8 @@ public class BlockManager
     private static BlockManager _instance;
     public static BlockManager Instance => _instance ??= new BlockManager();
 
-    private readonly Dictionary<ushort, Block> _blocks = new();
-    private readonly Dictionary<string, ushort> _nameToId = new();
+    private readonly Dictionary<int, Block> _blocks = new();
+    private readonly Dictionary<string, int> _nameToId = new();
 
     public void RegisterBlock(Block block)
     {
@@ -22,7 +22,7 @@ public class BlockManager
         block.LoadResources();
     }
 
-    public Block GetBlock(ushort id) => _blocks.TryGetValue(id, out var block) ? block : null;
+    public Block GetBlock(int id) => _blocks.TryGetValue(id, out var block) ? block : null;
     public Block GetBlock(string name) =>
         _nameToId.TryGetValue(name, out var id) ? GetBlock(id) : null;
 

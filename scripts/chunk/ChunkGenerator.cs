@@ -20,7 +20,7 @@ public static class ChunkGenerator
                     var distance = Mathf.Sqrt((x - center) * (x - center) + (y - center) * (y - center) + (z - center) * (z - center));
                     if (distance < radius)
                     {
-                        chunk.SetVoxel(x, y, z, 1);
+                        chunk.SetVoxel(x, y, z, 3);
                     }
                 }
             }
@@ -67,7 +67,7 @@ public static class ChunkGenerator
                 {
                     if (random.NextDouble() < ratio)
                     {
-                        chunk.SetVoxel(x, y, z, 1);
+                        chunk.SetVoxel(x, y, z, (int)(GD.Randi() % 4 + 1));
                         count++;
                     }
                 }
