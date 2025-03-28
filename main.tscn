@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://g8ki650u2whs"]
 
-[ext_resource type="PackedScene" uid="uid://dow13p3u55e61" path="res://scripts/chunk/chunk.tscn" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://c2qfpfy2m41sn" path="res://scripts/camera/FreeLookCameraBase.cs" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://dow13p3u55e61" path="res://scripts/chunk/chunk.tscn" id="3_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scripts/gui/info.tscn" id="3_h2yge"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h2yge"]
@@ -21,8 +21,6 @@ tonemap_mode = 2
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_lquwl")
 
-[node name="Chunk" parent="." instance=ExtResource("1_ig7tw")]
-
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(-0.483038, 0, -0.875599, 0, 1, 0, 0.875599, 0, -0.483038, -2.26609, 1.03028, -2.55)
 current = true
@@ -33,3 +31,5 @@ transform = Transform3D(-0.291577, 0.670504, -0.682207, 0.263516, 0.741906, 0.61
 shadow_enabled = true
 
 [node name="Info" parent="." instance=ExtResource("3_h2yge")]
+
+[node name="Chunk" parent="." instance=ExtResource("3_1bvp3")]

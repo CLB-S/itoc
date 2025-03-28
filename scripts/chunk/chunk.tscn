@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dow13p3u55e61"]
 
-[ext_resource type="Script" uid="uid://bimd6yhkuql14" path="res://Scripts/Chunk/ChunkDebugger.cs" id="1_rps4x"]
-[ext_resource type="Material" uid="uid://cfnidhkhnbkyk" path="res://Scripts/Chunk/chunk_debug_shader_material.tres" id="2_ut6b0"]
+[ext_resource type="Script" uid="uid://bimd6yhkuql14" path="res://scripts/chunk/ChunkDebugger.cs" id="1_rps4x"]
+[ext_resource type="Material" uid="uid://cfnidhkhnbkyk" path="res://scripts/chunk/chunk_debug_shader_material.tres" id="2_ut6b0"]
 
 [node name="Chunk" type="Node3D"]
 script = ExtResource("1_rps4x")
