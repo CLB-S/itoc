@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public partial class MultimeshTest : MultiMeshInstance3D
 {
@@ -9,14 +8,14 @@ public partial class MultimeshTest : MultiMeshInstance3D
         Multimesh = new MultiMesh();
         // Set the format first.
         Multimesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3D;
-        Multimesh.Mesh = new PlaneMesh()
+        Multimesh.Mesh = new PlaneMesh
         {
-            Material = new StandardMaterial3D()
+            Material = new StandardMaterial3D
             {
                 Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
                 TextureRepeat = true,
                 TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-                CullMode = BaseMaterial3D.CullModeEnum.Disabled,
+                CullMode = BaseMaterial3D.CullModeEnum.Disabled
             }
         };
         // Then resize (otherwise, changing the format is not allowed)
@@ -25,10 +24,8 @@ public partial class MultimeshTest : MultiMeshInstance3D
         Multimesh.VisibleInstanceCount = 50000;
 
         // Set the transform of the instances.
-        for (int i = 0; i < Multimesh.VisibleInstanceCount; i++)
-        {
+        for (var i = 0; i < Multimesh.VisibleInstanceCount; i++)
             Multimesh.SetInstanceTransform(i, new Transform3D(Basis.Identity,
                 new Vector3(GD.Randf() * 100, -GD.Randf() * 100, GD.Randf() * 100)));
-        }
     }
 }

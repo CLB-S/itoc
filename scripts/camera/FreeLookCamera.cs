@@ -1,9 +1,11 @@
-
-using System;
 using Godot;
 
-partial class FreeLookCamera : FreeLookCameraBase
-{   
+internal partial class FreeLookCamera : FreeLookCameraBase
+{
+    private bool _enabled;
+    private Camera3D _previousCamera;
+    private Input.MouseModeEnum _previousMouseMode;
+
     public bool Enabled
     {
         set
@@ -36,40 +38,29 @@ partial class FreeLookCamera : FreeLookCameraBase
                 Current = false;
                 if (_previousCamera != null)
                 {
-                    _previousCamera.Current = true;                
+                    _previousCamera.Current = true;
                     Input.MouseMode = _previousMouseMode;
                 }
             }
         }
 
-        get
-        {
-            return _enabled;
-        }
+        get => _enabled;
     }
-
-    private bool _enabled = false;
-    private Camera3D _previousCamera;
-    private Input.MouseModeEnum _previousMouseMode;
 
     public override void _Ready()
     {
         Current = false;
     }
+
     public override void _Input(InputEvent _event)
     {
-        if (! Enabled)
-        {
-            return;
-        }
+        if (!Enabled) return;
         base._Input(_event);
     }
+
     public override void _Process(double delta)
     {
-        if (! Enabled)
-        {
-            return;
-        }
+        if (!Enabled) return;
 
         base._Process(delta);
     }

@@ -1,6 +1,4 @@
-using Godot;
-using System;
-using System.Collections.Generic;
+
 
 // WARNING: By deepseek. Not revised.
 

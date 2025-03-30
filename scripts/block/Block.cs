@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public abstract class Block
 {
@@ -10,10 +9,12 @@ public abstract class Block
     public bool IsSolid { get; } = true;
     public bool IsTransparent { get; protected set; } = false;
     public bool IsLightSource { get; protected set; } = false;
+
     public float LightStrength { get; protected set; } = 0;
     // public virtual string[] ModelTypes => new[] { "cube" };
 
     public abstract void LoadResources();
+
     public abstract Material GetMaterial(Direction face = Direction.PositiveY);
     // public virtual Mesh GetMesh(string modelType = "cube") => null;
 }

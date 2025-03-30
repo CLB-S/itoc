@@ -1,27 +1,18 @@
 using Godot;
-using System;
-using System.Collections.Generic;
 
 public class DirectionalBlock : Block
 {
-    private Material _materialTop;
-    private Material _materialRound;
-    private Material _materialBottom;
-
-    public Direction? FreezeDirection { get; private set; }
-
     private Direction _direction;
-    public Direction Direction
-    {
-        get { return FreezeDirection ?? _direction; }
-        set { _direction = value; }
-    }
+    private Material _materialBottom;
+    private Material _materialRound;
+    private Material _materialTop;
+    private readonly string _textureBottomPath;
+    private readonly string _textureRoundPath;
 
-    private string _textureTopPath;
-    private string _textureRoundPath;
-    private string _textureBottomPath;
+    private readonly string _textureTopPath;
 
-    public DirectionalBlock(int id, string name, Direction? freezeDirection = null, string textureTopPath = null, string textureRoundPath = null, string textureBottomPath = null)
+    public DirectionalBlock(int id, string name, Direction? freezeDirection = null, string textureTopPath = null,
+        string textureRoundPath = null, string textureBottomPath = null)
     {
         BlockID = id;
         BlockName = name;
@@ -29,6 +20,14 @@ public class DirectionalBlock : Block
         _textureTopPath = textureTopPath ?? $"res://assets/blocks/{BlockName}/top.png";
         _textureRoundPath = textureRoundPath ?? $"res://assets/blocks/{BlockName}/round.png";
         _textureBottomPath = textureBottomPath ?? $"res://assets/blocks/{BlockName}/bottom.png";
+    }
+
+    public Direction? FreezeDirection { get; }
+
+    public Direction Direction
+    {
+        get => FreezeDirection ?? _direction;
+        set => _direction = value;
     }
 
     public override void LoadResources()

@@ -1,11 +1,14 @@
-using Godot;
 using System;
+using Godot;
 
 public enum Direction
 {
-    PositiveY = 0, NegativeY = 1,
-    PositiveX = 2, NegativeX = 3,
-    PositiveZ = 4, NegativeZ = 5
+    PositiveY = 0,
+    NegativeY = 1,
+    PositiveX = 2,
+    NegativeX = 3,
+    PositiveZ = 4,
+    NegativeZ = 5
 }
 
 public static class DirectionHelper
@@ -48,17 +51,10 @@ public static class DirectionHelper
     public static Direction GetDirection(Vector3 dir)
     {
         if (Mathf.Abs(dir.X) > Mathf.Abs(dir.Y) && Mathf.Abs(dir.X) > Mathf.Abs(dir.Z))
-        {
             return dir.X > 0 ? Direction.PositiveX : Direction.NegativeX;
-        }
-        else if (Mathf.Abs(dir.Y) > Mathf.Abs(dir.X) && Mathf.Abs(dir.Y) > Mathf.Abs(dir.Z))
-        {
+        if (Mathf.Abs(dir.Y) > Mathf.Abs(dir.X) && Mathf.Abs(dir.Y) > Mathf.Abs(dir.Z))
             return dir.Y > 0 ? Direction.PositiveY : Direction.NegativeY;
-        }
-        else
-        {
-            return dir.Z > 0 ? Direction.PositiveZ : Direction.NegativeZ;
-        }
+        return dir.Z > 0 ? Direction.PositiveZ : Direction.NegativeZ;
     }
 
     public static string Name(this Direction dir)
@@ -98,5 +94,4 @@ public static class DirectionHelper
             _ => Direction.PositiveZ
         };
     }
-
 }

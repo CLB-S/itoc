@@ -1,127 +1,120 @@
-
-using System;
 using Godot;
 
-partial class FreeLookCameraBase : Camera3D
+internal partial class FreeLookCameraBase : Camera3D
 {
     // This is a translation from the original free camera found in AssetStore 
 
     // Modifier keys' speed multiplier
-    const float SHIFT_MULTIPLIER = 15f;
-    const float ALT_MULTIPLIER = 1.0f / SHIFT_MULTIPLIER;
+    private const float SHIFT_MULTIPLIER = 15f;
+    private const float ALT_MULTIPLIER = 1.0f / SHIFT_MULTIPLIER;
+    private bool _a;
+    private float _acceleration = 30f;
+    private bool _alt;
+    private bool _d;
+    private float _deceleration = -10f;
+
+    // Movement state
+    private Vector3 _direction = new(0.0f, 0.0f, 0.0f);
+    private bool _e;
+
+    // Mouse state
+    private Vector2 _mouse_position = new(0.0f, 0.0f);
+    private bool _q;
+    private bool _s;
+    private bool _shift;
+    private float _total_pitch;
+    private float _vel_multiplier = 4f;
+    private Vector3 _velocity = new(0.0f, 0.0f, 0.0f);
+
+    // Keyboard state
+    private bool _w;
 
     [Export(PropertyHint.Range, "0.0f,1.0f")]
     public float sensitivity = 0.25f;
 
-    // Mouse state
-    private Vector2 _mouse_position = new Vector2(0.0f, 0.0f);
-    private float _total_pitch = 0.0f;
-
-    // Movement state
-    private Vector3 _direction = new Vector3(0.0f, 0.0f, 0.0f);
-    private Vector3 _velocity = new Vector3(0.0f, 0.0f, 0.0f);
-    private float _acceleration = 30f;
-    private float _deceleration = -10f;
-    private float _vel_multiplier = 4f;
-
-    // Keyboard state
-    private bool _w = false;
-    private bool _s = false;
-    private bool _a = false;
-    private bool _d = false;
-    private bool _q = false;
-    private bool _e = false;
-    private bool _shift = false;
-    private bool _alt = false;
-
     public override void _Input(InputEvent _event)
     {
         // Receives mouse motion
-        InputEventMouseMotion mouseMotionEvent = _event as InputEventMouseMotion;
-        if (mouseMotionEvent != null)
-        {
-            _mouse_position = mouseMotionEvent.Relative;
-        }
+        var mouseMotionEvent = _event as InputEventMouseMotion;
+        if (mouseMotionEvent != null) _mouse_position = mouseMotionEvent.Relative;
 
         // Receives mouse button input
-        InputEventMouseButton mouseButtonEvent = _event as InputEventMouseButton;
+        var mouseButtonEvent = _event as InputEventMouseButton;
         if (mouseButtonEvent != null)
-        {
             switch (mouseButtonEvent.ButtonIndex)
             {
                 case MouseButton.Right: // Only allows rotation if right click down
-                    {
-                        Input.MouseMode = mouseButtonEvent.Pressed ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
-                    }
+                {
+                    Input.MouseMode = mouseButtonEvent.Pressed
+                        ? Input.MouseModeEnum.Captured
+                        : Input.MouseModeEnum.Visible;
+                }
                     break;
 
                 case MouseButton.WheelUp: // Increases max velocity
-                    {
-                        _vel_multiplier = Mathf.Clamp(_vel_multiplier * 1.1f, 0.2f, 20f);
-                    }
+                {
+                    _vel_multiplier = Mathf.Clamp(_vel_multiplier * 1.1f, 0.2f, 20f);
+                }
                     break;
 
                 case MouseButton.WheelDown: // Decreases max velocity
-                    {
-                        _vel_multiplier = Mathf.Clamp(_vel_multiplier / 1.1f, 0.2f, 20f);
-                    }
+                {
+                    _vel_multiplier = Mathf.Clamp(_vel_multiplier / 1.1f, 0.2f, 20f);
+                }
                     break;
             }
-        }
 
         // Receives key input
-        InputEventKey keyEvent = _event as InputEventKey;
+        var keyEvent = _event as InputEventKey;
         if (keyEvent != null)
-        {
             switch (keyEvent.Keycode)
             {
                 case Key.W:
-                    {
-                        _w = keyEvent.Pressed;
-                    }
+                {
+                    _w = keyEvent.Pressed;
+                }
                     break;
 
                 case Key.S:
-                    {
-                        _s = keyEvent.Pressed;
-                    }
+                {
+                    _s = keyEvent.Pressed;
+                }
                     break;
 
                 case Key.A:
-                    {
-                        _a = keyEvent.Pressed;
-                    }
+                {
+                    _a = keyEvent.Pressed;
+                }
                     break;
 
                 case Key.D:
-                    {
-                        _d = keyEvent.Pressed;
-                    }
+                {
+                    _d = keyEvent.Pressed;
+                }
                     break;
 
                 case Key.Q:
-                    {
-                        _q = keyEvent.Pressed;
-                    }
+                {
+                    _q = keyEvent.Pressed;
+                }
                     break;
 
                 case Key.E:
-                    {
-                        _e = keyEvent.Pressed;
-                    }
+                {
+                    _e = keyEvent.Pressed;
+                }
                     break;
                 case Key.Shift:
-                    {
-                        _shift = keyEvent.Pressed;
-                    }
+                {
+                    _shift = keyEvent.Pressed;
+                }
                     break;
                 case Key.Alt:
-                    {
-                        _alt = keyEvent.Pressed;
-                    }
+                {
+                    _alt = keyEvent.Pressed;
+                }
                     break;
             }
-        }
     }
 
     // Updates mouselook and movement every frame
@@ -145,16 +138,16 @@ partial class FreeLookCameraBase : Camera3D
 
         // Computes the change in velocity due to desired direction and "drag"
         // The "drag" is a constant acceleration on the camera to bring it's velocity to 0
-        Vector3 offset = _direction.Normalized() * _acceleration * _vel_multiplier * delta
-                       + _velocity.Normalized() * _deceleration * _vel_multiplier * delta;
+        var offset = _direction.Normalized() * _acceleration * _vel_multiplier * delta
+                     + _velocity.Normalized() * _deceleration * _vel_multiplier * delta;
 
         // Compute modifiers' speed multiplier
-        float speed_multi = 1.0f;
+        var speed_multi = 1.0f;
         if (_shift) speed_multi *= SHIFT_MULTIPLIER;
         if (_alt) speed_multi *= ALT_MULTIPLIER;
 
         // Checks if we should bother translating the camera
-        if ((_direction == Vector3.Zero) && (offset.LengthSquared() > _velocity.LengthSquared()))
+        if (_direction == Vector3.Zero && offset.LengthSquared() > _velocity.LengthSquared())
         {
             // Sets the velocity to 0 to prevent jittering due to imperfect deceleration
             _velocity = Vector3.Zero;
@@ -177,8 +170,8 @@ partial class FreeLookCameraBase : Camera3D
         if (Input.MouseMode == Input.MouseModeEnum.Captured)
         {
             _mouse_position *= sensitivity;
-            float yaw = _mouse_position.X;
-            float pitch = _mouse_position.Y;
+            var yaw = _mouse_position.X;
+            var pitch = _mouse_position.Y;
             _mouse_position = Vector2.Zero;
 
             // Prevents looking up/down too far

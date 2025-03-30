@@ -11,31 +11,24 @@ public class ErosionProcessor
 
     public float[,] ApplyErosion(float[,] heightmap)
     {
-        float[,] eroded = (float[,])heightmap.Clone();
+        var eroded = (float[,])heightmap.Clone();
 
         // 文献建议50次迭代
-        for (int i = 0; i < 50; i++)
-        {
-            IterateErosion(eroded);
-        }
+        for (var i = 0; i < 50; i++) IterateErosion(eroded);
 
         return eroded;
     }
 
     private void IterateErosion(float[,] heightmap)
     {
-        for (int x = 0; x < _size; x++)
-        {
-            for (int z = 0; z < _size; z++)
-            {
-                ProcessCell(heightmap, x, z);
-            }
-        }
+        for (var x = 0; x < _size; x++)
+        for (var z = 0; z < _size; z++)
+            ProcessCell(heightmap, x, z);
     }
 
     private void ProcessCell(float[,] heightmap, int x, int z)
     {
-        float currentHeight = heightmap[x, z];
+        var currentHeight = heightmap[x, z];
         float maxDelta = 0;
         int lowestX = x, lowestZ = z;
 
@@ -47,20 +40,20 @@ public class ErosionProcessor
 
         if (maxDelta > 0 && maxDelta <= _talusThreshold)
         {
-            float delta = maxDelta * 0.5f;
+            var delta = maxDelta * 0.5f;
             heightmap[x, z] -= delta;
             heightmap[lowestX, lowestZ] += delta;
         }
     }
 
     private void CheckNeighbor(float[,] map, int x, int z,
-                              int nx, int nz,
-                              ref float maxDelta,
-                              ref int lowestX, ref int lowestZ)
+        int nx, int nz,
+        ref float maxDelta,
+        ref int lowestX, ref int lowestZ)
     {
         if (nx < 0 || nx >= _size || nz < 0 || nz >= _size) return;
 
-        float delta = map[x, z] - map[nx, nz];
+        var delta = map[x, z] - map[nx, nz];
         if (delta > maxDelta)
         {
             maxDelta = delta;

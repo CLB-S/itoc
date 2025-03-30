@@ -1,16 +1,14 @@
 using Godot;
-using System;
 
 // Singleton class to manage the camera
 public partial class CameraHelper : Node
 {
-    public static CameraHelper Instance { get; private set; }
-
-    public Vector3 CameraPosition = Vector3.Zero;
+    private Camera3D _camera;
     public Vector3 CameraFacing = Vector3.Zero;
     public Direction CameraFacingDirection = Direction.PositiveZ;
 
-    private Camera3D _camera;
+    public Vector3 CameraPosition = Vector3.Zero;
+    public static CameraHelper Instance { get; private set; }
 
     private bool CheckCamera()
     {
@@ -39,10 +37,18 @@ public partial class CameraHelper : Node
         }
     }
 
-    public Vector3 GetCameraPosition() => CameraPosition;
+    public Vector3 GetCameraPosition()
+    {
+        return CameraPosition;
+    }
 
-    public Vector3 GetCameraFacing() => CameraFacing;
+    public Vector3 GetCameraFacing()
+    {
+        return CameraFacing;
+    }
 
-    public Direction GetCameraFacingDirection() => CameraFacingDirection;
-
+    public Direction GetCameraFacingDirection()
+    {
+        return CameraFacingDirection;
+    }
 }
