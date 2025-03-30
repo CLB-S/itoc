@@ -17,7 +17,7 @@ public class TerrainGenerator
     public TerrainGenerator()
     {
         InitializeNoiseGenerators();
-        _erosionProcessor = new ErosionProcessor(Chunk.SIZE);
+        _erosionProcessor = new ErosionProcessor(World.ChunkSize);
         _config = new NoiseLayerConfig();
     }
 
@@ -61,45 +61,16 @@ public class TerrainGenerator
         return voronoiHeight;
     }
 
-    public static void GenerateVoxelsFromHeightmap(float[,] heightmap, Chunk chunk)
-    {
-        for (int x = 0; x < Chunk.SIZE; x++)
-        {
-            for (int z = 0; z < Chunk.SIZE; z++)
-            {
-                int height = Mathf.RoundToInt(heightmap[x, z] * Chunk.SIZE);
-                for (int y = 0; y < Chunk.SIZE; y++)
-                {
-                    if (y < height)
-                    {
-                        if (y == height - 1)
-                        {
-                            chunk.SetVoxel(x, y, z, 4);
-                        }
-                        else if (y > height - 4)
-                        {
-                            chunk.SetVoxel(x, y, z, 3);
-                        }
-                        else
-                        {
-                            chunk.SetVoxel(x, y, z, 2);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private float[,] GenerateBaseHeightmap(int chunkX, int chunkZ)
     {
-        float[,] heightmap = new float[Chunk.SIZE, Chunk.SIZE];
+        float[,] heightmap = new float[World.ChunkSize, World.ChunkSize];
 
-        int globalX = chunkX * Chunk.SIZE;
-        int globalZ = chunkZ * Chunk.SIZE;
+        int globalX = chunkX * World.ChunkSize;
+        int globalZ = chunkZ * World.ChunkSize;
 
-        for (int x = 0; x < Chunk.SIZE; x++)
+        for (int x = 0; x < World.ChunkSize; x++)
         {
-            for (int z = 0; z < Chunk.SIZE; z++)
+            for (int z = 0; z < World.ChunkSize; z++)
             {
                 float noiseValue = _baseNoise.GetNoise2D(
                     (globalX + x) * GlobalScale,
@@ -116,13 +87,13 @@ public class TerrainGenerator
 
     private float[,] AddDetailNoise(float[,] baseHeight, int chunkX, int chunkZ)
     {
-        float[,] detailed = new float[Chunk.SIZE, Chunk.SIZE];
-        int globalX = chunkX * Chunk.SIZE;
-        int globalZ = chunkZ * Chunk.SIZE;
+        float[,] detailed = new float[World.ChunkSize, World.ChunkSize];
+        int globalX = chunkX * World.ChunkSize;
+        int globalZ = chunkZ * World.ChunkSize;
 
-        for (int x = 0; x < Chunk.SIZE; x++)
+        for (int x = 0; x < World.ChunkSize; x++)
         {
-            for (int z = 0; z < Chunk.SIZE; z++)
+            for (int z = 0; z < World.ChunkSize; z++)
             {
                 float detail = _detailNoise.GetNoise2D(
                     (globalX + x) * GlobalScale * 2,
@@ -138,13 +109,13 @@ public class TerrainGenerator
 
     private float[,] ApplyVoronoiFeatures(float[,] heightmap, int chunkX, int chunkZ)
     {
-        float[,] modified = new float[Chunk.SIZE, Chunk.SIZE];
-        int globalX = chunkX * Chunk.SIZE;
-        int globalZ = chunkZ * Chunk.SIZE;
+        float[,] modified = new float[World.ChunkSize, World.ChunkSize];
+        int globalX = chunkX * World.ChunkSize;
+        int globalZ = chunkZ * World.ChunkSize;
 
-        for (int x = 0; x < Chunk.SIZE; x++)
+        for (int x = 0; x < World.ChunkSize; x++)
         {
-            for (int z = 0; z < Chunk.SIZE; z++)
+            for (int z = 0; z < World.ChunkSize; z++)
             {
                 float voronoiValue = _voronoiNoise.GetNoise2D(
                     (globalX + x) * GlobalScale,

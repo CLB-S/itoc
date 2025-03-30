@@ -38,7 +38,7 @@ public class DirectionalBlock : Block
         _materialBottom = BlockHelper.GetMaterial(_textureBottomPath);
     }
 
-    public override Material GetMaterial(Direction face = Direction.PositiveX)
+    public override Material GetMaterial(Direction face = Direction.PositiveY)
     {
         if (face == Direction.PositiveY)
             return _materialTop;

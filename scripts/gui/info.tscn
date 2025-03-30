@@ -23,9 +23,9 @@ theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 16
 
 [node name="InfoLabel" type="RichTextLabel" parent="MarginContainer"]
-visible = false
 layout_mode = 2
 bbcode_enabled = true
 text = "Info
 "
+fit_content = true
 script = ExtResource("1_s7ei6")

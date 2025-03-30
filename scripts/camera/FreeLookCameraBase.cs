@@ -7,7 +7,7 @@ partial class FreeLookCameraBase : Camera3D
     // This is a translation from the original free camera found in AssetStore 
 
     // Modifier keys' speed multiplier
-    const float SHIFT_MULTIPLIER = 2.5f;
+    const float SHIFT_MULTIPLIER = 15f;
     const float ALT_MULTIPLIER = 1.0f / SHIFT_MULTIPLIER;
 
     [Export(PropertyHint.Range, "0.0f,1.0f")]

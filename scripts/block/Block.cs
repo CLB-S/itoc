@@ -14,6 +14,6 @@ public abstract class Block
     // public virtual string[] ModelTypes => new[] { "cube" };
 
     public abstract void LoadResources();
-    public abstract Material GetMaterial(Direction face = Direction.PositiveX);
+    public abstract Material GetMaterial(Direction face = Direction.PositiveY);
     // public virtual Mesh GetMesh(string modelType = "cube") => null;
 }

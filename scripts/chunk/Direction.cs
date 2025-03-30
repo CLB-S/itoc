@@ -3,9 +3,9 @@ using System;
 
 public enum Direction
 {
-    PositiveX, NegativeX,
-    PositiveY, NegativeY,
-    PositiveZ, NegativeZ
+    PositiveY = 0, NegativeY = 1,
+    PositiveX = 2, NegativeX = 3,
+    PositiveZ = 4, NegativeZ = 5
 }
 
 public static class DirectionHelper
