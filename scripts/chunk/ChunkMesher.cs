@@ -38,7 +38,7 @@ public static class ChunkMesher
     }
 
 
-    public static void MeshVoxels(int[] voxels, MeshData meshData)
+    public static void MeshVoxels(uint[] voxels, MeshData meshData)
     {
         meshData.Quads.Clear();
         meshData.QuadBlockIDs.Clear();
@@ -238,7 +238,7 @@ public static class ChunkMesher
         public int[] FaceVertexLength = new int[6];
         public byte[] ForwardMerged = new byte[CS_2];
         public ulong[] OpaqueMask = new ulong[CS_P2];
-        public List<int> QuadBlockIDs = new(10000);
+        public List<uint> QuadBlockIDs = new(10000);
         public List<ulong> Quads = new(10000);
         public byte[] RightMerged = new byte[CS];
     }

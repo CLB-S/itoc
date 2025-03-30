@@ -7,7 +7,7 @@ public partial class World : Node
     // 区块加载范围（以区块为单位）
     public const int LoadDistance = 12;
     public const int ChunkSize = ChunkMesher.CS;
-    private const int MaxGenerationsPerFrame = 5; // 每帧最多处理5个区块
+    private const int MaxGenerationsPerFrame = 1; // 每帧最多处理5个区块
 
     // 区块存储（线程安全字典）
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
@@ -78,7 +78,7 @@ public partial class World : Node
         return chunk;
     }
 
-    public int GetBlock(Vector3 worldPos)
+    public uint GetBlock(Vector3 worldPos)
     {
         var chunk = GetChunk(worldPos);
         if (chunk == null) return 0;
@@ -94,12 +94,12 @@ public partial class World : Node
 
         // 计算需要加载的区块范围（原有逻辑）
         for (var x = -LoadDistance; x <= LoadDistance; x++)
-        for (var y = -1; y <= 1; y++)
-        for (var z = -LoadDistance; z <= LoadDistance; z++)
-        {
-            var pos = centerChunk + new Vector3I(x, y, z);
-            if (pos.DistanceTo(centerChunk) <= LoadDistance) loadArea.Add(pos);
-        }
+            for (var y = -1; y <= 1; y++)
+                for (var z = -LoadDistance; z <= LoadDistance; z++)
+                {
+                    var pos = centerChunk + new Vector3I(x, y, z);
+                    if (pos.DistanceTo(centerChunk) <= LoadDistance) loadArea.Add(pos);
+                }
 
         // 卸载超出范围的区块（原有逻辑）
         foreach (var existingPos in Chunks.Keys)

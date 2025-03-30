@@ -32,11 +32,11 @@ public partial class Chunk : StaticBody3D
     // 公开属性
     public Vector3 ChunkPosition { get; private set; }
     public ChunkState State { get; private set; } = ChunkState.Unloaded;
-    public int[] VoxelData { get; private set; }
+    public uint[] VoxelData { get; private set; }
     public ChunkMesher.MeshData MeshData { get; private set; }
 
     // 初始化区块
-    public void Initialize(Vector3 chunkPosition, int[] voxelData, ChunkMesher.MeshData meshData)
+    public void Initialize(Vector3 chunkPosition, uint[] voxelData, ChunkMesher.MeshData meshData)
     {
         ChunkPosition = chunkPosition;
         VoxelData = voxelData;
@@ -83,32 +83,46 @@ public partial class Chunk : StaticBody3D
     {
         if (MeshData.Quads.Count == 0) return;
 
-        var surfaceArrayDict = new System.Collections.Generic.Dictionary<int, SurfaceArrayData>();
+        var surfaceArrayDict = new Dictionary<uint, SurfaceArrayData>();
 
         for (var face = 0; face < 6; face++)
-        for (var i = MeshData.FaceVertexBegin[face];
-             i < MeshData.FaceVertexBegin[face] + MeshData.FaceVertexLength[face];
-             i++)
-            ParseQuad((Direction)face, MeshData.QuadBlockIDs[i], MeshData.Quads[i], surfaceArrayDict);
+            for (var i = MeshData.FaceVertexBegin[face];
+                 i < MeshData.FaceVertexBegin[face] + MeshData.FaceVertexLength[face];
+                 i++)
+                ParseQuad((Direction)face, MeshData.QuadBlockIDs[i], MeshData.Quads[i], surfaceArrayDict);
 
         _arrayMesh = new ArrayMesh();
-        foreach (var (blockID, surfaceArrayData) in surfaceArrayDict)
+        foreach (var (blockInfo, surfaceArrayData) in surfaceArrayDict)
         {
+            var (blockID, dir) = ParseBlockInfo(blockInfo);
             _arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
             _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                BlockManager.Instance.GetBlock(blockID).GetMaterial());
+                BlockManager.Instance.GetBlock(blockID).GetMaterial(dir));
         }
 
         _meshInstance.Mesh = _arrayMesh;
     }
 
-    private void ParseQuad(Direction dir, int blockID, ulong quad,
-        System.Collections.Generic.Dictionary<int, SurfaceArrayData> surfaceArrayDict)
+    private (uint, Direction) ParseBlockInfo(uint blockInfo)
     {
-        if (!surfaceArrayDict.ContainsKey(blockID))
-            surfaceArrayDict.Add(blockID, new SurfaceArrayData());
+        return ((blockInfo << 3) >> 3, (Direction)(blockInfo >> 29));
+    }
 
-        var surfaceArrayData = surfaceArrayDict[blockID];
+    private uint GetBlockInfo(uint blockID, Direction dir)
+    {
+        if (BlockManager.Instance.GetBlock(blockID) is DirectionalBlock)
+            return ((uint)dir << 29) | blockID;
+        return blockID;
+    }
+
+    private void ParseQuad(Direction dir, uint blockID, ulong quad,
+        Dictionary<uint, SurfaceArrayData> surfaceArrayDict)
+    {
+        var blockInfo = GetBlockInfo(blockID, dir);
+        if (!surfaceArrayDict.ContainsKey(blockInfo))
+            surfaceArrayDict.Add(blockInfo, new SurfaceArrayData());
+
+        var surfaceArrayData = surfaceArrayDict[blockInfo];
 
         // 解析数据（与C++结构完全一致）
         var x = (uint)(quad & 0x3F) + 1; // 6 bits
@@ -272,7 +286,7 @@ public partial class Chunk : StaticBody3D
         _debugMesh.SurfaceAddVertex(to);
     }
 
-    public int GetBlock(int x, int y, int z)
+    public uint GetBlock(int x, int y, int z)
     {
         if (x < 0 || x >= World.ChunkSize ||
             y < 0 || y >= World.ChunkSize ||

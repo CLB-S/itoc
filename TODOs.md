@@ -10,7 +10,8 @@
 
 - [ ] LOD
 - [ ] ⭐⭐ Chunk.cs | `SetBlock()`, `GetBlock()`.
-- [ ] ⭐⭐⭐ Chunk.cs & ChunkMesher.cs | Fix `DirectionalBlock` rendering.
+- [ ] Empty/full chunks.
+- [x] ⭐⭐⭐ Chunk.cs & ChunkMesher.cs | Fix `DirectionalBlock` rendering.
 
 ## World
 

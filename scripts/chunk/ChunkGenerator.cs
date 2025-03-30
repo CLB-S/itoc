@@ -35,7 +35,7 @@ public class ChunkGenerationRequest
 
 public class ChunkGenerationResult
 {
-    public ChunkGenerationResult(Vector3I pos, ChunkMesher.MeshData data, int[] voxels)
+    public ChunkGenerationResult(Vector3I pos, ChunkMesher.MeshData data, uint[] voxels)
     {
         ChunkPosition = pos;
         MeshData = data;
@@ -44,7 +44,7 @@ public class ChunkGenerationResult
 
     public Vector3I ChunkPosition { get; }
     public ChunkMesher.MeshData MeshData { get; }
-    public int[] VoxelData { get; }
+    public uint[] VoxelData { get; }
 }
 
 
@@ -97,33 +97,33 @@ public class ChunkGenerator : IDisposable
         GD.Print($"Generating chunk {request.ChunkPosition}");
 
         // 生成地形数据（示例使用噪声生成）
-        var voxels = new int[ChunkMesher.CS_P3];
+        var voxels = new uint[ChunkMesher.CS_P3];
         var meshData = new ChunkMesher.MeshData();
 
         // 使用噪声生成地形（示例）
         for (var x = 0; x < ChunkMesher.CS_P; x++)
-        for (var z = 0; z < ChunkMesher.CS_P; z++)
-        {
-            var height = (int)NoiseGenerator.GetHeight(
-                request.ChunkPosition.X * ChunkMesher.CS + x,
-                request.ChunkPosition.Z * ChunkMesher.CS + z
-            );
-
-            for (var y = 0; y < ChunkMesher.CS_P; y++)
+            for (var z = 0; z < ChunkMesher.CS_P; z++)
             {
-                var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;
-                if (actualY < height - ChunkMesher.CS)
+                var height = (int)NoiseGenerator.GetHeight(
+                    request.ChunkPosition.X * ChunkMesher.CS + x,
+                    request.ChunkPosition.Z * ChunkMesher.CS + z
+                );
+
+                for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
-                    if (actualY == height - ChunkMesher.CS - 1)
-                        voxels[ChunkMesher.GetIndex(x, y, z)] = 4;
-                    else if (actualY > height - ChunkMesher.CS - 4)
-                        voxels[ChunkMesher.GetIndex(x, y, z)] = 3;
-                    else
-                        voxels[ChunkMesher.GetIndex(x, y, z)] = 2;
-                    ChunkMesher.AddNonOpaqueVoxel(ref meshData.OpaqueMask, x, y, z);
+                    var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;
+                    if (actualY < height - ChunkMesher.CS)
+                    {
+                        if (actualY == height - ChunkMesher.CS - 1)
+                            voxels[ChunkMesher.GetIndex(x, y, z)] = 4;
+                        else if (actualY > height - ChunkMesher.CS - 4)
+                            voxels[ChunkMesher.GetIndex(x, y, z)] = 3;
+                        else
+                            voxels[ChunkMesher.GetIndex(x, y, z)] = 2;
+                        ChunkMesher.AddNonOpaqueVoxel(ref meshData.OpaqueMask, x, y, z);
+                    }
                 }
             }
-        }
 
         // for (int x = 0; x < ChunkMesher.CS_P; x++)
         //     for (int y = 0; y < ChunkMesher.CS_P; y++)

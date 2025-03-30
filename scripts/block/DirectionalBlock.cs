@@ -11,7 +11,7 @@ public class DirectionalBlock : Block
 
     private readonly string _textureTopPath;
 
-    public DirectionalBlock(int id, string name, Direction? freezeDirection = null, string textureTopPath = null,
+    public DirectionalBlock(uint id, string name, Direction? freezeDirection = null, string textureTopPath = null,
         string textureRoundPath = null, string textureBottomPath = null)
     {
         BlockID = id;
@@ -39,9 +39,9 @@ public class DirectionalBlock : Block
 
     public override Material GetMaterial(Direction face = Direction.PositiveY)
     {
-        if (face == Direction.PositiveY)
+        if (face == Direction)
             return _materialTop;
-        if (face == Direction.NegativeY)
+        if (face == Direction.Opposite())
             return _materialBottom;
         return _materialRound;
     }

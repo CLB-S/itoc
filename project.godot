@@ -13,6 +13,7 @@ config_version=5
 config/name="itoc"
 run/main_scene="uid://g8ki650u2whs"
 config/features=PackedStringArray("4.4", "C#", "GL Compatibility")
+run/max_fps=144
 config/icon="res://icon.svg"
 
 [autoload]

@@ -2,7 +2,10 @@ using Godot;
 
 public abstract class Block
 {
-    public int BlockID { get; protected set; }
+    /// <summary>
+    /// The unique ID of the block. Top 3 bits are reserved for direction.
+    /// </summary>
+    public uint BlockID { get; protected set; }
     public string BlockName { get; protected set; }
     public Color Color { get; protected set; } = Colors.White;
     public float Hardness { get; protected set; } = 1.0f;
