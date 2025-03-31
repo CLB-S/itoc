@@ -44,7 +44,6 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Info" parent="GUIs" instance=ExtResource("3_h2yge")]
-visible = false
 layout_mode = 1
 
 [node name="Paused" parent="GUIs" instance=ExtResource("3_1bvp3")]
