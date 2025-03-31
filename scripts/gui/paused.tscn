@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://db8v3c26ehokt"]
+
+[ext_resource type="Script" uid="uid://cyinvju1aln52" path="res://scripts/gui/GuiPausedController.cs" id="1_1br0v"]
+
+[node name="Paused" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1br0v")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BackToGameButton" type="Button" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+text = "Continue"
+
+[node name="QuitGameButton" type="Button" parent="PanelContainer/VBoxContainer"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+text = "Exit"
+
+[connection signal="pressed" from="PanelContainer/VBoxContainer/BackToGameButton" to="." method="OnBackToGameButtonPressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/QuitGameButton" to="." method="OnQuitGameButtonPressed"]

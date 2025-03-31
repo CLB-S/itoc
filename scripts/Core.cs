@@ -15,4 +15,16 @@ public partial class Core : Node
     {
         GD.Print($"Loaded {BlockManager.Instance.GetBlockCount()} blocks");
     }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationWMCloseRequest)
+            QuitGame();  // default behavior
+    }
+
+    public void QuitGame()
+    {
+        GD.Print("Quiting game.");
+        GetTree().Quit();
+    }
 }

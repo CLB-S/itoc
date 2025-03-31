@@ -49,8 +49,6 @@ public partial class PlayerController : CharacterBody3D
         _orientation = GetNode<Node3D>("Orientation");
 
         _currentSpeed = MoveSpeed;
-
-        GD.Print(_gravity);
     }
 
     public override void _Input(InputEvent @event)

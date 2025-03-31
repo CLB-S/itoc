@@ -11,7 +11,7 @@
 - [ ] LOD
 - [ ] ⭐⭐ Chunk.cs | `SetBlock()`, `GetBlock()`.
 - [ ] Empty/full chunks.
-- [x] ⭐⭐⭐ Chunk.cs & ChunkMesher.cs | Fix `DirectionalBlock` rendering.
+- [x] Chunk.cs & ChunkMesher.cs | Fix `DirectionalBlock` rendering.
 
 ## World
 
@@ -25,7 +25,17 @@
 
 ## Player
 
-- [x] ⭐⭐ Add the player.
-  - [x] ⭐⭐ Movement
-  - [ ] ⭐ Place/break blocks
+- [x] Add the player.
+  - [x] Movement
+  - [ ] ⭐⭐ Place/break blocks
   - [ ] Model
+  - [ ] Third-person camera. See [Third-person camera with spring arm](https://docs.godotengine.org/zh-cn/4.x/tutorials/3d/spring_arm.html).
+  - [ ] Inventory
+
+## GUI
+
+- [ ] Settings
+
+## Graphics
+
+- [ ] Fog

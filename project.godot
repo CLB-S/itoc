@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Core="*res://scripts/Core.cs"
+GuiManager="*res://scripts/gui/GuiManager.cs"
 CameraHelper="*res://scripts/camera/CameraHelper.cs"
 World="*res://scripts/world/World.cs"
 
