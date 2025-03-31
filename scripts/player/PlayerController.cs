@@ -6,7 +6,7 @@ public partial class PlayerController : CharacterBody3D
     [ExportGroup("Movement Settings")]
     [Export] public float MoveSpeed = 5.0f;
     [Export] public float SprintSpeed = 8.0f;
-    [Export] public float JumpVelocity = 10.0f;
+    [Export] public float JumpVelocity = 9.0f;
     [Export] public float AirControl = 0.3f;
     [Export] public float Acceleration = 10.0f;
     [Export] public float Deceleration = 15.0f;
@@ -44,7 +44,7 @@ public partial class PlayerController : CharacterBody3D
     private bool _isSprinting;
 
     // Jump
-    private float _gravity = 60 * ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
+    private float _gravity = 3 * ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private float _coyoteTimer;
     private float _jumpBufferTimer;
 
@@ -129,7 +129,21 @@ public partial class PlayerController : CharacterBody3D
                 if (placeBlockPressed)
                 {
                     var pos = result["position"].AsVector3() + 0.5f * result["normal"].AsVector3();
-                    World.Instance.SetBlock(pos, 1);
+
+                    var cubeShape = new BoxShape3D() { Size = Vector3.One * 0.95f };
+                    var cubeCenter = new Vector3(Mathf.Floor(pos.X) + 0.5f, Mathf.Floor(pos.Y) + 0.5f, Mathf.Floor(pos.Z) + 0.5f);
+                    var cubeTransform = new Transform3D() { Origin = cubeCenter };
+
+                    var queryCube = new PhysicsShapeQueryParameters3D()
+                    {
+                        CollideWithAreas = true,
+                        Shape = cubeShape,
+                        Transform = cubeTransform,
+                    };
+
+                    var resultCube = spaceState.IntersectShape(queryCube, 1);
+                    if (resultCube.Count == 0)
+                        World.Instance.SetBlock(pos, 1);
                 }
 
                 if (breakBlockPressed)
@@ -158,26 +172,36 @@ public partial class PlayerController : CharacterBody3D
         // Rotate direction vector relative to camera
         Vector3 rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
 
-        Vector3 targetVelocity = rotatedDirection * _currentSpeed;
-        targetVelocity.Y = Velocity.Y;
+        // Calculate horizontal and vertical components separately
+        Vector3 horizontalVelocity = new Vector3(Velocity.X, 0, Velocity.Z);
+        float verticalVelocity = Velocity.Y;
 
-        // Apply gravity
+        // Target horizontal velocity (air control doesn't affect vertical movement)
+        Vector3 targetHorizontalVelocity = rotatedDirection * _currentSpeed;
+        float targetVerticalVelocity = verticalVelocity;
+
+        // Apply gravity (always full strength, unaffected by air control)
         if (!IsOnFloor())
         {
-            targetVelocity.Y -= (float)(_gravity * delta);
+            targetVerticalVelocity -= (float)(_gravity * delta);
         }
 
-        // Calculate acceleration rate
+        // Calculate acceleration rates
         float accel = IsOnFloor() ? Acceleration : Acceleration * AirControl;
         float decel = IsOnFloor() ? Deceleration : Deceleration * AirControl;
 
-        // Interpolate velocity
-        Velocity = Velocity.Lerp(targetVelocity,
-            (rotatedDirection.LengthSquared() > 0 ? accel : decel) * (float)delta);
+        // Only apply air control to horizontal movement
+        horizontalVelocity = horizontalVelocity.Lerp(
+            targetHorizontalVelocity,
+            (rotatedDirection.LengthSquared() > 0 ? accel : decel) * (float)delta
+        );
+
+        // Combine components back into final velocity
+        Velocity = new Vector3(horizontalVelocity.X, targetVerticalVelocity, horizontalVelocity.Z);
 
         MoveAndSlide();
 
-        // Jump handling - now properly using jump buffer
+        // Jump handling
         if (_jumpBufferTimer > 0 && CanJump())
         {
             Velocity = new Vector3(Velocity.X, JumpVelocity, Velocity.Z);

@@ -140,22 +140,24 @@ public partial class Chunk : StaticBody3D
         var normal = dir.Norm();
         for (var i = 0; i < 4; i++) surfaceArrayData.Normals.Add(normal);
 
+        var offset = 0.0014f;
+
         // 标准UV映射
         if (dir == Direction.PositiveZ ||
             dir == Direction.NegativeZ ||
             dir == Direction.NegativeY)
         {
-            surfaceArrayData.UVs.Add(new Vector2(0, h));
-            surfaceArrayData.UVs.Add(new Vector2(0, 0));
-            surfaceArrayData.UVs.Add(new Vector2(w, 0));
-            surfaceArrayData.UVs.Add(new Vector2(w, h));
+            surfaceArrayData.UVs.Add(new Vector2(offset, h - offset));
+            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(w - offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(w - offset, h - offset));
         }
         else
         {
-            surfaceArrayData.UVs.Add(new Vector2(0, w));
-            surfaceArrayData.UVs.Add(new Vector2(0, 0));
-            surfaceArrayData.UVs.Add(new Vector2(h, 0));
-            surfaceArrayData.UVs.Add(new Vector2(h, w));
+            surfaceArrayData.UVs.Add(new Vector2(offset, w - offset));
+            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(h - offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(h - offset, w - offset));
         }
 
         // 三角形索引（顺时针顺序）
@@ -167,7 +169,7 @@ public partial class Chunk : StaticBody3D
         surfaceArrayData.Indices.Add(baseIndex + 3);
     }
 
-    private Vector3[] GetQuadCorners(Direction dir, uint x, uint y, uint z, uint w, uint h)
+    private Vector3[] GetQuadCorners(Direction dir, float x, float y, float z, float w, float h)
     {
         // 0 PositiveY wDir = 0 hDir = 2
         // 1 NegativeY wDir = 0 hDir = 2
@@ -283,28 +285,109 @@ public partial class Chunk : StaticBody3D
 
     public uint GetBlock(int x, int y, int z)
     {
-        if (x < 0 || x >= World.ChunkSize ||
-            y < 0 || y >= World.ChunkSize ||
-            z < 0 || z >= World.ChunkSize)
-            return 0;
+        // if (x < 0 || x >= World.ChunkSize ||
+        //     y < 0 || y >= World.ChunkSize ||
+        //     z < 0 || z >= World.ChunkSize)
+        //     return 0;
 
         return VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)];
     }
 
     public void SetBlock(int x, int y, int z, uint block)
     {
-        if (x < 0 || x >= World.ChunkSize ||
-            y < 0 || y >= World.ChunkSize ||
-            z < 0 || z >= World.ChunkSize)
-            return;
+        // if (x < 0 || x >= World.ChunkSize ||
+        //     y < 0 || y >= World.ChunkSize ||
+        //     z < 0 || z >= World.ChunkSize)
+        //     return;
 
         VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)] = block;
 
-        if (block == 0 || !BlockManager.Instance.GetBlock(block).IsOpaque)
+        bool isOpaque = block == 0 || !BlockManager.Instance.GetBlock(block).IsOpaque;
+
+        if (isOpaque)
             ChunkMesher.AddNonOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
         else
             ChunkMesher.AddOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
-        UpdateChunk();
+        Update();
+
+        if (x == 0)
+        {
+            var neighbourChunkPos = (Vector3I)ChunkPosition;
+            neighbourChunkPos.X -= 1;
+            var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
+            if (isOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
+            else
+                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
+
+            neighbourChunk.Update();
+        }
+
+        if (x == ChunkMesher.CS - 1)
+        {
+            var neighbourChunkPos = (Vector3I)ChunkPosition;
+            neighbourChunkPos.X += 1;
+            var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
+            if (isOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, 0, y + 1, z + 1);
+            else
+                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, 0, y + 1, z + 1);
+
+            neighbourChunk.Update();
+        }
+
+        if (y == 0)
+        {
+            var neighbourChunkPos = (Vector3I)ChunkPosition;
+            neighbourChunkPos.Y -= 1;
+            var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
+            if (isOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
+            else
+                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
+
+            neighbourChunk.Update();
+        }
+
+        if (y == ChunkMesher.CS - 1)
+        {
+            var neighbourChunkPos = (Vector3I)ChunkPosition;
+            neighbourChunkPos.Y += 1;
+            var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
+            if (isOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, 0, z + 1);
+            else
+                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, 0, z + 1);
+
+            neighbourChunk.Update();
+        }
+
+        if (z == 0)
+        {
+            var neighbourChunkPos = (Vector3I)ChunkPosition;
+            neighbourChunkPos.Z -= 1;
+            var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
+            if (isOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
+            else
+                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
+
+            neighbourChunk.Update();
+        }
+
+        if (z == ChunkMesher.CS - 1)
+        {
+            var neighbourChunkPos = (Vector3I)ChunkPosition;
+            neighbourChunkPos.Z += 1;
+            var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
+            if (isOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, 0);
+            else
+                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, 0);
+
+            neighbourChunk.Update();
+        }
+
     }
 
 
@@ -347,7 +430,7 @@ public partial class Chunk : StaticBody3D
     }
 
     // 更新区块（重新生成网格）
-    public void UpdateChunk()
+    public void Update()
     {
         if (State != ChunkState.Loaded) return;
 

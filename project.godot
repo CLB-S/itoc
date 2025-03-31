@@ -25,6 +25,8 @@ World="*res://scripts/world/World.cs"
 
 [display]
 
+window/size/viewport_width=1600
+window/size/viewport_height=900
 window/vsync/vsync_mode=0
 
 [dotnet]

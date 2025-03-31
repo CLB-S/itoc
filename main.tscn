@@ -1,5 +1,6 @@
-[gd_scene load_steps=8 format=3 uid="uid://g8ki650u2whs"]
+[gd_scene load_steps=9 format=3 uid="uid://g8ki650u2whs"]
 
+[ext_resource type="Script" uid="uid://b4g0spdwms0iv" path="res://scripts/graphics/EnvironmentController.cs" id="1_lquwl"]
 [ext_resource type="PackedScene" uid="uid://c367kt62qvrax" path="res://scripts/player/player.tscn" id="2_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://bbjl30lukp4w3" path="res://scripts/gui/hud.tscn" id="2_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://db8v3c26ehokt" path="res://scripts/gui/paused.tscn" id="3_1bvp3"]
@@ -28,6 +29,7 @@ fog_depth_end = 250.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_lquwl")
+script = ExtResource("1_lquwl")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.291577, 0.670504, -0.682207, 0.263516, 0.741906, 0.616551, 0.919534, 0, -0.393011, -1.36823, 0, 0)
