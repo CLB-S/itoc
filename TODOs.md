@@ -34,8 +34,16 @@
 
 ## GUI
 
-- [ ] Settings
+- [ ] Settings GUI
+- [ ] Styling
+  - [ ] [Blur the screen](https://docs.godotengine.org/zh-cn/4.x/tutorials/3d/environment_and_post_processing.html#using-glow-to-blur-the-screen)
 
 ## Graphics
 
-- [ ] Fog
+- [x] Fog
+  - [ ] Sync with chunk loading distance.
+  - [ ] Styling
+
+## Others
+
+- [ ] i18n. [use gettext](https://docs.godotengine.org/zh-cn/4.x/tutorials/i18n/localization_using_gettext.html)
