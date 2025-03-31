@@ -21,10 +21,10 @@ public class BlockManager
 
     public void RegisterBlock(Block block)
     {
-        if (_blocks.ContainsKey(block.BlockID)) throw new ArgumentException($"Block ID {block.BlockID} already exists");
+        if (_blocks.ContainsKey(block.BlockId)) throw new ArgumentException($"Block ID {block.BlockId} already exists");
 
-        _blocks[block.BlockID] = block;
-        _nameToId[block.BlockName] = block.BlockID;
+        _blocks[block.BlockId] = block;
+        _nameToId[block.BlockName] = block.BlockId;
         block.LoadResources();
     }
 

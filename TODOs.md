@@ -9,15 +9,15 @@
 ## Chunks
 
 - [ ] LOD
-- [ ] ⭐⭐ Chunk.cs | `SetBlock()`, `GetBlock()`.
 - [ ] Empty/full chunks.
+- [x] Chunk.cs | `SetBlock()`, `GetBlock()`.
 - [x] Chunk.cs & ChunkMesher.cs | Fix `DirectionalBlock` rendering.
 
 ## World
 
-- [ ] ⭐⭐ `SetBlock()`, `GetBlock()`.
 - [ ] ⭐ Use `TerrainGenerator` for terrain generation.
 - [ ] ⭐⭐ Global chunk/block data storage. The chunk size is 62x62x62, while `ChunkMesher` takes (62+2)^3 voxels including neighboring chunk data as input. See [cgerikj/binary-greedy-meshing](https://github.com/cgerikj/binary-greedy-meshing). Related logic needs implementation.
+- [x] `SetBlock()`, `GetBlock()`.
 
 ## Terrain
 
@@ -27,7 +27,7 @@
 
 - [x] Add the player.
   - [x] Movement
-  - [ ] ⭐⭐ Place/break blocks
+  - [x] Place/break blocks
   - [ ] Model
   - [ ] Third-person camera. See [Third-person camera with spring arm](https://docs.godotengine.org/zh-cn/4.x/tutorials/3d/spring_arm.html).
   - [ ] Inventory
@@ -41,7 +41,7 @@
 ## Graphics
 
 - [x] Fog
-  - [ ] Sync with chunk loading distance.
+  - [x] Sync with chunk loading distance.
   - [ ] Styling
 
 ## Others

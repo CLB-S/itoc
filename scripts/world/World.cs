@@ -5,9 +5,10 @@ using Godot;
 public partial class World : Node
 {
     // 区块加载范围（以区块为单位）
-    public const int LoadDistance = 4;
+    public const int LoadDistance = 8;
     public const int ChunkSize = ChunkMesher.CS;
-    private const int MaxGenerationsPerFrame = 1; // 每帧最多处理5个区块
+
+    private const int MaxGenerationsPerFrame = 3;
 
     // 区块存储（线程安全字典）
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
@@ -23,10 +24,10 @@ public partial class World : Node
     private readonly HashSet<Vector3I> _queuedPositions = new();
 
     public bool DebugDrawChunkBounds = false;
+    public bool UseDebugMaterial = false;
     public ShaderMaterial DebugMaterial;
 
 
-    public bool UseDebugMaterial = false;
 
     // 单例访问
     public static World Instance { get; private set; }
@@ -84,7 +85,16 @@ public partial class World : Node
         if (chunk == null) return 0;
 
         var localPos = WorldToLocalPosition(worldPos);
-        return chunk.GetBlock((int)localPos.X, (int)localPos.Y, (int)localPos.Z);
+        return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));
+    }
+
+    public void SetBlock(Vector3 worldPos, uint block)
+    {
+        var chunk = GetChunk(worldPos);
+        if (chunk == null) return;
+
+        var localPos = WorldToLocalPosition(worldPos);
+        chunk.SetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z), block);
     }
 
     private void UpdateChunkLoading(Vector3 center)
@@ -94,7 +104,7 @@ public partial class World : Node
 
         // 计算需要加载的区块范围（原有逻辑）
         for (var x = -LoadDistance; x <= LoadDistance; x++)
-            for (var y = -1; y <= 1; y++)
+            for (var y = -3; y <= 3; y++)
                 for (var z = -LoadDistance; z <= LoadDistance; z++)
                 {
                     var pos = centerChunk + new Vector3I(x, y, z);
@@ -139,7 +149,7 @@ public partial class World : Node
         }
     }
 
-    private Vector3I WorldToChunkPosition(Vector3 worldPos)
+    public static Vector3I WorldToChunkPosition(Vector3 worldPos)
     {
         return new Vector3I(
             Mathf.FloorToInt(worldPos.X / ChunkSize),
@@ -148,7 +158,7 @@ public partial class World : Node
         );
     }
 
-    private Vector3 WorldToLocalPosition(Vector3 worldPos)
+    public static Vector3 WorldToLocalPosition(Vector3 worldPos)
     {
         return new Vector3(
             Mathf.PosMod(worldPos.X, ChunkSize),

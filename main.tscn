@@ -1,6 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://g8ki650u2whs"]
+[gd_scene load_steps=9 format=3 uid="uid://g8ki650u2whs"]
 
+[ext_resource type="Script" uid="uid://b4g0spdwms0iv" path="res://scripts/graphics/EnvironmentController.cs" id="1_lquwl"]
 [ext_resource type="PackedScene" uid="uid://c367kt62qvrax" path="res://scripts/player/player.tscn" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://bbjl30lukp4w3" path="res://scripts/gui/hud.tscn" id="2_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://db8v3c26ehokt" path="res://scripts/gui/paused.tscn" id="3_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scripts/gui/info.tscn" id="3_h2yge"]
 
@@ -17,6 +19,7 @@ sky = SubResource("Sky_1bvp3")
 tonemap_mode = 2
 fog_enabled = true
 fog_mode = 1
+fog_density = 1.0
 fog_aerial_perspective = 0.3
 fog_sky_affect = 0.5
 fog_depth_begin = 150.0
@@ -26,6 +29,7 @@ fog_depth_end = 250.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_lquwl")
+script = ExtResource("1_lquwl")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.291577, 0.670504, -0.682207, 0.263516, 0.741906, 0.616551, 0.919534, 0, -0.393011, -1.36823, 0, 0)
@@ -42,6 +46,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="Hud" parent="GUIs" instance=ExtResource("2_1bvp3")]
+layout_mode = 1
 
 [node name="Info" parent="GUIs" instance=ExtResource("3_h2yge")]
 layout_mode = 1

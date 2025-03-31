@@ -11,10 +11,10 @@ public class DirectionalBlock : Block
 
     private readonly string _textureTopPath;
 
-    public DirectionalBlock(uint id, string name, Direction? freezeDirection = null, string textureTopPath = null,
+    public DirectionalBlock(uint blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
         string textureRoundPath = null, string textureBottomPath = null)
     {
-        BlockID = id;
+        BlockId = blockId;
         BlockName = name;
         FreezeDirection = freezeDirection;
         _textureTopPath = textureTopPath ?? $"res://assets/blocks/{BlockName}/top.png";

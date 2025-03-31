@@ -20,6 +20,7 @@ public partial class GuiInfo : RichTextLabel
         var camFacing = CameraHelper.Instance.GetCameraFacing();
         var camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
         var camFacingDirName = camFacingDir.Name();
+        var chunkPos = World.WorldToChunkPosition(camPos);
 
         // 构建调试信息文本
         var debugText = "[b]Debug Info[/b]\n";
@@ -28,6 +29,7 @@ public partial class GuiInfo : RichTextLabel
         debugText += $"[color=yellow]Vertices:[/color] {vertices}\n";
         debugText += $"[color=yellow]Static Mem:[/color] {BytesToString(staticMem)}/{BytesToString(staticMemMax)}\n";
         debugText += $"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}\n";
+        debugText += $"[color=cyan]Chunk:[/color] {chunkPos.X}, {chunkPos.Y}, {chunkPos.Z}\n";
         debugText +=
             $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})\n";
         debugText += $"[color=Greenyellow]Chunk Num:[/color] {World.Instance.Chunks.Count}\n";

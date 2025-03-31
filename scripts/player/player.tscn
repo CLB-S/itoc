@@ -2,14 +2,15 @@
 
 [ext_resource type="Script" uid="uid://b6vor6uxbnhbr" path="res://scripts/player/PlayerController.cs" id="1_hmply"]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_hmply"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_hmply"]
+size = Vector3(0.6, 1.75, 0.6)
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_hmply")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-shape = SubResource("CylinderShape3D_hmply")
+shape = SubResource("BoxShape3D_hmply")
 
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
