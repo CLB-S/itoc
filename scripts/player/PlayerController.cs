@@ -22,6 +22,13 @@ public partial class PlayerController : CharacterBody3D
     [Export] public float CoyoteTime = 0.1f;
     [Export] public float JumpBufferTime = 0.1f;
 
+    [ExportGroup("Flying Settings")]
+    [Export] public float FlyingSpeed = 20.0f;
+    [Export] public float FlyingSprintSpeed = 40.0f;
+    [Export] public float FlyingAcceleration = 15.0f;
+    [Export] public float FlyingVerticalSpeed = 7.0f;
+    [Export] public float DoubleTapThreshold = 0.25f; // Time window for double tap
+
     // Nodes
     private Node3D _head;
     private Camera3D _camera;
@@ -39,6 +46,10 @@ public partial class PlayerController : CharacterBody3D
 
     // Camera
     private float _cameraTilt;
+
+    // Flying
+    private bool _isFlying = false;
+    private float _lastJumpPressTime = -1f;
 
     public override void _Ready()
     {
@@ -73,7 +84,16 @@ public partial class PlayerController : CharacterBody3D
     {
         HandleJumpBuffer(delta);
         HandleCoyoteTime(delta);
-        HandleMovement(delta);
+
+        if (_isFlying)
+        {
+            HandleFlyingMovement(delta);
+        }
+        else
+        {
+            HandleMovement(delta);
+        }
+
         HandleCameraTilt(delta);
     }
 
@@ -117,6 +137,35 @@ public partial class PlayerController : CharacterBody3D
         }
     }
 
+    private void HandleFlyingMovement(double delta)
+    {
+        Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        _direction = new Vector3(inputDir.X, 0, inputDir.Y).Normalized();
+        _isSprinting = Input.IsActionPressed("sprint");
+
+        // Handle vertical movement for flying
+        float verticalInput = 0f;
+        if (Input.IsActionPressed("jump"))
+        {
+            verticalInput = 1f;
+        }
+        if (Input.IsActionPressed("sneak"))
+        {
+            verticalInput = -1f;
+        }
+
+        // Rotate direction vector relative to camera
+        Vector3 rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
+        rotatedDirection.Y = verticalInput;
+
+        Vector3 targetVelocity = rotatedDirection * (_isSprinting ? FlyingSprintSpeed : FlyingSpeed);
+
+        // Interpolate velocity
+        Velocity = Velocity.Lerp(targetVelocity, FlyingAcceleration * (float)delta);
+
+        MoveAndSlide();
+    }
+
     private bool CanJump()
     {
         return IsOnFloor() || _coyoteTimer > 0;
@@ -138,6 +187,18 @@ public partial class PlayerController : CharacterBody3D
     {
         if (Input.IsActionJustPressed("jump"))
         {
+            // Check for double tap
+            float currentTime = (float)Time.GetTicksMsec() / 1000f;
+            if (currentTime - _lastJumpPressTime < DoubleTapThreshold)
+            {
+                _isFlying = !_isFlying;
+                if (_isFlying)
+                {
+                    Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
+                }
+            }
+            _lastJumpPressTime = currentTime;
+
             _jumpBufferTimer = JumpBufferTime;
         }
         else if (_jumpBufferTimer > 0)
