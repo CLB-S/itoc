@@ -22,7 +22,7 @@ public partial class World : Node
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly HashSet<Vector3I> _queuedPositions = new();
 
-    public bool DebugDrawChunkBounds = false;
+    public bool DebugDrawChunkBounds = true;
     public ShaderMaterial DebugMaterial;
 
 
@@ -84,7 +84,16 @@ public partial class World : Node
         if (chunk == null) return 0;
 
         var localPos = WorldToLocalPosition(worldPos);
-        return chunk.GetBlock((int)localPos.X, (int)localPos.Y, (int)localPos.Z);
+        return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));
+    }
+
+    public void SetBlock(Vector3 worldPos, uint block)
+    {
+        var chunk = GetChunk(worldPos);
+        if (chunk == null) return;
+
+        var localPos = WorldToLocalPosition(worldPos);
+        chunk.SetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z), block);
     }
 
     private void UpdateChunkLoading(Vector3 center)
@@ -139,7 +148,7 @@ public partial class World : Node
         }
     }
 
-    private Vector3I WorldToChunkPosition(Vector3 worldPos)
+    public static Vector3I WorldToChunkPosition(Vector3 worldPos)
     {
         return new Vector3I(
             Mathf.FloorToInt(worldPos.X / ChunkSize),
@@ -148,7 +157,7 @@ public partial class World : Node
         );
     }
 
-    private Vector3 WorldToLocalPosition(Vector3 worldPos)
+    public static Vector3 WorldToLocalPosition(Vector3 worldPos)
     {
         return new Vector3(
             Mathf.PosMod(worldPos.X, ChunkSize),

@@ -115,12 +115,12 @@ public class ChunkGenerator : IDisposable
                     if (actualY < height - ChunkMesher.CS)
                     {
                         if (actualY == height - ChunkMesher.CS - 1)
-                            voxels[ChunkMesher.GetIndex(x, y, z)] = 4;
+                            voxels[ChunkMesher.GetIndex(x, y, z)] = 4; // GD.Randi() % 4 + 1;
                         else if (actualY > height - ChunkMesher.CS - 4)
                             voxels[ChunkMesher.GetIndex(x, y, z)] = 3;
                         else
                             voxels[ChunkMesher.GetIndex(x, y, z)] = 2;
-                        ChunkMesher.AddNonOpaqueVoxel(ref meshData.OpaqueMask, x, y, z);
+                        ChunkMesher.AddOpaqueVoxel(ref meshData.OpaqueMask, x, y, z);
                     }
                 }
             }
@@ -149,15 +149,21 @@ public class ChunkGenerator : IDisposable
 
         // var voxelPositions = new Vector3I[]
         // {
+        //     new (0,0,0),
         //     new (1,1,1),
-        //     new (1,2,1),
-        //     new (1,3,1),
+        //     // new (1,2,1),
+        //     // new (1,3,1),
 
-        //     new (3,1,1),
-        //     new (3,1,2),
+        //     // new (3,1,1),
+        //     // new (3,1,2),
 
-        //     new (2,1,5),
-        //     new (3,1,5),
+        //     // new (2,1,5),
+        //     // new (3,1,5),
+
+        //     // new (0,0,0),
+        //     // new (1,61,1),
+        //     // new (63,61,61),
+        //     // new (62,62,62),
         // };
 
         // foreach (var pos in voxelPositions)

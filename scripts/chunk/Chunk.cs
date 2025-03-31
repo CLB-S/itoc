@@ -47,7 +47,6 @@ public partial class Chunk : StaticBody3D
         Name = $"Chunk_{chunkPosition.X}_{chunkPosition.Y}_{chunkPosition.Z}";
     }
 
-    // 主线程加载区块
     public void Load()
     {
         if (State == ChunkState.Loaded) return;
@@ -61,16 +60,14 @@ public partial class Chunk : StaticBody3D
 
         // 创建网格实例
         _meshInstance = new MeshInstance3D();
-
         if (World.Instance.UseDebugMaterial) _meshInstance.MaterialOverride = World.Instance.DebugMaterial;
-
         AddChild(_meshInstance);
 
-        // 生成Godot网格
-        GenerateGodotMesh();
+        _collisionShape = new CollisionShape3D();
+        AddChild(_collisionShape);
 
-        // 设置碰撞体
-        SetupCollision();
+        UpdateMesh();
+        UpdateCollision();
 
         // 调试边框
         if (World.Instance.DebugDrawChunkBounds) DrawDebugBounds();
@@ -79,7 +76,7 @@ public partial class Chunk : StaticBody3D
     }
 
     // 生成Godot可用的ArrayMesh
-    private void GenerateGodotMesh()
+    private void UpdateMesh()
     {
         if (MeshData.Quads.Count == 0) return;
 
@@ -125,9 +122,9 @@ public partial class Chunk : StaticBody3D
         var surfaceArrayData = surfaceArrayDict[blockInfo];
 
         // 解析数据（与C++结构完全一致）
-        var x = (uint)(quad & 0x3F) + 1; // 6 bits
-        var y = (uint)((quad >> 6) & 0x3F) + 1; // 6 bits
-        var z = (uint)((quad >> 12) & 0x3F) + 1; // 6 bits
+        var x = (uint)(quad & 0x3F); // 6 bits
+        var y = (uint)((quad >> 6) & 0x3F); // 6 bits
+        var z = (uint)((quad >> 12) & 0x3F); // 6 bits
         var w = (uint)((quad >> 18) & 0x3F); // 6 bits (width)
         var h = (uint)((quad >> 24) & 0x3F); // 6 bits (height)
         // uint blockType = (uint)((quad >> 32) & 0x7);
@@ -235,15 +232,13 @@ public partial class Chunk : StaticBody3D
     }
 
     // 设置碰撞体
-    private void SetupCollision()
+    private void UpdateCollision()
     {
         if (_arrayMesh == null) return;
 
         // 创建碰撞形状
-        _collisionShape = new CollisionShape3D();
         var shape = _arrayMesh.CreateTrimeshShape();
         _collisionShape.Shape = shape;
-        AddChild(_collisionShape);
     }
 
     // 绘制调试边界框
@@ -293,8 +288,25 @@ public partial class Chunk : StaticBody3D
             z < 0 || z >= World.ChunkSize)
             return 0;
 
-        return VoxelData[ChunkMesher.GetIndex(x, y, z)];
+        return VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)];
     }
+
+    public void SetBlock(int x, int y, int z, uint block)
+    {
+        if (x < 0 || x >= World.ChunkSize ||
+            y < 0 || y >= World.ChunkSize ||
+            z < 0 || z >= World.ChunkSize)
+            return;
+
+        VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)] = block;
+
+        if (block == 0 || !BlockManager.Instance.GetBlock(block).IsOpaque)
+            ChunkMesher.AddNonOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
+        else
+            ChunkMesher.AddOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
+        UpdateChunk();
+    }
+
 
     // 卸载区块
     public void Unload()
@@ -302,9 +314,8 @@ public partial class Chunk : StaticBody3D
         CallDeferred(nameof(DeferredUnload));
     }
 
-    private void DeferredUnload()
+    private void FreeUpResources()
     {
-        // 释放资源
         if (_meshInstance != null)
         {
             _meshInstance.QueueFree();
@@ -325,6 +336,11 @@ public partial class Chunk : StaticBody3D
 
         _arrayMesh?.Dispose();
         _arrayMesh = null;
+    }
+
+    private void DeferredUnload()
+    {
+        FreeUpResources();
 
         State = ChunkState.Unloaded;
         QueueFree();
@@ -335,14 +351,10 @@ public partial class Chunk : StaticBody3D
     {
         if (State != ChunkState.Loaded) return;
 
-        Unload();
+        ChunkMesher.MeshVoxels(VoxelData, MeshData);
 
-        // 重新生成网格数据
-        var newMeshData = new ChunkMesher.MeshData();
-        ChunkMesher.MeshVoxels(VoxelData, newMeshData);
-        MeshData = newMeshData;
-
-        Load();
+        UpdateMesh();
+        UpdateCollision();
     }
 
     private class SurfaceArrayData

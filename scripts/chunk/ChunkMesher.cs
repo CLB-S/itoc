@@ -226,9 +226,14 @@ public static class ChunkMesher
         }
     }
 
-    public static void AddNonOpaqueVoxel(ref ulong[] opaqueMask, int x, int y, int z)
+    public static void AddOpaqueVoxel(ref ulong[] opaqueMask, int x, int y, int z)
     {
         opaqueMask[y * CS_P + x] |= 1UL << z;
+    }
+
+    public static void AddNonOpaqueVoxel(ref ulong[] opaqueMask, int x, int y, int z)
+    {
+        opaqueMask[y * CS_P + x] &= ~(1UL << z);
     }
 
     public class MeshData

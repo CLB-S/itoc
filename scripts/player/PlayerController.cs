@@ -29,6 +29,10 @@ public partial class PlayerController : CharacterBody3D
     [Export] public float FlyingVerticalSpeed = 7.0f;
     [Export] public float DoubleTapThreshold = 0.25f; // Time window for double tap
 
+    [ExportGroup("Block Interaction Settings")]
+    [Export] public float BlockInteractionMaxDistance = 5.0f;
+
+
     // Nodes
     private Node3D _head;
     private Camera3D _camera;
@@ -95,6 +99,51 @@ public partial class PlayerController : CharacterBody3D
         }
 
         HandleCameraTilt(delta);
+
+        HandleBlockInteractions(delta);
+    }
+
+    private void HandleBlockInteractions(double delta)
+    {
+        var spaceState = GetWorld3D().DirectSpaceState;
+        var mousePos = GetViewport().GetMousePosition();
+
+        var origin = _camera.ProjectRayOrigin(mousePos);
+        var end = origin + _camera.ProjectRayNormal(mousePos) * BlockInteractionMaxDistance;
+        var query = PhysicsRayQueryParameters3D.Create(origin, end);
+        query.CollideWithAreas = true;
+
+        var result = spaceState.IntersectRay(query);
+
+        if (result.Count > 0)
+        {
+            try
+            {
+                // var pos = result["position"].AsVector3() - 0.5f * result["normal"].AsVector3();
+                // var block = World.Instance.GetBlock(pos);
+                // GD.Print($"Looking at block {block}:{BlockManager.Instance.GetBlock(block).BlockName}");
+
+                var placeBlockPressed = Input.IsActionJustPressed("place_block");
+                var breakBlockPressed = Input.IsActionJustPressed("break_block");
+
+                if (placeBlockPressed)
+                {
+                    var pos = result["position"].AsVector3() + 0.5f * result["normal"].AsVector3();
+                    World.Instance.SetBlock(pos, 1);
+                }
+
+                if (breakBlockPressed)
+                {
+                    var pos = result["position"].AsVector3() - 0.5f * result["normal"].AsVector3();
+                    World.Instance.SetBlock(pos, 0);
+                }
+            }
+            catch (Exception e)
+            {
+                GD.PushError(e.ToString());
+            }
+
+        }
     }
 
     private void HandleMovement(double delta)
