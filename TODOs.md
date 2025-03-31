@@ -23,9 +23,9 @@
 
 - [ ] ⭐ Revise `TerrainGenerator`.
 
-
 ## Player
 
-- [ ] ⭐⭐ Add the player.
-  - [ ] ⭐⭐ Movement
+- [x] ⭐⭐ Add the player.
+  - [x] ⭐⭐ Movement
   - [ ] ⭐ Place/break blocks
+  - [ ] Model

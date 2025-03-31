@@ -94,7 +94,7 @@ public class ChunkGenerator : IDisposable
 
     private ChunkGenerationResult GenerateChunkData(ChunkGenerationRequest request)
     {
-        GD.Print($"Generating chunk {request.ChunkPosition}");
+        // GD.Print($"Generating chunk {request.ChunkPosition}");
 
         // 生成地形数据（示例使用噪声生成）
         var voxels = new uint[ChunkMesher.CS_P3];

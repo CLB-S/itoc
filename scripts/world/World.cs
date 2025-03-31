@@ -5,7 +5,7 @@ using Godot;
 public partial class World : Node
 {
     // 区块加载范围（以区块为单位）
-    public const int LoadDistance = 12;
+    public const int LoadDistance = 4;
     public const int ChunkSize = ChunkMesher.CS;
     private const int MaxGenerationsPerFrame = 1; // 每帧最多处理5个区块
 
