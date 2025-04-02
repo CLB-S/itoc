@@ -72,16 +72,23 @@ public partial class World : Node
         }
     }
 
-    public Chunk GetChunk(Vector3 worldPos)
+    public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
         var chunkPos = WorldToChunkPosition(worldPos);
         Chunks.TryGetValue(chunkPos, out var chunk);
         return chunk;
     }
 
+
+    public Chunk GetChunk(Vector3I chunkPos)
+    {
+        Chunks.TryGetValue(chunkPos, out var chunk);
+        return chunk;
+    }
+
     public uint GetBlock(Vector3 worldPos)
     {
-        var chunk = GetChunk(worldPos);
+        var chunk = GetChunkWorldPos(worldPos);
         if (chunk == null) return 0;
 
         var localPos = WorldToLocalPosition(worldPos);
@@ -90,7 +97,7 @@ public partial class World : Node
 
     public void SetBlock(Vector3 worldPos, uint block)
     {
-        var chunk = GetChunk(worldPos);
+        var chunk = GetChunkWorldPos(worldPos);
         if (chunk == null) return;
 
         var localPos = WorldToLocalPosition(worldPos);

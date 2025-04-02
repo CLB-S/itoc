@@ -47,3 +47,4 @@
 ## Others
 
 - [ ] i18n. [use gettext](https://docs.godotengine.org/zh-cn/4.x/tutorials/i18n/localization_using_gettext.html)
+- [ ] Logging system.

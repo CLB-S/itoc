@@ -300,11 +300,13 @@ public partial class Chunk : StaticBody3D
         //     z < 0 || z >= World.ChunkSize)
         //     return;
 
+        // GD.Print($"Setting block {block} at {x}, {y}, {z}");
+
         VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)] = block;
 
-        bool isOpaque = block == 0 || !BlockManager.Instance.GetBlock(block).IsOpaque;
+        bool isNonOpaque = block == 0 || !BlockManager.Instance.GetBlock(block).IsOpaque;
 
-        if (isOpaque)
+        if (isNonOpaque)
             ChunkMesher.AddNonOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
         else
             ChunkMesher.AddOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
@@ -315,11 +317,12 @@ public partial class Chunk : StaticBody3D
             var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.X -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isOpaque)
+            if (isNonOpaque)
                 ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
             else
                 ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
 
+            neighbourChunk.VoxelData[ChunkMesher.GetIndex(ChunkMesher.CS_P - 1, y + 1, z + 1)] = block;
             neighbourChunk.Update();
         }
 
@@ -328,11 +331,12 @@ public partial class Chunk : StaticBody3D
             var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.X += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isOpaque)
+            if (isNonOpaque)
                 ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, 0, y + 1, z + 1);
             else
                 ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, 0, y + 1, z + 1);
 
+            neighbourChunk.VoxelData[ChunkMesher.GetIndex(0, y + 1, z + 1)] = block;
             neighbourChunk.Update();
         }
 
@@ -341,11 +345,12 @@ public partial class Chunk : StaticBody3D
             var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Y -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isOpaque)
+            if (isNonOpaque)
                 ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
             else
                 ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
 
+            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, ChunkMesher.CS_P - 1, z + 1)] = block;
             neighbourChunk.Update();
         }
 
@@ -354,11 +359,12 @@ public partial class Chunk : StaticBody3D
             var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Y += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isOpaque)
+            if (isNonOpaque)
                 ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, 0, z + 1);
             else
                 ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, 0, z + 1);
 
+            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, 0, z + 1)] = block;
             neighbourChunk.Update();
         }
 
@@ -367,11 +373,12 @@ public partial class Chunk : StaticBody3D
             var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Z -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isOpaque)
+            if (isNonOpaque)
                 ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
             else
                 ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
 
+            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, ChunkMesher.CS_P - 1)] = block;
             neighbourChunk.Update();
         }
 
@@ -380,11 +387,12 @@ public partial class Chunk : StaticBody3D
             var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Z += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isOpaque)
+            if (isNonOpaque)
                 ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, 0);
             else
                 ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, 0);
 
+            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, 0)] = block;
             neighbourChunk.Update();
         }
 
@@ -438,6 +446,8 @@ public partial class Chunk : StaticBody3D
 
         UpdateMesh();
         UpdateCollision();
+
+        // GD.Print($"Updated chunk at {ChunkPosition}");
     }
 
     private class SurfaceArrayData
