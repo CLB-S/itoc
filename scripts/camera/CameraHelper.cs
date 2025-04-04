@@ -29,12 +29,12 @@ public partial class CameraHelper : Node
     {
         base._Process(delta);
 
-        // if (CheckCamera())
-        // {
-        CameraPosition = _camera.GlobalTransform.Origin;
-        CameraFacing = -_camera.GlobalTransform.Basis.Z;
-        CameraFacingDirection = DirectionHelper.GetDirection(CameraFacing);
-        // }
+        if (CheckCamera())
+        {
+            CameraPosition = _camera.GlobalTransform.Origin;
+            CameraFacing = -_camera.GlobalTransform.Basis.Z;
+            CameraFacingDirection = DirectionHelper.GetDirection(CameraFacing);
+        }
     }
 
     public Camera3D GetActiveCamera()
