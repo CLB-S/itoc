@@ -19,35 +19,28 @@ public static class ColorUtils
     /// </summary>
     /// <param name="height">[-1, 1]</param>
     /// <returns></returns>
-    public static Color GetSmoothHeightColor(float height, float seaLevel = 0f)
+    public static Color GetHeightColor(float height, float seaLevel = 0f)
     {
         // Define color stops
-        var deepWater = new Color(0.0f, 0.0f, 0.3f);
-        var shallowWater = new Color(0.2f, 0.2f, 0.8f);
-        var sand = new Color(0.9f, 0.8f, 0.6f);
-        var grass = new Color(0.2f, 0.6f, 0.2f);
         var mountain = new Color(0.5f, 0.4f, 0.3f);
         var snow = new Color(1.0f, 1.0f, 1.0f);
 
-        // Normalize height relative to sea level
-        float normalizedHeight = Mathf.Clamp((height - seaLevel + 0.1f) / (1.0f - seaLevel + 0.1f), 0f, 1f);
-
         // Interpolate between colors
-        if (height < seaLevel - 0.1f)
+        if (height < seaLevel)
         {
-            return deepWater.Lerp(shallowWater, (height + 0.1f) / (seaLevel - 0.1f + 0.1f));
+            return new Color(0, 0, 1 + height * 3f);
         }
-        else if (height < seaLevel)
+        else if (height < seaLevel + 0.03f)
         {
-            return shallowWater.Lerp(sand, (height - (seaLevel - 0.1f)) / 0.1f);
+            return new Color(0.9f, 0.8f, 0.6f); // sand
         }
-        else if (height < seaLevel + 0.1f)
+        else if (height < seaLevel + 0.2f)
         {
-            return sand.Lerp(grass, (height - seaLevel) / 0.1f);
+            return new Color(0.2f - height * 1.5f, 0.6f - height * 1.5f, 0.2f - height * 1.5f); // grass
         }
-        else if (height < seaLevel + 0.3f)
+        else if (height < seaLevel + 0.5f)
         {
-            return grass.Lerp(mountain, (height - (seaLevel + 0.1f)) / 0.2f);
+            return new Color(0.5f - height * 0.5f, 0.4f - height * 0.5f, 0.3f - height * 0.5f);
         }
         else
         {

@@ -30,6 +30,7 @@ public partial class WorldTest : Node2D
     public float ContinentRatio = 0.6f;
 
     private List<Vector2> _points;
+    private Dictionary<int, int> _edgePointsMap;
     private Delaunator _delaunator;
 
     private Dictionary<int, CellData> _cellDatas;
@@ -62,42 +63,70 @@ public partial class WorldTest : Node2D
         ) + rect.Position;
     }
 
-    private void RepeatPointsRoundEdges(List<Vector2> points, Rect2 rect, float edgeDistance)
+    private Dictionary<int, int> RepeatPointsRoundEdges(List<Vector2> points, Rect2 rect, float edgeDistance)
     {
-        var originalPoints = new List<Vector2>(points);
-
-        foreach (var point in originalPoints)
+        var indexMap = new Dictionary<int, int>();
+        var count = points.Count;
+        for (int i = 0; i < count; i++)
         {
+            var point = points[i];
+
             if (point.X < rect.Position.X + edgeDistance)
+            {
                 points.Add(new Vector2(point.X + rect.Size.X, point.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.X > rect.Position.X + rect.Size.X - edgeDistance)
+            {
                 points.Add(new Vector2(point.X - rect.Size.X, point.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.Y < rect.Position.Y + edgeDistance)
+            {
                 points.Add(new Vector2(point.X, point.Y + rect.Size.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
+            {
                 points.Add(new Vector2(point.X, point.Y - rect.Size.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.X < rect.Position.X + edgeDistance && point.Y < rect.Position.Y + edgeDistance)
+            {
                 points.Add(new Vector2(point.X + rect.Size.X, point.Y + rect.Size.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.X > rect.Position.X + rect.Size.X - edgeDistance && point.Y < rect.Position.Y + edgeDistance)
+            {
                 points.Add(new Vector2(point.X - rect.Size.X, point.Y + rect.Size.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.X < rect.Position.X + edgeDistance && point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
+            {
                 points.Add(new Vector2(point.X + rect.Size.X, point.Y - rect.Size.Y));
+                indexMap[points.Count - 1] = i;
+            }
 
             if (point.X > rect.Position.X + rect.Size.X - edgeDistance && point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
+            {
                 points.Add(new Vector2(point.X - rect.Size.X, point.Y - rect.Size.Y));
+                indexMap[points.Count - 1] = i;
+            }
         }
+
+        return indexMap;
     }
 
     private void Construct()
     {
         _points = FastPoissonDiskSampling.Sampling(Rect.Position, Rect.End, MinimumDistance, _rng);
-        RepeatPointsRoundEdges(_points, Rect, 2 * MinimumDistance);
+        _edgePointsMap = RepeatPointsRoundEdges(_points, Rect, 2 * MinimumDistance);
         _delaunator = new Delaunator(_points.ToArray());
         _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
         var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
@@ -109,7 +138,7 @@ public partial class WorldTest : Node2D
             _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
 
         InitTectonicProperties();
-        SetInitialAltitudes();
+        CalculateAltitudes();
         QueueRedraw();
     }
 
@@ -144,7 +173,7 @@ public partial class WorldTest : Node2D
         else return x * k;
     }
 
-    private void SetInitialAltitudes()
+    private void CalculateAltitudes()
     {
         var initialIndices = new List<int>();
 
@@ -157,7 +186,7 @@ public partial class WorldTest : Node2D
                 // [-1, 1]
                 var relativeMovement = cellP.TectonicMovement.Dot(-cellQ.TectonicMovement) / MaxTectonicMovement / MaxTectonicMovement;
 
-                if (Mathf.Abs(relativeMovement) < 0.2f)
+                if (Mathf.Abs(relativeMovement) < 0.25f)
                     continue;
 
                 cellP.RoundPlateJunction = true;
@@ -252,6 +281,10 @@ public partial class WorldTest : Node2D
             foreach (int i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[currentIndex].TriangleIndex)))
             {
                 var neighborIndex = _delaunator.Triangles[i];
+
+                if (_edgePointsMap.ContainsKey(neighborIndex))
+                    neighborIndex = _edgePointsMap[neighborIndex];
+
                 if (!used.Contains(neighborIndex))
                 {
                     CellData neighbor = _cellDatas[neighborIndex];
@@ -347,9 +380,9 @@ public partial class WorldTest : Node2D
                     // DrawColoredPolygon(cellData.Cell.Points, color);
                     using var rng = new RandomNumberGenerator() { Seed = seed };
                     var height = cellData.Altitude / MaxAltitude;
-                    var color = height > 0 ? new Color(height, height, height) : new Color(0, 0, 1 + height * 3f);
-                    DrawColoredPolygon(cellData.Cell.Points, color);
-                    // DrawColoredPolygon(cellData.Cell.Points, ColorUtils.GetSmoothHeightColor(height));
+                    // var color = height > 0 ? new Color(height, height, height) : new Color(0, 0, 1 + height * 3f);
+                    // DrawColoredPolygon(cellData.Cell.Points, color);
+                    DrawColoredPolygon(cellData.Cell.Points, ColorUtils.GetHeightColor(height));
                     // DrawColoredPolygon(cellData.Cell.Points, new Color((int)cellData.PlateType, (int)cellData.PlateType, (int)cellData.PlateType));
                     // DrawColoredPolygon(cellData.Cell.Points, new Color(cellData.Altitude * 0.6f + 0.4f, (int)cellData.PlateType, rng.Randf()));
                 }
