@@ -36,12 +36,12 @@ public static class FastPoissonDiskSampling
     #endregion
 
 
-    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance)
+    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance, RandomNumberGenerator rng)
     {
-        return Sampling(bottomLeft, topRight, minimumDistance, DefaultIterationPerPoint);
+        return Sampling(bottomLeft, topRight, minimumDistance, rng, DefaultIterationPerPoint);
     }
 
-    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance, int iterationPerPoint)
+    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance, RandomNumberGenerator rng, int iterationPerPoint)
     {
         var settings = GetSettings(
             bottomLeft,
@@ -57,18 +57,18 @@ public static class FastPoissonDiskSampling
             ActivePoints = new List<Vector2>()
         };
 
-        GetFirstPoint(settings, bags);
+        GetFirstPoint(settings, bags, rng);
 
         do
         {
-            var index = (int)(GD.Randi() % bags.ActivePoints.Count); // Random.Range(0, bags.ActivePoints.Count);
+            var index = (int)(rng.Randi() % bags.ActivePoints.Count); // Random.Range(0, bags.ActivePoints.Count);
 
             var point = bags.ActivePoints[index];
 
             var found = false;
             for (var k = 0; k < settings.IterationPerPoint; k++)
             {
-                found = found | GetNextPoint(point, settings, bags);
+                found = found | GetNextPoint(point, settings, bags, rng);
             }
 
             if (found == false)
@@ -82,10 +82,10 @@ public static class FastPoissonDiskSampling
     }
 
     #region "Algorithm Calculations"
-    private static bool GetNextPoint(Vector2 point, Settings set, Bags bags)
+    private static bool GetNextPoint(Vector2 point, Settings set, Bags bags, RandomNumberGenerator rng)
     {
         var found = false;
-        var p = GetRandPosInCircle(set.MinimumDistance, 2f * set.MinimumDistance) + point;
+        var p = GetRandPosInCircle(set.MinimumDistance, 2f * set.MinimumDistance, rng) + point;
 
         if (set.Dimension.HasPoint(p) == false)
         {
@@ -125,11 +125,11 @@ public static class FastPoissonDiskSampling
         return found;
     }
 
-    private static void GetFirstPoint(Settings set, Bags bags)
+    private static void GetFirstPoint(Settings set, Bags bags, RandomNumberGenerator rng)
     {
         var first = new Vector2(
-            (float)GD.RandRange(set.BottomLeft.X, set.TopRight.X),
-            (float)GD.RandRange(set.BottomLeft.Y, set.TopRight.Y)
+            rng.RandfRange(set.BottomLeft.X, set.TopRight.X),
+            rng.RandfRange(set.BottomLeft.Y, set.TopRight.Y)
         );
 
         var index = GetGridIndex(first, set);
@@ -170,10 +170,10 @@ public static class FastPoissonDiskSampling
         };
     }
 
-    private static Vector2 GetRandPosInCircle(float fieldMin, float fieldMax)
+    private static Vector2 GetRandPosInCircle(float fieldMin, float fieldMax, RandomNumberGenerator rng)
     {
-        var theta = (float)GD.RandRange(0f, Mathf.Pi * 2f);
-        var radius = Mathf.Sqrt((float)GD.RandRange(fieldMin * fieldMin, fieldMax * fieldMax));
+        var theta = rng.RandfRange(0f, Mathf.Pi * 2f);
+        var radius = Mathf.Sqrt(rng.RandfRange(fieldMin * fieldMin, fieldMax * fieldMax));
 
         return new Vector2(radius * Mathf.Cos(theta), radius * Mathf.Sin(theta));
     }
