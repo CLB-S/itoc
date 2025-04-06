@@ -105,13 +105,15 @@ text = "ColorPreset:"
 [node name="OptionButton" type="OptionButton" parent="CanvasLayer/Control/VBoxContainer2/HSplitContainer"]
 layout_mode = 2
 selected = 1
-item_count = 3
+item_count = 4
 popup/item_0/text = "Plates"
 popup/item_0/id = 0
 popup/item_1/text = "Height"
 popup/item_1/id = 1
 popup/item_2/text = "PlateTypes"
 popup/item_2/id = 2
+popup/item_3/text = "Precipitation"
+popup/item_3/id = 3
 
 [node name="CheckButton" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
 layout_mode = 2
@@ -121,6 +123,10 @@ text = "Draw Tectonic Movements:"
 layout_mode = 2
 text = "Draw Cell Outlines: "
 
+[node name="CheckButton3" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
+layout_mode = 2
+text = "Draw Rivers: "
+
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/SpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
@@ -129,3 +135,4 @@ text = "Draw Cell Outlines: "
 [connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton" to="Map" method="OnDrawTectonicMovementToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton2" to="Map" method="OnDrawCellOutlinesToggled"]
+[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton3" to="Map" method="OnDrawRiversToggled"]

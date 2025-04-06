@@ -18,6 +18,7 @@ public partial class WorldTest : Node2D
         Plates,
         Height,
         PlateTypes,
+        Precipitation,
     }
 
     public class CellData
@@ -28,7 +29,19 @@ public partial class WorldTest : Node2D
         public PlateType PlateType;
         public float Altitude = 0f;
         public bool RoundPlateJunction = false;
+        public float Precipitation;
+        public float Flux;
+        public RiverSegment River;
     }
+
+    public class RiverSegment
+    {
+        public int ID;
+        public float Length;
+        public float Width;
+        public List<Vector2> Path = new();
+    }
+
 
     private ulong _seed = 234;
     public ulong Seed
@@ -52,18 +65,20 @@ public partial class WorldTest : Node2D
     public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
     public bool DrawTectonicMovement = false;
     public bool DrawCellOutlines = false;
+    public bool DrawRivers = false;
 
 
     private List<Vector2> _points;
     private Dictionary<int, int> _edgePointsMap;
     private Delaunator _delaunator;
-
     private Dictionary<int, CellData> _cellDatas;
-
     private Edge[] _edges;
     private Noise _plateNoise;
     private Noise _heightNoise;
     private RandomNumberGenerator _rng;
+    private readonly Dictionary<int, RiverSegment> _rivers = new();
+    private int _riverIdCounter;
+
 
 
     public override void _Ready()
@@ -117,6 +132,9 @@ public partial class WorldTest : Node2D
 
         InitTectonicProperties();
         CalculateAltitudes();
+        // ResolveDepressions();
+        // CalculatePrecipitation();
+        CalculateWaterFlux();
         QueueRedraw();
     }
 
@@ -313,6 +331,21 @@ public partial class WorldTest : Node2D
         PropagateAltitudes(initialIndices, 0.8f);
     }
 
+    private IEnumerable<int> GetNeighborCells(CellData cell) => GetNeighborCells(cell.Cell.Index);
+
+    private IEnumerable<int> GetNeighborCells(int index)
+    {
+        foreach (int i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
+        {
+            var neighborIndex = _delaunator.Triangles[i];
+
+            if (_edgePointsMap.ContainsKey(neighborIndex))
+                neighborIndex = _edgePointsMap[neighborIndex];
+
+            yield return neighborIndex;
+        }
+    }
+
     private void PropagateAltitudes(IEnumerable<int> initialIndices, float decrement = 0.9f, float sharpness = 0.1f)
     {
         var used = new HashSet<int>();
@@ -334,13 +367,8 @@ public partial class WorldTest : Node2D
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 
-            foreach (int i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[currentIndex].TriangleIndex)))
+            foreach (int neighborIndex in GetNeighborCells(currentIndex))
             {
-                var neighborIndex = _delaunator.Triangles[i];
-
-                if (_edgePointsMap.ContainsKey(neighborIndex))
-                    neighborIndex = _edgePointsMap[neighborIndex];
-
                 if (!used.Contains(neighborIndex))
                 {
                     CellData neighbor = _cellDatas[neighborIndex];
@@ -354,13 +382,115 @@ public partial class WorldTest : Node2D
                 }
             }
         }
-
     }
 
-
-    public override void _Process(double delta)
+    private void CalculatePrecipitation()
     {
-        base._Process(delta);
+        // Simple west-to-east moisture simulation
+        const float initialMoisture = 1.0f;
+        const float evaporationRate = 0.05f;
+
+        foreach (var cellEntry in _cellDatas.OrderBy(c => _points[c.Key].X))
+        {
+            var cell = cellEntry.Value;
+            if (cell.PlateType == PlateType.Oceans)
+            {
+                cell.Precipitation = initialMoisture;
+                continue;
+            }
+
+            var neighbors = GetNeighborCells(cell);
+            var highest = neighbors.OrderByDescending(n => _cellDatas[n].Altitude).First();
+
+            if (_cellDatas[highest].Altitude > cell.Altitude)
+            {
+                cell.Precipitation = Mathf.Max(0, _cellDatas[highest].Precipitation - evaporationRate);
+            }
+        }
+    }
+
+    private void ResolveDepressions()
+    {
+        var landCells = _cellDatas.Values.Where(c => c.PlateType != PlateType.Oceans).ToList();
+        bool hasDepressions;
+
+        do
+        {
+            hasDepressions = false;
+            foreach (var cell in landCells)
+            {
+                var lowestNeighbor = GetNeighborCells(cell)
+                    .OrderBy(n => _cellDatas[n].Altitude).First();
+
+                if (cell.Altitude <= _cellDatas[lowestNeighbor].Altitude)
+                {
+                    cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05f; ;
+                    hasDepressions = true;
+                }
+            }
+        } while (hasDepressions);
+    }
+
+    private void CalculateWaterFlux()
+    {
+        var orderedCells = _cellDatas.Values
+            .Where(c => c.PlateType != PlateType.Oceans)
+            .OrderByDescending(c => c.Altitude)
+            .ToList();
+
+        foreach (var cell in orderedCells)
+        {
+            var neighbors = GetNeighborCells(cell);
+            var lowest = neighbors.OrderBy(n => _cellDatas[n].Altitude).First();
+            // if (_cellDatas[lowest].Altitude < 0)
+            //     continue;
+
+            _cellDatas[lowest].Flux += 1f + cell.Flux;
+            cell.Flux = 0;
+
+            if (_cellDatas[lowest].Flux > 3.0f)
+            {
+                UpdateRiverPath(cell, _cellDatas[lowest]);
+            }
+        }
+    }
+
+    private void UpdateRiverPath(CellData from, CellData to)
+    {
+        if (from.River == null)
+        {
+            var river = new RiverSegment { ID = _riverIdCounter++ };
+            river.Path.Add(_points[from.Cell.Index]);
+            _rivers[river.ID] = river;
+            from.River = river;
+        }
+
+        var riverSeg = from.River;
+        riverSeg.Path.Add(_points[to.Cell.Index]);
+        to.River = riverSeg;
+
+        // Add meandering
+        if (riverSeg.Path.Count >= 2)
+        {
+            var last = riverSeg.Path[^2];
+            var current = riverSeg.Path[^1];
+            var dir = (current - last).Normalized();
+            var perpendicular = new Vector2(-dir.Y, dir.X);
+
+            // Add jitter to create meanders
+            var jitter = perpendicular * _rng.RandfRange(-0.4f, 0.4f);
+            riverSeg.Path[^1] += jitter;
+        }
+
+        UpdateRiverWidth(riverSeg);
+    }
+
+    private void UpdateRiverWidth(RiverSegment river)
+    {
+        const float baseWidth = 1.0f;
+        const float widthGrowth = 0.2f;
+
+        river.Width = baseWidth + widthGrowth * river.Path.Count;
     }
 
     private void DrawArrow(Vector2 start, Vector2 end, Color color, bool twoLineHead = false)
@@ -429,6 +559,9 @@ public partial class WorldTest : Node2D
                         case ColorPreset.PlateTypes:
                             DrawColoredPolygon(cellData.Cell.Points, new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType, (int)cellData.PlateType));
                             break;
+                        case ColorPreset.Precipitation:
+                            DrawColoredPolygon(cellData.Cell.Points, new Color(cellData.Precipitation, cellData.Precipitation, cellData.Precipitation));
+                            break;
                     }
                 }
             }
@@ -469,7 +602,31 @@ public partial class WorldTest : Node2D
             }
         }
 
-        DrawRect(Rect, Colors.Red, false);
+
+        // Draw rivers
+        if (DrawRivers)
+        {
+            foreach (var river in _rivers.Values)
+            {
+                if (river.Path.Count < 2) continue;
+
+                var points = river.Path.ToArray();
+                var color = new Color(0.2f, 0.4f, 0.8f);
+
+                for (int i = 0; i < points.Length - 1; i++)
+                {
+                    if ((points[i] - points[i + 1]).LengthSquared() > MinimumCellDistance * MinimumCellDistance * 5) continue;
+                    DrawLine(points[i], points[i + 1], color, river.Width);
+                }
+
+                // Draw main river channel
+                // DrawPolyline(points, color, river.Width);
+
+                // Draw river banks
+                // var bankColor = new Color(0.1f, 0.3f, 0.7f);
+                // DrawPolyline(points, bankColor, river.Width * 1.2f);
+            }
+        }
 
         // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)Rect.Size.X, (int)Rect.Size.Y)), Rect, false);
 
@@ -495,6 +652,8 @@ public partial class WorldTest : Node2D
         // DrawCircle(_points[cellP], 4f, Colors.Red);
         // DrawCircle(_points[cellQ], 4f, Colors.Blue);
         // DrawLine(edge1.P, edge1.Q, Colors.Aqua);
+
+        DrawRect(Rect, Colors.Red, false);
     }
 
     public void OnSeedSpinBoxValueChanged(float value)
@@ -540,4 +699,9 @@ public partial class WorldTest : Node2D
         QueueRedraw();
     }
 
+    public void OnDrawRiversToggled(bool toggledOn)
+    {
+        DrawRivers = toggledOn;
+        QueueRedraw();
+    }
 }
