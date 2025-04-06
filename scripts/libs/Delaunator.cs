@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Adapted from https://github.com/nol1fe/delaunator-sharp v1.0.11
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
