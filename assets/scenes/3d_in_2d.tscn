@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://cxa3tkpxqnhd6"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_m1jws"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_m1jws"]
+viewport_path = NodePath("3D in 2D/SubViewport")
+
+[node name="3Din2D" type="Node"]
+
+[node name="SubViewport" type="SubViewport" parent="."]
+transparent_bg = true
+render_target_update_mode = 1
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewport"]
+mesh = SubResource("BoxMesh_m1jws")
+
+[node name="Camera3D" type="Camera3D" parent="SubViewport"]
+transform = Transform3D(0.707107, -0.40558, 0.579228, 0, 0.819152, 0.573576, -0.707107, -0.40558, 0.579228, 2, 2, 2)
+projection = 1
+size = 2.709
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewport"]
+transform = Transform3D(0.993152, -0.0682659, 0.0948064, -0.0486846, 0.495852, 0.867041, -0.106199, -0.86572, 0.489133, 0, 0, 0)
+
+[node name="SubViewportSprite" type="Sprite2D" parent="."]
+texture = SubResource("ViewportTexture_m1jws")

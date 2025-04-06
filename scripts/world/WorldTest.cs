@@ -61,11 +61,13 @@ public partial class WorldTest : Node2D
     public float PlateMergeRatio = 0.13f;
     [Export] public float MinimumCellDistance = 5f;
     [Export] public Rect2 Rect = new Rect2(-500, -500, 1000, 1000);
+    public Texture2D HeightMapTexture;
 
     public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
     public bool DrawTectonicMovement = false;
     public bool DrawCellOutlines = false;
     public bool DrawRivers = false;
+    public bool DrawInterpolatedHeightMap = false;
 
 
     private List<Vector2> _points;
@@ -78,8 +80,7 @@ public partial class WorldTest : Node2D
     private RandomNumberGenerator _rng;
     private readonly Dictionary<int, RiverSegment> _rivers = new();
     private int _riverIdCounter;
-
-
+    private int _heightMapResolution = 512;
 
     public override void _Ready()
     {
@@ -135,7 +136,37 @@ public partial class WorldTest : Node2D
         // ResolveDepressions();
         // CalculatePrecipitation();
         CalculateWaterFlux();
+        HeightMapTexture = GetHeightMapImageTexture();
         QueueRedraw();
+
+    }
+
+    public float[,] CalculateFullHeightMap()
+    {
+        var posList = new List<Vector2>(_cellDatas.Count);
+        var dataList = new List<float>(_cellDatas.Count);
+        for (int i = 0; i < _cellDatas.Count; i++)
+        {
+            posList.Add(_points[i]);
+            dataList.Add(_cellDatas[i].Altitude);
+        }
+
+        return IdwInterpolator.ConstructHeightMap(posList, dataList, _heightMapResolution, _heightMapResolution, Rect);
+    }
+
+    public ImageTexture GetHeightMapImageTexture()
+    {
+        var heightMap = CalculateFullHeightMap();
+        var image = Image.CreateEmpty(_heightMapResolution, _heightMapResolution, false, Image.Format.Rgb8);
+        for (int x = 0; x < _heightMapResolution; x++)
+        {
+            for (int y = 0; y < _heightMapResolution; y++)
+            {
+                var h = 0.5f * (1 + heightMap[x, y] / MaxAltitude);
+                image.SetPixel(x, y, new Color(h, h, h));
+            }
+        }
+        return ImageTexture.CreateFromImage(image);
     }
 
     private Vector2 UniformPosition(Vector2 position, Rect2 rect)
@@ -630,6 +661,11 @@ public partial class WorldTest : Node2D
 
         // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)Rect.Size.X, (int)Rect.Size.Y)), Rect, false);
 
+        if (DrawInterpolatedHeightMap)
+        {
+            DrawTextureRect(HeightMapTexture, Rect, false);
+        }
+
         // Find neigbour cells of a cell.
         // var itest = 99;
         // DrawCircle(_points[_delaunator.Triangles[itest]], 6f, Colors.Blue);
@@ -702,6 +738,12 @@ public partial class WorldTest : Node2D
     public void OnDrawRiversToggled(bool toggledOn)
     {
         DrawRivers = toggledOn;
+        QueueRedraw();
+    }
+
+    public void OnDrawInterpolatedHeightMapToggled(bool toggledOn)
+    {
+        DrawInterpolatedHeightMap = toggledOn;
         QueueRedraw();
     }
 }
