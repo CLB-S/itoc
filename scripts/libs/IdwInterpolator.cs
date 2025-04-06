@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using Supercluster.KDTree;
 
@@ -67,15 +68,16 @@ public class IdwInterpolator
         return (float)(weightedSum / totalWeight);
     }
 
+
     public static float[,] ConstructHeightMap(IEnumerable<Vector2> positions, IEnumerable<float> heights, int resolutionX, int resolutionY, Rect2 rect, double power = 2.0, int numNeighbors = 10)
     {
-        var interpolator = new IdwInterpolator(positions, heights);
+        var interpolator = new IdwInterpolator(positions, heights, power, numNeighbors);
 
         float[,] heightMap = new float[resolutionX, resolutionY];
         float stepX = rect.Size.X / (resolutionX - 1);
         float stepY = rect.Size.Y / (resolutionY - 1);
 
-        for (int i = 0; i < resolutionX; i++)
+        Parallel.For(0, resolutionX, i =>
         {
             float x = rect.Position.X + i * stepX;
             for (int j = 0; j < resolutionY; j++)
@@ -83,7 +85,7 @@ public class IdwInterpolator
                 float y = rect.Position.Y + j * stepY;
                 heightMap[i, j] = interpolator.GetHeight(x, y);
             }
-        }
+        });
 
         return heightMap;
     }
