@@ -28,19 +28,19 @@ public static class ColorUtils
         // Interpolate between colors
         if (height < seaLevel)
         {
-            return new Color(0, 0, 1 + height * 3f);
+            return new Color(0, 0, 1 + height);
         }
         else if (height < seaLevel + 0.03f)
         {
             return new Color(0.9f, 0.8f, 0.6f); // sand
         }
-        else if (height < seaLevel + 0.2f)
+        else if (height < seaLevel + 0.4f)
         {
-            return new Color(0.2f - height * 1.5f, 0.6f - height * 1.5f, 0.2f - height * 1.5f); // grass
+            return new Color(0.2f - height, 0.6f - height, 0.2f - height); // grass
         }
-        else if (height < seaLevel + 0.5f)
+        else if (height < seaLevel + 0.8f)
         {
-            return new Color(0.5f - height * 0.5f, 0.4f - height * 0.5f, 0.3f - height * 0.5f);
+            return new Color(0.6f - height * 0.5f, 0.5f - height * 0.5f, 0.4f - height * 0.5f); // mountain
         }
         else
         {

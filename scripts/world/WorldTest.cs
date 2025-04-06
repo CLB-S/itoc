@@ -13,6 +13,13 @@ public partial class WorldTest : Node2D
         Oceans,
     }
 
+    public enum ColorPreset
+    {
+        Plates,
+        Height,
+        PlateTypes,
+    }
+
     public class CellData
     {
         public int TriangleIndex;
@@ -23,12 +30,29 @@ public partial class WorldTest : Node2D
         public bool RoundPlateJunction = false;
     }
 
-    public ulong Seed = 234;
+    private ulong _seed = 234;
+    public ulong Seed
+    {
+        get
+        {
+            if (_seed == 0) return GD.Randi();
+            return _seed;
+        }
+        set { _seed = value; }
+    }
+
     public float MaxTectonicMovement = 10.0f;
     public float MaxAltitude = 2000.0f;
 
     public float ContinentRatio = 0.4f;
     public float PlateMergeRatio = 0.13f;
+    [Export] public float MinimumCellDistance = 5f;
+    [Export] public Rect2 Rect = new Rect2(-500, -500, 1000, 1000);
+
+    public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
+    public bool DrawTectonicMovement = false;
+    public bool DrawCellOutlines = false;
+
 
     private List<Vector2> _points;
     private Dictionary<int, int> _edgePointsMap;
@@ -41,27 +65,20 @@ public partial class WorldTest : Node2D
     private Noise _heightNoise;
     private RandomNumberGenerator _rng;
 
-    private float _minimumDistance = 5f;
-    [Export]
-    public float MinimumDistance
-    {
-        get { return _minimumDistance; }
-        set
-        {
-            _minimumDistance = value;
-            Construct();
-        }
-    }
-
-    [Export] public Rect2 Rect = new Rect2(-500, -500, 1000, 1000);
 
     public override void _Ready()
     {
         base._Ready();
-        _rng = new RandomNumberGenerator() { Seed = Seed };
+        GenerateMap();
+    }
+
+    public void GenerateMap()
+    {
+        var seed = Seed;
+        _rng = new RandomNumberGenerator() { Seed = seed };
         _plateNoise = new FastNoiseLite()
         {
-            Seed = (int)Seed,
+            Seed = (int)seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
             Frequency = 0.010f,
             CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.CellValue,
@@ -74,7 +91,7 @@ public partial class WorldTest : Node2D
 
         _heightNoise = new FastNoiseLite()
         {
-            Seed = (int)Seed,
+            Seed = (int)seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
             Frequency = 0.010f,
             FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
@@ -82,7 +99,25 @@ public partial class WorldTest : Node2D
             DomainWarpEnabled = false,
         };
 
-        Construct();
+        _points = FastPoissonDiskSampling.Sampling(Rect.Position, Rect.End, MinimumCellDistance, _rng);
+        _edgePointsMap = RepeatPointsRoundEdges(_points, Rect, 2 * MinimumCellDistance);
+        _delaunator = new Delaunator(_points.ToArray());
+        _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
+        var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
+        _cellDatas = new Dictionary<int, CellData>(_cells.Length);
+        for (int i = 0; i < _cells.Length; i++)
+            _cellDatas[_cells[i].Index] = new CellData()
+            {
+                Cell = _cells[i],
+                // Altitude = (_heightNoise.GetNoise2Dv(_points[i]) + 1f) * MaxAltitude * 0.01f,
+            };
+
+        for (int i = 0; i < _delaunator.Triangles.Length; i++)
+            _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
+
+        InitTectonicProperties();
+        CalculateAltitudes();
+        QueueRedraw();
     }
 
     private Vector2 UniformPosition(Vector2 position, Rect2 rect)
@@ -152,29 +187,6 @@ public partial class WorldTest : Node2D
         }
 
         return indexMap;
-    }
-
-    private void Construct()
-    {
-        _points = FastPoissonDiskSampling.Sampling(Rect.Position, Rect.End, MinimumDistance, _rng);
-        _edgePointsMap = RepeatPointsRoundEdges(_points, Rect, 2 * MinimumDistance);
-        _delaunator = new Delaunator(_points.ToArray());
-        _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
-        var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
-        _cellDatas = new Dictionary<int, CellData>(_cells.Length);
-        for (int i = 0; i < _cells.Length; i++)
-            _cellDatas[_cells[i].Index] = new CellData()
-            {
-                Cell = _cells[i],
-                // Altitude = (_heightNoise.GetNoise2Dv(_points[i]) + 1f) * MaxAltitude * 0.01f,
-            };
-
-        for (int i = 0; i < _delaunator.Triangles.Length; i++)
-            _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
-
-        InitTectonicProperties();
-        CalculateAltitudes();
-        QueueRedraw();
     }
 
     private PlateType RandomPlateType(RandomNumberGenerator rng)
@@ -395,27 +407,34 @@ public partial class WorldTest : Node2D
         {
             foreach (var (i, cellData) in _cellDatas)
             {
+                if (!Rect.HasPoint(_points[i])) continue;
+
                 if (cellData.Cell.Points.Length >= 3)
                 {
                     var pos = UniformPosition(_points[i], Rect);
-                    // var seed = ((Vector2I)pos).ToString().Hash();
-                    var mappedX = 2 * Mathf.Pi * pos.X / Rect.Size.X;
-                    var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, Mathf.Sin(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, pos.Y);
-                    var seed = MergeNoiseValue(noiseValue).ToString().Hash();
-                    var color = ColorUtils.RandomColorHSV(seed);
-                    DrawColoredPolygon(cellData.Cell.Points, color);
-                    using var rng = new RandomNumberGenerator() { Seed = seed };
-                    var height = cellData.Altitude / MaxAltitude;
-                    // var color = height > 0 ? new Color(height, height, height) : new Color(0, 0, 1 + height * 3f);
-                    // DrawColoredPolygon(cellData.Cell.Points, color);
-                    // DrawColoredPolygon(cellData.Cell.Points, ColorUtils.GetHeightColor(height));
-                    // DrawColoredPolygon(cellData.Cell.Points, new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType, (int)cellData.PlateType));
-                    // DrawColoredPolygon(cellData.Cell.Points, new Color(cellData.Altitude * 0.6f + 0.4f, (int)cellData.PlateType, rng.Randf()));
+
+                    switch (DrawingCorlorPreset)
+                    {
+                        case ColorPreset.Plates:
+                            var mappedX = 2 * Mathf.Pi * pos.X / Rect.Size.X;
+                            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, Mathf.Sin(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, pos.Y);
+                            var seed = MergeNoiseValue(noiseValue).ToString().Hash();
+                            var color = ColorUtils.RandomColorHSV(seed);
+                            DrawColoredPolygon(cellData.Cell.Points, color);
+                            break;
+                        case ColorPreset.Height:
+                            var height = cellData.Altitude / MaxAltitude;
+                            DrawColoredPolygon(cellData.Cell.Points, ColorUtils.GetHeightColor(height));
+                            break;
+                        case ColorPreset.PlateTypes:
+                            DrawColoredPolygon(cellData.Cell.Points, new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType, (int)cellData.PlateType));
+                            break;
+                    }
                 }
             }
         }
 
-        if (_edges != null)
+        if (DrawCellOutlines && _edges != null)
         {
             var lines = new Vector2[_edges.Count() * 2];
             int i = 0;
@@ -425,7 +444,7 @@ public partial class WorldTest : Node2D
                 lines[i++] = edge.Q;
             }
 
-            // DrawMultiline(lines, Colors.White);
+            DrawMultiline(lines, Colors.White);
         }
 
         // foreach (var pos in _points)
@@ -433,14 +452,22 @@ public partial class WorldTest : Node2D
         //     DrawCircle(pos, 2f, Colors.White);
         // }
 
-        // foreach (var (i, cellData) in _cellDatas)
+        // foreach (var i in _delaunator.GetHullPoints())
         // {
-        //     if (i % 10 != 0) continue;
-        //     var pos = _points[i];
-        //     var end = pos + cellData.TectonicMovement * 3f;
-        //     var length = cellData.TectonicMovement.LengthSquared() / 100f;
-        //     DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
+        //     DrawCircle(i, 2f, Colors.White);
         // }
+
+        if (DrawTectonicMovement)
+        {
+            foreach (var (i, cellData) in _cellDatas)
+            {
+                if (i % 10 != 0) continue;
+                var pos = _points[i];
+                var end = pos + cellData.TectonicMovement * 3f;
+                var length = cellData.TectonicMovement.LengthSquared() / 100f;
+                DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
+            }
+        }
 
         DrawRect(Rect, Colors.Red, false);
 
@@ -469,4 +496,48 @@ public partial class WorldTest : Node2D
         // DrawCircle(_points[cellQ], 4f, Colors.Blue);
         // DrawLine(edge1.P, edge1.Q, Colors.Aqua);
     }
+
+    public void OnSeedSpinBoxValueChanged(float value)
+    {
+        Seed = (ulong)value;
+    }
+
+    public void OnContinentRatioSpinBoxValueChanged(float value)
+    {
+        ContinentRatio = value;
+    }
+    public void OnPlateMergeRatioSpinBoxValueChanged(float value)
+    {
+        PlateMergeRatio = value;
+    }
+
+    public void OnCellDistanceSpinBoxValueChanged(float value)
+    {
+        MinimumCellDistance = value;
+    }
+
+    public void OnRegenerateButtonPressed()
+    {
+        GenerateMap();
+    }
+
+    public void OnDrawingCorlorPresetSelected(int value)
+    {
+        DrawingCorlorPreset = (ColorPreset)value;
+        QueueRedraw();
+    }
+
+    public void OnDrawTectonicMovementToggled(bool toggledOn)
+    {
+        DrawTectonicMovement = toggledOn;
+        QueueRedraw();
+
+    }
+
+    public void OnDrawCellOutlinesToggled(bool toggledOn)
+    {
+        DrawCellOutlines = toggledOn;
+        QueueRedraw();
+    }
+
 }

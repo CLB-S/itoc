@@ -2,7 +2,130 @@
 
 [ext_resource type="Script" uid="uid://dve6fx2002n8g" path="res://scripts/world/WorldTest.cs" id="1_m1jws"]
 
-[node name="World2d" type="Node2D"]
-script = ExtResource("1_m1jws")
+[node name="World2d" type="Node"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="Map" type="Node2D" parent="."]
+script = ExtResource("1_m1jws")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 24.0
+offset_right = 102.0
+offset_bottom = 102.0
+theme_override_constants/separation = 16
+
+[node name="HSplitContainer" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer"]
+layout_mode = 2
+text = "Seed:"
+
+[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer"]
+layout_mode = 2
+max_value = 1e+07
+value = 234.0
+rounded = true
+allow_greater = true
+
+[node name="HSplitContainer2" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer2"]
+layout_mode = 2
+text = "Continent Ratio:"
+
+[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer2"]
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 0.4
+
+[node name="HSplitContainer3" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer3"]
+layout_mode = 2
+text = "Plate Merge Ratio:"
+
+[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer3"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.13
+
+[node name="HSplitContainer4" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer4"]
+layout_mode = 2
+text = "Cell Distance:"
+
+[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer4"]
+layout_mode = 2
+value = 5.0
+
+[node name="Button" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+text = "Regenerate
+"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -255.0
+offset_top = 24.0
+offset_right = -16.0
+offset_bottom = 243.0
+grow_horizontal = 0
+theme_override_constants/separation = 16
+
+[node name="HSplitContainer" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer2"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer2/HSplitContainer"]
+layout_mode = 2
+text = "ColorPreset:"
+
+[node name="OptionButton" type="OptionButton" parent="CanvasLayer/Control/VBoxContainer2/HSplitContainer"]
+layout_mode = 2
+selected = 1
+item_count = 3
+popup/item_0/text = "Plates"
+popup/item_0/id = 0
+popup/item_1/text = "Height"
+popup/item_1/id = 1
+popup/item_2/text = "PlateTypes"
+popup/item_2/id = 2
+
+[node name="CheckButton" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
+layout_mode = 2
+text = "Draw Tectonic Movements:"
+
+[node name="CheckButton2" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
+layout_mode = 2
+text = "Draw Cell Outlines: "
+
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/SpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/SpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Button" to="Map" method="OnRegenerateButtonPressed"]
+[connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
+[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton" to="Map" method="OnDrawTectonicMovementToggled"]
+[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton2" to="Map" method="OnDrawCellOutlinesToggled"]
