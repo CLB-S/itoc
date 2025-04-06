@@ -80,7 +80,7 @@ public partial class WorldTest : Node2D
     private RandomNumberGenerator _rng;
     private readonly Dictionary<int, RiverSegment> _rivers = new();
     private int _riverIdCounter;
-    private int _heightMapResolution = 512;
+    private int _heightMapResolution = 1000;
 
     public override void _Ready()
     {
@@ -91,8 +91,8 @@ public partial class WorldTest : Node2D
     public void GenerateMap()
     {
         var seed = Seed;
-        _rng = new RandomNumberGenerator() { Seed = seed };
-        _plateNoise = new FastNoiseLite()
+        _rng = new RandomNumberGenerator { Seed = seed };
+        _plateNoise = new FastNoiseLite
         {
             Seed = (int)seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
@@ -102,17 +102,17 @@ public partial class WorldTest : Node2D
             DomainWarpAmplitude = 90f,
             DomainWarpFrequency = 0.010f,
             DomainWarpFractalType = FastNoiseLite.DomainWarpFractalTypeEnum.None,
-            FractalType = FastNoiseLite.FractalTypeEnum.None,
+            FractalType = FastNoiseLite.FractalTypeEnum.None
         };
 
-        _heightNoise = new FastNoiseLite()
+        _heightNoise = new FastNoiseLite
         {
             Seed = (int)seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
             Frequency = 0.010f,
             FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
             FractalOctaves = 4,
-            DomainWarpEnabled = false,
+            DomainWarpEnabled = false
         };
 
         _points = FastPoissonDiskSampling.Sampling(Rect.Position, Rect.End, MinimumCellDistance, _rng);
@@ -121,14 +121,14 @@ public partial class WorldTest : Node2D
         _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
         var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
         _cellDatas = new Dictionary<int, CellData>(_cells.Length);
-        for (int i = 0; i < _cells.Length; i++)
-            _cellDatas[_cells[i].Index] = new CellData()
+        for (var i = 0; i < _cells.Length; i++)
+            _cellDatas[_cells[i].Index] = new CellData
             {
-                Cell = _cells[i],
+                Cell = _cells[i]
                 // Altitude = (_heightNoise.GetNoise2Dv(_points[i]) + 1f) * MaxAltitude * 0.01f,
             };
 
-        for (int i = 0; i < _delaunator.Triangles.Length; i++)
+        for (var i = 0; i < _delaunator.Triangles.Length; i++)
             _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
 
         InitTectonicProperties();
@@ -138,14 +138,13 @@ public partial class WorldTest : Node2D
         CalculateWaterFlux();
         HeightMapTexture = GetHeightMapImageTexture();
         QueueRedraw();
-
     }
 
     public float[,] CalculateFullHeightMap()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
         var dataList = new List<float>(_cellDatas.Count);
-        for (int i = 0; i < _cellDatas.Count; i++)
+        for (var i = 0; i < _cellDatas.Count; i++)
         {
             posList.Add(_points[i]);
             dataList.Add(_cellDatas[i].Altitude);
@@ -158,14 +157,13 @@ public partial class WorldTest : Node2D
     {
         var heightMap = CalculateFullHeightMap();
         var image = Image.CreateEmpty(_heightMapResolution, _heightMapResolution, false, Image.Format.Rgb8);
-        for (int x = 0; x < _heightMapResolution; x++)
-        {
-            for (int y = 0; y < _heightMapResolution; y++)
+        for (var x = 0; x < _heightMapResolution; x++)
+            for (var y = 0; y < _heightMapResolution; y++)
             {
                 var h = 0.5f * (1 + heightMap[x, y] / MaxAltitude);
                 image.SetPixel(x, y, new Color(h, h, h));
             }
-        }
+
         return ImageTexture.CreateFromImage(image);
     }
 
@@ -182,7 +180,7 @@ public partial class WorldTest : Node2D
     {
         var indexMap = new Dictionary<int, int>();
         var count = points.Count;
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             var point = points[i];
 
@@ -228,7 +226,8 @@ public partial class WorldTest : Node2D
                 indexMap[points.Count - 1] = i;
             }
 
-            if (point.X > rect.Position.X + rect.Size.X - edgeDistance && point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
+            if (point.X > rect.Position.X + rect.Size.X - edgeDistance &&
+                point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
             {
                 points.Add(new Vector2(point.X - rect.Size.X, point.Y - rect.Size.Y));
                 indexMap[points.Count - 1] = i;
@@ -265,13 +264,15 @@ public partial class WorldTest : Node2D
         {
             var pos = UniformPosition(_points[i], Rect);
             var mappedX = 2 * Mathf.Pi * pos.X / Rect.Size.X;
-            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, Mathf.Sin(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, pos.Y);
+            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi,
+                Mathf.Sin(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, pos.Y);
             var seed = MergeNoiseValue(noiseValue).ToString().Hash();
             rng.Seed = seed;
             var r = rng.Randf() * MaxTectonicMovement;
             var phi = rng.Randf() * Mathf.Pi * 2;
             cellData.TectonicMovement = new Vector2(Mathf.Cos(phi), Mathf.Sin(phi)) * r;
-            cellData.PlateType = RandomPlateType(rng); // (PlateType)(rng.Randi() % Enum.GetNames(typeof(PlateType)).Length);
+            cellData.PlateType =
+                RandomPlateType(rng); // (PlateType)(rng.Randi() % Enum.GetNames(typeof(PlateType)).Length);
         }
     }
 
@@ -289,7 +290,9 @@ public partial class WorldTest : Node2D
             {
                 // [-1, 1]
                 var l = _points[cellPId] - _points[cellQId];
-                var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) / (2 * l.Length() * MaxTectonicMovement); // cellP.TectonicMovement.Dot(cellQ.TectonicMovement) / MaxTectonicMovement / MaxTectonicMovement;
+                var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
+                                       (2 * l.Length() *
+                                        MaxTectonicMovement); // cellP.TectonicMovement.Dot(cellQ.TectonicMovement) / MaxTectonicMovement / MaxTectonicMovement;
 
                 if (Mathf.Abs(relativeMovement) < 0.25f)
                     continue;
@@ -309,14 +312,16 @@ public partial class WorldTest : Node2D
                         altitude *= altitude;
                     }
                     else
+                    {
                         altitude = 1 - 0.75f * (relativeMovement - 1) * (relativeMovement - 1);
+                    }
 
                     cellP.Altitude += altitude * MaxAltitude;
                     cellQ.Altitude += altitude * MaxAltitude;
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Oceans)
                 {
-                    float altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                    var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                     altitude = altitude * altitude * 0.5f - 0.3f;
                     if (relativeMovement > 0)
                         altitude += 0.25f * (1 - (1 - relativeMovement) * (1 - relativeMovement));
@@ -335,7 +340,7 @@ public partial class WorldTest : Node2D
                     {
                         cellP.Altitude += 1 - (relativeMovement - 1) * (relativeMovement - 1);
 
-                        float altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                        var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                         altitude = altitude * altitude - 0.25f;
                         cellQ.Altitude += altitude;
                     }
@@ -351,7 +356,7 @@ public partial class WorldTest : Node2D
                     {
                         cellQ.Altitude += 1 - (relativeMovement - 1) * (relativeMovement - 1);
 
-                        float altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                        var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                         altitude = altitude * altitude - 0.25f;
                         cellP.Altitude += altitude;
                     }
@@ -362,11 +367,14 @@ public partial class WorldTest : Node2D
         PropagateAltitudes(initialIndices, 0.8f);
     }
 
-    private IEnumerable<int> GetNeighborCells(CellData cell) => GetNeighborCells(cell.Cell.Index);
+    private IEnumerable<int> GetNeighborCells(CellData cell)
+    {
+        return GetNeighborCells(cell.Cell.Index);
+    }
 
     private IEnumerable<int> GetNeighborCells(int index)
     {
-        foreach (int i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
+        foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
         {
             var neighborIndex = _delaunator.Triangles[i];
 
@@ -390,28 +398,26 @@ public partial class WorldTest : Node2D
 
         while (queue.Count > 0)
         {
-            int currentIndex = queue.Dequeue();
-            CellData currentCell = _cellDatas[currentIndex];
-            float parentHeight = currentCell.Altitude;
+            var currentIndex = queue.Dequeue();
+            var currentCell = _cellDatas[currentIndex];
+            var parentHeight = currentCell.Altitude;
 
-            float propagatedHeight = parentHeight * decrement;
+            var propagatedHeight = parentHeight * decrement;
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 
-            foreach (int neighborIndex in GetNeighborCells(currentIndex))
-            {
+            foreach (var neighborIndex in GetNeighborCells(currentIndex))
                 if (!used.Contains(neighborIndex))
                 {
-                    CellData neighbor = _cellDatas[neighborIndex];
-                    float mod = sharpness == 0 ? 1.0f : (1.1f - sharpness) + (_rng.Randf() * sharpness);
-                    float heightContribution = propagatedHeight * mod;
+                    var neighbor = _cellDatas[neighborIndex];
+                    var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + _rng.Randf() * sharpness;
+                    var heightContribution = propagatedHeight * mod;
 
                     neighbor.Altitude += heightContribution;
 
                     used.Add(neighborIndex);
                     queue.Enqueue(neighborIndex, -Mathf.Abs(_cellDatas[neighborIndex].Altitude));
                 }
-            }
         }
     }
 
@@ -434,9 +440,7 @@ public partial class WorldTest : Node2D
             var highest = neighbors.OrderByDescending(n => _cellDatas[n].Altitude).First();
 
             if (_cellDatas[highest].Altitude > cell.Altitude)
-            {
                 cell.Precipitation = Mathf.Max(0, _cellDatas[highest].Precipitation - evaporationRate);
-            }
         }
     }
 
@@ -455,7 +459,7 @@ public partial class WorldTest : Node2D
 
                 if (cell.Altitude <= _cellDatas[lowestNeighbor].Altitude)
                 {
-                    cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05f; ;
+                    cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05f;
                     hasDepressions = true;
                 }
             }
@@ -479,10 +483,7 @@ public partial class WorldTest : Node2D
             _cellDatas[lowest].Flux += 1f + cell.Flux;
             cell.Flux = 0;
 
-            if (_cellDatas[lowest].Flux > 3.0f)
-            {
-                UpdateRiverPath(cell, _cellDatas[lowest]);
-            }
+            if (_cellDatas[lowest].Flux > 3.0f) UpdateRiverPath(cell, _cellDatas[lowest]);
         }
     }
 
@@ -527,26 +528,26 @@ public partial class WorldTest : Node2D
     private void DrawArrow(Vector2 start, Vector2 end, Color color, bool twoLineHead = false)
     {
         // the arrow size and flatness
-        float arrowSize = (end - start).Length() * 0.4f;
-        float flatness = 0.5f;
+        var arrowSize = (end - start).Length() * 0.4f;
+        var flatness = 0.5f;
 
         // the line starting and ending points
         DrawLine(start, end, color, Mathf.Sqrt(arrowSize));
 
         // calculate the direction vector
-        Vector2 direction = (end - start).Normalized();
+        var direction = (end - start).Normalized();
 
         // calculate the side vectors
-        Vector2 side1 = new Vector2(-direction.Y, direction.X);
-        Vector2 side2 = new Vector2(direction.Y, -direction.X);
+        var side1 = new Vector2(-direction.Y, direction.X);
+        var side2 = new Vector2(direction.Y, -direction.X);
 
         // calculate the T-junction points
-        Vector2 e1 = end + side1 * arrowSize * flatness;
-        Vector2 e2 = end + side2 * arrowSize * flatness;
+        var e1 = end + side1 * arrowSize * flatness;
+        var e2 = end + side2 * arrowSize * flatness;
 
         // calculate the arrow edges
-        Vector2 p1 = e1 - direction * arrowSize;
-        Vector2 p2 = e2 - direction * arrowSize;
+        var p1 = e1 - direction * arrowSize;
+        var p2 = e2 - direction * arrowSize;
 
         // draw the arrow sides as a polygon
         if (!twoLineHead)
@@ -563,9 +564,7 @@ public partial class WorldTest : Node2D
 
     public override void _Draw()
     {
-
         if (_cellDatas != null)
-        {
             foreach (var (i, cellData) in _cellDatas)
             {
                 if (!Rect.HasPoint(_points[i])) continue;
@@ -578,7 +577,8 @@ public partial class WorldTest : Node2D
                     {
                         case ColorPreset.Plates:
                             var mappedX = 2 * Mathf.Pi * pos.X / Rect.Size.X;
-                            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, Mathf.Sin(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, pos.Y);
+                            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi,
+                                Mathf.Sin(mappedX) * Rect.Size.X * 0.5f / Mathf.Pi, pos.Y);
                             var seed = MergeNoiseValue(noiseValue).ToString().Hash();
                             var color = ColorUtils.RandomColorHSV(seed);
                             DrawColoredPolygon(cellData.Cell.Points, color);
@@ -588,20 +588,22 @@ public partial class WorldTest : Node2D
                             DrawColoredPolygon(cellData.Cell.Points, ColorUtils.GetHeightColor(height));
                             break;
                         case ColorPreset.PlateTypes:
-                            DrawColoredPolygon(cellData.Cell.Points, new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType, (int)cellData.PlateType));
+                            DrawColoredPolygon(cellData.Cell.Points,
+                                new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
+                                    (int)cellData.PlateType));
                             break;
                         case ColorPreset.Precipitation:
-                            DrawColoredPolygon(cellData.Cell.Points, new Color(cellData.Precipitation, cellData.Precipitation, cellData.Precipitation));
+                            DrawColoredPolygon(cellData.Cell.Points,
+                                new Color(cellData.Precipitation, cellData.Precipitation, cellData.Precipitation));
                             break;
                     }
                 }
             }
-        }
 
         if (DrawCellOutlines && _edges != null)
         {
             var lines = new Vector2[_edges.Count() * 2];
-            int i = 0;
+            var i = 0;
             foreach (var edge in _edges)
             {
                 lines[i++] = edge.P;
@@ -622,7 +624,6 @@ public partial class WorldTest : Node2D
         // }
 
         if (DrawTectonicMovement)
-        {
             foreach (var (i, cellData) in _cellDatas)
             {
                 if (i % 10 != 0) continue;
@@ -631,12 +632,10 @@ public partial class WorldTest : Node2D
                 var length = cellData.TectonicMovement.LengthSquared() / 100f;
                 DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
             }
-        }
 
 
         // Draw rivers
         if (DrawRivers)
-        {
             foreach (var river in _rivers.Values)
             {
                 if (river.Path.Count < 2) continue;
@@ -644,27 +643,22 @@ public partial class WorldTest : Node2D
                 var points = river.Path.ToArray();
                 var color = new Color(0.2f, 0.4f, 0.8f);
 
-                for (int i = 0; i < points.Length - 1; i++)
+                for (var i = 0; i < points.Length - 1; i++)
                 {
-                    if ((points[i] - points[i + 1]).LengthSquared() > MinimumCellDistance * MinimumCellDistance * 5) continue;
+                    if ((points[i] - points[i + 1]).LengthSquared() >
+                        MinimumCellDistance * MinimumCellDistance * 5) continue;
                     DrawLine(points[i], points[i + 1], color, river.Width);
                 }
-
                 // Draw main river channel
                 // DrawPolyline(points, color, river.Width);
-
                 // Draw river banks
                 // var bankColor = new Color(0.1f, 0.3f, 0.7f);
                 // DrawPolyline(points, bankColor, river.Width * 1.2f);
             }
-        }
 
         // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)Rect.Size.X, (int)Rect.Size.Y)), Rect, false);
 
-        if (DrawInterpolatedHeightMap)
-        {
-            DrawTextureRect(HeightMapTexture, Rect, false);
-        }
+        if (DrawInterpolatedHeightMap) DrawTextureRect(HeightMapTexture, Rect, false);
 
         // Find neigbour cells of a cell.
         // var itest = 99;
@@ -701,6 +695,7 @@ public partial class WorldTest : Node2D
     {
         ContinentRatio = value;
     }
+
     public void OnPlateMergeRatioSpinBoxValueChanged(float value)
     {
         PlateMergeRatio = value;
@@ -726,7 +721,6 @@ public partial class WorldTest : Node2D
     {
         DrawTectonicMovement = toggledOn;
         QueueRedraw();
-
     }
 
     public void OnDrawCellOutlinesToggled(bool toggledOn)

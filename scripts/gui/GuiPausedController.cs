@@ -1,6 +1,3 @@
-using Godot;
-using System;
-
 public partial class GuiPausedController : GuiController
 {
     public override void _Ready()

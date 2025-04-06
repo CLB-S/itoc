@@ -162,7 +162,7 @@ text = "Draw Rivers: "
 
 [node name="CheckButton4" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
 layout_mode = 2
-text = "Draw Height Map: "
+text = "Show Height Map: "
 
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]

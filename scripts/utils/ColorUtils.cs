@@ -15,7 +15,7 @@ public static class ColorUtils
     }
 
     /// <summary>
-    /// Color palette for height maps.
+    ///     Color palette for height maps.
     /// </summary>
     /// <param name="height">[-1, 1]</param>
     /// <returns></returns>
@@ -27,24 +27,13 @@ public static class ColorUtils
 
         // Interpolate between colors
         if (height < seaLevel)
-        {
             return new Color(0, 0, 1 + height);
-        }
-        else if (height < seaLevel + 0.03f)
-        {
+        if (height < seaLevel + 0.03f)
             return new Color(0.9f, 0.8f, 0.6f); // sand
-        }
-        else if (height < seaLevel + 0.4f)
-        {
+        if (height < seaLevel + 0.4f)
             return new Color(0.2f - height, 0.6f - height, 0.2f - height); // grass
-        }
-        else if (height < seaLevel + 0.8f)
-        {
+        if (height < seaLevel + 0.8f)
             return new Color(0.6f - height * 0.5f, 0.5f - height * 0.5f, 0.4f - height * 0.5f); // mountain
-        }
-        else
-        {
-            return mountain.Lerp(snow, (height - (seaLevel + 0.3f)) / 0.7f);
-        }
+        return mountain.Lerp(snow, (height - (seaLevel + 0.3f)) / 0.7f);
     }
 }

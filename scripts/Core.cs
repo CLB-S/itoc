@@ -19,7 +19,7 @@ public partial class Core : Node
     public override void _Notification(int what)
     {
         if (what == NotificationWMCloseRequest)
-            QuitGame();  // default behavior
+            QuitGame(); // default behavior
     }
 
     public void QuitGame()

@@ -11,37 +11,15 @@ public static class FastPoissonDiskSampling
     public const float InvertRootTwo = 0.70710678118f; // Becaust two dimension grid.
     public const int DefaultIterationPerPoint = 30;
 
-    #region "Structures"
-    private class Settings
-    {
-        public Vector2 BottomLeft;
-        public Vector2 TopRight;
-        public Vector2 Center;
-        public Rect2 Dimension;
 
-        public float MinimumDistance;
-        public int IterationPerPoint;
-
-        public float CellSize;
-        public int GridWidth;
-        public int GridHeight;
-    }
-
-    private class Bags
-    {
-        public Vector2?[,] Grid;
-        public List<Vector2> SamplePoints;
-        public List<Vector2> ActivePoints;
-    }
-    #endregion
-
-
-    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance, RandomNumberGenerator rng)
+    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance,
+        RandomNumberGenerator rng)
     {
         return Sampling(bottomLeft, topRight, minimumDistance, rng, DefaultIterationPerPoint);
     }
 
-    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance, RandomNumberGenerator rng, int iterationPerPoint)
+    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, float minimumDistance,
+        RandomNumberGenerator rng, int iterationPerPoint)
     {
         var settings = GetSettings(
             bottomLeft,
@@ -50,7 +28,7 @@ public static class FastPoissonDiskSampling
             iterationPerPoint <= 0 ? DefaultIterationPerPoint : iterationPerPoint
         );
 
-        var bags = new Bags()
+        var bags = new Bags
         {
             Grid = new Vector2?[settings.GridWidth + 1, settings.GridHeight + 1],
             SamplePoints = new List<Vector2>(),
@@ -67,30 +45,48 @@ public static class FastPoissonDiskSampling
 
             var found = false;
             for (var k = 0; k < settings.IterationPerPoint; k++)
-            {
                 found = found | GetNextPoint(point, settings, bags, rng);
-            }
 
-            if (found == false)
-            {
-                bags.ActivePoints.RemoveAt(index);
-            }
-        }
-        while (bags.ActivePoints.Count > 0);
+            if (found == false) bags.ActivePoints.RemoveAt(index);
+        } while (bags.ActivePoints.Count > 0);
 
         return bags.SamplePoints;
     }
 
+    #region "Structures"
+
+    private class Settings
+    {
+        public Vector2 BottomLeft;
+
+        public float CellSize;
+        public Vector2 Center;
+        public Rect2 Dimension;
+        public int GridHeight;
+        public int GridWidth;
+        public int IterationPerPoint;
+
+        public float MinimumDistance;
+        public Vector2 TopRight;
+    }
+
+    private class Bags
+    {
+        public List<Vector2> ActivePoints;
+        public Vector2?[,] Grid;
+        public List<Vector2> SamplePoints;
+    }
+
+    #endregion
+
     #region "Algorithm Calculations"
+
     private static bool GetNextPoint(Vector2 point, Settings set, Bags bags, RandomNumberGenerator rng)
     {
         var found = false;
         var p = GetRandPosInCircle(set.MinimumDistance, 2f * set.MinimumDistance, rng) + point;
 
-        if (set.Dimension.HasPoint(p) == false)
-        {
-            return false;
-        }
+        if (set.Dimension.HasPoint(p) == false) return false;
 
         var minimum = set.MinimumDistance * set.MinimumDistance;
         var index = GetGridIndex(p, set);
@@ -99,18 +95,14 @@ public static class FastPoissonDiskSampling
         // Although it is Mathf.CeilToInt(set.MinimumDistance / set.CellSize) in the formula, It will be 2 after all.
         var around = 2;
         var fieldMin = new Vector2I(Mathf.Max(0, index.X - around), Mathf.Max(0, index.Y - around));
-        var fieldMax = new Vector2I(Mathf.Min(set.GridWidth, index.X + around), Mathf.Min(set.GridHeight, index.Y + around));
+        var fieldMax = new Vector2I(Mathf.Min(set.GridWidth, index.X + around),
+            Mathf.Min(set.GridHeight, index.Y + around));
 
         for (var i = fieldMin.X; i <= fieldMax.X && drop == false; i++)
+        for (var j = fieldMin.Y; j <= fieldMax.Y && drop == false; j++)
         {
-            for (var j = fieldMin.Y; j <= fieldMax.Y && drop == false; j++)
-            {
-                var q = bags.Grid[i, j];
-                if (q.HasValue == true && (q.Value - p).LengthSquared() <= minimum)
-                {
-                    drop = true;
-                }
-            }
+            var q = bags.Grid[i, j];
+            if (q.HasValue && (q.Value - p).LengthSquared() <= minimum) drop = true;
         }
 
         if (drop == false)
@@ -138,9 +130,11 @@ public static class FastPoissonDiskSampling
         bags.SamplePoints.Add(first);
         bags.ActivePoints.Add(first);
     }
+
     #endregion
 
     #region "Utils"
+
     private static Vector2I GetGridIndex(Vector2 point, Settings set)
     {
         return new Vector2I(
@@ -154,7 +148,7 @@ public static class FastPoissonDiskSampling
         var dimension = tr - bl;
         var cell = min * InvertRootTwo;
 
-        return new Settings()
+        return new Settings
         {
             BottomLeft = bl,
             TopRight = tr,
@@ -177,6 +171,6 @@ public static class FastPoissonDiskSampling
 
         return new Vector2(radius * Mathf.Cos(theta), radius * Mathf.Sin(theta));
     }
+
     #endregion
 }
-

@@ -1,9 +1,9 @@
 <Project Sdk="Godot.NET.Sdk/4.4.1">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Supercluster.KDTree.Standard" Version="1.0.5" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Supercluster.KDTree.Standard" Version="1.0.5"/>
+    </ItemGroup>
 </Project>

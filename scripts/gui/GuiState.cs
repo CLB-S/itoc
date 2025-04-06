@@ -1,4 +1,5 @@
 // GUIState.cs (Enum)
+
 public enum GuiState
 {
     Gameplay,
