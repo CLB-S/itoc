@@ -2,6 +2,8 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 using DelaunatorSharp;
 
@@ -61,6 +63,8 @@ public partial class WorldTest : Node2D
     public float PlateMergeRatio = 0.13f;
     [Export] public float MinimumCellDistance = 5f;
     [Export] public Rect2 Rect = new Rect2(-500, -500, 1000, 1000);
+    [Export] public RichTextLabel TerminalLabel;
+
     public Texture2D HeightMapTexture;
 
     public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
@@ -69,6 +73,8 @@ public partial class WorldTest : Node2D
     public bool DrawRivers = false;
     public bool DrawInterpolatedHeightMap = false;
 
+    [Signal]
+    public delegate void MapGenerationProgressEventHandler(string msg, float progress);
 
     private List<Vector2> _points;
     private Dictionary<int, int> _edgePointsMap;
@@ -85,11 +91,26 @@ public partial class WorldTest : Node2D
     public override void _Ready()
     {
         base._Ready();
-        GenerateMap();
+
+        if (TerminalLabel != null)
+            TerminalLabel.GetVScrollBar().Visible = false;
+
+        this.MapGenerationProgress += (msg, progress) =>
+        {
+            GD.Print($"{msg}");
+            TerminalLabel?.AppendText($"{msg}\n");
+        };
+
+        GenerateMapAsync();
     }
 
-    public void GenerateMap()
+
+    public async void GenerateMapAsync()
     {
+        var stopwatch = new Stopwatch();
+        EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Initialising", 0.00f);
+        stopwatch.Start();
+
         var seed = Seed;
         _rng = new RandomNumberGenerator { Seed = seed };
         _plateNoise = new FastNoiseLite
@@ -115,28 +136,62 @@ public partial class WorldTest : Node2D
             DomainWarpEnabled = false
         };
 
-        _points = FastPoissonDiskSampling.Sampling(Rect.Position, Rect.End, MinimumCellDistance, _rng);
-        _edgePointsMap = RepeatPointsRoundEdges(_points, Rect, 2 * MinimumCellDistance);
-        _delaunator = new Delaunator(_points.ToArray());
-        _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
-        var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
-        _cellDatas = new Dictionary<int, CellData>(_cells.Length);
-        for (var i = 0; i < _cells.Length; i++)
-            _cellDatas[_cells[i].Index] = new CellData
+        try
+        {
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Generating points", 0.1f);
+            await Task.Run(() =>
             {
-                Cell = _cells[i]
-                // Altitude = (_heightNoise.GetNoise2Dv(_points[i]) + 1f) * MaxAltitude * 0.01f,
-            };
+                _points = FastPoissonDiskSampling.Sampling(Rect.Position, Rect.End, MinimumCellDistance, _rng);
+                _edgePointsMap = RepeatPointsRoundEdges(_points, Rect, 2 * MinimumCellDistance);
+            });
 
-        for (var i = 0; i < _delaunator.Triangles.Length; i++)
-            _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating Voronoi diagrams", 0.25f);
+            await Task.Run(() =>
+            {
+                _delaunator = new Delaunator(_points.ToArray());
+                _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
+                var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
+                _cellDatas = new Dictionary<int, CellData>(_cells.Length);
 
-        InitTectonicProperties();
-        CalculateAltitudes();
-        // ResolveDepressions();
-        // CalculatePrecipitation();
-        CalculateWaterFlux();
-        HeightMapTexture = GetHeightMapImageTexture();
+                for (var i = 0; i < _cells.Length; i++)
+                    _cellDatas[_cells[i].Index] = new CellData
+                    {
+                        Cell = _cells[i]
+                    };
+
+                for (var i = 0; i < _delaunator.Triangles.Length; i++)
+                    _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
+            });
+
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Initializing tectonic properties", 0.3f);
+            await Task.Run(() => InitTectonicProperties());
+
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating altitudes", 0.4f);
+            await Task.Run(() => CalculateAltitudes());
+
+            // EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Resolving depressions", 0.5f);
+            // await Task.Run(() => ResolveDepressions());
+
+            // EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating precipitation", 0.6f);
+            // await Task.Run(() => CalculatePrecipitation());
+
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating water flux", 0.7f);
+            await Task.Run(() => CalculateWaterFlux());
+
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating full height map", 0.8f);
+            await Task.Run(() => HeightMapTexture = GetHeightMapImageTexture());
+
+            CallDeferred("UpdateUi");
+            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Completed", 1.0f);
+        }
+        finally
+        {
+            stopwatch.Stop();
+        }
+    }
+
+    private void UpdateUi()
+    {
         QueueRedraw();
     }
 
@@ -708,7 +763,7 @@ public partial class WorldTest : Node2D
 
     public void OnRegenerateButtonPressed()
     {
-        GenerateMap();
+        GenerateMapAsync();
     }
 
     public void OnDrawingCorlorPresetSelected(int value)

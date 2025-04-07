@@ -19,8 +19,9 @@ viewport_path = NodePath("SubViewport")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="."]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel")]
 script = ExtResource("1_m1jws")
+TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
 
 [node name="SubViewport" type="SubViewport" parent="."]
 transparent_bg = true
@@ -45,6 +46,7 @@ texture = SubResource("ViewportTexture_m1jws")
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Control" type="Control" parent="CanvasLayer"]
+texture_filter = 1
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -163,6 +165,21 @@ text = "Draw Rivers: "
 [node name="CheckButton4" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
 layout_mode = 2
 text = "Show Height Map: "
+
+[node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -220.0
+offset_right = 300.0
+grow_vertical = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+vertical_alignment = 2
+drag_and_drop_selection_enabled = false
 
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]

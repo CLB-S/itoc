@@ -26,11 +26,20 @@ CameraHelper="*res://scripts/camera/CameraHelper.cs"
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
 
 [dotnet]
 
 project/assembly_name="itoc"
+
+[gui]
+
+theme/default_theme_scale=1.2
+theme/default_font_multichannel_signed_distance_field=true
 
 [input]
 
