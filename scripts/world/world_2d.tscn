@@ -1,47 +1,58 @@
-[gd_scene load_steps=6 format=3 uid="uid://dnbce5r6br382"]
+[gd_scene load_steps=7 format=3 uid="uid://dnbce5r6br382"]
 
 [ext_resource type="Script" uid="uid://dve6fx2002n8g" path="res://scripts/world/WorldTest.cs" id="1_m1jws"]
 [ext_resource type="Shader" uid="uid://dx5sokiwa158o" path="res://scripts/world/world_2d.gdshader" id="2_a8jty"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yvewi"]
-render_priority = 0
-shader = ExtResource("2_a8jty")
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_m1jws"]
-material = SubResource("ShaderMaterial_yvewi")
-subdivide_width = 1024
-subdivide_depth = 1024
+[ext_resource type="Script" uid="uid://dteeikkfn2w8b" path="res://scripts/misc/ObjectRotator.cs" id="3_yvewi"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_m1jws"]
 viewport_path = NodePath("SubViewport")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_yvewi"]
+subdivide_width = 1000
+subdivide_depth = 1000
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_a8jty"]
+render_priority = 0
+shader = ExtResource("2_a8jty")
+shader_parameter/height_scale = 0.15
+shader_parameter/texture_scale = Vector2(1, 1)
 
 [node name="World2d" type="Node"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel")]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "HeightMapSubViewportSprite")]
 script = ExtResource("1_m1jws")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
+HeightMapMesh = NodePath("../SubViewport/MeshInstance3D")
+GenerateMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/Button")
+HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
+
+[node name="HeightMapSubViewportSprite" type="Sprite2D" parent="." node_paths=PackedStringArray("TargetObject")]
+visible = false
+texture = SubResource("ViewportTexture_m1jws")
+script = ExtResource("3_yvewi")
+TargetObject = NodePath("../SubViewport/MeshInstance3D")
 
 [node name="SubViewport" type="SubViewport" parent="."]
 transparent_bg = true
-render_target_update_mode = 1
+size = Vector2i(1024, 1024)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewport"]
-mesh = SubResource("PlaneMesh_m1jws")
+mesh = SubResource("PlaneMesh_yvewi")
+surface_material_override/0 = SubResource("ShaderMaterial_a8jty")
 
 [node name="Camera3D" type="Camera3D" parent="SubViewport"]
-transform = Transform3D(0.707107, -0.40558, 0.579228, 0, 0.819152, 0.573576, -0.707107, -0.40558, 0.579228, 2.5, 2.5, 2.5)
+transform = Transform3D(0.707107, -0.40558, 0.579228, 0, 0.819152, 0.573576, -0.707107, -0.40558, 0.579228, 2.5, 2.695, 2.5)
 projection = 1
 size = 3.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewport"]
 transform = Transform3D(0.993152, -0.0682659, 0.0948064, -0.0486846, 0.495852, 0.867041, -0.106199, -0.86572, 0.489133, 0, 0, 0)
 
-[node name="SubViewportSprite" type="Sprite2D" parent="."]
-visible = false
-position = Vector2(-691, 278)
-texture = SubResource("ViewportTexture_m1jws")
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="SubViewport"]
+transform = Transform3D(0.945025, 0.0693418, 0.319561, -0.0559315, -0.928579, 0.366897, 0.322179, -0.364601, -0.873652, 0, 0, 0)
+light_energy = 0.4
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -170,6 +181,10 @@ text = "Draw Rivers: "
 layout_mode = 2
 text = "Show Height Map: "
 
+[node name="CheckButton5" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
+layout_mode = 2
+text = "Show 3D Height Map: "
+
 [node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer/Control"]
 layout_mode = 1
 anchors_preset = 2
@@ -196,3 +211,4 @@ drag_and_drop_selection_enabled = false
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton2" to="Map" method="OnDrawCellOutlinesToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton3" to="Map" method="OnDrawRiversToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton4" to="Map" method="OnDrawInterpolatedHeightMapToggled"]
+[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton5" to="Map" method="OnShow3DHeightMapToggled"]

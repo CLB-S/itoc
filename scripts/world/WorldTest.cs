@@ -64,8 +64,11 @@ public partial class WorldTest : Node2D
     [Export] public float MinimumCellDistance = 5f;
     [Export] public Rect2 Rect = new Rect2(-500, -500, 1000, 1000);
     [Export] public RichTextLabel TerminalLabel;
+    [Export] public MeshInstance3D HeightMapMesh;
+    [Export] public Button GenerateMapButton;
+    [Export] public Node2D HeightMapSubViewportSprite;
 
-    public Texture2D HeightMapTexture;
+    public ImageTexture HeightMapTexture;
 
     public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
     public bool DrawTectonicMovement = false;
@@ -76,6 +79,18 @@ public partial class WorldTest : Node2D
 
     [Signal]
     public delegate void MapGenerationProgressEventHandler(string msg, float progress);
+
+    private bool _isGenerating;
+    public bool IsGenerating
+    {
+        get { return _isGenerating; }
+        set
+        {
+            GenerateMapButton.Disabled = value;
+            _isGenerating = value;
+        }
+    }
+
 
     private List<Vector2> _points;
     private Dictionary<int, int> _edgePointsMap;
@@ -111,6 +126,7 @@ public partial class WorldTest : Node2D
         var stopwatch = new Stopwatch();
         EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Initialising", 0.00f);
         stopwatch.Start();
+        IsGenerating = true;
 
         var seed = Seed;
         _rng = new RandomNumberGenerator { Seed = seed };
@@ -183,6 +199,9 @@ public partial class WorldTest : Node2D
             {
                 EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating full height map", 0.8f);
                 await Task.Run(() => HeightMapTexture = GetHeightMapImageTexture());
+
+                var mat = HeightMapMesh.GetSurfaceOverrideMaterial(0) as ShaderMaterial;
+                mat.SetShaderParameter("heightmap", HeightMapTexture);
             }
 
             CallDeferred("UpdateUi");
@@ -190,6 +209,7 @@ public partial class WorldTest : Node2D
         }
         finally
         {
+            IsGenerating = false;
             stopwatch.Stop();
         }
     }
@@ -806,12 +826,17 @@ public partial class WorldTest : Node2D
 
     public void OnDrawInterpolatedHeightMapToggled(bool toggledOn)
     {
-        DrawInterpolatedHeightMap = toggledOn && GenerateFullHeightMap;
+        DrawInterpolatedHeightMap = toggledOn;
         QueueRedraw();
     }
 
     public void OnGenerateFullHeightMapToggled(bool toggledOn)
     {
         GenerateFullHeightMap = toggledOn;
+    }
+
+    public void OnShow3DHeightMapToggled(bool toggledOn)
+    {
+        HeightMapSubViewportSprite.Visible = toggledOn;
     }
 }
