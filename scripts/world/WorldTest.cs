@@ -71,6 +71,7 @@ public partial class WorldTest : Node2D
     public bool DrawTectonicMovement = false;
     public bool DrawCellOutlines = false;
     public bool DrawRivers = false;
+    public bool GenerateFullHeightMap = false;
     public bool DrawInterpolatedHeightMap = false;
 
     [Signal]
@@ -84,7 +85,7 @@ public partial class WorldTest : Node2D
     private Noise _plateNoise;
     private Noise _heightNoise;
     private RandomNumberGenerator _rng;
-    private readonly Dictionary<int, RiverSegment> _rivers = new();
+    private Dictionary<int, RiverSegment> _rivers;
     private int _riverIdCounter;
     private int _heightMapResolution = 1000;
 
@@ -178,8 +179,11 @@ public partial class WorldTest : Node2D
             EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating water flux", 0.7f);
             await Task.Run(() => CalculateWaterFlux());
 
-            EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating full height map", 0.8f);
-            await Task.Run(() => HeightMapTexture = GetHeightMapImageTexture());
+            if (GenerateFullHeightMap)
+            {
+                EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Calculating full height map", 0.8f);
+                await Task.Run(() => HeightMapTexture = GetHeightMapImageTexture());
+            }
 
             CallDeferred("UpdateUi");
             EmitSignal(SignalName.MapGenerationProgress, $"[{stopwatch.ElapsedMilliseconds / 1000.0f}s] Completed", 1.0f);
@@ -523,6 +527,7 @@ public partial class WorldTest : Node2D
 
     private void CalculateWaterFlux()
     {
+        _rivers = [];
         var orderedCells = _cellDatas.Values
             .Where(c => c.PlateType != PlateType.Oceans)
             .OrderByDescending(c => c.Altitude)
@@ -532,8 +537,8 @@ public partial class WorldTest : Node2D
         {
             var neighbors = GetNeighborCells(cell);
             var lowest = neighbors.OrderBy(n => _cellDatas[n].Altitude).First();
-            // if (_cellDatas[lowest].Altitude < 0)
-            //     continue;
+            if (_cellDatas[lowest].Altitude < 0)
+                continue;
 
             _cellDatas[lowest].Flux += 1f + cell.Flux;
             cell.Flux = 0;
@@ -619,6 +624,11 @@ public partial class WorldTest : Node2D
 
     public override void _Draw()
     {
+        GD.Print($"Redrawing...");
+        TerminalLabel?.AppendText($"Redrawing...\n");
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
         if (_cellDatas != null)
             foreach (var (i, cellData) in _cellDatas)
             {
@@ -713,7 +723,7 @@ public partial class WorldTest : Node2D
 
         // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)Rect.Size.X, (int)Rect.Size.Y)), Rect, false);
 
-        if (DrawInterpolatedHeightMap) DrawTextureRect(HeightMapTexture, Rect, false);
+        if (DrawInterpolatedHeightMap && GenerateFullHeightMap) DrawTextureRect(HeightMapTexture, Rect, false);
 
         // Find neigbour cells of a cell.
         // var itest = 99;
@@ -739,6 +749,10 @@ public partial class WorldTest : Node2D
         // DrawLine(edge1.P, edge1.Q, Colors.Aqua);
 
         DrawRect(Rect, Colors.Red, false);
+
+        stopwatch.Stop();
+        GD.Print($"Draw time: {stopwatch.ElapsedMilliseconds / 1000.0f}s");
+        TerminalLabel?.AppendText($"Draw time: {stopwatch.ElapsedMilliseconds / 1000.0f}s\n");
     }
 
     public void OnSeedSpinBoxValueChanged(float value)
@@ -792,7 +806,12 @@ public partial class WorldTest : Node2D
 
     public void OnDrawInterpolatedHeightMapToggled(bool toggledOn)
     {
-        DrawInterpolatedHeightMap = toggledOn;
+        DrawInterpolatedHeightMap = toggledOn && GenerateFullHeightMap;
         QueueRedraw();
+    }
+
+    public void OnGenerateFullHeightMapToggled(bool toggledOn)
+    {
+        GenerateFullHeightMap = toggledOn;
     }
 }

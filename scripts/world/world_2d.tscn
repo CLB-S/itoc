@@ -113,6 +113,10 @@ text = "Cell Distance:"
 layout_mode = 2
 value = 5.0
 
+[node name="CheckButton" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+text = "Generate Height Map:"
+
 [node name="Button" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
 text = "Regenerate
@@ -172,7 +176,7 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_top = -220.0
-offset_right = 300.0
+offset_right = 400.0
 grow_vertical = 0
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -185,6 +189,7 @@ drag_and_drop_selection_enabled = false
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/SpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/SpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
+[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer/CheckButton" to="Map" method="OnGenerateFullHeightMapToggled"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Button" to="Map" method="OnRegenerateButtonPressed"]
 [connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton" to="Map" method="OnDrawTectonicMovementToggled"]
