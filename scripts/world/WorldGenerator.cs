@@ -35,7 +35,7 @@ public class WorldSettings
     public float AltitudePropagationSharpness = 0.1f;
 
 
-    public WorldSettings(ulong seed = 0)
+    public WorldSettings(ulong seed = 234)
     {
         Seed = seed == 0 ? GD.Randi() : seed;
     }
