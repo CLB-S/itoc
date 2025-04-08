@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Godot;
 
+// TODO: Status
+
 public partial class World : Node
 {
     // 区块加载范围（以区块为单位）

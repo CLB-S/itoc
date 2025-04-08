@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="itoc"
-run/main_scene="uid://g8ki650u2whs"
+run/main_scene="uid://dnbce5r6br382"
 config/features=PackedStringArray("4.4", "C#", "GL Compatibility")
 run/max_fps=144
 config/icon="res://icon.svg"
@@ -21,17 +21,25 @@ config/icon="res://icon.svg"
 Core="*res://scripts/Core.cs"
 GuiManager="*res://scripts/gui/GuiManager.cs"
 CameraHelper="*res://scripts/camera/CameraHelper.cs"
-World="*res://scripts/world/World.cs"
 
 [display]
 
-window/size/viewport_width=1600
-window/size/viewport_height=900
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/vsync/vsync_mode=0
 
 [dotnet]
 
 project/assembly_name="itoc"
+
+[gui]
+
+theme/default_theme_scale=1.2
+theme/default_font_multichannel_signed_distance_field=true
 
 [input]
 

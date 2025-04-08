@@ -77,7 +77,7 @@ public partial class PlayerController : CharacterBody3D
             _head.RotateX(Mathf.DegToRad(-mouseMotion.Relative.Y * MouseSensitivity));
             _head.Rotation = new Vector3(
                 Mathf.Clamp(_head.Rotation.X, Mathf.DegToRad(MinLookAngle),
-                Mathf.DegToRad(MaxLookAngle)),
+                    Mathf.DegToRad(MaxLookAngle)),
                 _head.Rotation.Y,
                 0
             );
@@ -90,13 +90,9 @@ public partial class PlayerController : CharacterBody3D
         HandleCoyoteTime(delta);
 
         if (_isFlying)
-        {
             HandleFlyingMovement(delta);
-        }
         else
-        {
             HandleMovement(delta);
-        }
 
         HandleCameraTilt(delta);
 
@@ -116,13 +112,11 @@ public partial class PlayerController : CharacterBody3D
         var result = spaceState.IntersectRay(query);
 
         if (result.Count > 0)
-        {
             try
             {
                 // var pos = result["position"].AsVector3() - 0.5f * result["normal"].AsVector3();
                 // var block = World.Instance.GetBlock(pos);
                 // GD.Print($"Looking at block {block}:{BlockManager.Instance.GetBlock(block).BlockName}");
-
                 var placeBlockPressed = Input.IsActionJustPressed("place_block");
                 var breakBlockPressed = Input.IsActionJustPressed("break_block");
 
@@ -130,15 +124,16 @@ public partial class PlayerController : CharacterBody3D
                 {
                     var pos = result["position"].AsVector3() + 0.5f * result["normal"].AsVector3();
 
-                    var cubeShape = new BoxShape3D() { Size = Vector3.One * 0.95f };
-                    var cubeCenter = new Vector3(Mathf.Floor(pos.X) + 0.5f, Mathf.Floor(pos.Y) + 0.5f, Mathf.Floor(pos.Z) + 0.5f);
-                    var cubeTransform = new Transform3D() { Origin = cubeCenter };
+                    var cubeShape = new BoxShape3D { Size = Vector3.One * 0.95f };
+                    var cubeCenter = new Vector3(Mathf.Floor(pos.X) + 0.5f, Mathf.Floor(pos.Y) + 0.5f,
+                        Mathf.Floor(pos.Z) + 0.5f);
+                    var cubeTransform = new Transform3D { Origin = cubeCenter };
 
-                    var queryCube = new PhysicsShapeQueryParameters3D()
+                    var queryCube = new PhysicsShapeQueryParameters3D
                     {
                         CollideWithAreas = true,
                         Shape = cubeShape,
-                        Transform = cubeTransform,
+                        Transform = cubeTransform
                     };
 
                     var resultCube = spaceState.IntersectShape(queryCube, 1);
@@ -156,13 +151,11 @@ public partial class PlayerController : CharacterBody3D
             {
                 GD.PushError(e.ToString());
             }
-
-        }
     }
 
     private void HandleMovement(double delta)
     {
-        Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
         _direction = new Vector3(inputDir.X, 0, inputDir.Y).Normalized();
 
         // Handle sprint
@@ -170,25 +163,22 @@ public partial class PlayerController : CharacterBody3D
         _currentSpeed = _isSprinting ? SprintSpeed : MoveSpeed;
 
         // Rotate direction vector relative to camera
-        Vector3 rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
+        var rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
 
         // Calculate horizontal and vertical components separately
-        Vector3 horizontalVelocity = new Vector3(Velocity.X, 0, Velocity.Z);
-        float verticalVelocity = Velocity.Y;
+        var horizontalVelocity = new Vector3(Velocity.X, 0, Velocity.Z);
+        var verticalVelocity = Velocity.Y;
 
         // Target horizontal velocity (air control doesn't affect vertical movement)
-        Vector3 targetHorizontalVelocity = rotatedDirection * _currentSpeed;
-        float targetVerticalVelocity = verticalVelocity;
+        var targetHorizontalVelocity = rotatedDirection * _currentSpeed;
+        var targetVerticalVelocity = verticalVelocity;
 
         // Apply gravity (always full strength, unaffected by air control)
-        if (!IsOnFloor())
-        {
-            targetVerticalVelocity -= (float)(_gravity * delta);
-        }
+        if (!IsOnFloor()) targetVerticalVelocity -= (float)(_gravity * delta);
 
         // Calculate acceleration rates
-        float accel = IsOnFloor() ? Acceleration : Acceleration * AirControl;
-        float decel = IsOnFloor() ? Deceleration : Deceleration * AirControl;
+        var accel = IsOnFloor() ? Acceleration : Acceleration * AirControl;
+        var decel = IsOnFloor() ? Deceleration : Deceleration * AirControl;
 
         // Only apply air control to horizontal movement
         horizontalVelocity = horizontalVelocity.Lerp(
@@ -212,26 +202,20 @@ public partial class PlayerController : CharacterBody3D
 
     private void HandleFlyingMovement(double delta)
     {
-        Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
+        var inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_back");
         _direction = new Vector3(inputDir.X, 0, inputDir.Y).Normalized();
         _isSprinting = Input.IsActionPressed("sprint");
 
         // Handle vertical movement for flying
-        float verticalInput = 0f;
-        if (Input.IsActionPressed("jump"))
-        {
-            verticalInput = 1f;
-        }
-        if (Input.IsActionPressed("sneak"))
-        {
-            verticalInput = -1f;
-        }
+        var verticalInput = 0f;
+        if (Input.IsActionPressed("jump")) verticalInput = 1f;
+        if (Input.IsActionPressed("sneak")) verticalInput = -1f;
 
         // Rotate direction vector relative to camera
-        Vector3 rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
+        var rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
         rotatedDirection.Y = verticalInput;
 
-        Vector3 targetVelocity = rotatedDirection * (_isSprinting ? FlyingSprintSpeed : FlyingSpeed);
+        var targetVelocity = rotatedDirection * (_isSprinting ? FlyingSprintSpeed : FlyingSpeed);
 
         // Interpolate velocity
         Velocity = Velocity.Lerp(targetVelocity, FlyingAcceleration * (float)delta);
@@ -247,13 +231,9 @@ public partial class PlayerController : CharacterBody3D
     private void HandleCoyoteTime(double delta)
     {
         if (IsOnFloor())
-        {
             _coyoteTimer = CoyoteTime;
-        }
         else
-        {
             _coyoteTimer -= (float)delta;
-        }
     }
 
     private void HandleJumpBuffer(double delta)
@@ -261,15 +241,13 @@ public partial class PlayerController : CharacterBody3D
         if (Input.IsActionJustPressed("jump"))
         {
             // Check for double tap
-            float currentTime = (float)Time.GetTicksMsec() / 1000f;
+            var currentTime = Time.GetTicksMsec() / 1000f;
             if (currentTime - _lastJumpPressTime < DoubleTapThreshold)
             {
                 _isFlying = !_isFlying;
-                if (_isFlying)
-                {
-                    Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
-                }
+                if (_isFlying) Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
             }
+
             _lastJumpPressTime = currentTime;
 
             _jumpBufferTimer = JumpBufferTime;
@@ -284,14 +262,8 @@ public partial class PlayerController : CharacterBody3D
     {
         float targetTilt = 0;
 
-        if (Input.IsActionPressed("move_left"))
-        {
-            targetTilt += CameraTiltAmount;
-        }
-        if (Input.IsActionPressed("move_right"))
-        {
-            targetTilt -= CameraTiltAmount;
-        }
+        if (Input.IsActionPressed("move_left")) targetTilt += CameraTiltAmount;
+        if (Input.IsActionPressed("move_right")) targetTilt -= CameraTiltAmount;
 
         _cameraTilt = Mathf.Lerp(_cameraTilt, targetTilt, CameraTiltSpeed * (float)delta);
         _camera.Rotation = new Vector3(_camera.Rotation.X, _camera.Rotation.Y,

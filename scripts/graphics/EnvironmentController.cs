@@ -2,7 +2,6 @@ using Godot;
 
 public partial class EnvironmentController : WorldEnvironment
 {
-
     public override void _Ready()
     {
         float viewDistance = World.LoadDistance * World.ChunkSize;

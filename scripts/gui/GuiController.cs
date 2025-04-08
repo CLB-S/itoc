@@ -1,5 +1,4 @@
 using Godot;
-using System.Collections.Generic;
 
 public partial class GuiController : Control
 {
@@ -23,16 +22,13 @@ public partial class GuiController : Control
     protected bool ShouldPauseGame()
     {
         foreach (var state in PausingStates)
-        {
-            if (GuiManager.Instance.CurrentState == state) return true;
-        }
+            if (GuiManager.Instance.CurrentState == state)
+                return true;
         return false;
     }
 
     protected void UpdateMouseState()
     {
-        Input.MouseMode = Visible ?
-            Input.MouseModeEnum.Visible :
-            Input.MouseModeEnum.Captured;
+        Input.MouseMode = Visible ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Captured;
     }
 }
