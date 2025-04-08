@@ -21,11 +21,12 @@ shader_parameter/texture_scale = Vector2(1, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "HeightMapSubViewportSprite")]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "HeightMapSubViewportSprite")]
 script = ExtResource("1_m1jws")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
 HeightMapMesh = NodePath("../SubViewport/MeshInstance3D")
-GenerateMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/Button")
+GenerateMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/RegenerateButton")
+GenerateHeightMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton")
 HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
 
 [node name="HeightMapSubViewportSprite" type="Sprite2D" parent="." node_paths=PackedStringArray("TargetObject")]
@@ -124,14 +125,14 @@ text = "Cell Distance:"
 layout_mode = 2
 value = 5.0
 
-[node name="CheckButton" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer"]
-layout_mode = 2
-text = "Generate Height Map:"
-
-[node name="Button" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
+[node name="RegenerateButton" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
 text = "Regenerate
 "
+
+[node name="GenerateHeightMapButton" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+text = "Generate Heightmap"
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/Control"]
 layout_mode = 1
@@ -205,8 +206,8 @@ drag_and_drop_selection_enabled = false
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/SpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/SpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
-[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer/CheckButton" to="Map" method="OnGenerateFullHeightMapToggled"]
-[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Button" to="Map" method="OnRegenerateButtonPressed"]
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/RegenerateButton" to="Map" method="OnRegenerateButtonPressed"]
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton" to="Map" method="OnGenerateHeightMapButtonPressed"]
 [connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton" to="Map" method="OnDrawTectonicMovementToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton2" to="Map" method="OnDrawCellOutlinesToggled"]
