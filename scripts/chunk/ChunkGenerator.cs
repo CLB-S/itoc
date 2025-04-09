@@ -16,6 +16,8 @@ public partial class ChunkGenerator : IDisposable
     private readonly SemaphoreSlim _throttler;
     private readonly int _maxConcurrentJobs;
 
+    private ChunkGenerator() { }
+
     public ChunkGenerator(int maxConcurrentJobs = 0)
     {
         _maxConcurrentJobs = maxConcurrentJobs > 0

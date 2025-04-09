@@ -1,21 +1,20 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 
 public partial class World : Node
 {
-    // 区块加载范围（以区块为单位）
-    public const int LoadDistance = 8;
     public const int ChunkSize = ChunkMesher.CS;
-
-
-    // 区块存储（线程安全字典）
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
 
+    public WorldSettings Settings = new();
+    private WorldGenerator.WorldGenerator _worldGenerator;
+
     private PackedScene _debugCube;
+    private ChunkGenerator.ChunkGenerator _chunkGenerator;
 
-    private ChunkGenerator.ChunkGenerator _generator;
-
+    private bool _ready = false; //TODO: State
 
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly HashSet<Vector3I> _queuedPositions = new();
@@ -24,21 +23,29 @@ public partial class World : Node
     public bool UseDebugMaterial = false;
     public ShaderMaterial DebugMaterial;
 
-    // 单例访问
-    public static World Instance { get; private set; }
+    public static World Instance { get; private set; } //TODO: Remove after gui.
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         Instance = this;
-        _generator = new ChunkGenerator.ChunkGenerator();
-        _generator.Start();
 
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scripts/world/debug_cube.tscn");
+
+        _worldGenerator = new WorldGenerator.WorldGenerator(Settings);
+        await _worldGenerator.GenerateWorldAsync(); //TODO: GUI
+        GD.Print("World pre-generation finished.");
+
+        _chunkGenerator = new ChunkGenerator.ChunkGenerator();
+        _chunkGenerator.Start();
+
+        _ready = true;
     }
 
     public override void _Process(double delta)
     {
+        if (!_ready) return;
+
         var playerPos = GetPlayerPosition();
         if ((playerPos - _lastPlayerPosition).Length() > ChunkSize / 2)
         {
@@ -85,12 +92,12 @@ public partial class World : Node
         var loadArea = new HashSet<Vector3I>();
 
         // 计算需要加载的区块范围（原有逻辑）
-        for (var x = -LoadDistance; x <= LoadDistance; x++)
+        for (var x = -Settings.LoadDistance; x <= Settings.LoadDistance; x++)
             for (var y = -3; y <= 3; y++)
-                for (var z = -LoadDistance; z <= LoadDistance; z++)
+                for (var z = -Settings.LoadDistance; z <= Settings.LoadDistance; z++)
                 {
                     var pos = centerChunk + new Vector3I(x, y, z);
-                    if (pos.DistanceTo(centerChunk) <= LoadDistance) loadArea.Add(pos);
+                    if (pos.DistanceTo(centerChunk) <= Settings.LoadDistance) loadArea.Add(pos);
                 }
 
         // 卸载超出范围的区块（原有逻辑）
@@ -112,8 +119,8 @@ public partial class World : Node
         foreach (var pos in toGenerate)
             if (_queuedPositions.Add(pos))
             {
-                var request = new ChunkGenerator.ChunkGenerationRequest(pos, MainThreadCallback);
-                _generator.Enqueue(request);
+                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, pos, MainThreadCallback);
+                _chunkGenerator.Enqueue(request);
             }
     }
 
@@ -125,7 +132,7 @@ public partial class World : Node
         var currentPlayerPos = GetPlayerPosition();
         var currentCenter = WorldToChunkPosition(currentPlayerPos);
 
-        if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > LoadDistance) return; // 超出范围则丢弃
+        if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Settings.LoadDistance) return; // 超出范围则丢弃
 
         if (!Chunks.ContainsKey(result.ChunkData.GetPosition()))
         {
@@ -170,6 +177,6 @@ public partial class World : Node
 
     public override void _ExitTree()
     {
-        _generator.Stop();
+        _chunkGenerator.Stop();
     }
 }

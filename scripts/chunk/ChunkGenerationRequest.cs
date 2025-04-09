@@ -31,9 +31,12 @@ public partial class ChunkGenerationRequest
 
     private readonly LinkedList<GenerationStep> _generationPipeline = new();
     private readonly Stopwatch _stopwatch = new();
+    private readonly WorldGenerator.WorldGenerator _worldGenerator;
 
-    public ChunkGenerationRequest(Vector3I position, Action<ChunkGenerationResult> callback)
+
+    public ChunkGenerationRequest(WorldGenerator.WorldGenerator worldGenerator, Vector3I position, Action<ChunkGenerationResult> callback)
     {
+        _worldGenerator = worldGenerator;
         ChunkPosition = position;
         Callback = callback;
         InitializePipeline();

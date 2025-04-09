@@ -45,6 +45,7 @@ public enum GenerationState
     CalculatingAltitudes,
     PropagatingAltitudes,
     CalculatingWaterFlux,
+    InitInterpolator,
     Custom,
     Completed,
     Failed
@@ -63,21 +64,30 @@ public partial class WorldGenerator
     public event EventHandler GenerationCompletedEvent;
     public event EventHandler<Exception> GenerationFailedEvent;
 
-    private readonly LinkedList<GenerationStep> _generationPipeline = new();
     public GenerationState State { get; private set; } = GenerationState.NotStarted;
+
+    private readonly LinkedList<GenerationStep> _generationPipeline = new();
     private readonly Stopwatch _stopwatch = new();
     private readonly object _stateLock = new();
+    private IdwInterpolator _interpolator;
 
     // World data properties
     private Noise _plateNoise;
     private Noise _heightNoise;
 
     // Configuration
-    public WorldSettings Settings { get; set; } = new();
+    public WorldSettings Settings { get; private set; }
 
     public WorldGenerator()
     {
         InitializePipeline();
+        Settings = new WorldSettings();
+    }
+
+    public WorldGenerator(WorldSettings settings)
+    {
+        InitializePipeline();
+        Settings = settings;
     }
 
     private void InitializePipeline()
@@ -89,6 +99,7 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingAltitudes, CalculateAltitudes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingAltitudes, PropagateAltitudes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingWaterFlux, CalculateWaterFlux));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 
     public void AddGenerationStepAfter(GenerationStep step, GenerationState afterState)
@@ -152,7 +163,7 @@ public partial class WorldGenerator
         }
     }
 
-    public async void GenerateWorldAsync()
+    public async Task GenerateWorldAsync()
     {
         try
         {
@@ -224,11 +235,8 @@ public partial class WorldGenerator
     //     } while (hasDepressions);
     // }
 
-    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    private void InitInterpolator()
     {
-        if (State != GenerationState.Completed)
-            throw new InvalidOperationException("World generation is not completed yet.");
-
         var posList = new List<Vector2>(_cellDatas.Count);
         var dataList = new List<double>(_cellDatas.Count);
         for (var i = 0; i < _cellDatas.Count; i++)
@@ -237,7 +245,20 @@ public partial class WorldGenerator
             dataList.Add(_cellDatas[i].Altitude);
         }
 
-        return IdwInterpolator.ConstructHeightMap(posList, dataList, resolutionX, resolutionY, Settings.Bounds);
+        _interpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
+    }
+
+    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    {
+        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds);
+    }
+
+    public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2 bounds)
+    {
+        if (State != GenerationState.Completed)
+            throw new InvalidOperationException("World generation is not completed yet.");
+
+        return _interpolator.ConstructHeightMap(resolutionX, resolutionY, bounds);
     }
 
     public ImageTexture GetHeightMapImageTexture(int resolutionX, int resolutionY)

@@ -23,7 +23,7 @@ public enum GenerationState
 {
     NotStarted,
     Initializing,
-    // TODO
+    HeightMap,
     Meshing,
     Custom,
     Completed,
@@ -41,7 +41,8 @@ public partial class ChunkGenerationRequest
     private void InitializePipeline()
     {
         _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, Initialize));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
+        // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.HeightMap, GetHeightmap));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.Meshing, Meshing));
     }
 
@@ -49,6 +50,33 @@ public partial class ChunkGenerationRequest
     {
         _voxels = new uint[ChunkMesher.CS_P3];
         _meshData = new ChunkMesher.MeshData();
+    }
+
+    // TODO: Optimize this
+    private void GetHeightmap()
+    {
+        var rect = new Rect2(ChunkPosition.X * ChunkMesher.CS, ChunkPosition.Z * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
+        var heightMap = _worldGenerator.CalculateHeightMap(ChunkMesher.CS_P, ChunkMesher.CS_P, rect);
+        for (var x = 0; x < ChunkMesher.CS_P; x++)
+            for (var z = 0; z < ChunkMesher.CS_P; z++)
+            {
+                var height = (int)heightMap[x, z];
+
+                for (var y = 0; y < ChunkMesher.CS_P; y++)
+                {
+                    var actualY = ChunkPosition.Y * ChunkMesher.CS + y;
+                    if (actualY < height - ChunkMesher.CS)
+                    {
+                        if (actualY == height - ChunkMesher.CS - 1)
+                            _voxels[ChunkMesher.GetIndex(x, y, z)] = 4; // GD.Randi() % 4 + 1;
+                        else if (actualY > height - ChunkMesher.CS - 4)
+                            _voxels[ChunkMesher.GetIndex(x, y, z)] = 3;
+                        else
+                            _voxels[ChunkMesher.GetIndex(x, y, z)] = 2;
+                        ChunkMesher.AddOpaqueVoxel(ref _meshData.OpaqueMask, x, y, z);
+                    }
+                }
+            }
     }
 
     private void TerrainTest()

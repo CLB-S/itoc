@@ -62,10 +62,10 @@ public class IdwInterpolator
     }
 
 
-    public static double[,] ConstructHeightMap(IEnumerable<Vector2> positions, IEnumerable<double> heights,
-        int resolutionX, int resolutionY, Rect2 rect, double power = 2, int numNeighbors = 12)
+    public double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2 rect)
     {
-        var interpolator = new IdwInterpolator(positions, heights, power, numNeighbors);
+        if (resolutionX == 1 || resolutionY == 1)
+            throw new ArgumentException("Resolution must be greater than 1."); // TODO: lazy to implement this
 
         var heightMap = new double[resolutionX, resolutionY];
         var stepX = rect.Size.X / (resolutionX - 1);
@@ -77,7 +77,7 @@ public class IdwInterpolator
             for (var j = 0; j < resolutionY; j++)
             {
                 var y = rect.Position.Y + j * stepY;
-                heightMap[i, j] = interpolator.GetHeight(x, y);
+                heightMap[i, j] = GetHeight(x, y);
             }
         });
 

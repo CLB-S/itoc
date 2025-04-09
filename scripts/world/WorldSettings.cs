@@ -4,6 +4,9 @@ using System;
 public class WorldSettings
 {
     public ulong Seed = 234;
+    public int LoadDistance = 8;
+
+    #region Generation Settings
     public double ContinentRatio = 0.4;
     public double PlateMergeRatio = 0.13;
     public double MaxTectonicMovement = 10.0;
@@ -13,7 +16,7 @@ public class WorldSettings
     public double MinimumCellDistance = 50;
     public double AltitudePropagationDecrement = 0.8;
     public double AltitudePropagationSharpness = 0.1;
-
+    #endregion
 
     public WorldSettings(ulong seed = 234)
     {

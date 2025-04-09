@@ -61,7 +61,7 @@ public partial class WorldTest : Node2D
             Log($"[color=red]Generation failed:[/color]\n{ex.Message}");
         };
 
-        _worldGenerator.GenerateWorldAsync();
+        Task.Run(_worldGenerator.GenerateWorldAsync);
     }
 
     private void Log(string message)
@@ -256,7 +256,7 @@ public partial class WorldTest : Node2D
 
     public void OnRegenerateButtonPressed()
     {
-        _worldGenerator.GenerateWorldAsync();
+        Task.Run(_worldGenerator.GenerateWorldAsync);
     }
 
     public void OnGenerateHeightMapButtonPressed()
