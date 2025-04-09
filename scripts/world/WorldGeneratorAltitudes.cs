@@ -35,15 +35,15 @@ public partial class WorldGenerator
 
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
                 {
-                    float altitude;
+                    double altitude;
                     if (relativeMovement < 0)
                     {
-                        altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0 + 0.5;
                         altitude *= altitude;
                     }
                     else
                     {
-                        altitude = 1 - 0.75f * (relativeMovement - 1) * (relativeMovement - 1);
+                        altitude = 1 - 0.75 * (relativeMovement - 1) * (relativeMovement - 1);
                     }
 
                     cellP.Altitude += altitude * Settings.MaxAltitude;
@@ -99,7 +99,7 @@ public partial class WorldGenerator
     private void PropagateAltitudes()
     {
         var used = new HashSet<int>();
-        var queue = new PriorityQueue<int, float>();
+        var queue = new PriorityQueue<int, double>();
         var sharpness = Settings.AltitudePropagationSharpness;
 
         foreach (var i in _initialAltitudeIndices)

@@ -18,11 +18,11 @@ public partial class WorldGenerator
         return PlateType.Continent;
     }
 
-    public float MergeNoiseValue(float value)
+    public double MergeNoiseValue(double value)
     {
         if (Settings.PlateMergeRatio > 0)
         {
-            var normalized = (value + 1) * 0.5f;
+            var normalized = (value + 1) * 0.5;
             return 2 * Mathf.Floor(normalized / Settings.PlateMergeRatio) * Settings.PlateMergeRatio - 1;
         }
 
@@ -37,8 +37,8 @@ public partial class WorldGenerator
         {
             var pos = UniformPosition(_points[i]);
             var mappedX = 2 * Mathf.Pi * pos.X / Settings.Bounds.Size.X;
-            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5f / Mathf.Pi,
-                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5f / Mathf.Pi, pos.Y);
+            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi, pos.Y);
             var seed = MergeNoiseValue(noiseValue).ToString().Hash();
             rng.Seed = seed;
             var r = rng.Randf() * Settings.MaxTectonicMovement;

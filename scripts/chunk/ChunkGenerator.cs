@@ -10,11 +10,11 @@ public static class NoiseGenerator
     static NoiseGenerator()
     {
         _noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin;
-        _noise.Frequency = 0.01f;
+        _noise.Frequency = 0.01;
         _noise.FractalOctaves = 3;
     }
 
-    public static float GetHeight(float x, float z)
+    public static double GetHeight(float x, float z)
     {
         return 50 + _noise.GetNoise2D(x, z) * 40;
     }

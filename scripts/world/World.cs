@@ -184,7 +184,7 @@ public partial class World : Node
     public void SpawnDebugCube(Vector3I pos)
     {
         var cube = _debugCube.Instantiate() as Node3D;
-        cube.Position = pos + Vector3.One * 0.5f;
+        cube.Position = pos + Vector3.One * 0.5;
         CallDeferred(Node.MethodName.AddChild, cube);
     }
 

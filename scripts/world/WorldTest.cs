@@ -129,7 +129,7 @@ public partial class WorldTest : Node2D
                             break;
                         case ColorPreset.Height:
                             var height = cellData.Altitude / _worldGenerator.Settings.MaxAltitude;
-                            DrawColoredPolygon(points, ColorUtils.GetHeightColor(height));
+                            DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
                             break;
                         case ColorPreset.PlateTypes:
                             DrawColoredPolygon(points,
@@ -138,7 +138,7 @@ public partial class WorldTest : Node2D
                             break;
                         case ColorPreset.Precipitation:
                             DrawColoredPolygon(points,
-                                new Color(cellData.Precipitation, cellData.Precipitation, cellData.Precipitation));
+                                new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
                             break;
                     }
                 }
@@ -174,8 +174,8 @@ public partial class WorldTest : Node2D
             {
                 if (i % 10 != 0) continue;
                 var pos = _worldGenerator.SamplePoints[i] * _scalingFactor;
-                var end = pos + cellData.TectonicMovement * 3f;
-                var length = cellData.TectonicMovement.LengthSquared() / 100f;
+                var end = pos + cellData.TectonicMovement * 3;
+                var length = (float)(cellData.TectonicMovement.LengthSquared() / 100.0);
                 DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
             }
 

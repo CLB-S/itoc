@@ -27,11 +27,11 @@ public partial class WorldGenerator
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
-            Frequency = 10.0f / sizeY,
+            Frequency = 10.0 / sizeY,
             CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.CellValue,
             DomainWarpEnabled = true,
-            DomainWarpAmplitude = 0.09f * sizeY,
-            DomainWarpFrequency = 10.0f / sizeY,
+            DomainWarpAmplitude = 0.09 * sizeY,
+            DomainWarpFrequency = 10.0 / sizeY,
             DomainWarpFractalType = FastNoiseLite.DomainWarpFractalTypeEnum.None,
             FractalType = FastNoiseLite.FractalTypeEnum.None
         };
@@ -40,7 +40,7 @@ public partial class WorldGenerator
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
-            Frequency = 10.0f / sizeY,
+            Frequency = 10.0 / sizeY,
             FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
             FractalOctaves = 4,
             DomainWarpEnabled = false

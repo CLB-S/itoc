@@ -14,26 +14,26 @@ public class CellData
     public Vector2 TectonicMovement;
     public PlateType PlateType;
     public uint PlateSeed;
-    public float Altitude = 0f;
+    public double Altitude = 0;
     public bool RoundPlateJunction = false;
-    public float Precipitation;
-    public float Flux;
+    public double Precipitation;
+    public double Flux;
     public RiverSegment River;
 }
 
 public class WorldSettings
 {
     public ulong Seed = 234;
-    public float ContinentRatio = 0.4f;
-    public float PlateMergeRatio = 0.13f;
-    public float MaxTectonicMovement = 10.0f;
-    public float MaxAltitude = 2000.0f;
+    public double ContinentRatio = 0.4;
+    public double PlateMergeRatio = 0.13;
+    public double MaxTectonicMovement = 10.0;
+    public double MaxAltitude = 2000.0;
 
 
     public Rect2 Bounds = new Rect2(-5000, -5000, 10000, 10000);
-    public float MinimumCellDistance = 50f;
-    public float AltitudePropagationDecrement = 0.8f;
-    public float AltitudePropagationSharpness = 0.1f;
+    public double MinimumCellDistance = 50;
+    public double AltitudePropagationDecrement = 0.8;
+    public double AltitudePropagationSharpness = 0.1;
 
 
     public WorldSettings(ulong seed = 234)
@@ -239,20 +239,20 @@ public partial class WorldGenerator
 
     //             if (cell.Altitude <= _cellDatas[lowestNeighbor].Altitude)
     //             {
-    //                 cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05f;
+    //                 cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05;
     //                 hasDepressions = true;
     //             }
     //         }
     //     } while (hasDepressions);
     // }
 
-    public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
         var posList = new List<Vector2>(_cellDatas.Count);
-        var dataList = new List<float>(_cellDatas.Count);
+        var dataList = new List<double>(_cellDatas.Count);
         for (var i = 0; i < _cellDatas.Count; i++)
         {
             posList.Add(_points[i]);
@@ -269,7 +269,7 @@ public partial class WorldGenerator
         for (var x = 0; x < resolutionX; x++)
             for (var y = 0; y < resolutionY; y++)
             {
-                var h = 0.5f * (1 + heightMap[x, y] / Settings.MaxAltitude);
+                var h = (float)(0.5 * (1 + heightMap[x, y] / Settings.MaxAltitude));
                 image.SetPixel(x, y, new Color(h, h, h));
             }
 

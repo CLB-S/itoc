@@ -7,11 +7,11 @@ using Supercluster.KDTree;
 
 public class IdwInterpolator
 {
-    private readonly KDTree<float, float> _kdTree;
+    private readonly KDTree<double, double> _kdTree;
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 2.0,
+    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<double> heights, double power = 2.0,
         int numNeighbors = 10)
     {
         var positionsList = positions.ToList();
@@ -22,13 +22,13 @@ public class IdwInterpolator
 
         var pointsData = positions.Select(p => new[] { p.X, p.Y }).ToArray();
 
-        _kdTree = new KDTree<float, float>(2, pointsData, heights.ToArray(), L2Norm);
+        _kdTree = new KDTree<double, double>(2, pointsData, heights.ToArray(), L2Norm);
 
         _power = power;
         _numNeighbors = numNeighbors;
     }
 
-    private static double L2Norm(float[] x, float[] y)
+    private static double L2Norm(double[] x, double[] y)
     {
         double dist = 0;
         for (var i = 0; i < x.Length; i++) dist += (x[i] - y[i]) * (x[i] - y[i]);
@@ -36,7 +36,7 @@ public class IdwInterpolator
         return dist;
     }
 
-    public float GetHeight(float x, float y)
+    public double GetHeight(double x, double y)
     {
         var neighbors = _kdTree.NearestNeighbors([x, y], _numNeighbors);
 
@@ -47,7 +47,7 @@ public class IdwInterpolator
         {
             var distance = L2Norm(pos, [x, y]);
 
-            if (distance <= 0.0f) return height;
+            if (distance <= 0) return height;
 
             var weight = 1.0 / Mathf.Pow(distance, _power);
             weightedSum += weight * height;
@@ -56,18 +56,18 @@ public class IdwInterpolator
 
         if (totalWeight <= 0.0)
             // This should not happen unless all weights are zero, which is impossible with distance > 0
-            return 0.0f;
+            return 0.0;
 
-        return (float)(weightedSum / totalWeight);
+        return weightedSum / totalWeight;
     }
 
 
-    public static float[,] ConstructHeightMap(IEnumerable<Vector2> positions, IEnumerable<float> heights,
+    public static double[,] ConstructHeightMap(IEnumerable<Vector2> positions, IEnumerable<double> heights,
         int resolutionX, int resolutionY, Rect2 rect, double power = 2, int numNeighbors = 12)
     {
         var interpolator = new IdwInterpolator(positions, heights, power, numNeighbors);
 
-        var heightMap = new float[resolutionX, resolutionY];
+        var heightMap = new double[resolutionX, resolutionY];
         var stepX = rect.Size.X / (resolutionX - 1);
         var stepY = rect.Size.Y / (resolutionY - 1);
 

@@ -22,7 +22,7 @@ internal partial class FreeLookCameraBase : Camera3D
     private bool _q;
     private bool _s;
     private bool _shift;
-    private float _total_pitch;
+    private double _total_pitch;
     private float _vel_multiplier = 4f;
     private Vector3 _velocity = new(0.0f, 0.0f, 0.0f);
 
@@ -44,23 +44,23 @@ internal partial class FreeLookCameraBase : Camera3D
             switch (mouseButtonEvent.ButtonIndex)
             {
                 case MouseButton.Right: // Only allows rotation if right click down
-                {
-                    Input.MouseMode = mouseButtonEvent.Pressed
-                        ? Input.MouseModeEnum.Captured
-                        : Input.MouseModeEnum.Visible;
-                }
+                    {
+                        Input.MouseMode = mouseButtonEvent.Pressed
+                            ? Input.MouseModeEnum.Captured
+                            : Input.MouseModeEnum.Visible;
+                    }
                     break;
 
                 case MouseButton.WheelUp: // Increases max velocity
-                {
-                    _vel_multiplier = Mathf.Clamp(_vel_multiplier * 1.1f, 0.2f, 20f);
-                }
+                    {
+                        _vel_multiplier = Mathf.Clamp(_vel_multiplier * 1.1f, 0.2f, 20f);
+                    }
                     break;
 
                 case MouseButton.WheelDown: // Decreases max velocity
-                {
-                    _vel_multiplier = Mathf.Clamp(_vel_multiplier / 1.1f, 0.2f, 20f);
-                }
+                    {
+                        _vel_multiplier = Mathf.Clamp(_vel_multiplier / 1.1f, 0.2f, 20f);
+                    }
                     break;
             }
 
@@ -70,49 +70,49 @@ internal partial class FreeLookCameraBase : Camera3D
             switch (keyEvent.Keycode)
             {
                 case Key.W:
-                {
-                    _w = keyEvent.Pressed;
-                }
+                    {
+                        _w = keyEvent.Pressed;
+                    }
                     break;
 
                 case Key.S:
-                {
-                    _s = keyEvent.Pressed;
-                }
+                    {
+                        _s = keyEvent.Pressed;
+                    }
                     break;
 
                 case Key.A:
-                {
-                    _a = keyEvent.Pressed;
-                }
+                    {
+                        _a = keyEvent.Pressed;
+                    }
                     break;
 
                 case Key.D:
-                {
-                    _d = keyEvent.Pressed;
-                }
+                    {
+                        _d = keyEvent.Pressed;
+                    }
                     break;
 
                 case Key.Q:
-                {
-                    _q = keyEvent.Pressed;
-                }
+                    {
+                        _q = keyEvent.Pressed;
+                    }
                     break;
 
                 case Key.E:
-                {
-                    _e = keyEvent.Pressed;
-                }
+                    {
+                        _e = keyEvent.Pressed;
+                    }
                     break;
                 case Key.Shift:
-                {
-                    _shift = keyEvent.Pressed;
-                }
+                    {
+                        _shift = keyEvent.Pressed;
+                    }
                     break;
                 case Key.Alt:
-                {
-                    _alt = keyEvent.Pressed;
-                }
+                    {
+                        _alt = keyEvent.Pressed;
+                    }
                     break;
             }
     }
