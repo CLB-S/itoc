@@ -26,11 +26,12 @@ public class WorldSettings
     public ulong Seed = 234;
     public float ContinentRatio = 0.4f;
     public float PlateMergeRatio = 0.13f;
-    public float MinimumCellDistance = 5f;
     public float MaxTectonicMovement = 10.0f;
     public float MaxAltitude = 2000.0f;
-    public Rect2 Bounds = new Rect2(-500, -500, 1000, 1000);
 
+
+    public Rect2 Bounds = new Rect2(-5000, -5000, 10000, 10000);
+    public float MinimumCellDistance = 50f;
     public float AltitudePropagationDecrement = 0.8f;
     public float AltitudePropagationSharpness = 0.1f;
 

@@ -22,15 +22,16 @@ public partial class WorldGenerator
     {
         ReportProgress("Initializing resources");
         _rng = new RandomNumberGenerator { Seed = Settings.Seed };
+        var sizeY = Settings.Bounds.Size.Y;
         _plateNoise = new FastNoiseLite
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
-            Frequency = 0.010f,
+            Frequency = 10.0f / sizeY,
             CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.CellValue,
             DomainWarpEnabled = true,
-            DomainWarpAmplitude = 90f,
-            DomainWarpFrequency = 0.010f,
+            DomainWarpAmplitude = 0.09f * sizeY,
+            DomainWarpFrequency = 10.0f / sizeY,
             DomainWarpFractalType = FastNoiseLite.DomainWarpFractalTypeEnum.None,
             FractalType = FastNoiseLite.FractalTypeEnum.None
         };
@@ -39,7 +40,7 @@ public partial class WorldGenerator
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
-            Frequency = 0.010f,
+            Frequency = 10.0f / sizeY,
             FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
             FractalOctaves = 4,
             DomainWarpEnabled = false
