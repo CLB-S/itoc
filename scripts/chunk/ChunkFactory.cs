@@ -56,7 +56,7 @@ public partial class ChunkFactory : IDisposable
 
                 try
                 {
-                    var result = request.Generate();
+                    var result = new ChunkGenerationPipeline().Excute(request);
                     request?.Callback?.Invoke(result);
                 }
                 finally
@@ -91,12 +91,31 @@ public partial class ChunkFactory : IDisposable
 
     public void Dispose()
     {
+        //TODO: Need review.
+
         if (_disposed) return;
         _disposed = true;
 
-        _cts.Dispose();
-        _queue.Dispose();
-        _throttler.Dispose();
-        GC.SuppressFinalize(this);
+        try
+        {
+            // Cancel any ongoing operations
+            _cts.Cancel();
+
+            // Wait for all threads to finish
+            foreach (var thread in _workerThreads)
+            {
+                if (thread.IsAlive)
+                    thread.Join();
+            }
+
+            // Dispose managed resources
+            _queue?.Dispose();
+            _cts?.Dispose();
+            _throttler?.Dispose();
+        }
+        catch (Exception e)
+        {
+            GD.PrintErr($"Error during disposal: {e}");
+        }
     }
 }
