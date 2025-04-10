@@ -6,7 +6,7 @@ using Godot;
 
 namespace ChunkGenerator;
 
-public partial class ChunkGenerator : IDisposable
+public partial class ChunkFactory : IDisposable
 {
     private readonly BlockingCollection<ChunkGenerationRequest> _queue = new();
     private readonly List<Thread> _workerThreads = new();
@@ -16,9 +16,9 @@ public partial class ChunkGenerator : IDisposable
     private readonly SemaphoreSlim _throttler;
     private readonly int _maxConcurrentJobs;
 
-    private ChunkGenerator() { }
+    private ChunkFactory() { }
 
-    public ChunkGenerator(int maxConcurrentJobs = 0)
+    public ChunkFactory(int maxConcurrentJobs = 0)
     {
         _maxConcurrentJobs = maxConcurrentJobs > 0
             ? maxConcurrentJobs
@@ -28,6 +28,8 @@ public partial class ChunkGenerator : IDisposable
 
         for (var i = 0; i < _maxConcurrentJobs; i++)
             _workerThreads.Add(new Thread(ProcessQueue));
+
+        GD.Print("ChunkFactory initialized with " + _maxConcurrentJobs + " threads.");
     }
 
     public void Start()

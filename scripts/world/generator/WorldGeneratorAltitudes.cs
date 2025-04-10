@@ -22,8 +22,8 @@ public partial class WorldGenerator
             {
                 // [-1, 1]
                 var l = _points[cellPId] - _points[cellQId];
-                var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
-                                       (2 * l.Length() * Settings.MaxTectonicMovement);
+                var relativeMovement = (float)((cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
+                                       (2 * l.Length() * Settings.MaxTectonicMovement));
 
                 if (Mathf.Abs(relativeMovement) < 0.25f)
                     continue;
@@ -35,15 +35,15 @@ public partial class WorldGenerator
 
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
                 {
-                    double altitude;
+                    float altitude;
                     if (relativeMovement < 0)
                     {
-                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0 + 0.5;
+                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0f + 0.5f;
                         altitude *= altitude;
                     }
                     else
                     {
-                        altitude = 1 - 0.75 * (relativeMovement - 1) * (relativeMovement - 1);
+                        altitude = 1 - 0.75f * (relativeMovement - 1) * (relativeMovement - 1);
                     }
 
                     cellP.Altitude += altitude * Settings.MaxAltitude;
@@ -122,7 +122,7 @@ public partial class WorldGenerator
                 if (!used.Contains(neighborIndex))
                 {
                     var neighbor = _cellDatas[neighborIndex];
-                    var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + _rng.Randf() * sharpness;
+                    var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + (float)_rng.Randf() * sharpness;
                     var heightContribution = propagatedHeight * mod;
 
                     neighbor.Altitude += heightContribution;

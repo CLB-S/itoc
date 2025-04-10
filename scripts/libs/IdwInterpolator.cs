@@ -7,11 +7,11 @@ using Supercluster.KDTree;
 
 public class IdwInterpolator
 {
-    private readonly KDTree<double, double> _kdTree;
+    private readonly KDTree<double, float> _kdTree;
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<double> heights, double power = 2.0,
+    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 2.0,
         int numNeighbors = 10)
     {
         var positionsList = positions.ToList();
@@ -22,7 +22,7 @@ public class IdwInterpolator
 
         var pointsData = positions.Select(p => new[] { p.X, p.Y }).ToArray();
 
-        _kdTree = new KDTree<double, double>(2, pointsData, heights.ToArray(), L2Norm);
+        _kdTree = new KDTree<double, float>(2, pointsData, heights.ToArray(), L2Norm);
 
         _power = power;
         _numNeighbors = numNeighbors;
@@ -36,7 +36,7 @@ public class IdwInterpolator
         return dist;
     }
 
-    public double GetHeight(double x, double y)
+    public float GetHeight(double x, double y)
     {
         var neighbors = _kdTree.NearestNeighbors([x, y], _numNeighbors);
 
@@ -56,30 +56,45 @@ public class IdwInterpolator
 
         if (totalWeight <= 0.0)
             // This should not happen unless all weights are zero, which is impossible with distance > 0
-            return 0.0;
+            return 0.0f;
 
-        return weightedSum / totalWeight;
+        return (float)(weightedSum / totalWeight);
     }
 
 
-    public double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2 rect)
+    public float[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2 rect, bool parallel = false)
     {
-        if (resolutionX == 1 || resolutionY == 1)
+        if (resolutionX <= 1 || resolutionY <= 1)
             throw new ArgumentException("Resolution must be greater than 1."); // TODO: lazy to implement this
 
-        var heightMap = new double[resolutionX, resolutionY];
+        var heightMap = new float[resolutionX, resolutionY];
         var stepX = rect.Size.X / (resolutionX - 1);
         var stepY = rect.Size.Y / (resolutionY - 1);
 
-        Parallel.For(0, resolutionX, i =>
+        if (parallel)
         {
-            var x = rect.Position.X + i * stepX;
-            for (var j = 0; j < resolutionY; j++)
+            Parallel.For(0, resolutionX, i =>
             {
-                var y = rect.Position.Y + j * stepY;
-                heightMap[i, j] = GetHeight(x, y);
+                var x = rect.Position.X + i * stepX;
+                for (var j = 0; j < resolutionY; j++)
+                {
+                    var y = rect.Position.Y + j * stepY;
+                    heightMap[i, j] = GetHeight(x, y);
+                }
+            });
+        }
+        else
+        {
+            for (var i = 0; i < resolutionX; i++)
+            {
+                var x = rect.Position.X + i * stepX;
+                for (var j = 0; j < resolutionY; j++)
+                {
+                    var y = rect.Position.Y + j * stepY;
+                    heightMap[i, j] = GetHeight(x, y);
+                }
             }
-        });
+        }
 
         return heightMap;
     }

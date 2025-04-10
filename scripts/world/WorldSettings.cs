@@ -7,15 +7,15 @@ public class WorldSettings
     public int LoadDistance = 8;
 
     #region Generation Settings
-    public double ContinentRatio = 0.4;
-    public double PlateMergeRatio = 0.13;
-    public double MaxTectonicMovement = 10.0;
-    public double MaxAltitude = 2000.0;
+    public float ContinentRatio = 0.4f;
+    public float PlateMergeRatio = 0.13f;
+    public float MaxTectonicMovement = 10.0f;
+    public float MaxAltitude = 2000.0f;
 
     public Rect2 Bounds = new Rect2(-5000, -5000, 10000, 10000);
-    public double MinimumCellDistance = 50;
-    public double AltitudePropagationDecrement = 0.8;
-    public double AltitudePropagationSharpness = 0.1;
+    public float MinimumCellDistance = 50;
+    public float AltitudePropagationDecrement = 0.8f;
+    public float AltitudePropagationSharpness = 0.1f;
     #endregion
 
     public WorldSettings(ulong seed = 234)

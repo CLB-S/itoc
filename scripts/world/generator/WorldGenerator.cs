@@ -14,10 +14,10 @@ public class CellData
     public Vector2 TectonicMovement;
     public PlateType PlateType;
     public uint PlateSeed;
-    public double Altitude = 0;
+    public float Altitude = 0;
     public bool RoundPlateJunction = false;
-    public double Precipitation;
-    public double Flux;
+    public float Precipitation;
+    public float Flux;
     public RiverSegment River;
 }
 
@@ -238,7 +238,7 @@ public partial class WorldGenerator
     private void InitInterpolator()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
-        var dataList = new List<double>(_cellDatas.Count);
+        var dataList = new List<float>(_cellDatas.Count);
         for (var i = 0; i < _cellDatas.Count; i++)
         {
             posList.Add(_points[i]);
@@ -248,20 +248,20 @@ public partial class WorldGenerator
         _interpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
     }
 
-    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
     {
-        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds);
+        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
-    public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2 bounds)
+    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2 bounds, bool parallel = false)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return _interpolator.ConstructHeightMap(resolutionX, resolutionY, bounds);
+        return _interpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel);
     }
 
-    public ImageTexture GetHeightMapImageTexture(int resolutionX, int resolutionY)
+    public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)
     {
         var heightMap = CalculateFullHeightMap(resolutionX, resolutionY);
         var image = Image.CreateEmpty(resolutionX, resolutionY, false, Image.Format.Rgb8);

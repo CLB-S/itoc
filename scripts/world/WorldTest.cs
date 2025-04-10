@@ -271,7 +271,7 @@ public partial class WorldTest : Node2D
         Log("Generating height map...");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        await Task.Run(() => HeightMapTexture = _worldGenerator.GetHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
+        await Task.Run(() => HeightMapTexture = _worldGenerator.GetFullHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
         GenerateHeightMapButton.Disabled = false;
         var mat = HeightMapMesh.GetSurfaceOverrideMaterial(0) as ShaderMaterial;
         mat.SetShaderParameter("heightmap", HeightMapTexture);

@@ -7,21 +7,17 @@ public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
-
     public WorldSettings Settings = new();
-    private WorldGenerator.WorldGenerator _worldGenerator;
-
-    private PackedScene _debugCube;
-    private ChunkGenerator.ChunkGenerator _chunkGenerator;
-
-    private bool _ready = false; //TODO: State
-
-    private Vector3 _lastPlayerPosition = Vector3.Inf;
-    private readonly HashSet<Vector3I> _queuedPositions = new();
-
     public bool DebugDrawChunkBounds = false;
     public bool UseDebugMaterial = false;
     public ShaderMaterial DebugMaterial;
+    private PackedScene _debugCube;
+
+    private WorldGenerator.WorldGenerator _worldGenerator;
+    private ChunkGenerator.ChunkFactory _chunkFactory;
+    private bool _ready = false; //TODO: State
+    private Vector3 _lastPlayerPosition = Vector3.Inf;
+    private readonly HashSet<Vector3I> _queuedPositions = new();
 
     public static World Instance { get; private set; } //TODO: Remove after gui.
 
@@ -36,13 +32,13 @@ public partial class World : Node
         await _worldGenerator.GenerateWorldAsync(); //TODO: GUI
         GD.Print("World pre-generation finished.");
 
-        _chunkGenerator = new ChunkGenerator.ChunkGenerator();
-        _chunkGenerator.Start();
+        _chunkFactory = new ChunkGenerator.ChunkFactory();
+        _chunkFactory.Start();
 
         _ready = true;
     }
 
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
         if (!_ready) return;
 
@@ -120,7 +116,7 @@ public partial class World : Node
             if (_queuedPositions.Add(pos))
             {
                 var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, pos, MainThreadCallback);
-                _chunkGenerator.Enqueue(request);
+                _chunkFactory.Enqueue(request);
             }
     }
 
@@ -177,6 +173,7 @@ public partial class World : Node
 
     public override void _ExitTree()
     {
-        _chunkGenerator.Stop();
+        _chunkFactory.Stop();
+        _chunkFactory.Dispose();
     }
 }
