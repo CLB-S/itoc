@@ -253,12 +253,12 @@ public partial class WorldGenerator
         return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
-    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2 bounds, bool parallel = false)
+    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2 bounds, bool parallel = false, int upscaleLevel = 2)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return _interpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel);
+        return _interpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel, upscaleLevel);
     }
 
     public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)
