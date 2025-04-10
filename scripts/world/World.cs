@@ -79,7 +79,7 @@ public partial class World : Node
         return chunk;
     }
 
-    public uint GetBlock(Vector3 worldPos)
+    public ushort GetBlock(Vector3 worldPos)
     {
         var chunk = GetChunkWorldPos(worldPos);
         if (chunk == null) return 0;
@@ -88,7 +88,7 @@ public partial class World : Node
         return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));
     }
 
-    public void SetBlock(Vector3 worldPos, uint block)
+    public void SetBlock(Vector3 worldPos, ushort block)
     {
         var chunk = GetChunkWorldPos(worldPos);
         if (chunk == null) return;
@@ -103,6 +103,7 @@ public partial class World : Node
         var centerChunkXZ = new Vector2I(centerChunk.X, centerChunk.Z);
         var loadArea = new HashSet<Vector2I>();
 
+        // Load Area
         for (var x = -Settings.LoadDistance; x <= Settings.LoadDistance; x++)
             for (var z = -Settings.LoadDistance; z <= Settings.LoadDistance; z++)
             {
@@ -110,12 +111,18 @@ public partial class World : Node
                 if (pos.DistanceTo(centerChunkXZ) <= Settings.LoadDistance) loadArea.Add(pos);
             }
 
-        // TODO: Unload.
-        // foreach (var existingPos in Chunks.Keys)
-        //     if (!loadArea.Contains(existingPos))
-        //         if (Chunks.TryRemove(existingPos, out var chunk))
-        //             chunk.Unload();
+        // Unload
+        foreach (var existingPos in Chunks.Keys)
+            if (!loadArea.Contains(new Vector2I(existingPos.X, existingPos.Z)))
+                if (Chunks.TryRemove(existingPos, out var chunk))
+                    chunk.Unload();
 
+        foreach (var existingPos in ChunkColumns.Keys)
+            if (!loadArea.Contains(existingPos))
+                if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
+                    chunkColumn = null;
+
+        // To generate
         var toGenerate = new List<Vector2I>();
         foreach (var pos in loadArea)
             if (!ChunkColumns.ContainsKey(pos) && !_queuedChunkColumns.Contains(pos))
@@ -138,7 +145,7 @@ public partial class World : Node
             ChunkColumns[result.Position] = result;
 
             var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkSize);
-            var low = Mathf.FloorToInt(result.HeightMapLow / ChunkSize) - 1;
+            var low = Mathf.FloorToInt((result.HeightMapLow - 2) / ChunkSize) - 1;
 
             for (var y = low; y <= high; y++)
             {
