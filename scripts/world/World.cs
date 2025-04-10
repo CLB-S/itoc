@@ -7,6 +7,7 @@ public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
+    public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
     public WorldSettings Settings = new();
     public bool DebugDrawChunkBounds = false;
     public bool UseDebugMaterial = false;
@@ -18,6 +19,7 @@ public partial class World : Node
     private bool _ready = false; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly HashSet<Vector3I> _queuedPositions = new();
+    private readonly HashSet<Vector2I> _queuedChunkColumns = new();
 
     public static World Instance { get; private set; } //TODO: Remove after gui.
 
@@ -85,50 +87,67 @@ public partial class World : Node
     private void UpdateChunkLoading(Vector3 center)
     {
         var centerChunk = WorldToChunkPosition(center);
-        var loadArea = new HashSet<Vector3I>();
+        var centerChunkXZ = new Vector2I(centerChunk.X, centerChunk.Z);
+        var loadArea = new HashSet<Vector2I>();
 
-        // 计算需要加载的区块范围（原有逻辑）
         for (var x = -Settings.LoadDistance; x <= Settings.LoadDistance; x++)
-            for (var y = -3; y <= 3; y++)
-                for (var z = -Settings.LoadDistance; z <= Settings.LoadDistance; z++)
-                {
-                    var pos = centerChunk + new Vector3I(x, y, z);
-                    if (pos.DistanceTo(centerChunk) <= Settings.LoadDistance) loadArea.Add(pos);
-                }
+            for (var z = -Settings.LoadDistance; z <= Settings.LoadDistance; z++)
+            {
+                var pos = centerChunkXZ + new Vector2I(x, z);
+                if (pos.DistanceTo(centerChunkXZ) <= Settings.LoadDistance) loadArea.Add(pos);
+            }
 
-        // 卸载超出范围的区块（原有逻辑）
-        foreach (var existingPos in Chunks.Keys)
-            if (!loadArea.Contains(existingPos))
-                if (Chunks.TryRemove(existingPos, out var chunk))
-                    chunk.Unload();
+        // TODO: Unload.
+        // foreach (var existingPos in Chunks.Keys)
+        //     if (!loadArea.Contains(existingPos))
+        //         if (Chunks.TryRemove(existingPos, out var chunk))
+        //             chunk.Unload();
 
-        // 收集需要生成的区块并按距离排序
-        var toGenerate = new List<Vector3I>();
+        var toGenerate = new List<Vector2I>();
         foreach (var pos in loadArea)
-            if (!Chunks.ContainsKey(pos) && !_queuedPositions.Contains(pos))
+            if (!ChunkColumns.ContainsKey(pos) && !_queuedChunkColumns.Contains(pos))
                 toGenerate.Add(pos);
 
-        // 按距离排序（近的优先）
-        toGenerate.Sort((a, b) => a.DistanceTo(centerChunk).CompareTo(b.DistanceTo(centerChunk)));
+        // Sort by distance.
+        toGenerate.Sort((a, b) => a.DistanceTo(centerChunkXZ).CompareTo(b.DistanceTo(centerChunkXZ)));
 
-        // 加入生成队列
         foreach (var pos in toGenerate)
-            if (_queuedPositions.Add(pos))
+            if (_queuedChunkColumns.Add(pos))
             {
-                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, pos, MainThreadCallback);
-                _chunkFactory.Enqueue(request);
+                var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(_worldGenerator, pos, ChunkColumnGenerationCallback);
+                _chunkFactory.Enqueue(columnRequest);
             }
     }
 
-    private void MainThreadCallback(ChunkGenerator.ChunkGenerationResult result)
+    private void ChunkColumnGenerationCallback(ChunkColumn result)
     {
         if (result == null) return;
 
-        // 检查区块是否仍在加载范围内
-        var currentPlayerPos = GetPlayerPosition();
-        var currentCenter = WorldToChunkPosition(currentPlayerPos);
+        if (!ChunkColumns.ContainsKey(result.Position))
+        {
+            ChunkColumns[result.Position] = result;
 
-        if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Settings.LoadDistance) return; // 超出范围则丢弃
+            var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkSize);
+            var low = Mathf.FloorToInt(result.HeightMapLow / ChunkSize) - 2;
+
+            for (var y = low; y <= high; y++)
+            {
+                var chunkPos = new Vector3I(result.Position.X, y, result.Position.Y);
+                if (Chunks.ContainsKey(chunkPos) || _queuedPositions.Contains(chunkPos)) continue;
+
+                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, chunkPos, ChunkGenerationCallback);
+                _chunkFactory.Enqueue(request);
+            }
+        }
+    }
+
+    private void ChunkGenerationCallback(ChunkGenerator.ChunkGenerationResult result)
+    {
+        if (result == null) return;
+
+        // var currentPlayerPos = GetPlayerPosition();
+        // var currentCenter = WorldToChunkPosition(currentPlayerPos);
+        // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Settings.LoadDistance) return;
 
         if (!Chunks.ContainsKey(result.ChunkData.GetPosition()))
         {

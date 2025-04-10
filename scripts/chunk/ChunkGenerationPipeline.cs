@@ -5,7 +5,7 @@ using Godot;
 
 namespace ChunkGenerator;
 
-public enum GenerationState
+public enum ChunkGenerationState
 {
     NotStarted,
     Initializing,
@@ -18,11 +18,11 @@ public enum GenerationState
 
 public class GenerationStep
 {
-    public GenerationState State { get; }
+    public ChunkGenerationState State { get; }
     public Action<ChunkGenerationRequest> Action { get; }
     public bool Optional { get; }
 
-    public GenerationStep(GenerationState state, Action<ChunkGenerationRequest> action, bool optional = false)
+    public GenerationStep(ChunkGenerationState state, Action<ChunkGenerationRequest> action, bool optional = false)
     {
         State = state;
         Action = action;
@@ -32,7 +32,7 @@ public class GenerationStep
 
 public class ChunkGenerationPipeline
 {
-    public GenerationState State { get; private set; } = GenerationState.NotStarted;
+    public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
 
     private uint[] _voxels;
     private ChunkMesher.MeshData _meshData;
@@ -49,10 +49,10 @@ public class ChunkGenerationPipeline
 
     private void InitializePipeline()
     {
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, Initialize));
+        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Initializing, Initialize));
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.HeightMap, GetHeightmap));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.Meshing, Meshing));
+        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, GetHeightMap));
+        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Meshing, Meshing));
     }
 
     private void Initialize(ChunkGenerationRequest request)
@@ -62,7 +62,7 @@ public class ChunkGenerationPipeline
     }
 
     // TODO: Optimize this
-    private void GetHeightmap(ChunkGenerationRequest request)
+    private void GetHeightMap(ChunkGenerationRequest request)
     {
         var rect = new Rect2(request.ChunkPosition.X * ChunkMesher.CS, request.ChunkPosition.Z * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
         var heightMap = request.WorldGenerator.CalculateHeightMap(ChunkMesher.CS_P, ChunkMesher.CS_P, rect);
@@ -105,7 +105,7 @@ public class ChunkGenerationPipeline
     {
         try
         {
-            State = GenerationState.Initializing;
+            State = ChunkGenerationState.Initializing;
 
             // GenerationStartedEvent?.Invoke(this, EventArgs.Empty);
             _stopwatch.Restart();
@@ -131,7 +131,7 @@ public class ChunkGenerationPipeline
     private ChunkGenerationResult CompleteGeneration()
     {
         _stopwatch.Stop();
-        State = GenerationState.Completed;
+        State = ChunkGenerationState.Completed;
         ReportProgress("Generation completed");
         // GenerationCompletedEvent?.Invoke(this, EventArgs.Empty);
         return new ChunkGenerationResult(_chunkData, _meshData, _mesh, _shape);
@@ -139,7 +139,7 @@ public class ChunkGenerationPipeline
 
     private ChunkGenerationResult HandleError(Exception ex)
     {
-        State = GenerationState.Failed;
+        State = ChunkGenerationState.Failed;
         // GenerationFailedEvent?.Invoke(this, ex);
         GD.PrintErr($"Chunk generation failed: {ex}");
         return null;

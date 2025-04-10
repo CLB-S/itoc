@@ -10,7 +10,7 @@ namespace ChunkGenerator;
 
 public class ChunkGenerationRequest
 {
-    public GenerationState State { get; private set; } = GenerationState.NotStarted;
+    public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
     public Vector3I ChunkPosition { get; }
     public Action<ChunkGenerationResult> Callback { get; }
     public readonly WorldGenerator.WorldGenerator WorldGenerator;

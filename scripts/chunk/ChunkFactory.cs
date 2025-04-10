@@ -8,7 +8,8 @@ namespace ChunkGenerator;
 
 public partial class ChunkFactory : IDisposable
 {
-    private readonly BlockingCollection<ChunkGenerationRequest> _queue = new();
+    private readonly BlockingCollection<ChunkGenerationRequest> _chunkQueue = new();
+    private readonly BlockingCollection<ChunkColumnGenerationRequest> _chunkColumnQueue = new();
     private readonly List<Thread> _workerThreads = new();
     private readonly CancellationTokenSource _cts = new();
     private bool _disposed;
@@ -40,7 +41,13 @@ public partial class ChunkFactory : IDisposable
     public void Enqueue(ChunkGenerationRequest request)
     {
         if (_disposed) return;
-        _queue.Add(request);
+        _chunkQueue.Add(request);
+    }
+
+    public void Enqueue(ChunkColumnGenerationRequest request)
+    {
+        if (_disposed) return;
+        _chunkColumnQueue.Add(request);
     }
 
     private void ProcessQueue(object obj)
@@ -52,12 +59,17 @@ public partial class ChunkFactory : IDisposable
             {
                 _throttler.Wait(ct);
 
-                var request = _queue.Take(ct);
-
                 try
                 {
-                    var result = new ChunkGenerationPipeline().Excute(request);
-                    request?.Callback?.Invoke(result);
+                    if (_chunkColumnQueue.TryTake(out var columnRequest))
+                    {
+                        columnRequest.Callback?.Invoke(columnRequest.Excute());
+                    }
+                    else if (_chunkQueue.TryTake(out var request))
+                    {
+                        var result = new ChunkGenerationPipeline().Excute(request);
+                        request.Callback?.Invoke(result);
+                    }
                 }
                 finally
                 {
@@ -109,7 +121,8 @@ public partial class ChunkFactory : IDisposable
             }
 
             // Dispose managed resources
-            _queue?.Dispose();
+            _chunkQueue?.Dispose();
+            _chunkColumnQueue?.Dispose();
             _cts?.Dispose();
             _throttler?.Dispose();
         }
