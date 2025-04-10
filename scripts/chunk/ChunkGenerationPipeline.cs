@@ -51,7 +51,7 @@ public class ChunkGenerationPipeline
     {
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Initializing, Initialize));
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
-        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, GetHeightMap));
+        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, SetBlocksyHeightMap));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Meshing, Meshing));
     }
 
@@ -62,15 +62,12 @@ public class ChunkGenerationPipeline
     }
 
     // TODO: Optimize this
-    private void GetHeightMap(ChunkGenerationRequest request)
+    private void SetBlocksyHeightMap(ChunkGenerationRequest request)
     {
-        var rect = new Rect2(request.ChunkPosition.X * ChunkMesher.CS, request.ChunkPosition.Z * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        var heightMap = request.WorldGenerator.CalculateHeightMap(ChunkMesher.CS_P, ChunkMesher.CS_P, rect);
         for (var x = 0; x < ChunkMesher.CS_P; x++)
             for (var z = 0; z < ChunkMesher.CS_P; z++)
             {
-                var height = (int)heightMap[x, z];
-
+                var height = (int)request.ChunkColumn.HeightMap[x, z];
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
                     var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;

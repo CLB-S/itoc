@@ -12,6 +12,7 @@ public class ChunkGenerationRequest
 {
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
     public Vector3I ChunkPosition { get; }
+    public ChunkColumn ChunkColumn { get; }
     public Action<ChunkGenerationResult> Callback { get; }
     public readonly WorldGenerator.WorldGenerator WorldGenerator;
 
@@ -19,12 +20,12 @@ public class ChunkGenerationRequest
     public ChunkGenerationRequest(
         WorldGenerator.WorldGenerator worldGenerator,
         Vector3I position,
+        ChunkColumn chunkColumn,
         Action<ChunkGenerationResult> callback)
     {
         WorldGenerator = worldGenerator;
         ChunkPosition = position;
+        ChunkColumn = chunkColumn;
         Callback = callback;
     }
-
-
 }

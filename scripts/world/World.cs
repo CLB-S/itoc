@@ -6,6 +6,8 @@ using Godot;
 public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
+    public const int MaxGenerationsPerFrame = 1;
+
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
     public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
     public WorldSettings Settings = new();
@@ -18,8 +20,8 @@ public partial class World : Node
     private ChunkGenerator.ChunkFactory _chunkFactory;
     private bool _ready = false; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
-    private readonly HashSet<Vector3I> _queuedPositions = new();
     private readonly HashSet<Vector2I> _queuedChunkColumns = new();
+    private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
     public static World Instance { get; private set; } //TODO: Remove after gui.
 
@@ -49,6 +51,17 @@ public partial class World : Node
         {
             UpdateChunkLoading(playerPos);
             _lastPlayerPosition = playerPos;
+        }
+
+        var processed = 0;
+        while (_chunkColumnsGenerationQueue.Count > 0 && processed < MaxGenerationsPerFrame)
+        {
+            var pos = _chunkColumnsGenerationQueue.Dequeue();
+            _queuedChunkColumns.Remove(pos);
+
+            var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(_worldGenerator, pos, ChunkColumnGenerationCallback);
+            _chunkFactory.Enqueue(columnRequest);
+            processed++;
         }
     }
 
@@ -113,10 +126,7 @@ public partial class World : Node
 
         foreach (var pos in toGenerate)
             if (_queuedChunkColumns.Add(pos))
-            {
-                var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(_worldGenerator, pos, ChunkColumnGenerationCallback);
-                _chunkFactory.Enqueue(columnRequest);
-            }
+                _chunkColumnsGenerationQueue.Enqueue(pos);
     }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)
@@ -128,14 +138,14 @@ public partial class World : Node
             ChunkColumns[result.Position] = result;
 
             var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkSize);
-            var low = Mathf.FloorToInt(result.HeightMapLow / ChunkSize) - 2;
+            var low = Mathf.FloorToInt(result.HeightMapLow / ChunkSize) - 1;
 
             for (var y = low; y <= high; y++)
             {
                 var chunkPos = new Vector3I(result.Position.X, y, result.Position.Y);
-                if (Chunks.ContainsKey(chunkPos) || _queuedPositions.Contains(chunkPos)) continue;
+                if (Chunks.ContainsKey(chunkPos)) continue;
 
-                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, chunkPos, ChunkGenerationCallback);
+                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, chunkPos, result, ChunkGenerationCallback);
                 _chunkFactory.Enqueue(request);
             }
         }
@@ -156,7 +166,6 @@ public partial class World : Node
             chunk.Load();
             CallDeferred(Node.MethodName.AddChild, chunk);
 
-            _queuedPositions.Remove(result.ChunkData.GetPosition());
         }
     }
 

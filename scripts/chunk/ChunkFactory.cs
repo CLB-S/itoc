@@ -70,6 +70,11 @@ public partial class ChunkFactory : IDisposable
                         var result = new ChunkGenerationPipeline().Excute(request);
                         request.Callback?.Invoke(result);
                     }
+                    else
+                    {
+                        // No requests to process, wait for a short time before checking again
+                        Thread.Sleep(10);
+                    }
                 }
                 finally
                 {
