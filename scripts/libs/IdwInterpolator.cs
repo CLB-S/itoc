@@ -11,7 +11,7 @@ public class IdwInterpolator
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 2.0,
+    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 1.3,
         int numNeighbors = 10)
     {
         var positionsList = positions.ToList();
@@ -61,6 +61,7 @@ public class IdwInterpolator
         return (float)(weightedSum / totalWeight);
     }
 
+    // TODO: Fix inconsistency.
     public float[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2 rect, bool parallel = false, int upscaleLevel = 2)
     {
         if (resolutionX <= 1 || resolutionY <= 1)
