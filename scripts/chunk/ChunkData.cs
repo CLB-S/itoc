@@ -6,7 +6,7 @@ public class ChunkData
     public readonly int x;
     public readonly int y;
     public readonly int z;
-    public uint[] Voxels;
+    public ushort[] Voxels;
 
     private ChunkData() { }
     public ChunkData(int x, int y, int z)

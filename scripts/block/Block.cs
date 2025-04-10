@@ -5,7 +5,7 @@ public abstract class Block
     /// <summary>
     ///     The unique ID of the block. Top 3 bits are reserved for direction.
     /// </summary>
-    public uint BlockId { get; protected set; }
+    public ushort BlockId { get; protected set; }
 
     public string BlockName { get; protected set; }
     public Color Color { get; set; } = Colors.White;

@@ -5,8 +5,8 @@ public class BlockManager
 {
     private static BlockManager _instance;
 
-    private readonly Dictionary<uint, Block> _blocks = new();
-    private readonly Dictionary<string, uint> _nameToId = new();
+    private readonly Dictionary<ushort, Block> _blocks = new();
+    private readonly Dictionary<string, ushort> _nameToId = new();
 
     public BlockManager()
     {
@@ -28,7 +28,7 @@ public class BlockManager
         block.LoadResources();
     }
 
-    public Block GetBlock(uint id)
+    public Block GetBlock(ushort id)
     {
         return _blocks.TryGetValue(id, out var block) ? block : null;
     }

@@ -5,7 +5,7 @@ public class BasicBlock : Block
     private Material _material;
     public Texture2D Texture;
 
-    public BasicBlock(uint blockId, string blockName)
+    public BasicBlock(ushort blockId, string blockName)
     {
         BlockId = blockId;
         BlockName = blockName;

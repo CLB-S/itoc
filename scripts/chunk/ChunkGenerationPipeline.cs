@@ -34,7 +34,7 @@ public class ChunkGenerationPipeline
 {
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
 
-    private uint[] _voxels;
+    private ushort[] _voxels;
     private ChunkMesher.MeshData _meshData;
     private ChunkData _chunkData;
     private Mesh _mesh;
@@ -57,7 +57,7 @@ public class ChunkGenerationPipeline
 
     private void Initialize(ChunkGenerationRequest request)
     {
-        _voxels = new uint[ChunkMesher.CS_P3];
+        _voxels = new ushort[ChunkMesher.CS_P3];
         _meshData = new ChunkMesher.MeshData();
     }
 
@@ -67,7 +67,7 @@ public class ChunkGenerationPipeline
         for (var x = 0; x < ChunkMesher.CS_P; x++)
             for (var z = 0; z < ChunkMesher.CS_P; z++)
             {
-                var height = (int)request.ChunkColumn.HeightMap[x, z];
+                var height = Mathf.FloorToInt(request.ChunkColumn.HeightMap[x, z]);
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
                     var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;

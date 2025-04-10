@@ -26,7 +26,7 @@ public partial class Chunk : StaticBody3D
     public Vector3I ChunkPosition { get; private set; }
 
     public ChunkState State { get; private set; } = ChunkState.Unloaded;
-    // public uint[] ChunkData.Voxels { get; private set; }
+    // public ushort[] ChunkData.Voxels { get; private set; }
 
     public Chunk(ChunkGenerator.ChunkGenerationResult result)
     {
@@ -110,7 +110,7 @@ public partial class Chunk : StaticBody3D
 
     */
 
-    public uint GetBlock(int x, int y, int z)
+    public ushort GetBlock(int x, int y, int z)
     {
         // if (x < 0 || x >= World.ChunkSize ||
         //     y < 0 || y >= World.ChunkSize ||
@@ -120,7 +120,7 @@ public partial class Chunk : StaticBody3D
         return ChunkData.Voxels[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)];
     }
 
-    public void SetBlock(int x, int y, int z, uint block)
+    public void SetBlock(int x, int y, int z, ushort block)
     {
         // if (x < 0 || x >= World.ChunkSize ||
         //     y < 0 || y >= World.ChunkSize ||

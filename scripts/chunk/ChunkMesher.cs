@@ -37,7 +37,7 @@ public static class ChunkMesher
     }
 
 
-    public static void MeshVoxels(uint[] voxels, MeshData meshData)
+    public static void MeshVoxels(ushort[] voxels, MeshData meshData)
     {
         meshData.Quads.Clear();
         meshData.QuadBlockIDs.Clear();
@@ -231,7 +231,7 @@ public static class ChunkMesher
     {
         if (meshData.Quads.Count == 0) return null;
 
-        var surfaceArrayDict = new Dictionary<uint, SurfaceArrayData>();
+        var surfaceArrayDict = new Dictionary<ushort, SurfaceArrayData>();
 
         for (var face = 0; face < 6; face++)
             for (var i = meshData.FaceVertexBegin[face];
@@ -251,20 +251,19 @@ public static class ChunkMesher
         return _arrayMesh;
     }
 
-    private static (uint, Direction) ParseBlockInfo(uint blockInfo)
+    // TODO: Reduce mem cost and increase block type capacity.
+    private static (ushort, Direction) ParseBlockInfo(ushort blockInfo)
     {
-        return ((blockInfo << 3) >> 3, (Direction)(blockInfo >> 29));
+        return (blockInfo, Direction.PositiveY);
     }
 
-    private static uint GetBlockInfo(uint blockID, Direction dir)
+    private static ushort GetBlockInfo(ushort blockID, Direction dir)
     {
-        if (BlockManager.Instance.GetBlock(blockID) is DirectionalBlock)
-            return ((uint)dir << 29) | blockID;
         return blockID;
     }
 
-    private static void ParseQuad(Direction dir, uint blockID, ulong quad,
-        Dictionary<uint, SurfaceArrayData> surfaceArrayDict)
+    private static void ParseQuad(Direction dir, ushort blockID, ulong quad,
+        Dictionary<ushort, SurfaceArrayData> surfaceArrayDict)
     {
         var blockInfo = GetBlockInfo(blockID, dir);
         if (!surfaceArrayDict.ContainsKey(blockInfo))
@@ -272,12 +271,12 @@ public static class ChunkMesher
 
         var surfaceArrayData = surfaceArrayDict[blockInfo];
 
-        var x = (uint)(quad & 0x3F); // 6 bits
-        var y = (uint)((quad >> 6) & 0x3F); // 6 bits
-        var z = (uint)((quad >> 12) & 0x3F); // 6 bits
-        var w = (uint)((quad >> 18) & 0x3F); // 6 bits (width)
-        var h = (uint)((quad >> 24) & 0x3F); // 6 bits (height)
-        // uint blockType = (uint)((quad >> 32) & 0x7);
+        var x = (byte)(quad & 0x3F); // 6 bits
+        var y = (byte)((quad >> 6) & 0x3F); // 6 bits
+        var z = (byte)((quad >> 12) & 0x3F); // 6 bits
+        var w = (byte)((quad >> 18) & 0x3F); // 6 bits (width)
+        var h = (byte)((quad >> 24) & 0x3F); // 6 bits (height)
+        // ushort blockType = (ushort)((quad >> 32) & 0x7);
 
         // GD.Print($"{dir.Name()}: {x},{y},{z} ({w},{h})");
         // if (dir != Direction.PositiveY && dir != Direction.NegativeY) return;
@@ -410,7 +409,7 @@ public static class ChunkMesher
         public int[] FaceVertexLength = new int[6];
         public byte[] ForwardMerged = new byte[CS_2];
         public ulong[] OpaqueMask = new ulong[CS_P2];
-        public List<uint> QuadBlockIDs = new(10000);
+        public List<ushort> QuadBlockIDs = new(10000);
         public List<ulong> Quads = new(10000);
         public byte[] RightMerged = new byte[CS];
     }

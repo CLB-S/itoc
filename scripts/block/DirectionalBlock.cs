@@ -11,7 +11,7 @@ public class DirectionalBlock : Block
 
     private readonly string _textureTopPath;
 
-    public DirectionalBlock(uint blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
+    public DirectionalBlock(ushort blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
         string textureRoundPath = null, string textureBottomPath = null)
     {
         BlockId = blockId;
