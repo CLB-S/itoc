@@ -69,7 +69,7 @@ public partial class WorldGenerator
     private readonly LinkedList<GenerationStep> _generationPipeline = new();
     private readonly Stopwatch _stopwatch = new();
     private readonly object _stateLock = new();
-    private IdwInterpolator _interpolator;
+    private IdwInterpolator _heightMapInterpolator;
 
     // World data properties
     private Noise _plateNoise;
@@ -245,7 +245,7 @@ public partial class WorldGenerator
             dataList.Add(_cellDatas[i].Altitude);
         }
 
-        _interpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
+        _heightMapInterpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
     }
 
     public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
@@ -253,12 +253,22 @@ public partial class WorldGenerator
         return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
-    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2 bounds, bool parallel = false, int upscaleLevel = 2)
+    public float[,] CalculateChunkHeightMap(Vector2I chunkPos)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return _interpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel, upscaleLevel);
+        // Consider overlapping edges
+        var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
+        return _heightMapInterpolator.ConstructChunkHeightMap(rect);
+    }
+
+    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false, int upscaleLevel = 2)
+    {
+        if (State != GenerationState.Completed)
+            throw new InvalidOperationException("World generation is not completed yet.");
+
+        return _heightMapInterpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel, upscaleLevel);
     }
 
     public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)

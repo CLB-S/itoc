@@ -12,7 +12,7 @@ public class WorldSettings
     public float MaxTectonicMovement = 10.0f;
     public float MaxAltitude = 200.0f;
 
-    public Rect2 Bounds = new Rect2(-5000, -5000, 10000, 10000);
+    public Rect2I Bounds = new Rect2I(-5000, -5000, 10000, 10000);
     public float MinimumCellDistance = 50;
     public float AltitudePropagationDecrement = 0.8f;
     public float AltitudePropagationSharpness = 0.1f;

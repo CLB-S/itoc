@@ -26,8 +26,7 @@ public class ChunkColumnGenerationRequest
 
     public ChunkColumn Excute()
     {
-        var rect = new Rect2(ChunkColumnPosition.X * ChunkMesher.CS, ChunkColumnPosition.Y * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        var heightMap = WorldGenerator.CalculateHeightMap(ChunkMesher.CS_P, ChunkMesher.CS_P, rect);
+        var heightMap = WorldGenerator.CalculateChunkHeightMap(ChunkColumnPosition);
         return new ChunkColumn(ChunkColumnPosition, heightMap);
     }
 }

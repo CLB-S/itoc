@@ -116,7 +116,7 @@ public partial class WorldTest : Node2D
         if (_worldGenerator.CellDatas != null)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
             {
-                if (!_worldGenerator.Settings.Bounds.HasPoint(_worldGenerator.SamplePoints[i])) continue;
+                if (!((Rect2)_worldGenerator.Settings.Bounds).HasPoint(_worldGenerator.SamplePoints[i])) continue;
 
                 if (cellData.Cell.Points.Length >= 3)
                 {
