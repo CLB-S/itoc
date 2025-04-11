@@ -34,7 +34,6 @@ public class ChunkGenerationPipeline
 {
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
 
-    private ushort[] _voxels;
     private ChunkMesher.MeshData _meshData;
     private ChunkData _chunkData;
     private Mesh _mesh;
@@ -51,18 +50,18 @@ public class ChunkGenerationPipeline
     {
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Initializing, Initialize));
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
-        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, SetBlocksyHeightMap));
+        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, SetBlocksHeightMap));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Meshing, Meshing));
     }
 
     private void Initialize(ChunkGenerationRequest request)
     {
-        _voxels = new ushort[ChunkMesher.CS_P3];
+        _chunkData = new ChunkData(request.ChunkPosition);
         _meshData = new ChunkMesher.MeshData();
     }
 
     // TODO: Optimize this
-    private void SetBlocksyHeightMap(ChunkGenerationRequest request)
+    private void SetBlocksHeightMap(ChunkGenerationRequest request)
     {
         for (var x = 0; x < ChunkMesher.CS_P; x++)
             for (var z = 0; z < ChunkMesher.CS_P; z++)
@@ -74,11 +73,11 @@ public class ChunkGenerationPipeline
                     if (actualY < height - ChunkMesher.CS)
                     {
                         if (actualY == height - ChunkMesher.CS - 1)
-                            _voxels[ChunkMesher.GetIndex(x, y, z)] = 4; // GD.Randi() % 4 + 1;
+                            _chunkData.SetBlock(x, y, z, "grass_block"); // GD.Randi() % 4 + 1;
                         else if (actualY > height - ChunkMesher.CS - 4)
-                            _voxels[ChunkMesher.GetIndex(x, y, z)] = 3;
+                            _chunkData.SetBlock(x, y, z, "dirt");
                         else
-                            _voxels[ChunkMesher.GetIndex(x, y, z)] = 2;
+                            _chunkData.SetBlock(x, y, z, "stone");
                         ChunkMesher.AddOpaqueVoxel(ref _meshData.OpaqueMask, x, y, z);
                     }
                 }
@@ -88,10 +87,7 @@ public class ChunkGenerationPipeline
 
     private void Meshing(ChunkGenerationRequest request)
     {
-        ChunkMesher.MeshVoxels(_voxels, _meshData);
-
-        _chunkData = new ChunkData(request.ChunkPosition);
-        _chunkData.Voxels = _voxels;
+        ChunkMesher.MeshChunk(_chunkData, _meshData);
 
         _mesh = ChunkMesher.GenerateMesh(_meshData);
         _shape = _mesh?.CreateTrimeshShape();

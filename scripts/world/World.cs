@@ -79,16 +79,16 @@ public partial class World : Node
         return chunk;
     }
 
-    public ushort GetBlock(Vector3 worldPos)
+    public string GetBlock(Vector3 worldPos)
     {
         var chunk = GetChunkWorldPos(worldPos);
-        if (chunk == null) return 0;
+        if (chunk == null) return "itoc:air";
 
         var localPos = WorldToLocalPosition(worldPos);
         return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));
     }
 
-    public void SetBlock(Vector3 worldPos, ushort block)
+    public void SetBlock(Vector3 worldPos, string block)
     {
         var chunk = GetChunkWorldPos(worldPos);
         if (chunk == null) return;

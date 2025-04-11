@@ -9,6 +9,8 @@ public abstract class Block
     /// </summary>
     public string BlockId { get; }
     public string BlockName { get; }
+    public string Namespace => BlockId.Split(':')[0];
+    public string NakeId => BlockId.Split(':')[1];
 
     private const string DEFAULT_NAMESPACE = "itoc";
     private static readonly Regex BlockIdRegex = new Regex(@"^[a-z0-9_]+:[a-z0-9_]+$", RegexOptions.Compiled);
@@ -32,6 +34,17 @@ public abstract class Block
             throw new ArgumentException($"Invalid block ID format: {blockId}. Must be in format 'namespace:block_id' using lowercase letters, numbers and underscores");
 
         return blockId;
+    }
+
+    public static (string blockNamespace, string nakeId) SplitBlockId(string blockId)
+    {
+        var parts = blockId.Split(':');
+        return (parts[0], parts[1]);
+    }
+
+    public static bool IsTransparent(string blockId)
+    {
+        return blockId == "itoc:air" || blockId == "air" || String.IsNullOrEmpty(blockId) || !BlockManager.Instance.GetBlock(blockId).IsOpaque;
     }
 
     public Color Color { get; set; } = Colors.White;
