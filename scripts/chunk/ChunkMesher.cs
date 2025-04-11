@@ -217,12 +217,12 @@ public static class ChunkMesher
         }
     }
 
-    public static void AddOpaqueVoxel(ref ulong[] opaqueMask, int x, int y, int z)
+    public static void AddOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
     {
         opaqueMask[y * CS_P + x] |= 1UL << z;
     }
 
-    public static void AddNonOpaqueVoxel(ref ulong[] opaqueMask, int x, int y, int z)
+    public static void AddNonOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
     {
         opaqueMask[y * CS_P + x] &= ~(1UL << z);
     }
@@ -389,15 +389,38 @@ public static class ChunkMesher
         }
     }
 
-    public class MeshData
+    public class MeshData : IDisposable
     {
         public ulong[] FaceMasks = new ulong[CS_2 * 6];
         public int[] FaceVertexBegin = new int[6];
         public int[] FaceVertexLength = new int[6];
         public byte[] ForwardMerged = new byte[CS_2];
-        public ulong[] OpaqueMask = new ulong[CS_P2];
+        public ulong[] OpaqueMask;
         public List<string> QuadBlockIDs = new();
         public List<ulong> Quads = new(10000);
         public byte[] RightMerged = new byte[CS];
+
+        public MeshData(ulong[] opaqueMask)
+        {
+            OpaqueMask = opaqueMask;
+        }
+
+        public MeshData()
+        {
+            OpaqueMask = new ulong[CS_P2];
+        }
+
+        public void Dispose()
+        {
+            FaceMasks = null;
+            FaceVertexBegin = null;
+            FaceVertexLength = null;
+            ForwardMerged = null;
+            OpaqueMask = null;
+            QuadBlockIDs = null;
+            Quads = null;
+            RightMerged = null;
+            GC.SuppressFinalize(this);
+        }
     }
 }

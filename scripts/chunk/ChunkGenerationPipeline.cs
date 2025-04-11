@@ -34,7 +34,6 @@ public class ChunkGenerationPipeline
 {
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
 
-    private ChunkMesher.MeshData _meshData;
     private ChunkData _chunkData;
     private Mesh _mesh;
     private Shape3D _shape;
@@ -57,7 +56,6 @@ public class ChunkGenerationPipeline
     private void Initialize(ChunkGenerationRequest request)
     {
         _chunkData = new ChunkData(request.ChunkPosition);
-        _meshData = new ChunkMesher.MeshData();
     }
 
     // TODO: Optimize this
@@ -78,21 +76,19 @@ public class ChunkGenerationPipeline
                             _chunkData.SetBlock(x, y, z, "dirt");
                         else
                             _chunkData.SetBlock(x, y, z, "stone");
-                        ChunkMesher.AddOpaqueVoxel(ref _meshData.OpaqueMask, x, y, z);
+                        ChunkMesher.AddOpaqueVoxel(_chunkData.OpaqueMask, x, y, z);
                     }
                 }
             }
     }
 
-
     private void Meshing(ChunkGenerationRequest request)
     {
-        ChunkMesher.MeshChunk(_chunkData, _meshData);
-
-        _mesh = ChunkMesher.GenerateMesh(_meshData);
+        using var meshData = new ChunkMesher.MeshData(_chunkData.OpaqueMask);
+        ChunkMesher.MeshChunk(_chunkData, meshData);
+        _mesh = ChunkMesher.GenerateMesh(meshData);
         _shape = _mesh?.CreateTrimeshShape();
     }
-
 
     public ChunkGenerationResult Excute(ChunkGenerationRequest request)
     {
@@ -127,7 +123,7 @@ public class ChunkGenerationPipeline
         State = ChunkGenerationState.Completed;
         ReportProgress("Generation completed");
         // GenerationCompletedEvent?.Invoke(this, EventArgs.Empty);
-        return new ChunkGenerationResult(_chunkData, _meshData, _mesh, _shape);
+        return new ChunkGenerationResult(_chunkData, _mesh, _shape);
     }
 
     private ChunkGenerationResult HandleError(Exception ex)

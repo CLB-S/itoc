@@ -20,7 +20,6 @@ public partial class Chunk : StaticBody3D
     // private MeshInstance3D _debugMeshInstance;
 
     private MeshInstance3D _meshInstance;
-    private ChunkMesher.MeshData _meshData;
 
     public ChunkData ChunkData { get; private set; }
     public Vector3I ChunkPosition { get; private set; }
@@ -30,7 +29,6 @@ public partial class Chunk : StaticBody3D
     public Chunk(ChunkGenerator.ChunkGenerationResult result)
     {
         _mesh = result.Mesh;
-        _meshData = result.MeshData;
         _collisionShape = result.CollisionShape;
         ChunkData = result.ChunkData;
         ChunkPosition = ChunkData.GetPosition();
@@ -129,95 +127,53 @@ public partial class Chunk : StaticBody3D
         // GD.Print($"Setting block {block} at {x}, {y}, {z}");
 
         ChunkData.SetBlock(x + 1, y + 1, z + 1, block);
-
-        bool isTransparent = Block.IsTransparent(block);
-
-        if (isTransparent)
-            ChunkMesher.AddNonOpaqueVoxel(ref _meshData.OpaqueMask, x + 1, y + 1, z + 1);
-        else
-            ChunkMesher.AddOpaqueVoxel(ref _meshData.OpaqueMask, x + 1, y + 1, z + 1);
         Update();
 
+        var neighbourChunkPos = ChunkPosition;
         if (x == 0)
         {
-            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.X -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isTransparent)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
-
             neighbourChunk.ChunkData.SetBlock(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
             neighbourChunk.Update();
         }
 
         if (x == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.X += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isTransparent)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, 0, y + 1, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, 0, y + 1, z + 1);
-
             neighbourChunk.ChunkData.SetBlock(0, y + 1, z + 1, block);
             neighbourChunk.Update();
         }
 
         if (y == 0)
         {
-            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Y -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isTransparent)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
-
             neighbourChunk.ChunkData.SetBlock(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
             neighbourChunk.Update();
         }
 
         if (y == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Y += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isTransparent)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, 0, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, 0, z + 1);
-
             neighbourChunk.ChunkData.SetBlock(x + 1, 0, z + 1, block);
             neighbourChunk.Update();
         }
 
         if (z == 0)
         {
-            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Z -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isTransparent)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
-
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
             neighbourChunk.Update();
         }
 
         if (z == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Z += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isTransparent)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, y + 1, 0);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk._meshData.OpaqueMask, x + 1, y + 1, 0);
-
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, 0, block);
             neighbourChunk.Update();
         }
@@ -266,8 +222,9 @@ public partial class Chunk : StaticBody3D
     {
         if (State != ChunkState.Loaded) return;
 
-        ChunkMesher.MeshChunk(ChunkData, _meshData);
-        var mesh = ChunkMesher.GenerateMesh(_meshData);
+        using var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask);
+        ChunkMesher.MeshChunk(ChunkData, meshData);
+        var mesh = ChunkMesher.GenerateMesh(meshData);
         _meshInstance.Mesh = mesh;
         _collisionShape3D.Shape = mesh?.CreateTrimeshShape();
 

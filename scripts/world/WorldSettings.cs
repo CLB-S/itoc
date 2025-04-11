@@ -4,7 +4,7 @@ using System;
 public class WorldSettings
 {
     public ulong Seed = 234;
-    public int LoadDistance = 8;
+    public int LoadDistance = 24;
 
     #region Generation Settings
     public float ContinentRatio = 0.4f;

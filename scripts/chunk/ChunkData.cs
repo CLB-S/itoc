@@ -54,6 +54,7 @@ public class ChunkData
     public readonly int Y;
     public readonly int Z;
 
+    public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
     private Palette _palette = new Palette();
     private List<ulong> _data = new List<ulong>();
     private int _entriesPerLong;
@@ -123,5 +124,10 @@ public class ChunkData
         _data[longIndex] &= ~(_palette.Mask << bitOffset);
         // Set new bits
         _data[longIndex] |= ((ulong)paletteId & _palette.Mask) << bitOffset;
+
+        if (Block.IsTransparent(blockId))
+            ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
+        else
+            ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
     }
 }
