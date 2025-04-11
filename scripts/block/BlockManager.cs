@@ -29,7 +29,7 @@ public class BlockManager
 
     public Block GetBlock(string blockId)
     {
-        return _blocks.TryGetValue(Block.NormalizeBlockId(blockId), out var block) ? block : null;
+        return _blocks.TryGetValue(blockId, out var block) ? block : null;
     }
 
     public int GetBlockCount()

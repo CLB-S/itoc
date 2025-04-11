@@ -12,7 +12,7 @@ public class Palette
     {
         _bitsPerEntry = 4; // Default to 4 bits
         _mask = (1UL << _bitsPerEntry) - 1UL;
-        _entries.Add("itoc:air"); // Air by default
+        _entries.Add("air"); // Air by default
     }
 
     public int GetId(string blockId)
@@ -39,7 +39,7 @@ public class Palette
 
     public string GetBlock(int id)
     {
-        if (id < 0 || id >= _entries.Count) return "itoc:air"; // Return air if invalid
+        if (id < 0 || id >= _entries.Count) return "air"; // Return air if invalid
         return _entries[id];
     }
 
@@ -86,7 +86,7 @@ public class ChunkData
         int longIndex = index / _entriesPerLong;
         int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
 
-        if (longIndex >= _data.Count) return "itoc:air";
+        if (longIndex >= _data.Count) return "air";
 
         ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
         return _palette.GetBlock((int)value);
@@ -98,7 +98,7 @@ public class ChunkData
         int longIndex = index / _entriesPerLong;
         int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
 
-        if (longIndex >= _data.Count) return "itoc:air";
+        if (longIndex >= _data.Count) return "air";
 
         ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
         return _palette.GetBlock((int)value);
@@ -110,8 +110,7 @@ public class ChunkData
         int longIndex = index / _entriesPerLong;
         int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
 
-        string normalizedId = Block.NormalizeBlockId(blockId);
-        int paletteId = _palette.GetId(normalizedId);
+        int paletteId = _palette.GetId(blockId);
 
         // Check if we need to resize the data array
         if (longIndex >= _data.Count)

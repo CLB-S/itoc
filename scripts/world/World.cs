@@ -82,7 +82,7 @@ public partial class World : Node
     public string GetBlock(Vector3 worldPos)
     {
         var chunk = GetChunkWorldPos(worldPos);
-        if (chunk == null) return "itoc:air";
+        if (chunk == null) return "air";
 
         var localPos = WorldToLocalPosition(worldPos);
         return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));

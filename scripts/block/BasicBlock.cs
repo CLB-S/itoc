@@ -11,7 +11,7 @@ public class BasicBlock : Block
 
     public override void LoadResources()
     {
-        var path = $"res://assets/blocks/{NakeId}.png";
+        var path = $"res://assets/blocks/{BlockId}.png";
         _material = BlockHelper.GetMaterial(path);
     }
 

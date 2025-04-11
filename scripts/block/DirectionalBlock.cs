@@ -15,9 +15,9 @@ public class DirectionalBlock : Block
         string textureRoundPath = null, string textureBottomPath = null) : base(blockId, name)
     {
         FreezeDirection = freezeDirection;
-        _textureTopPath = textureTopPath ?? $"res://assets/blocks/{NakeId}/top.png";
-        _textureRoundPath = textureRoundPath ?? $"res://assets/blocks/{NakeId}/round.png";
-        _textureBottomPath = textureBottomPath ?? $"res://assets/blocks/{NakeId}/bottom.png";
+        _textureTopPath = textureTopPath ?? $"res://assets/blocks/{BlockId}/top.png";
+        _textureRoundPath = textureRoundPath ?? $"res://assets/blocks/{BlockId}/round.png";
+        _textureBottomPath = textureBottomPath ?? $"res://assets/blocks/{BlockId}/bottom.png";
     }
 
     public Direction? FreezeDirection { get; }
