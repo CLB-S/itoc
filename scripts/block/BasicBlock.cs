@@ -5,10 +5,8 @@ public class BasicBlock : Block
     private Material _material;
     public Texture2D Texture;
 
-    public BasicBlock(ushort blockId, string blockName)
+    public BasicBlock(string blockId, string blockName) : base(blockId, blockName)
     {
-        BlockId = blockId;
-        BlockName = blockName;
     }
 
     public override void LoadResources()

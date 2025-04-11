@@ -11,11 +11,9 @@ public class DirectionalBlock : Block
 
     private readonly string _textureTopPath;
 
-    public DirectionalBlock(ushort blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
-        string textureRoundPath = null, string textureBottomPath = null)
+    public DirectionalBlock(string blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
+        string textureRoundPath = null, string textureBottomPath = null) : base(blockId, name)
     {
-        BlockId = blockId;
-        BlockName = name;
         FreezeDirection = freezeDirection;
         _textureTopPath = textureTopPath ?? $"res://assets/blocks/{BlockName}/top.png";
         _textureRoundPath = textureRoundPath ?? $"res://assets/blocks/{BlockName}/round.png";
