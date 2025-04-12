@@ -17,7 +17,8 @@ public partial class Chunk : StaticBody3D
     private Shape3D _collisionShape;
 
     // private ImmediateMesh _debugMesh;
-    // private MeshInstance3D _debugMeshInstance;
+    private const bool DRAW_DEBUG_COLLISION_SHAPE = true;
+    private MeshInstance3D _collisionDebugMeshInstance;
 
     private MeshInstance3D _meshInstance;
 
@@ -56,15 +57,29 @@ public partial class Chunk : StaticBody3D
 
         _collisionShape3D = new CollisionShape3D();
         if (_collisionShape != null)
+        {
             _collisionShape3D.Shape = _collisionShape;
+            DrawDebugCollisionShape();
+        }
         AddChild(_collisionShape3D);
 
 
         // if (World.Instance.DebugDrawChunkBounds) DrawDebugBounds();
-
         State = ChunkState.Loaded;
     }
 
+
+    private void DrawDebugCollisionShape()
+    {
+        if (!DRAW_DEBUG_COLLISION_SHAPE) return;
+
+        _collisionDebugMeshInstance = new MeshInstance3D();
+        AddChild(_collisionDebugMeshInstance);
+
+        _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+        _collisionDebugMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
+    }
 
     /*
     private void DrawDebugBounds()
@@ -127,7 +142,7 @@ public partial class Chunk : StaticBody3D
         // GD.Print($"Setting block {block} at {x}, {y}, {z}");
 
         ChunkData.SetBlock(x + 1, y + 1, z + 1, block);
-        Update();
+        UpdateMesh();
 
         var neighbourChunkPos = ChunkPosition;
         if (x == 0)
@@ -135,7 +150,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.X -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
-            neighbourChunk.Update();
+            neighbourChunk.UpdateMesh();
         }
 
         if (x == ChunkMesher.CS - 1)
@@ -143,7 +158,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.X += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(0, y + 1, z + 1, block);
-            neighbourChunk.Update();
+            neighbourChunk.UpdateMesh();
         }
 
         if (y == 0)
@@ -151,7 +166,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Y -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
-            neighbourChunk.Update();
+            neighbourChunk.UpdateMesh();
         }
 
         if (y == ChunkMesher.CS - 1)
@@ -159,7 +174,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Y += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, 0, z + 1, block);
-            neighbourChunk.Update();
+            neighbourChunk.UpdateMesh();
         }
 
         if (z == 0)
@@ -167,7 +182,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Z -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
-            neighbourChunk.Update();
+            neighbourChunk.UpdateMesh();
         }
 
         if (z == ChunkMesher.CS - 1)
@@ -175,7 +190,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Z += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, 0, block);
-            neighbourChunk.Update();
+            neighbourChunk.UpdateMesh();
         }
 
     }
@@ -218,7 +233,7 @@ public partial class Chunk : StaticBody3D
         QueueFree();
     }
 
-    public void Update()
+    public void UpdateMesh()
     {
         if (State != ChunkState.Loaded) return;
 
@@ -227,6 +242,9 @@ public partial class Chunk : StaticBody3D
         var mesh = ChunkMesher.GenerateMesh(meshData);
         _meshInstance.Mesh = mesh;
         _collisionShape3D.Shape = mesh?.CreateTrimeshShape();
+
+        _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+
 
         // GD.Print($"Updated chunk at {ChunkPosition}");
     }
