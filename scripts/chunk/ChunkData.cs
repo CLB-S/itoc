@@ -129,4 +129,10 @@ public class ChunkData
         else
             ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
     }
+
+    public int GetBytes()
+    {
+        return (_data.Count * sizeof(ulong)
+               + OpaqueMask.Length * sizeof(ulong)) / 8;
+    }
 }
