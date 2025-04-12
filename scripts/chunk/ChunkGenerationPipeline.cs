@@ -72,13 +72,25 @@ public class ChunkGenerationPipeline
                     var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;
                     if (actualY < height - ChunkMesher.CS)
                     {
-                        if (actualY == height - ChunkMesher.CS - 1)
-                            _chunkData.SetBlock(x, y, z, "grass_block"); // GD.Randi() % 4 + 1;
-                        else if (actualY > height - ChunkMesher.CS - 4)
-                            _chunkData.SetBlock(x, y, z, "dirt");
-                        else
+                        if (actualY <= height - ChunkMesher.CS - 4)
                             _chunkData.SetBlock(x, y, z, "stone");
-                        ChunkMesher.AddOpaqueVoxel(_chunkData.OpaqueMask, x, y, z);
+                        else
+                        {
+                            if (actualY <= 3)
+                                _chunkData.SetBlock(x, y, z, "sand");
+                            else if (actualY >= 150)
+                                _chunkData.SetBlock(x, y, z, "snow");
+                            else if (actualY >= 100)
+                                _chunkData.SetBlock(x, y, z, "stone");
+                            else if (actualY == height - ChunkMesher.CS - 1)
+                                _chunkData.SetBlock(x, y, z, "grass_block");
+                            else if (actualY > height - ChunkMesher.CS - 4)
+                                _chunkData.SetBlock(x, y, z, "dirt");
+                        }
+                    }
+                    else if (actualY <= 0)
+                    {
+                        _chunkData.SetBlock(x, y, z, "water"); // TODO: Mesh transparent blocks
                     }
                 }
             }

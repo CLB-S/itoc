@@ -12,6 +12,9 @@ public class BlockManager
         RegisterBlock(new BasicBlock("debug", "Debug Block"));
         RegisterBlock(new BasicBlock("stone", "Stone"));
         RegisterBlock(new BasicBlock("dirt", "Dirt"));
+        RegisterBlock(new BasicBlock("sand", "Sand"));
+        RegisterBlock(new BasicBlock("snow", "Snow"));
+        RegisterBlock(new BasicBlock("water", "Water") { IsOpaque = false });
         RegisterBlock(new DirectionalBlock("grass_block", "Grass Block", Direction.PositiveY,
             textureBottomPath: "res://assets/blocks/dirt.png"));
     }
