@@ -8,7 +8,6 @@ public partial class Chunk : StaticBody3D
     {
         Unloaded,
         DataReady,
-        Empty,
         Render,
         Physics,
     }
@@ -36,7 +35,7 @@ public partial class Chunk : StaticBody3D
         Position = ChunkPosition * World.ChunkSize;
         Name = $"Chunk_{ChunkPosition.X}_{ChunkPosition.Y}_{ChunkPosition.Z}";
 
-        State = result.Mesh == null ? State = ChunkState.Empty : ChunkState.DataReady;
+        State = ChunkState.DataReady; // result.Mesh == null ? ChunkState.Empty : ChunkState.DataReady;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -172,9 +171,9 @@ public partial class Chunk : StaticBody3D
         ChunkData.SetBlock(x + 1, y + 1, z + 1, block);
         UpdateMesh();
 
-        var neighbourChunkPos = ChunkPosition;
         if (x == 0)
         {
+            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.X -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
@@ -183,6 +182,7 @@ public partial class Chunk : StaticBody3D
 
         if (x == ChunkMesher.CS - 1)
         {
+            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.X += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(0, y + 1, z + 1, block);
@@ -191,6 +191,7 @@ public partial class Chunk : StaticBody3D
 
         if (y == 0)
         {
+            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Y -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
@@ -199,6 +200,7 @@ public partial class Chunk : StaticBody3D
 
         if (y == ChunkMesher.CS - 1)
         {
+            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Y += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, 0, z + 1, block);
@@ -207,6 +209,7 @@ public partial class Chunk : StaticBody3D
 
         if (z == 0)
         {
+            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Z -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
@@ -215,6 +218,7 @@ public partial class Chunk : StaticBody3D
 
         if (z == ChunkMesher.CS - 1)
         {
+            var neighbourChunkPos = ChunkPosition;
             neighbourChunkPos.Z += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, 0, block);
@@ -269,8 +273,8 @@ public partial class Chunk : StaticBody3D
 
     public void UpdateMesh()
     {
-        if (State != ChunkState.Render && State != ChunkState.Physics)
-            throw new Exception("Chunk unloaded.");
+        if (State == ChunkState.Unloaded || State == ChunkState.DataReady)
+            throw new InvalidOperationException("Chunk is not loaded or data is not ready");
 
         var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask);
         ChunkMesher.MeshChunk(ChunkData, meshData);
@@ -282,7 +286,7 @@ public partial class Chunk : StaticBody3D
             _collisionShape3D.Shape = _meshInstance.Mesh?.CreateTrimeshShape();
 
             if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
-                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape?.GetDebugMesh();
         }
 
         // GD.Print($"Updated chunk at {ChunkPosition}");
