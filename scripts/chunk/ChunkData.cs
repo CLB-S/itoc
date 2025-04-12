@@ -2,52 +2,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public class Palette
-{
-    private List<string> _entries = new List<string>();
-    private int _bitsPerEntry;
-    private ulong _mask;
-
-    public Palette()
-    {
-        _bitsPerEntry = 4; // Default to 4 bits
-        _mask = (1UL << _bitsPerEntry) - 1UL;
-        _entries.Add("air"); // Air by default
-    }
-
-    public int GetId(string blockId)
-    {
-        for (int i = 0; i < _entries.Count; i++)
-        {
-            if (_entries[i] == blockId) return i;
-        }
-
-        // Not found, add to palette
-        int newId = _entries.Count;
-        _entries.Add(blockId);
-
-        // Check if we need more bits
-        int requiredBits = (int)Math.Ceiling(Math.Log2(_entries.Count));
-        if (requiredBits > _bitsPerEntry)
-        {
-            _bitsPerEntry = requiredBits;
-            _mask = (1UL << _bitsPerEntry) - 1UL;
-        }
-
-        return newId;
-    }
-
-    public string GetBlock(int id)
-    {
-        if (id < 0 || id >= _entries.Count) return "air"; // Return air if invalid
-        return _entries[id];
-    }
-
-    public int BitsPerEntry => _bitsPerEntry;
-    public int Count => _entries.Count;
-    public ulong Mask => _mask;
-}
-
 public class ChunkData
 {
     public readonly int X;
@@ -55,7 +9,7 @@ public class ChunkData
     public readonly int Z;
 
     public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
-    private Palette _palette = new Palette();
+    private Palette<string> _palette = new Palette<string>("air");
     private List<ulong> _data = new List<ulong>();
     private int _entriesPerLong;
 
@@ -89,7 +43,7 @@ public class ChunkData
         if (longIndex >= _data.Count) return "air";
 
         ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
-        return _palette.GetBlock((int)value);
+        return _palette.GetValue((int)value);
     }
 
     public string GetBlock(int x, int y, int z)
@@ -101,7 +55,7 @@ public class ChunkData
         if (longIndex >= _data.Count) return "air";
 
         ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
-        return _palette.GetBlock((int)value);
+        return _palette.GetValue((int)value);
     }
 
     public void SetBlock(int x, int y, int z, string blockId)
