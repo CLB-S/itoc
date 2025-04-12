@@ -104,11 +104,11 @@ public partial class World : Node
         var loadArea = new HashSet<Vector2I>();
 
         // Load Area
-        for (var x = -Settings.LoadDistance; x <= Settings.LoadDistance; x++)
-            for (var z = -Settings.LoadDistance; z <= Settings.LoadDistance; z++)
+        for (var x = -Core.Instance.Settings.RenderDistance; x <= Core.Instance.Settings.RenderDistance; x++)
+            for (var z = -Core.Instance.Settings.RenderDistance; z <= Core.Instance.Settings.RenderDistance; z++)
             {
                 var pos = centerChunkXZ + new Vector2I(x, z);
-                if (pos.DistanceTo(centerChunkXZ) <= Settings.LoadDistance) loadArea.Add(pos);
+                if (pos.DistanceTo(centerChunkXZ) <= Core.Instance.Settings.RenderDistance) loadArea.Add(pos);
             }
 
         // Unload
@@ -210,5 +210,14 @@ public partial class World : Node
     {
         _chunkFactory.Stop();
         _chunkFactory.Dispose();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationWMCloseRequest)
+        {
+            _chunkFactory.Stop();
+            _chunkFactory.Dispose();
+        }
     }
 }
