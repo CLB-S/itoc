@@ -175,12 +175,13 @@ public partial class World : Node
         // var currentCenter = WorldToChunkPosition(currentPlayerPos);
         // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Core.Instance.Settings.LoadDistance) return;
 
-        if (!Chunks.ContainsKey(result.ChunkData.GetPosition()))
+        var position = result.ChunkData.GetPosition();
+        var positionXZ = new Vector2I(position.X, position.Z);
+        if (!Chunks.ContainsKey(position) && ChunkColumns.ContainsKey(positionXZ))
         {
-            var position = result.ChunkData.GetPosition();
             var chunk = new Chunk(result);
             Chunks[position] = chunk;
-            ChunkColumns[new Vector2I(position.X, position.Z)].Chunks[position] = chunk;
+            ChunkColumns[positionXZ].Chunks[position] = chunk;
             chunk.Load();
             CallDeferred(Node.MethodName.AddChild, chunk);
         }
