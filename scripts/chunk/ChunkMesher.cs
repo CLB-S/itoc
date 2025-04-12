@@ -40,7 +40,7 @@ public static class ChunkMesher
     public static void MeshChunk(ChunkData chunkData, MeshData meshData)
     {
         meshData.Quads.Clear();
-        meshData.QuadBlockIDs.Clear();
+        meshData.QuadBlocks.Clear();
 
         Array.Clear(meshData.FaceMasks, 0, meshData.FaceMasks.Length);
         Array.Clear(meshData.ForwardMerged, 0, meshData.ForwardMerged.Length);
@@ -83,11 +83,11 @@ public static class ChunkMesher
                     while (bitsHere != 0)
                     {
                         var bitPos = System.Numerics.BitOperations.TrailingZeroCount(bitsHere);
-                        var blockID = chunkData.GetBlock(axis, forward + 1, bitPos + 1, layer + 1);
+                        var block = chunkData.GetBlock(axis, forward + 1, bitPos + 1, layer + 1);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[bitPos];
 
                         if ((bitsNext & (1UL << bitPos)) != 0 &&
-                            blockID == chunkData.GetBlock(axis, forward + 2, bitPos + 1, layer + 1))
+                            block == chunkData.GetBlock(axis, forward + 2, bitPos + 1, layer + 1))
                         {
                             forwardMergedRef++;
                             bitsHere &= ~(1UL << bitPos);
@@ -98,7 +98,7 @@ public static class ChunkMesher
                         {
                             if ((bitsHere & (1UL << right)) == 0 ||
                                 forwardMergedRef != meshData.ForwardMerged[right] ||
-                                blockID != chunkData.GetBlock(axis, forward + 1, right + 1, layer + 1))
+                                block != chunkData.GetBlock(axis, forward + 1, right + 1, layer + 1))
                                 break;
 
                             meshData.ForwardMerged[right] = 0;
@@ -134,7 +134,7 @@ public static class ChunkMesher
                         };
 
                         meshData.Quads.Add(quad);
-                        meshData.QuadBlockIDs.Add(blockID);
+                        meshData.QuadBlocks.Add(block);
 
                         forwardMergedRef = 0;
                         rightMerged = 1;
@@ -169,13 +169,13 @@ public static class ChunkMesher
                         var bitPos = System.Numerics.BitOperations.TrailingZeroCount(bitsHere);
                         bitsHere &= ~(1UL << bitPos);
 
-                        var blockID = chunkData.GetBlock(axis, right + 1, forward + 1, bitPos);
+                        var block = chunkData.GetBlock(axis, right + 1, forward + 1, bitPos);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[rightCS + (bitPos - 1)];
                         ref var rightMergedRef = ref meshData.RightMerged[bitPos - 1];
 
                         if (rightMergedRef == 0 &&
                             (bitsForward & (1UL << bitPos)) != 0 &&
-                            blockID == chunkData.GetBlock(axis, right + 1, forward + 2, bitPos))
+                            block == chunkData.GetBlock(axis, right + 1, forward + 2, bitPos))
                         {
                             forwardMergedRef++;
                             continue;
@@ -183,7 +183,7 @@ public static class ChunkMesher
 
                         if ((bitsRight & (1UL << bitPos)) != 0 &&
                             forwardMergedRef == meshData.ForwardMerged[rightCS + CS + (bitPos - 1)] &&
-                            blockID == chunkData.GetBlock(axis, right + 2, forward + 1, bitPos))
+                            block == chunkData.GetBlock(axis, right + 2, forward + 1, bitPos))
                         {
                             forwardMergedRef = 0;
                             rightMergedRef++;
@@ -206,7 +206,7 @@ public static class ChunkMesher
                         );
 
                         meshData.Quads.Add(quad);
-                        meshData.QuadBlockIDs.Add(blockID);
+                        meshData.QuadBlocks.Add(block);
                         forwardMergedRef = 0;
                         rightMergedRef = 0;
                     }
@@ -231,32 +231,32 @@ public static class ChunkMesher
     {
         if (meshData.Quads.Count == 0) return null;
 
-        var surfaceArrayDict = new Dictionary<string, SurfaceArrayData>();
+        var surfaceArrayDict = new Dictionary<(Block, Direction), SurfaceArrayData>();
 
         for (var face = 0; face < 6; face++)
             for (var i = meshData.FaceVertexBegin[face];
                  i < meshData.FaceVertexBegin[face] + meshData.FaceVertexLength[face];
                  i++)
-                ParseQuad((Direction)face, meshData.QuadBlockIDs[i], meshData.Quads[i], surfaceArrayDict);
+                ParseQuad((Direction)face, meshData.QuadBlocks[i], meshData.Quads[i], surfaceArrayDict);
 
         var _arrayMesh = new ArrayMesh();
-        foreach (var (blockId, surfaceArrayData) in surfaceArrayDict)
+        foreach (var ((block, dir), surfaceArrayData) in surfaceArrayDict)
         {
             _arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
             _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                BlockManager.Instance.GetBlock(blockId).GetMaterial()); // TODO: Directional block.
+                block.GetMaterial(dir)); // TODO: Need direction.
         }
 
         return _arrayMesh;
     }
 
-    private static void ParseQuad(Direction dir, string blockID, ulong quad,
-        Dictionary<string, SurfaceArrayData> surfaceArrayDict)
+    private static void ParseQuad(Direction dir, Block block, ulong quad,
+        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
-        if (!surfaceArrayDict.ContainsKey(blockID))
-            surfaceArrayDict.Add(blockID, new SurfaceArrayData());
-
-        var surfaceArrayData = surfaceArrayDict[blockID];
+        var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
+        if (!surfaceArrayDict.ContainsKey(blockDirPair))
+            surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
+        var surfaceArrayData = surfaceArrayDict[blockDirPair];
 
         var x = (byte)(quad & 0x3F); // 6 bits
         var y = (byte)((quad >> 6) & 0x3F); // 6 bits
@@ -396,7 +396,7 @@ public static class ChunkMesher
         public int[] FaceVertexLength = new int[6];
         public byte[] ForwardMerged = new byte[CS_2];
         public ulong[] OpaqueMask;
-        public List<string> QuadBlockIDs = new();
+        public List<Block> QuadBlocks = new();
         public List<ulong> Quads = new(10000);
         public byte[] RightMerged = new byte[CS];
 

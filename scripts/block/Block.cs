@@ -2,7 +2,7 @@ using System;
 using System.Text.RegularExpressions;
 using Godot;
 
-public abstract class Block
+public abstract class Block : IEquatable<Block>
 {
     /// <summary>
     /// The namespaced ID of the block (e.g. "stone")
@@ -22,7 +22,7 @@ public abstract class Block
 
     public static bool IsTransparent(string blockId)
     {
-        return blockId == "air" || String.IsNullOrEmpty(blockId) || !BlockManager.Instance.GetBlock(blockId).IsOpaque;
+        return String.IsNullOrEmpty(blockId) || !BlockManager.Instance.GetBlock(blockId).IsOpaque;
     }
 
     public Color Color { get; set; } = Colors.White;
@@ -37,5 +37,9 @@ public abstract class Block
     public abstract void LoadResources();
 
     public abstract Material GetMaterial(Direction face = Direction.PositiveY);
+
+    public abstract bool Equals(Block other);
+
     // public virtual Mesh GetMesh(string modelType = "cube") => null;
+
 }

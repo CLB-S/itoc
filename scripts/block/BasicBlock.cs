@@ -19,4 +19,10 @@ public class BasicBlock : Block
     {
         return _material;
     }
+
+    public override bool Equals(Block other)
+    {
+        return other.BlockId == BlockId;
+    }
+
 }

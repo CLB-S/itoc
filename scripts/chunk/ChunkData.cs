@@ -9,7 +9,7 @@ public class ChunkData
     public readonly int Z;
 
     public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
-    private Palette<string> _palette = new Palette<string>("air");
+    private Palette<Block> _palette = new Palette<Block>(null);
     private List<ulong> _data = new List<ulong>();
     private int _entriesPerLong;
 
@@ -34,37 +34,53 @@ public class ChunkData
         return new Vector3I(X, Y, Z);
     }
 
-    public string GetBlock(int axis, int a, int b, int c)
+    public Block GetBlock(int axis, int a, int b, int c)
     {
         int index = ChunkMesher.GetAxisIndex(axis, a, b, c);
-        int longIndex = index / _entriesPerLong;
-        int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
-
-        if (longIndex >= _data.Count) return "air";
-
-        ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
-        return _palette.GetValue((int)value);
+        return GetBlock(index);
     }
 
-    public string GetBlock(int x, int y, int z)
+    public Block GetBlock(int x, int y, int z)
     {
         int index = ChunkMesher.GetIndex(x, y, z);
+        return GetBlock(index);
+    }
+
+    public Block GetBlock(Vector3I pos)
+    {
+        return GetBlock(pos.X, pos.Y, pos.Z);
+    }
+
+    public Block GetBlock(int index)
+    {
         int longIndex = index / _entriesPerLong;
         int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
 
-        if (longIndex >= _data.Count) return "air";
+        if (longIndex >= _data.Count) return null;
 
         ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
         return _palette.GetValue((int)value);
     }
+
 
     public void SetBlock(int x, int y, int z, string blockId)
     {
+        var block = BlockManager.Instance.GetBlock(blockId);
+        SetBlock(x, y, z, block);
+    }
+
+    public void SetBlock(Vector3I pos, string blockId)
+    {
+        SetBlock(pos.X, pos.Y, pos.Z, blockId);
+    }
+
+    public void SetBlock(int x, int y, int z, Block block)
+    {
         int index = ChunkMesher.GetIndex(x, y, z);
         int longIndex = index / _entriesPerLong;
         int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
 
-        int paletteId = _palette.GetId(blockId);
+        int paletteId = _palette.GetId(block);
 
         // Check if we need to resize the data array
         if (longIndex >= _data.Count)
@@ -78,10 +94,15 @@ public class ChunkData
         // Set new bits
         _data[longIndex] |= ((ulong)paletteId & _palette.Mask) << bitOffset;
 
-        if (Block.IsTransparent(blockId))
+        if (block == null || !block.IsOpaque)
             ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
         else
             ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
+    }
+
+    public void SetBlock(Vector3I pos, Block block)
+    {
+        SetBlock(pos.X, pos.Y, pos.Z, block);
     }
 
     public int GetBytes()

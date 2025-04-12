@@ -144,7 +144,7 @@ public partial class PlayerController : CharacterBody3D
                 if (breakBlockPressed)
                 {
                     var pos = result["position"].AsVector3() - 0.5f * result["normal"].AsVector3();
-                    World.Instance.SetBlock(pos, "air");
+                    World.Instance.SetBlock(pos, (Block)null);
                 }
             }
             catch (Exception e)

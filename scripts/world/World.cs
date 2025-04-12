@@ -82,16 +82,22 @@ public partial class World : Node
         return chunk;
     }
 
-    public string GetBlock(Vector3 worldPos)
+    public Block GetBlock(Vector3 worldPos)
     {
         var chunk = GetChunkWorldPos(worldPos);
-        if (chunk == null) return "air";
+        if (chunk == null) return null;
 
         var localPos = WorldToLocalPosition(worldPos);
         return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));
     }
 
-    public void SetBlock(Vector3 worldPos, string block)
+    public void SetBlock(Vector3 worldPos, string blockId)
+    {
+        var block = BlockManager.Instance.GetBlock(blockId);
+        SetBlock(worldPos, block);
+    }
+
+    public void SetBlock(Vector3 worldPos, Block block)
     {
         var chunk = GetChunkWorldPos(worldPos);
         if (chunk == null) return;

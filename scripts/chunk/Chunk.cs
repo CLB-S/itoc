@@ -150,7 +150,7 @@ public partial class Chunk : StaticBody3D
 
     */
 
-    public string GetBlock(int x, int y, int z)
+    public Block GetBlock(int x, int y, int z)
     {
         // if (x < 0 || x >= World.ChunkSize ||
         //     y < 0 || y >= World.ChunkSize ||
@@ -160,7 +160,7 @@ public partial class Chunk : StaticBody3D
         return ChunkData.GetBlock(x + 1, y + 1, z + 1);
     }
 
-    public void SetBlock(int x, int y, int z, string block)
+    public void SetBlock(int x, int y, int z, Block block)
     {
         // if (x < 0 || x >= World.ChunkSize ||
         //     y < 0 || y >= World.ChunkSize ||

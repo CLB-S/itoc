@@ -43,4 +43,10 @@ public class DirectionalBlock : Block
             return _materialBottom;
         return _materialRound;
     }
+
+    public override bool Equals(Block other)
+    {
+        return other.BlockId == BlockId &&
+               (other as DirectionalBlock).Direction == Direction;
+    }
 }

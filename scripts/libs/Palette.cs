@@ -22,7 +22,11 @@ public class Palette<T> where T : IEquatable<T>
     {
         for (int i = 0; i < _entries.Count; i++)
         {
-            if (_entries[i].Equals(value)) return i;
+            if (_entries[i] == null)
+            {
+                if (value == null) return i;
+            }
+            else if (_entries[i].Equals(value)) return i;
         }
 
         // Not found, add to palette
