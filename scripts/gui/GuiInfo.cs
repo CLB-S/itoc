@@ -22,12 +22,17 @@ public partial class GuiInfo : RichTextLabel
         var camFacingDirName = camFacingDir.Name();
         var chunkPos = World.WorldToChunkPosition(camPos);
 
+        var chunkMem = 0;
+        foreach (var chunk in World.Instance.Chunks.Values)
+            chunkMem += chunk.ChunkData.GetBytes();
+
         // 构建调试信息文本
         var debugText = "[b]Debug Info[/b]\n";
         debugText += $"[color=yellow]FPS:[/color] {fps:0.0}\n";
         debugText += $"[color=yellow]Draw Calls:[/color] {drawCalls}\n";
         debugText += $"[color=yellow]Vertices:[/color] {vertices}\n";
         debugText += $"[color=yellow]Static Mem:[/color] {BytesToString(staticMem)}/{BytesToString(staticMemMax)}\n";
+        debugText += $"[color=yellow]Chunk Mem:[/color] {BytesToString(chunkMem)}\n";
         debugText += $"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}\n";
         debugText += $"[color=cyan]Chunk:[/color] {chunkPos.X}, {chunkPos.Y}, {chunkPos.Z}\n";
         debugText +=

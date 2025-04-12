@@ -1,5 +1,5 @@
 shader_type spatial;
-// render_mode wireframe;
+render_mode wireframe;
 // render_mode cull_disabled;
 
 uniform vec3 x_color : source_color = vec3(1.0, 0.0, 0.0);

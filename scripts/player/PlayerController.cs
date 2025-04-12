@@ -138,13 +138,13 @@ public partial class PlayerController : CharacterBody3D
 
                     var resultCube = spaceState.IntersectShape(queryCube, 1);
                     if (resultCube.Count == 0)
-                        World.Instance.SetBlock(pos, 1);
+                        World.Instance.SetBlock(pos, "debug");
                 }
 
                 if (breakBlockPressed)
                 {
                     var pos = result["position"].AsVector3() - 0.5f * result["normal"].AsVector3();
-                    World.Instance.SetBlock(pos, 0);
+                    World.Instance.SetBlock(pos, (Block)null);
                 }
             }
             catch (Exception e)

@@ -22,8 +22,8 @@ public partial class WorldGenerator
             {
                 // [-1, 1]
                 var l = _points[cellPId] - _points[cellQId];
-                var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
-                                       (2 * l.Length() * Settings.MaxTectonicMovement);
+                var relativeMovement = (float)((cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
+                                       (2 * l.Length() * Settings.MaxTectonicMovement));
 
                 if (Mathf.Abs(relativeMovement) < 0.25f)
                     continue;
@@ -38,7 +38,7 @@ public partial class WorldGenerator
                     float altitude;
                     if (relativeMovement < 0)
                     {
-                        altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0f + 0.5f;
                         altitude *= altitude;
                     }
                     else
@@ -99,7 +99,7 @@ public partial class WorldGenerator
     private void PropagateAltitudes()
     {
         var used = new HashSet<int>();
-        var queue = new PriorityQueue<int, float>();
+        var queue = new PriorityQueue<int, double>();
         var sharpness = Settings.AltitudePropagationSharpness;
 
         foreach (var i in _initialAltitudeIndices)
@@ -122,7 +122,7 @@ public partial class WorldGenerator
                 if (!used.Contains(neighborIndex))
                 {
                     var neighbor = _cellDatas[neighborIndex];
-                    var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + _rng.Randf() * sharpness;
+                    var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + (float)_rng.Randf() * sharpness;
                     var heightContribution = propagatedHeight * mod;
 
                     neighbor.Altitude += heightContribution;

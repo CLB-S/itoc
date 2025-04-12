@@ -11,15 +11,13 @@ public class DirectionalBlock : Block
 
     private readonly string _textureTopPath;
 
-    public DirectionalBlock(uint blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
-        string textureRoundPath = null, string textureBottomPath = null)
+    public DirectionalBlock(string blockId, string name, Direction? freezeDirection = null, string textureTopPath = null,
+        string textureRoundPath = null, string textureBottomPath = null) : base(blockId, name)
     {
-        BlockId = blockId;
-        BlockName = name;
         FreezeDirection = freezeDirection;
-        _textureTopPath = textureTopPath ?? $"res://assets/blocks/{BlockName}/top.png";
-        _textureRoundPath = textureRoundPath ?? $"res://assets/blocks/{BlockName}/round.png";
-        _textureBottomPath = textureBottomPath ?? $"res://assets/blocks/{BlockName}/bottom.png";
+        _textureTopPath = textureTopPath ?? $"res://assets/blocks/{BlockId}/top.png";
+        _textureRoundPath = textureRoundPath ?? $"res://assets/blocks/{BlockId}/round.png";
+        _textureBottomPath = textureBottomPath ?? $"res://assets/blocks/{BlockId}/bottom.png";
     }
 
     public Direction? FreezeDirection { get; }
@@ -44,5 +42,11 @@ public class DirectionalBlock : Block
         if (face == Direction.Opposite())
             return _materialBottom;
         return _materialRound;
+    }
+
+    public override bool Equals(Block other)
+    {
+        return other.BlockId == BlockId &&
+               (other as DirectionalBlock).Direction == Direction;
     }
 }

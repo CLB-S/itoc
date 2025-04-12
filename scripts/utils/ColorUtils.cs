@@ -11,7 +11,7 @@ public static class ColorUtils
     {
         var rng = new RandomNumberGenerator();
         rng.Seed = seed;
-        return Color.FromHsv(rng.Randf(), rng.RandfRange(0.2f, 0.6f), rng.RandfRange(0.9f, 1.0f));
+        return Color.FromHsv((float)rng.Randf(), (float)rng.RandfRange(0.2f, 0.6f), (float)rng.RandfRange(0.9f, 1.0f));
     }
 
     /// <summary>

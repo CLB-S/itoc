@@ -5,15 +5,13 @@ public class BasicBlock : Block
     private Material _material;
     public Texture2D Texture;
 
-    public BasicBlock(uint blockId, string blockName)
+    public BasicBlock(string blockId, string blockName) : base(blockId, blockName)
     {
-        BlockId = blockId;
-        BlockName = blockName;
     }
 
     public override void LoadResources()
     {
-        var path = $"res://assets/blocks/{BlockName}.png";
+        var path = $"res://assets/blocks/{BlockId}.png";
         _material = BlockHelper.GetMaterial(path);
     }
 
@@ -21,4 +19,10 @@ public class BasicBlock : Block
     {
         return _material;
     }
+
+    public override bool Equals(Block other)
+    {
+        return other.BlockId == BlockId;
+    }
+
 }

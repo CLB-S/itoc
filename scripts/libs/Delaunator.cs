@@ -48,9 +48,9 @@ public struct VoronoiCell
 
 public class Delaunator
 {
-    private readonly float[] coords;
+    private readonly double[] coords;
     private readonly int[] EDGE_STACK = new int[512];
-    private readonly float EPSILON = Mathf.Pow(2, -52);
+    private readonly double EPSILON = Mathf.Pow(2, -52.0);
 
     private readonly int hashSize;
     private readonly int[] hullHash;
@@ -60,8 +60,8 @@ public class Delaunator
     private readonly int hullStart;
     private readonly int[] hullTri;
 
-    private readonly float cx;
-    private readonly float cy;
+    private readonly double cx;
+    private readonly double cy;
 
     private int trianglesLen;
 
@@ -70,7 +70,7 @@ public class Delaunator
         if (points.Length < 3) throw new ArgumentOutOfRangeException("Need at least 3 points");
 
         Points = points;
-        coords = new float[Points.Length * 2];
+        coords = new double[Points.Length * 2];
 
         for (var i = 0; i < Points.Length; i++)
         {
@@ -94,10 +94,10 @@ public class Delaunator
 
         var ids = new int[n];
 
-        var minX = float.PositiveInfinity;
-        var minY = float.PositiveInfinity;
-        var maxX = float.NegativeInfinity;
-        var maxY = float.NegativeInfinity;
+        var minX = double.PositiveInfinity;
+        var minY = double.PositiveInfinity;
+        var maxX = double.NegativeInfinity;
+        var maxY = double.NegativeInfinity;
 
         for (var i = 0; i < n; i++)
         {
@@ -113,7 +113,7 @@ public class Delaunator
         var cx = (minX + maxX) / 2;
         var cy = (minY + maxY) / 2;
 
-        var minDist = float.PositiveInfinity;
+        var minDist = double.PositiveInfinity;
         var i0 = 0;
         var i1 = 0;
         var i2 = 0;
@@ -132,7 +132,7 @@ public class Delaunator
         var i0x = coords[2 * i0];
         var i0y = coords[2 * i0 + 1];
 
-        minDist = float.PositiveInfinity;
+        minDist = double.PositiveInfinity;
 
         // find the point closest to the seed
         for (var i = 0; i < n; i++)
@@ -149,7 +149,7 @@ public class Delaunator
         var i1x = coords[2 * i1];
         var i1y = coords[2 * i1 + 1];
 
-        var minRadius = float.PositiveInfinity;
+        var minRadius = double.PositiveInfinity;
 
         // find the third point which forms the smallest circumcircle with the first two
         for (var i = 0; i < n; i++)
@@ -166,7 +166,7 @@ public class Delaunator
         var i2x = coords[2 * i2];
         var i2y = coords[2 * i2 + 1];
 
-        if (minRadius == float.PositiveInfinity)
+        if (minRadius == double.PositiveInfinity)
             throw new Exception("No Delaunay triangulation exists for this input.");
 
         if (Orient(i0x, i0y, i1x, i1y, i2x, i2y))
@@ -186,7 +186,7 @@ public class Delaunator
         this.cx = center.X;
         this.cy = center.Y;
 
-        var dists = new float[n];
+        var dists = new double[n];
         for (var i = 0; i < n; i++) dists[i] = Dist(coords[2 * i], coords[2 * i + 1], center.X, center.Y);
 
         // sort the points by distance from the seed triangle circumcenter
@@ -211,8 +211,8 @@ public class Delaunator
         trianglesLen = 0;
         AddTriangle(i0, i1, i2, -1, -1, -1);
 
-        float xp = 0;
-        float yp = 0;
+        double xp = 0;
+        double yp = 0;
 
         for (var k = 0; k < ids.Length; k++)
         {
@@ -438,7 +438,7 @@ public class Delaunator
         return ar;
     }
 
-    private static bool InCircle(float ax, float ay, float bx, float by, float cx, float cy, float px, float py)
+    private static bool InCircle(double ax, double ay, double bx, double by, double cx, double cy, double px, double py)
     {
         var dx = ax - px;
         var dy = ay - py;
@@ -478,18 +478,18 @@ public class Delaunator
         if (b != -1) Halfedges[b] = a;
     }
 
-    private int HashKey(float x, float y)
+    private int HashKey(double x, double y)
     {
         return Mathf.FloorToInt(PseudoAngle(x - cx, y - cy) * hashSize) % hashSize;
     }
 
-    private static float PseudoAngle(float dx, float dy)
+    private static double PseudoAngle(double dx, double dy)
     {
         var p = dx / (Mathf.Abs(dx) + Mathf.Abs(dy));
         return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
     }
 
-    private static void Quicksort(int[] ids, float[] dists, int left, int right)
+    private static void Quicksort(int[] ids, double[] dists, int left, int right)
     {
         if (right - left <= 20)
         {
@@ -553,12 +553,12 @@ public class Delaunator
         arr[j] = tmp;
     }
 
-    private static bool Orient(float px, float py, float qx, float qy, float rx, float ry)
+    private static bool Orient(double px, double py, double qx, double qy, double rx, double ry)
     {
         return (qy - py) * (rx - qx) - (qx - px) * (ry - qy) < 0;
     }
 
-    private static float Circumradius(float ax, float ay, float bx, float by, float cx, float cy)
+    private static double Circumradius(double ax, double ay, double bx, double by, double cx, double cy)
     {
         var dx = bx - ax;
         var dy = by - ay;
@@ -566,13 +566,13 @@ public class Delaunator
         var ey = cy - ay;
         var bl = dx * dx + dy * dy;
         var cl = ex * ex + ey * ey;
-        var d = 0.5f / (dx * ey - dy * ex);
+        var d = 0.5 / (dx * ey - dy * ex);
         var x = (ey * bl - dy * cl) * d;
         var y = (dx * cl - ex * bl) * d;
         return x * x + y * y;
     }
 
-    private static Vector2 Circumcenter(float ax, float ay, float bx, float by, float cx, float cy)
+    private static Vector2 Circumcenter(double ax, double ay, double bx, double by, double cx, double cy)
     {
         var dx = bx - ax;
         var dy = by - ay;
@@ -587,7 +587,7 @@ public class Delaunator
         return new Vector2(x, y);
     }
 
-    private static float Dist(float ax, float ay, float bx, float by)
+    private static double Dist(double ax, double ay, double bx, double by)
     {
         var dx = ax - bx;
         var dy = ay - by;
@@ -721,9 +721,9 @@ public class Delaunator
 
     public static Vector2 GetCentroid(Vector2[] points)
     {
-        var accumulatedArea = 0.0f;
-        var centerX = 0.0f;
-        var centerY = 0.0f;
+        var accumulatedArea = 0.0;
+        var centerX = 0.0;
+        var centerY = 0.0;
 
         for (int i = 0, j = points.Length - 1; i < points.Length; j = i++)
         {
@@ -736,7 +736,7 @@ public class Delaunator
         if (Mathf.Abs(accumulatedArea) < 1E-7f)
             return new Vector2();
 
-        accumulatedArea *= 3f;
+        accumulatedArea *= 3;
         return new Vector2(centerX / accumulatedArea, centerY / accumulatedArea);
     }
 

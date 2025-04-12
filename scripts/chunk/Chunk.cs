@@ -1,249 +1,115 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using Array = Godot.Collections.Array;
 
 public partial class Chunk : StaticBody3D
 {
-    // 区块状态枚举
     public enum ChunkState
     {
         Unloaded,
         DataReady,
-        MeshReady,
-        Loaded
+        Empty,
+        Render,
+        Physics,
     }
 
-    private ArrayMesh _arrayMesh;
-    private CollisionShape3D _collisionShape;
+    private Mesh _mesh;
+    private CollisionShape3D _collisionShape3D;
+    private Shape3D _collisionShape;
 
-    // 调试显示
-    private ImmediateMesh _debugMesh;
-    private MeshInstance3D _debugMeshInstance;
+    // private ImmediateMesh _debugMesh;
+    private MeshInstance3D _collisionDebugMeshInstance;
 
-    // 节点引用
     private MeshInstance3D _meshInstance;
 
-    public Chunk(ChunkGenerationResult result)
+    public ChunkData ChunkData { get; private set; }
+    public Vector3I ChunkPosition { get; private set; }
+
+    public ChunkState State { get; private set; } = ChunkState.Unloaded;
+
+    public Chunk(ChunkGenerator.ChunkGenerationResult result)
     {
-        Initialize(result.ChunkPosition, result.VoxelData, result.MeshData);
+        _mesh = result.Mesh;
+        _collisionShape = result.CollisionShape;
+        ChunkData = result.ChunkData;
+        ChunkPosition = ChunkData.GetPosition();
+        Position = ChunkPosition * World.ChunkSize;
+        Name = $"Chunk_{ChunkPosition.X}_{ChunkPosition.Y}_{ChunkPosition.Z}";
+
+        State = result.Mesh == null ? State = ChunkState.Empty : ChunkState.DataReady;
     }
 
-    // 公开属性
-    public Vector3 ChunkPosition { get; private set; }
-    public ChunkState State { get; private set; } = ChunkState.Unloaded;
-    public uint[] VoxelData { get; private set; }
-    public ChunkMesher.MeshData MeshData { get; private set; }
-
-    // 初始化区块
-    public void Initialize(Vector3 chunkPosition, uint[] voxelData, ChunkMesher.MeshData meshData)
+    public override void _PhysicsProcess(double delta)
     {
-        ChunkPosition = chunkPosition;
-        VoxelData = voxelData;
-        MeshData = meshData;
-        State = ChunkState.DataReady;
-
-        Position = chunkPosition * World.ChunkSize;
-        Name = $"Chunk_{chunkPosition.X}_{chunkPosition.Y}_{chunkPosition.Z}";
+        var distance = ChunkPosition.DistanceTo(World.Instance.PlayerChunk);
+        if (distance > Core.Instance.Settings.PhysicsDistance + 1)
+        {
+            UnloadPhysics();
+        }
+        else if (distance <= Core.Instance.Settings.PhysicsDistance)
+        {
+            LoadPhysics();
+        }
     }
 
     public void Load()
     {
-        if (State == ChunkState.Loaded) return;
+        if (State != ChunkState.DataReady) return;
 
         CallDeferred(nameof(DeferredLoad));
     }
 
     private void DeferredLoad()
     {
-        if (State == ChunkState.Loaded) return;
-
-        // 创建网格实例
         _meshInstance = new MeshInstance3D();
+        _meshInstance.Mesh = _mesh;
         if (World.Instance.UseDebugMaterial) _meshInstance.MaterialOverride = World.Instance.DebugMaterial;
         AddChild(_meshInstance);
 
-        _collisionShape = new CollisionShape3D();
-        AddChild(_collisionShape);
+        _collisionShape3D = new CollisionShape3D();
+        _collisionDebugMeshInstance = new MeshInstance3D();
+        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
+        _collisionDebugMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        AddChild(_collisionShape3D);
+        AddChild(_collisionDebugMeshInstance);
 
-        UpdateMesh();
-        UpdateCollision();
+        State = ChunkState.Render;
 
-        // 调试边框
-        if (World.Instance.DebugDrawChunkBounds) DrawDebugBounds();
-
-        State = ChunkState.Loaded;
-    }
-
-    // 生成Godot可用的ArrayMesh
-    private void UpdateMesh()
-    {
-        if (MeshData.Quads.Count == 0) return;
-
-        var surfaceArrayDict = new Dictionary<uint, SurfaceArrayData>();
-
-        for (var face = 0; face < 6; face++)
-            for (var i = MeshData.FaceVertexBegin[face];
-                 i < MeshData.FaceVertexBegin[face] + MeshData.FaceVertexLength[face];
-                 i++)
-                ParseQuad((Direction)face, MeshData.QuadBlockIDs[i], MeshData.Quads[i], surfaceArrayDict);
-
-        _arrayMesh = new ArrayMesh();
-        foreach (var (blockInfo, surfaceArrayData) in surfaceArrayDict)
+        if (_collisionShape != null)
         {
-            var (blockID, dir) = ParseBlockInfo(blockInfo);
-            _arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
-            _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                BlockManager.Instance.GetBlock(blockID).GetMaterial(dir));
+            _collisionShape3D.Shape = _collisionShape;
+            State = ChunkState.Physics;
+
+            if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
         }
 
-        _meshInstance.Mesh = _arrayMesh;
+        // if (World.Instance.DebugDrawChunkBounds) DrawDebugBounds();
     }
 
-    private (uint, Direction) ParseBlockInfo(uint blockInfo)
+    private void UnloadPhysics()
     {
-        return ((blockInfo << 3) >> 3, (Direction)(blockInfo >> 29));
+        if (State != ChunkState.Physics) return;
+
+        _collisionShape3D.Shape = null;
+
+        if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+            _collisionDebugMeshInstance.Mesh = null;
+
+        State = ChunkState.Render;
     }
 
-    private uint GetBlockInfo(uint blockID, Direction dir)
+    private void LoadPhysics()
     {
-        if (BlockManager.Instance.GetBlock(blockID) is DirectionalBlock)
-            return ((uint)dir << 29) | blockID;
-        return blockID;
+        if (State != ChunkState.Render) return;
+        _collisionShape3D.Shape = _meshInstance.Mesh?.CreateTrimeshShape();
+        if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+            _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape?.GetDebugMesh();
+
+        State = ChunkState.Physics;
     }
 
-    private void ParseQuad(Direction dir, uint blockID, ulong quad,
-        Dictionary<uint, SurfaceArrayData> surfaceArrayDict)
-    {
-        var blockInfo = GetBlockInfo(blockID, dir);
-        if (!surfaceArrayDict.ContainsKey(blockInfo))
-            surfaceArrayDict.Add(blockInfo, new SurfaceArrayData());
-
-        var surfaceArrayData = surfaceArrayDict[blockInfo];
-
-        // 解析数据（与C++结构完全一致）
-        var x = (uint)(quad & 0x3F); // 6 bits
-        var y = (uint)((quad >> 6) & 0x3F); // 6 bits
-        var z = (uint)((quad >> 12) & 0x3F); // 6 bits
-        var w = (uint)((quad >> 18) & 0x3F); // 6 bits (width)
-        var h = (uint)((quad >> 24) & 0x3F); // 6 bits (height)
-        // uint blockType = (uint)((quad >> 32) & 0x7);
-
-        // GD.Print($"{dir.Name()}: {x},{y},{z} ({w},{h})");
-        // if (dir != Direction.PositiveY && dir != Direction.NegativeY) return;
-        // Color color = GetBlockColor(blockType);
-
-        var baseIndex = surfaceArrayData.Vertices.Count;
-        var corners = GetQuadCorners(dir, x, y, z, w, h);
-        surfaceArrayData.Vertices.AddRange(corners);
-
-        var normal = dir.Norm();
-        for (var i = 0; i < 4; i++) surfaceArrayData.Normals.Add(normal);
-
-        var offset = 0.0014f;
-
-        // 标准UV映射
-        if (dir == Direction.PositiveZ ||
-            dir == Direction.NegativeZ ||
-            dir == Direction.NegativeY)
-        {
-            surfaceArrayData.UVs.Add(new Vector2(offset, h - offset));
-            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(w - offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(w - offset, h - offset));
-        }
-        else
-        {
-            surfaceArrayData.UVs.Add(new Vector2(offset, w - offset));
-            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(h - offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(h - offset, w - offset));
-        }
-
-        // 三角形索引（顺时针顺序）
-        surfaceArrayData.Indices.Add(baseIndex + 0);
-        surfaceArrayData.Indices.Add(baseIndex + 1);
-        surfaceArrayData.Indices.Add(baseIndex + 2);
-        surfaceArrayData.Indices.Add(baseIndex + 0);
-        surfaceArrayData.Indices.Add(baseIndex + 2);
-        surfaceArrayData.Indices.Add(baseIndex + 3);
-    }
-
-    private Vector3[] GetQuadCorners(Direction dir, float x, float y, float z, float w, float h)
-    {
-        // 0 PositiveY wDir = 0 hDir = 2
-        // 1 NegativeY wDir = 0 hDir = 2
-        // 2 PositiveX wDir = 1 hDir = 2
-        // 3 NegativeX wDir = 1 hDir = 2
-        // 4 PositiveZ wDir = 0 hDir = 1
-        // 5 NegativeZ wDir = 0 hDir = 1
-
-        switch (dir)
-        {
-            case Direction.PositiveY: // Y+
-                return new Vector3[]
-                {
-                    new(x, y, z),
-                    new(x + w, y, z),
-                    new(x + w, y, z + h),
-                    new(x, y, z + h)
-                };
-            case Direction.NegativeY: // Y-
-                return new Vector3[]
-                {
-                    new(x - w, y, z),
-                    new(x - w, y, z + h),
-                    new(x, y, z + h),
-                    new(x, y, z)
-                };
-            case Direction.PositiveX: // X+
-                return new Vector3[]
-                {
-                    new(x, y - w, z + h),
-                    new(x, y, z + h),
-                    new(x, y, z),
-                    new(x, y - w, z)
-                };
-            case Direction.NegativeX: // X-
-                return new Vector3[]
-                {
-                    new(x, y, z),
-                    new(x, y + w, z),
-                    new(x, y + w, z + h),
-                    new(x, y, z + h)
-                };
-            case Direction.PositiveZ: // Z+
-                return new Vector3[]
-                {
-                    new(x - w, y, z),
-                    new(x - w, y + h, z),
-                    new(x, y + h, z),
-                    new(x, y, z)
-                };
-            case Direction.NegativeZ: // Z-
-                return new Vector3[]
-                {
-                    new(x + w, y, z),
-                    new(x + w, y + h, z),
-                    new(x, y + h, z),
-                    new(x, y, z)
-                };
-            default:
-                throw new ArgumentOutOfRangeException(nameof(dir), dir, null);
-        }
-    }
-
-    // 设置碰撞体
-    private void UpdateCollision()
-    {
-        if (_arrayMesh == null) return;
-
-        // 创建碰撞形状
-        var shape = _arrayMesh.CreateTrimeshShape();
-        _collisionShape.Shape = shape;
-    }
-
-    // 绘制调试边界框
+    /*
     private void DrawDebugBounds()
     {
         _debugMesh = new ImmediateMesh();
@@ -255,7 +121,6 @@ public partial class Chunk : StaticBody3D
         var min = Vector3.Zero;
         var max = new Vector3(World.ChunkSize, World.ChunkSize, World.ChunkSize);
 
-        // 边框线
         DrawDebugLine(min, new Vector3(max.X, min.Y, min.Z));
         DrawDebugLine(min, new Vector3(min.X, max.Y, min.Z));
         DrawDebugLine(min, new Vector3(min.X, min.Y, max.Z));
@@ -283,17 +148,19 @@ public partial class Chunk : StaticBody3D
         _debugMesh.SurfaceAddVertex(to);
     }
 
-    public uint GetBlock(int x, int y, int z)
+    */
+
+    public Block GetBlock(int x, int y, int z)
     {
         // if (x < 0 || x >= World.ChunkSize ||
         //     y < 0 || y >= World.ChunkSize ||
         //     z < 0 || z >= World.ChunkSize)
         //     return 0;
 
-        return VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)];
+        return ChunkData.GetBlock(x + 1, y + 1, z + 1);
     }
 
-    public void SetBlock(int x, int y, int z, uint block)
+    public void SetBlock(int x, int y, int z, Block block)
     {
         // if (x < 0 || x >= World.ChunkSize ||
         //     y < 0 || y >= World.ChunkSize ||
@@ -302,104 +169,61 @@ public partial class Chunk : StaticBody3D
 
         // GD.Print($"Setting block {block} at {x}, {y}, {z}");
 
-        VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, z + 1)] = block;
+        ChunkData.SetBlock(x + 1, y + 1, z + 1, block);
+        UpdateMesh();
 
-        bool isNonOpaque = block == 0 || !BlockManager.Instance.GetBlock(block).IsOpaque;
-
-        if (isNonOpaque)
-            ChunkMesher.AddNonOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
-        else
-            ChunkMesher.AddOpaqueVoxel(ref MeshData.OpaqueMask, x + 1, y + 1, z + 1);
-        Update();
-
+        var neighbourChunkPos = ChunkPosition;
         if (x == 0)
         {
-            var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.X -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isNonOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, ChunkMesher.CS_P - 1, y + 1, z + 1);
-
-            neighbourChunk.VoxelData[ChunkMesher.GetIndex(ChunkMesher.CS_P - 1, y + 1, z + 1)] = block;
-            neighbourChunk.Update();
+            neighbourChunk.ChunkData.SetBlock(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
+            neighbourChunk.UpdateMesh();
         }
 
         if (x == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.X += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isNonOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, 0, y + 1, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, 0, y + 1, z + 1);
-
-            neighbourChunk.VoxelData[ChunkMesher.GetIndex(0, y + 1, z + 1)] = block;
-            neighbourChunk.Update();
+            neighbourChunk.ChunkData.SetBlock(0, y + 1, z + 1, block);
+            neighbourChunk.UpdateMesh();
         }
 
         if (y == 0)
         {
-            var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Y -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isNonOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, ChunkMesher.CS_P - 1, z + 1);
-
-            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, ChunkMesher.CS_P - 1, z + 1)] = block;
-            neighbourChunk.Update();
+            neighbourChunk.ChunkData.SetBlock(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
+            neighbourChunk.UpdateMesh();
         }
 
         if (y == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Y += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isNonOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, 0, z + 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, 0, z + 1);
-
-            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, 0, z + 1)] = block;
-            neighbourChunk.Update();
+            neighbourChunk.ChunkData.SetBlock(x + 1, 0, z + 1, block);
+            neighbourChunk.UpdateMesh();
         }
 
         if (z == 0)
         {
-            var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Z -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isNonOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, ChunkMesher.CS_P - 1);
-
-            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, ChunkMesher.CS_P - 1)] = block;
-            neighbourChunk.Update();
+            neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
+            neighbourChunk.UpdateMesh();
         }
 
         if (z == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = (Vector3I)ChunkPosition;
             neighbourChunkPos.Z += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
-            if (isNonOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, 0);
-            else
-                ChunkMesher.AddOpaqueVoxel(ref neighbourChunk.MeshData.OpaqueMask, x + 1, y + 1, 0);
-
-            neighbourChunk.VoxelData[ChunkMesher.GetIndex(x + 1, y + 1, 0)] = block;
-            neighbourChunk.Update();
+            neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, 0, block);
+            neighbourChunk.UpdateMesh();
         }
 
     }
 
 
-    // 卸载区块
     public void Unload()
     {
         CallDeferred(nameof(DeferredUnload));
@@ -413,20 +237,26 @@ public partial class Chunk : StaticBody3D
             _meshInstance = null;
         }
 
-        if (_collisionShape != null)
+        if (_collisionShape3D != null)
         {
-            _collisionShape.QueueFree();
-            _collisionShape = null;
+            _collisionShape3D.QueueFree();
+            _collisionShape3D = null;
         }
 
-        if (_debugMeshInstance != null)
+        if (_collisionDebugMeshInstance != null)
         {
-            _debugMeshInstance.QueueFree();
-            _debugMeshInstance = null;
+            _collisionDebugMeshInstance.QueueFree();
+            _collisionDebugMeshInstance = null;
         }
 
-        _arrayMesh?.Dispose();
-        _arrayMesh = null;
+        // if (_debugMeshInstance != null)
+        // {
+        //     _debugMeshInstance.QueueFree();
+        //     _debugMeshInstance = null;
+        // }
+
+        // _arrayMesh?.Dispose();
+        // _arrayMesh = null;
     }
 
     private void DeferredUnload()
@@ -437,37 +267,24 @@ public partial class Chunk : StaticBody3D
         QueueFree();
     }
 
-    // 更新区块（重新生成网格）
-    public void Update()
+    public void UpdateMesh()
     {
-        if (State != ChunkState.Loaded) return;
+        if (State != ChunkState.Render && State != ChunkState.Physics)
+            throw new Exception("Chunk unloaded.");
 
-        ChunkMesher.MeshVoxels(VoxelData, MeshData);
+        var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask);
+        ChunkMesher.MeshChunk(ChunkData, meshData);
+        var mesh = ChunkMesher.GenerateMesh(meshData);
+        _meshInstance.Mesh = mesh;
 
-        UpdateMesh();
-        UpdateCollision();
+        if (State == ChunkState.Physics)
+        {
+            _collisionShape3D.Shape = _meshInstance.Mesh?.CreateTrimeshShape();
+
+            if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+        }
 
         // GD.Print($"Updated chunk at {ChunkPosition}");
-    }
-
-    private class SurfaceArrayData
-    {
-        public readonly List<int> Indices = new();
-        public readonly List<Vector3> Normals = new();
-        public readonly List<Vector2> UVs = new();
-        public readonly List<Vector3> Vertices = new();
-
-        public Array GetSurfaceArray()
-        {
-            var surfaceArray = new Array();
-            surfaceArray.Resize((int)Mesh.ArrayType.Max);
-
-            surfaceArray[(int)Mesh.ArrayType.Vertex] = Vertices.ToArray();
-            surfaceArray[(int)Mesh.ArrayType.TexUV] = UVs.ToArray();
-            surfaceArray[(int)Mesh.ArrayType.Normal] = Normals.ToArray();
-            surfaceArray[(int)Mesh.ArrayType.Index] = Indices.ToArray();
-
-            return surfaceArray;
-        }
     }
 }

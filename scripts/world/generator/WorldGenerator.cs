@@ -14,31 +14,11 @@ public class CellData
     public Vector2 TectonicMovement;
     public PlateType PlateType;
     public uint PlateSeed;
-    public float Altitude = 0f;
+    public float Altitude = 0;
     public bool RoundPlateJunction = false;
     public float Precipitation;
     public float Flux;
     public RiverSegment River;
-}
-
-public class WorldSettings
-{
-    public ulong Seed = 234;
-    public float ContinentRatio = 0.4f;
-    public float PlateMergeRatio = 0.13f;
-    public float MinimumCellDistance = 5f;
-    public float MaxTectonicMovement = 10.0f;
-    public float MaxAltitude = 2000.0f;
-    public Rect2 Bounds = new Rect2(-500, -500, 1000, 1000);
-
-    public float AltitudePropagationDecrement = 0.8f;
-    public float AltitudePropagationSharpness = 0.1f;
-
-
-    public WorldSettings(ulong seed = 0)
-    {
-        Seed = seed == 0 ? GD.Randi() : seed;
-    }
 }
 
 public class GenerationStep
@@ -65,6 +45,7 @@ public enum GenerationState
     CalculatingAltitudes,
     PropagatingAltitudes,
     CalculatingWaterFlux,
+    InitInterpolator,
     Custom,
     Completed,
     Failed
@@ -83,21 +64,30 @@ public partial class WorldGenerator
     public event EventHandler GenerationCompletedEvent;
     public event EventHandler<Exception> GenerationFailedEvent;
 
-    private readonly LinkedList<GenerationStep> _generationPipeline = new();
     public GenerationState State { get; private set; } = GenerationState.NotStarted;
+
+    private readonly LinkedList<GenerationStep> _generationPipeline = new();
     private readonly Stopwatch _stopwatch = new();
     private readonly object _stateLock = new();
+    private IdwInterpolator _heightMapInterpolator;
 
     // World data properties
     private Noise _plateNoise;
     private Noise _heightNoise;
 
     // Configuration
-    public WorldSettings Settings { get; set; } = new();
+    public WorldSettings Settings { get; private set; }
 
     public WorldGenerator()
     {
         InitializePipeline();
+        Settings = new WorldSettings();
+    }
+
+    public WorldGenerator(WorldSettings settings)
+    {
+        InitializePipeline();
+        Settings = settings;
     }
 
     private void InitializePipeline()
@@ -109,6 +99,7 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingAltitudes, CalculateAltitudes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingAltitudes, PropagateAltitudes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingWaterFlux, CalculateWaterFlux));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 
     public void AddGenerationStepAfter(GenerationStep step, GenerationState afterState)
@@ -129,7 +120,6 @@ public partial class WorldGenerator
 
         throw new ArgumentException($"No step found with state {afterState}");
     }
-
 
     public void AddGenerationStepBefore(GenerationStep step, GenerationState beforeState)
     {
@@ -173,7 +163,7 @@ public partial class WorldGenerator
         }
     }
 
-    public async void GenerateWorldAsync()
+    public async Task GenerateWorldAsync()
     {
         try
         {
@@ -238,18 +228,15 @@ public partial class WorldGenerator
 
     //             if (cell.Altitude <= _cellDatas[lowestNeighbor].Altitude)
     //             {
-    //                 cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05f;
+    //                 cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05;
     //                 hasDepressions = true;
     //             }
     //         }
     //     } while (hasDepressions);
     // }
 
-    public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    private void InitInterpolator()
     {
-        if (State != GenerationState.Completed)
-            throw new InvalidOperationException("World generation is not completed yet.");
-
         var posList = new List<Vector2>(_cellDatas.Count);
         var dataList = new List<float>(_cellDatas.Count);
         for (var i = 0; i < _cellDatas.Count; i++)
@@ -258,17 +245,40 @@ public partial class WorldGenerator
             dataList.Add(_cellDatas[i].Altitude);
         }
 
-        return IdwInterpolator.ConstructHeightMap(posList, dataList, resolutionX, resolutionY, Settings.Bounds);
+        _heightMapInterpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
     }
 
-    public ImageTexture GetHeightMapImageTexture(int resolutionX, int resolutionY)
+    public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    {
+        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
+    }
+
+    public float[,] CalculateChunkHeightMap(Vector2I chunkPos)
+    {
+        if (State != GenerationState.Completed)
+            throw new InvalidOperationException("World generation is not completed yet.");
+
+        // Consider overlapping edges
+        var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
+        return _heightMapInterpolator.ConstructChunkHeightMap(rect);
+    }
+
+    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false, int upscaleLevel = 2)
+    {
+        if (State != GenerationState.Completed)
+            throw new InvalidOperationException("World generation is not completed yet.");
+
+        return _heightMapInterpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel, upscaleLevel);
+    }
+
+    public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)
     {
         var heightMap = CalculateFullHeightMap(resolutionX, resolutionY);
         var image = Image.CreateEmpty(resolutionX, resolutionY, false, Image.Format.Rgb8);
         for (var x = 0; x < resolutionX; x++)
             for (var y = 0; y < resolutionY; y++)
             {
-                var h = 0.5f * (1 + heightMap[x, y] / Settings.MaxAltitude);
+                var h = (float)(0.5 * (1 + heightMap[x, y] / Settings.MaxAltitude));
                 image.SetPixel(x, y, new Color(h, h, h));
             }
 

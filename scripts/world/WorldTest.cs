@@ -23,6 +23,7 @@ public partial class WorldTest : Node2D
     [Export] public Button GenerateMapButton;
     [Export] public Button GenerateHeightMapButton;
     [Export] public Node2D HeightMapSubViewportSprite;
+    [Export] public Rect2 DrawingRect = new Rect2(-500, -500, 1000, 1000);
 
     public ImageTexture HeightMapTexture;
 
@@ -35,6 +36,7 @@ public partial class WorldTest : Node2D
     private WorldGenerator _worldGenerator;
 
     private int _heightMapResolution = 1000;
+    private Vector2 _scalingFactor;
 
     public override void _Ready()
     {
@@ -44,6 +46,7 @@ public partial class WorldTest : Node2D
             TerminalLabel.GetVScrollBar().Visible = false;
 
         _worldGenerator = new WorldGenerator();
+        _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
         _worldGenerator.GenerationStartedEvent += (_, _) => GenerateMapButton.Disabled = true;
         _worldGenerator.GenerationCompletedEvent += (_, _) =>
@@ -58,7 +61,7 @@ public partial class WorldTest : Node2D
             Log($"[color=red]Generation failed:[/color]\n{ex.Message}");
         };
 
-        _worldGenerator.GenerateWorldAsync();
+        Task.Run(_worldGenerator.GenerateWorldAsync);
     }
 
     private void Log(string message)
@@ -113,28 +116,29 @@ public partial class WorldTest : Node2D
         if (_worldGenerator.CellDatas != null)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
             {
-                if (!_worldGenerator.Settings.Bounds.HasPoint(_worldGenerator.SamplePoints[i])) continue;
+                if (!((Rect2)_worldGenerator.Settings.Bounds).HasPoint(_worldGenerator.SamplePoints[i])) continue;
 
                 if (cellData.Cell.Points.Length >= 3)
                 {
+                    var points = cellData.Cell.Points.Select(p => p * _scalingFactor).ToArray();
                     switch (DrawingCorlorPreset)
                     {
                         case ColorPreset.Plates:
                             var color = ColorUtils.RandomColorHSV(cellData.PlateSeed);
-                            DrawColoredPolygon(cellData.Cell.Points, color);
+                            DrawColoredPolygon(points, color);
                             break;
                         case ColorPreset.Height:
                             var height = cellData.Altitude / _worldGenerator.Settings.MaxAltitude;
-                            DrawColoredPolygon(cellData.Cell.Points, ColorUtils.GetHeightColor(height));
+                            DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
                             break;
                         case ColorPreset.PlateTypes:
-                            DrawColoredPolygon(cellData.Cell.Points,
+                            DrawColoredPolygon(points,
                                 new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
                                     (int)cellData.PlateType));
                             break;
                         case ColorPreset.Precipitation:
-                            DrawColoredPolygon(cellData.Cell.Points,
-                                new Color(cellData.Precipitation, cellData.Precipitation, cellData.Precipitation));
+                            DrawColoredPolygon(points,
+                                new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
                             break;
                     }
                 }
@@ -146,8 +150,8 @@ public partial class WorldTest : Node2D
             var i = 0;
             foreach (var edge in _worldGenerator.CellEdges)
             {
-                lines[i++] = edge.P;
-                lines[i++] = edge.Q;
+                lines[i++] = edge.P * _scalingFactor;
+                lines[i++] = edge.Q * _scalingFactor;
             }
 
             DrawMultiline(lines, Colors.White);
@@ -163,13 +167,15 @@ public partial class WorldTest : Node2D
         //     DrawCircle(i, 2f, Colors.White);
         // }
 
+        if (DrawInterpolatedHeightMap && HeightMapTexture != null) DrawTextureRect(HeightMapTexture, DrawingRect, false);
+
         if (DrawTectonicMovement)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
             {
                 if (i % 10 != 0) continue;
-                var pos = _worldGenerator.SamplePoints[i];
-                var end = pos + cellData.TectonicMovement * 3f;
-                var length = cellData.TectonicMovement.LengthSquared() / 100f;
+                var pos = _worldGenerator.SamplePoints[i] * _scalingFactor;
+                var end = pos + cellData.TectonicMovement * 3;
+                var length = (float)(cellData.TectonicMovement.LengthSquared() / 100.0);
                 DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
             }
 
@@ -187,7 +193,7 @@ public partial class WorldTest : Node2D
                 {
                     if ((points[i] - points[i + 1]).LengthSquared() >
                         _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
-                    DrawLine(points[i], points[i + 1], color, river.Width);
+                    DrawLine(points[i] * _scalingFactor, points[i + 1] * _scalingFactor, color, river.Width);
                 }
                 // Draw main river channel
                 // DrawPolyline(points, color, river.Width);
@@ -198,7 +204,6 @@ public partial class WorldTest : Node2D
 
         // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)_worldGenerator.Settings.Bounds.Size.X, (int)_worldGenerator.Settings.Bounds.Size.Y)), Rect, false);
 
-        if (DrawInterpolatedHeightMap && HeightMapTexture != null) DrawTextureRect(HeightMapTexture, _worldGenerator.Settings.Bounds, false);
 
         // Find neigbour cells of a cell.
         // var itest = 99;
@@ -223,7 +228,7 @@ public partial class WorldTest : Node2D
         // DrawCircle(_worldGenerator.SamplePoints[cellQ], 4f, Colors.Blue);
         // DrawLine(edge1.P, edge1.Q, Colors.Aqua);
 
-        DrawRect(_worldGenerator.Settings.Bounds, Colors.Red, false);
+        DrawRect(DrawingRect, Colors.Red, false);
 
         stopwatch.Stop();
         Log($"Draw time: {stopwatch.ElapsedMilliseconds / 1000.0f}s");
@@ -251,7 +256,7 @@ public partial class WorldTest : Node2D
 
     public void OnRegenerateButtonPressed()
     {
-        _worldGenerator.GenerateWorldAsync();
+        Task.Run(_worldGenerator.GenerateWorldAsync);
     }
 
     public void OnGenerateHeightMapButtonPressed()
@@ -266,7 +271,7 @@ public partial class WorldTest : Node2D
         Log("Generating height map...");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        await Task.Run(() => HeightMapTexture = _worldGenerator.GetHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
+        await Task.Run(() => HeightMapTexture = _worldGenerator.GetFullHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
         GenerateHeightMapButton.Disabled = false;
         var mat = HeightMapMesh.GetSurfaceOverrideMaterial(0) as ShaderMaterial;
         mat.SetShaderParameter("heightmap", HeightMapTexture);
