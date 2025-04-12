@@ -164,15 +164,16 @@ public partial class World : Node
 
         // var currentPlayerPos = GetPlayerPosition();
         // var currentCenter = WorldToChunkPosition(currentPlayerPos);
-        // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Settings.LoadDistance) return;
+        // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Core.Instance.Settings.LoadDistance) return;
 
         if (!Chunks.ContainsKey(result.ChunkData.GetPosition()))
         {
+            var position = result.ChunkData.GetPosition();
             var chunk = new Chunk(result);
-            Chunks[result.ChunkData.GetPosition()] = chunk;
+            Chunks[position] = chunk;
+            ChunkColumns[new Vector2I(position.X, position.Z)].Chunks[position] = chunk;
             chunk.Load();
             CallDeferred(Node.MethodName.AddChild, chunk);
-
         }
     }
 

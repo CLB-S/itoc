@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Concurrent;
 using System.Linq;
 
 public class ChunkColumn
@@ -7,6 +8,8 @@ public class ChunkColumn
     public float[,] HeightMap;
     public float HeightMapHigh;
     public float HeightMapLow;
+    public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
+
 
     private ChunkColumn() { }
     public ChunkColumn(Vector2I position, float[,] heightMap)
