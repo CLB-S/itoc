@@ -8,8 +8,9 @@ public partial class Chunk : StaticBody3D
     {
         Unloaded,
         DataReady,
-        MeshReady,
-        Loaded
+        Empty,
+        Render,
+        Physics,
     }
 
     private Mesh _mesh;
@@ -17,7 +18,6 @@ public partial class Chunk : StaticBody3D
     private Shape3D _collisionShape;
 
     // private ImmediateMesh _debugMesh;
-    private const bool DRAW_DEBUG_COLLISION_SHAPE = true;
     private MeshInstance3D _collisionDebugMeshInstance;
 
     private MeshInstance3D _meshInstance;
@@ -36,49 +36,77 @@ public partial class Chunk : StaticBody3D
         Position = ChunkPosition * World.ChunkSize;
         Name = $"Chunk_{ChunkPosition.X}_{ChunkPosition.Y}_{ChunkPosition.Z}";
 
-        // TODO: State
+        State = result.Mesh == null ? State = ChunkState.Empty : ChunkState.DataReady;
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        var distance = ChunkPosition.DistanceTo(World.Instance.PlayerChunk);
+        if (distance > Core.Instance.Settings.PhysicsDistance + 1)
+        {
+            UnloadPhysics();
+        }
+        else if (distance <= Core.Instance.Settings.PhysicsDistance)
+        {
+            LoadPhysics();
+        }
     }
 
     public void Load()
     {
-        if (State == ChunkState.Loaded) return;
+        if (State != ChunkState.DataReady) return;
 
         CallDeferred(nameof(DeferredLoad));
     }
 
     private void DeferredLoad()
     {
-        if (State == ChunkState.Loaded) return;
-
         _meshInstance = new MeshInstance3D();
         _meshInstance.Mesh = _mesh;
         if (World.Instance.UseDebugMaterial) _meshInstance.MaterialOverride = World.Instance.DebugMaterial;
         AddChild(_meshInstance);
 
         _collisionShape3D = new CollisionShape3D();
+        _collisionDebugMeshInstance = new MeshInstance3D();
+        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
+        _collisionDebugMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        AddChild(_collisionShape3D);
+        AddChild(_collisionDebugMeshInstance);
+
+        State = ChunkState.Render;
+
         if (_collisionShape != null)
         {
             _collisionShape3D.Shape = _collisionShape;
-            DrawDebugCollisionShape();
-        }
-        AddChild(_collisionShape3D);
+            State = ChunkState.Physics;
 
+            if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+        }
 
         // if (World.Instance.DebugDrawChunkBounds) DrawDebugBounds();
-        State = ChunkState.Loaded;
     }
 
-
-    private void DrawDebugCollisionShape()
+    private void UnloadPhysics()
     {
-        if (!DRAW_DEBUG_COLLISION_SHAPE) return;
+        if (State != ChunkState.Physics) return;
 
-        _collisionDebugMeshInstance = new MeshInstance3D();
-        AddChild(_collisionDebugMeshInstance);
+        _collisionShape3D.Shape = null;
 
-        _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
-        _collisionDebugMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
-        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
+        if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+            _collisionDebugMeshInstance.Mesh = null;
+
+        State = ChunkState.Render;
+    }
+
+    private void LoadPhysics()
+    {
+        if (State != ChunkState.Render) return;
+        _collisionShape3D.Shape = _meshInstance.Mesh?.CreateTrimeshShape();
+        if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+            _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape?.GetDebugMesh();
+
+        State = ChunkState.Physics;
     }
 
     /*
@@ -215,6 +243,12 @@ public partial class Chunk : StaticBody3D
             _collisionShape3D = null;
         }
 
+        if (_collisionDebugMeshInstance != null)
+        {
+            _collisionDebugMeshInstance.QueueFree();
+            _collisionDebugMeshInstance = null;
+        }
+
         // if (_debugMeshInstance != null)
         // {
         //     _debugMeshInstance.QueueFree();
@@ -235,16 +269,21 @@ public partial class Chunk : StaticBody3D
 
     public void UpdateMesh()
     {
-        if (State != ChunkState.Loaded) return;
+        if (State != ChunkState.Render && State != ChunkState.Physics)
+            throw new Exception("Chunk unloaded.");
 
-        using var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask);
+        var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask);
         ChunkMesher.MeshChunk(ChunkData, meshData);
         var mesh = ChunkMesher.GenerateMesh(meshData);
         _meshInstance.Mesh = mesh;
-        _collisionShape3D.Shape = mesh?.CreateTrimeshShape();
 
-        _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+        if (State == ChunkState.Physics)
+        {
+            _collisionShape3D.Shape = _meshInstance.Mesh?.CreateTrimeshShape();
 
+            if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+        }
 
         // GD.Print($"Updated chunk at {ChunkPosition}");
     }

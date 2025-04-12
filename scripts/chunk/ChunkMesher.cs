@@ -389,7 +389,7 @@ public static class ChunkMesher
         }
     }
 
-    public class MeshData : IDisposable
+    public class MeshData
     {
         public ulong[] FaceMasks = new ulong[CS_2 * 6];
         public int[] FaceVertexBegin = new int[6];
@@ -408,19 +408,6 @@ public static class ChunkMesher
         public MeshData()
         {
             OpaqueMask = new ulong[CS_P2];
-        }
-
-        public void Dispose()
-        {
-            FaceMasks = null;
-            FaceVertexBegin = null;
-            FaceVertexLength = null;
-            ForwardMerged = null;
-            OpaqueMask = null;
-            QuadBlockIDs = null;
-            Quads = null;
-            RightMerged = null;
-            GC.SuppressFinalize(this);
         }
     }
 }

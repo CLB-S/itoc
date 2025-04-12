@@ -11,6 +11,7 @@ public enum ChunkGenerationState
     Initializing,
     HeightMap,
     Meshing,
+    CollisionShape,
     Custom,
     Completed,
     Failed
@@ -51,6 +52,7 @@ public class ChunkGenerationPipeline
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, SetBlocksHeightMap));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Meshing, Meshing));
+        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.CollisionShape, CreateCollisionShape));
     }
 
     private void Initialize(ChunkGenerationRequest request)
@@ -84,11 +86,17 @@ public class ChunkGenerationPipeline
 
     private void Meshing(ChunkGenerationRequest request)
     {
-        using var meshData = new ChunkMesher.MeshData(_chunkData.OpaqueMask);
+        var meshData = new ChunkMesher.MeshData(_chunkData.OpaqueMask);
         ChunkMesher.MeshChunk(_chunkData, meshData);
         _mesh = ChunkMesher.GenerateMesh(meshData);
-        _shape = _mesh?.CreateTrimeshShape();
     }
+
+    private void CreateCollisionShape(ChunkGenerationRequest request)
+    {
+        if (request.CreateCollisionShape)
+            _shape = _mesh?.CreateTrimeshShape();
+    }
+
 
     public ChunkGenerationResult Excute(ChunkGenerationRequest request)
     {

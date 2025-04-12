@@ -15,17 +15,20 @@ public class ChunkGenerationRequest
     public ChunkColumn ChunkColumn { get; }
     public Action<ChunkGenerationResult> Callback { get; }
     public readonly WorldGenerator.WorldGenerator WorldGenerator;
+    public bool CreateCollisionShape { get; set; }
 
 
     public ChunkGenerationRequest(
         WorldGenerator.WorldGenerator worldGenerator,
         Vector3I position,
         ChunkColumn chunkColumn,
-        Action<ChunkGenerationResult> callback)
+        Action<ChunkGenerationResult> callback,
+        bool createCollisionShape)
     {
         WorldGenerator = worldGenerator;
         ChunkPosition = position;
         ChunkColumn = chunkColumn;
         Callback = callback;
+        CreateCollisionShape = createCollisionShape;
     }
 }

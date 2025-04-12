@@ -6,7 +6,6 @@ using Godot;
 public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
-    public const int MaxGenerationsPerFrame = 1;
 
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
     public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
@@ -22,6 +21,8 @@ public partial class World : Node
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly HashSet<Vector2I> _queuedChunkColumns = new();
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
+
+    public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
 
     public static World Instance { get; private set; } //TODO: Remove after gui.
 
@@ -42,19 +43,21 @@ public partial class World : Node
         _ready = true;
     }
 
-    public override void _PhysicsProcess(double delta)
+    public override void _Process(double delta)
     {
         if (!_ready) return;
 
         var playerPos = GetPlayerPosition();
+
         if ((playerPos - _lastPlayerPosition).Length() > ChunkSize / 2)
         {
-            UpdateChunkLoading(playerPos);
+            PlayerChunk = WorldToChunkPosition(playerPos);
+            UpdateChunkLoading();
             _lastPlayerPosition = playerPos;
         }
 
         var processed = 0;
-        while (_chunkColumnsGenerationQueue.Count > 0 && processed < MaxGenerationsPerFrame)
+        while (_chunkColumnsGenerationQueue.Count > 0 && processed < Core.Instance.Settings.MaxChunkGenerationsPerFrame)
         {
             var pos = _chunkColumnsGenerationQueue.Dequeue();
             _queuedChunkColumns.Remove(pos);
@@ -97,39 +100,38 @@ public partial class World : Node
         chunk.SetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z), block);
     }
 
-    private void UpdateChunkLoading(Vector3 center)
+    private void UpdateChunkLoading()
     {
-        var centerChunk = WorldToChunkPosition(center);
-        var centerChunkXZ = new Vector2I(centerChunk.X, centerChunk.Z);
-        var loadArea = new HashSet<Vector2I>();
+        var playerChunkXZ = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
+        var renderArea = new HashSet<Vector2I>();
 
         // Load Area
         for (var x = -Core.Instance.Settings.RenderDistance; x <= Core.Instance.Settings.RenderDistance; x++)
             for (var z = -Core.Instance.Settings.RenderDistance; z <= Core.Instance.Settings.RenderDistance; z++)
             {
-                var pos = centerChunkXZ + new Vector2I(x, z);
-                if (pos.DistanceTo(centerChunkXZ) <= Core.Instance.Settings.RenderDistance) loadArea.Add(pos);
+                var pos = playerChunkXZ + new Vector2I(x, z);
+                if (pos.DistanceTo(playerChunkXZ) <= Core.Instance.Settings.RenderDistance) renderArea.Add(pos);
             }
 
         // Unload
         foreach (var existingPos in Chunks.Keys)
-            if (!loadArea.Contains(new Vector2I(existingPos.X, existingPos.Z)))
+            if (!renderArea.Contains(new Vector2I(existingPos.X, existingPos.Z)))
                 if (Chunks.TryRemove(existingPos, out var chunk))
                     chunk.Unload();
 
         foreach (var existingPos in ChunkColumns.Keys)
-            if (!loadArea.Contains(existingPos))
+            if (!renderArea.Contains(existingPos))
                 if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
                     chunkColumn = null;
 
         // To generate
         var toGenerate = new List<Vector2I>();
-        foreach (var pos in loadArea)
+        foreach (var pos in renderArea)
             if (!ChunkColumns.ContainsKey(pos) && !_queuedChunkColumns.Contains(pos))
                 toGenerate.Add(pos);
 
         // Sort by distance.
-        toGenerate.Sort((a, b) => a.DistanceTo(centerChunkXZ).CompareTo(b.DistanceTo(centerChunkXZ)));
+        toGenerate.Sort((a, b) => a.DistanceTo(playerChunkXZ).CompareTo(b.DistanceTo(playerChunkXZ)));
 
         foreach (var pos in toGenerate)
             if (_queuedChunkColumns.Add(pos))
@@ -152,7 +154,8 @@ public partial class World : Node
                 var chunkPos = new Vector3I(result.Position.X, y, result.Position.Y);
                 if (Chunks.ContainsKey(chunkPos)) continue;
 
-                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, chunkPos, result, ChunkGenerationCallback);
+                var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
+                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, chunkPos, result, ChunkGenerationCallback, createCollisionShape);
                 _chunkFactory.Enqueue(request);
             }
         }
