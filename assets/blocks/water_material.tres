@@ -1,0 +1,37 @@
+[gd_resource type="ShaderMaterial" load_steps=5 format=3 uid="uid://dd0g0bykjfh0n"]
+
+[ext_resource type="Shader" uid="uid://cn0lx51ltbmhj" path="res://assets/blocks/water.gdshader" id="1_6f48r"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_5vw27"]
+fractal_octaves = 4
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_kek77"]
+seamless = true
+as_normal_map = true
+noise = SubResource("FastNoiseLite_5vw27")
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_4c57u"]
+seamless = true
+as_normal_map = true
+noise = SubResource("FastNoiseLite_5vw27")
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_6f48r")
+shader_parameter/albedo = Color(0.517647, 0.635294, 1, 0.835294)
+shader_parameter/albedo_texture_size = Vector2i(16, 16)
+shader_parameter/point_size = 1.0
+shader_parameter/roughness = 0.0
+shader_parameter/metallic_texture_channel = Vector4(1, 0, 0, 0)
+shader_parameter/specular = 0.5
+shader_parameter/metallic = 0.0
+shader_parameter/texture_refraction = SubResource("NoiseTexture2D_4c57u")
+shader_parameter/refraction = 0.05
+shader_parameter/refraction_texture_channel = Vector4(1, 0, 0, 0)
+shader_parameter/texture_normal = SubResource("NoiseTexture2D_kek77")
+shader_parameter/normal_scale = 1.0
+shader_parameter/uv1_blend_sharpness = 1.0
+shader_parameter/uv1_scale = Vector3(0.03, 0.03, 0.03)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+shader_parameter/uv2_scale = Vector3(1, 1, 1)
+shader_parameter/uv2_offset = Vector3(0, 0, 0)

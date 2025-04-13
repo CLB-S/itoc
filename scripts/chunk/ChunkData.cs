@@ -8,7 +8,11 @@ public class ChunkData
     public readonly int Y;
     public readonly int Z;
 
+    /// <summary>
+    /// Mask for opaque blocks.
+    /// </summary>
     public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
+    public ulong[] TransparentMasks;
     private Palette<Block> _palette = new Palette<Block>(null);
     private List<ulong> _data = new List<ulong>();
     private int _entriesPerLong;
@@ -98,6 +102,14 @@ public class ChunkData
             ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
         else
             ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
+
+        if (block != null && !block.IsOpaque)
+        {
+            if (TransparentMasks == null)
+                TransparentMasks = new ulong[ChunkMesher.CS_P2];
+
+            ChunkMesher.AddOpaqueVoxel(TransparentMasks, x, y, z);
+        }
     }
 
     public void SetBlock(Vector3I pos, Block block)

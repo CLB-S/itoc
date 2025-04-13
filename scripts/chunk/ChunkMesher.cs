@@ -46,21 +46,34 @@ public static class ChunkMesher
         Array.Clear(meshData.ForwardMerged, 0, meshData.ForwardMerged.Length);
         Array.Clear(meshData.RightMerged, 0, meshData.RightMerged.Length);
 
+        // Hidden face culling
         for (var a = 1; a < CS_P - 1; a++)
         {
             var aCS_P = a * CS_P;
             for (var b = 1; b < CS_P - 1; b++)
             {
-                var columnBits = meshData.OpaqueMask[a * CS_P + b] & ~((1UL << 63) | 1);
                 var baIndex = b - 1 + (a - 1) * CS;
                 var abIndex = a - 1 + (b - 1) * CS;
 
-                meshData.FaceMasks[baIndex + 0 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + CS_P + b]) >> 1;
+                var columnBits = meshData.OpaqueMask[a * CS_P + b] & ~((1UL << 63) | 1);
+                meshData.FaceMasks[baIndex + 0 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
                 meshData.FaceMasks[baIndex + 1 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P - CS_P + b]) >> 1;
                 meshData.FaceMasks[abIndex + 2 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + b + 1]) >> 1;
                 meshData.FaceMasks[abIndex + 3 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + (b - 1)]) >> 1;
                 meshData.FaceMasks[baIndex + 4 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] >> 1);
                 meshData.FaceMasks[baIndex + 5 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] << 1);
+
+                if (meshData.WaterMasks != null)
+                {
+                    columnBits = (meshData.WaterMasks[a * CS_P + b] | meshData.OpaqueMask[a * CS_P + b]) & ~((1UL << 63) | 1);
+
+                    meshData.FaceMasks[baIndex + 0 * CS_2] |= (columnBits & (~meshData.WaterMasks[aCS_P + CS_P + b])) >> 1; // +Y
+                    meshData.FaceMasks[baIndex + 1 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P - CS_P + b] | meshData.OpaqueMask[aCS_P - CS_P + b]))) >> 1;
+                    meshData.FaceMasks[abIndex + 2 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + b + 1] | meshData.OpaqueMask[aCS_P + b + 1]))) >> 1;
+                    meshData.FaceMasks[abIndex + 3 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + (b - 1)] | meshData.OpaqueMask[aCS_P + (b - 1)]))) >> 1;
+                    meshData.FaceMasks[baIndex + 4 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] >> 1) | (meshData.OpaqueMask[aCS_P + b] >> 1)));
+                    meshData.FaceMasks[baIndex + 5 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] << 1) | (meshData.OpaqueMask[aCS_P + b] << 1)));
+                }
             }
         }
 
@@ -270,7 +283,13 @@ public static class ChunkMesher
         // Color color = GetBlockColor(blockType);
 
         var baseIndex = surfaceArrayData.Vertices.Count;
-        var corners = GetQuadCorners(dir, x, y, z, w, h);
+        Vector3[] corners;
+        if (dir != Direction.NegativeY && block.BlockId == "water")
+            corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
+        else
+            corners = GetQuadCorners(dir, x, y, z, w, h);
+
+
         surfaceArrayData.Vertices.AddRange(corners);
 
         var normal = dir.Norm();
@@ -396,13 +415,15 @@ public static class ChunkMesher
         public int[] FaceVertexLength = new int[6];
         public byte[] ForwardMerged = new byte[CS_2];
         public ulong[] OpaqueMask;
-        public List<Block> QuadBlocks = new();
-        public List<ulong> Quads = new(10000);
+        public ulong[] WaterMasks;
+        public List<Block> QuadBlocks = new(1000);
+        public List<ulong> Quads = new(1000);
         public byte[] RightMerged = new byte[CS];
 
-        public MeshData(ulong[] opaqueMask)
+        public MeshData(ulong[] opaqueMask, ulong[] waterMasks = null)
         {
             OpaqueMask = opaqueMask;
+            WaterMasks = waterMasks;
         }
 
         public MeshData()

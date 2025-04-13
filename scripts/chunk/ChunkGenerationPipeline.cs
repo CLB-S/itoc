@@ -98,7 +98,7 @@ public class ChunkGenerationPipeline
 
     private void Meshing(ChunkGenerationRequest request)
     {
-        var meshData = new ChunkMesher.MeshData(_chunkData.OpaqueMask);
+        var meshData = new ChunkMesher.MeshData(_chunkData.OpaqueMask, _chunkData.TransparentMasks);
         ChunkMesher.MeshChunk(_chunkData, meshData);
         _mesh = ChunkMesher.GenerateMesh(meshData);
     }

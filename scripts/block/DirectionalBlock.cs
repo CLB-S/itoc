@@ -30,9 +30,9 @@ public class DirectionalBlock : Block
 
     public override void LoadResources()
     {
-        _materialTop = BlockHelper.GetMaterial(_textureTopPath);
-        _materialRound = BlockHelper.GetMaterial(_textureRoundPath);
-        _materialBottom = BlockHelper.GetMaterial(_textureBottomPath);
+        _materialTop = BlockHelper.GetMaterialByTexture(_textureTopPath);
+        _materialRound = BlockHelper.GetMaterialByTexture(_textureRoundPath);
+        _materialBottom = BlockHelper.GetMaterialByTexture(_textureBottomPath);
     }
 
     public override Material GetMaterial(Direction face = Direction.PositiveY)

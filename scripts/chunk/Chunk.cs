@@ -276,7 +276,7 @@ public partial class Chunk : StaticBody3D
         if (State == ChunkState.Unloaded || State == ChunkState.DataReady)
             throw new InvalidOperationException("Chunk is not loaded or data is not ready");
 
-        var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask);
+        var meshData = new ChunkMesher.MeshData(ChunkData.OpaqueMask, ChunkData.TransparentMasks);
         ChunkMesher.MeshChunk(ChunkData, meshData);
         var mesh = ChunkMesher.GenerateMesh(meshData);
         _meshInstance.Mesh = mesh;

@@ -2,7 +2,7 @@ using Godot;
 
 public static class BlockHelper
 {
-    public static Material GetMaterial(string texturePath)
+    public static Material GetMaterialByTexture(string texturePath)
     {
         var texture = ResourceLoader.Load(texturePath) as Texture2D;
         return new StandardMaterial3D
