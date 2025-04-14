@@ -13,11 +13,11 @@ public partial class WorldGenerator
     private Delaunator _delaunator;
     private Dictionary<int, CellData> _cellDatas;
     private float _cellArea;
-    private Edge[] _edges;
+    private Edge[] _voronoiEdges;
 
     public IReadOnlyList<Vector2> SamplePoints { get => _points; }
     public IReadOnlyDictionary<int, CellData> CellDatas { get => _cellDatas; }
-    public IReadOnlyCollection<Edge> CellEdges { get => _edges; }
+    public IReadOnlyCollection<Edge> CellEdges { get => _voronoiEdges; }
 
     private void InitializeResources()
     {
@@ -61,7 +61,7 @@ public partial class WorldGenerator
     {
         ReportProgress("Creating Voronoi diagram");
         _delaunator = new Delaunator(_points.ToArray());
-        _edges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
+        _voronoiEdges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
         var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
         _cellDatas = new Dictionary<int, CellData>(_cells.Length);
 

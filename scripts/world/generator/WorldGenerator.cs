@@ -17,6 +17,7 @@ public class CellData
     public float Uplift = 0;
     public float Height = 0;
     public bool IsRiverMouth = false;
+    public CellData Receiver;
     public bool RoundPlateJunction = false;
     public int TriangleIndex;
 }
@@ -57,6 +58,7 @@ public enum GenerationState
     CalculatingInitialUplifts,
     PropagatingUplifts,
     ComputingStreamTrees,
+    IdentifyingLakes,
     LakeOverflow,
     ComputingDrainageAndSlopes,
     SolvingPowerEquation, // If not converged, goto `ComputingStreamTrees`.
@@ -111,11 +113,12 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CreatingVoronoi, CreateVoronoiDiagram));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics, InitializeTectonicProperties));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts, CalculateInitialUplifts));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
+        // _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts, CalculateInitialUplifts));
+        // _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
 
         // Add the stream generation cycle
         _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingStreamTrees, ComputeStreamTrees));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.IdentifyingLakes, IdentifyLakes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.LakeOverflow, ProcessLakeOverflow));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingDrainageAndSlopes, ComputeDrainageAndSlopes));
         _generationPipeline.AddLast(

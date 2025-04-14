@@ -1,18 +1,19 @@
 using Godot;
 using System.Collections.Generic;
+using DelaunatorSharp;
 
 namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
-    private List<int> _initialAltitudeIndices;
+    private HashSet<int> _initialAltitudeIndices = new();
+    private HashSet<int> _riverMouths = new();
 
     private void CalculateInitialUplifts()
     {
         ReportProgress("Calculating initial uplifts.");
-        _initialAltitudeIndices = new List<int>();
 
-        foreach (var edge in _edges)
+        foreach (var edge in _voronoiEdges)
         {
             var cellPId = _delaunator.Triangles[edge.Index];
             var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
@@ -62,6 +63,8 @@ public partial class WorldGenerator
                 else if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
                     cellP.IsRiverMouth = true;
+                    cellP.Receiver = cellQ;
+                    _riverMouths.Add(cellP.Index);
 
                     if (relativeMovement < 0)
                     {
@@ -80,6 +83,8 @@ public partial class WorldGenerator
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
                 {
                     cellQ.IsRiverMouth = true;
+                    cellQ.Receiver = cellP;
+                    _riverMouths.Add(cellQ.Index);
 
                     if (relativeMovement < 0)
                     {
@@ -97,7 +102,6 @@ public partial class WorldGenerator
                 }
             }
         }
-
     }
 
     private void PropagateUplifts()

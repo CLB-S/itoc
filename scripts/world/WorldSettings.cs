@@ -17,8 +17,19 @@ public class WorldSettings
     public float AltitudePropagationSharpness = 0.1f;
     #endregion
 
+    // Fluvial erosion settings
+    public float ErosionRate { get; set; } = 0.01f;
+    public float TimeStep { get; set; } = 10.0f;
+    public float ErosionConvergenceThreshold { get; set; } = 0.02f;
+    public int MaxErosionIterations { get; set; } = 20;
+
     public WorldSettings(ulong seed = 234)
     {
         Seed = seed == 0 ? GD.Randi() : seed;
+    }
+
+    public WorldSettings Clone()
+    {
+        return (WorldSettings)MemberwiseClone();
     }
 }

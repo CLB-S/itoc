@@ -33,6 +33,8 @@ public partial class World : Node
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scripts/world/debug_cube.tscn");
 
+        return; // DEBUG
+
         _worldGenerator = new WorldGenerator.WorldGenerator(Settings);
         await _worldGenerator.GenerateWorldAsync(); //TODO: GUI
         GD.Print("World pre-generation finished.");
@@ -219,16 +221,16 @@ public partial class World : Node
 
     public override void _ExitTree()
     {
-        _chunkFactory.Stop();
-        _chunkFactory.Dispose();
+        _chunkFactory?.Stop();
+        _chunkFactory?.Dispose();
     }
 
     public override void _Notification(int what)
     {
         if (what == NotificationWMCloseRequest)
         {
-            _chunkFactory.Stop();
-            _chunkFactory.Dispose();
+            _chunkFactory?.Stop();
+            _chunkFactory?.Dispose();
         }
     }
 }

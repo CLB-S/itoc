@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace WorldGenerator;
 
@@ -141,10 +142,10 @@ public partial class WorldTest : Node2D
                                 new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
                                     (int)cellData.PlateType));
                             break;
-                        case ColorPreset.Precipitation:
-                            DrawColoredPolygon(points,
-                                new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
-                            break;
+                            // case ColorPreset.Precipitation:
+                            //     DrawColoredPolygon(points,
+                            //         new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
+                            //     break;
                     }
                 }
             }
@@ -184,28 +185,91 @@ public partial class WorldTest : Node2D
                 DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
             }
 
+        // Draw stream graph
+        if (DrawRivers && _worldGenerator.State == GenerationState.Completed)
+        {
+            // Access the stream graph data from the world generator
+            var streamGraph = _worldGenerator.StreamGraph;
+            var receivers = _worldGenerator.Receivers;
 
-        // Draw rivers
-        if (DrawRivers)
-            foreach (var river in _worldGenerator.Rivers.Values)
+            if (streamGraph != null && receivers != null && receivers.Count > 0)
             {
-                if (river.Path.Count < 2) continue;
-
-                var points = river.Path.ToArray();
-                var color = new Color(0.2f, 0.4f, 0.8f);
-
-                for (var i = 0; i < points.Length - 1; i++)
+                // Draw stream connections (edges in the stream tree)
+                foreach (var cell in streamGraph)
                 {
-                    if ((points[i] - points[i + 1]).LengthSquared() >
-                        _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
-                    DrawLine(points[i] * _scalingFactor, points[i + 1] * _scalingFactor, color, river.Width);
+                    if (receivers.TryGetValue(cell.Index, out var receiverIndex))
+                    {
+                        if (_worldGenerator.CellDatas.TryGetValue(receiverIndex, out var receiver))
+                        {
+                            if (cell.Index == receiverIndex) continue;
+                            var start = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+                            var end = _worldGenerator.SamplePoints[receiverIndex] * _scalingFactor;
+
+                            // Calculate line width based on drainage area
+                            float width = 1.0f;
+                            // if (_worldGenerator.DrainageArea != null &&
+                            //     _worldGenerator.DrainageArea.TryGetValue(cell.Index, out var drainage))
+                            // {
+                            //     // Scale the width logarithmically with the drainage area
+                            //     width = Mathf.Log(1 + drainage * 0.01f) * 1.5f;
+                            // }
+
+                            // Calculate color based on water flow
+                            // Deeper blue for higher drainage areas
+                            var alpha = Mathf.Clamp(width / 5.0f, 0.5f, 1.0f);
+                            var color = new Color(0.1f, 0.4f, 0.8f, alpha);
+
+                            DrawLine(start, end, color, width);
+                        }
+                    }
                 }
-                // Draw main river channel
-                // DrawPolyline(points, color, river.Width);
-                // Draw river banks
-                // var bankColor = new Color(0.1f, 0.3f, 0.7f);
-                // DrawPolyline(points, bankColor, river.Width * 1.2f);
+
+                // Draw lake areas in a lighter blue color
+                var lakes = new HashSet<int>();
+                foreach (var cell in streamGraph)
+                {
+                    // A cell is part of a lake if it's not a receiver for any other node
+                    // or if it's at the bottom of a depression
+                    if (!receivers.ContainsKey(cell.Index) && !cell.IsRiverMouth)
+                    {
+                        lakes.Add(cell.Index);
+
+                        // Draw lake node as a circle
+                        var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+                        DrawCircle(pos, 5f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
+                    }
+                }
+
+                // Draw river mouths with a different color
+                foreach (var cell in streamGraph.Where(c => c.IsRiverMouth))
+                {
+                    var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+                    DrawCircle(pos, 6f, new Color(0.0f, 0.2f, 0.6f, 0.8f));
+                }
             }
+        }
+
+        // Draw rivers (deprecated)
+        // if (DrawRivers)
+        //     foreach (var river in _worldGenerator.Rivers.Values)
+        //     {
+        //         if (river.Path.Count < 2) continue;
+
+        //         var points = river.Path.ToArray();
+        //         var color = new Color(0.2f, 0.4f, 0.8f);
+
+        //         for (var i = 0; i < points.Length - 1; i++)
+        //         {
+        //             if ((points[i] - points[i + 1]).LengthSquared() >
+        //                 _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
+        //             DrawLine(points[i] * _scalingFactor, points[i + 1] * _scalingFactor, color, river.Width);
+        //         }
+        //         // Draw main river channel
+        //         // DrawPolyline(points, color, river.Width);
+        //         // Draw river banks
+        //         // var bankColor = new Color(0.1f, 0.3f, 0.7f);
+        //         // DrawPolyline(points, bankColor, river.Width * 1.2f);
+        //     }
 
         // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)_worldGenerator.Settings.Bounds.Size.X, (int)_worldGenerator.Settings.Bounds.Size.Y)), Rect, false);
 
