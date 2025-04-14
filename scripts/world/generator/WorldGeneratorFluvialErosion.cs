@@ -134,7 +134,8 @@ public partial class WorldGenerator
         // For each cell in a lake
         foreach (var cell in _streamGraph)
         {
-            var sourceLakeId = _lakeIdentifiers[cell.Index];
+            if (!_lakeIdentifiers.TryGetValue(cell.Index, out var sourceLakeId))
+                continue; // Skip if the cell is not in a lake
 
             if (cell.IsRiverMouth)
                 continue; // Skip river mouths
@@ -142,7 +143,7 @@ public partial class WorldGenerator
             foreach (var neighbor in GetNeighborCells(cell))
             {
                 if (!_lakeIdentifiers.TryGetValue(neighbor.Index, out var targetLakeId))
-                    continue; // Skip if the neighbor is not a lake
+                    continue; // Skip if the neighbor is not in a lake
 
                 if (targetLakeId == sourceLakeId) continue;
 
@@ -179,46 +180,51 @@ public partial class WorldGenerator
             lakeTrees[lakeId] = (-1, -1); // -1 indicates a root lake (no receiver)
         }
 
-        while (lakeOutflowGraph.Count > 0)
-        {
-            var lowestLakeId = -1;
-            var lowestLakeTarget = -1;
-            var lowestLakeTargetNode = -1;
-            var lowestPassHeight = -1.0f;
-            foreach (var (sourceLakeId, outflows) in lakeOutflowGraph)
-            {
-                foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
-                {
-                    if (lakeTrees.ContainsKey(targetLakeId))
-                    {
-                        if (lowestLakeId == -1 || passHeight < lowestPassHeight)
-                        {
-                            lowestLakeId = sourceLakeId;
-                            lowestLakeTarget = targetLakeId;
-                            lowestLakeTargetNode = targetNode;
-                            lowestPassHeight = passHeight;
-                        }
-                    }
-                }
-            }
+        // Create a list of all lake connections sorted by pass height
+        var sortedConnections = new List<(int sourceLake, int targetLake, int sourceNode, int targetNode, float passHeight)>();
 
-            if (lowestLakeId != -1)
+        foreach (var (sourceLakeId, outflows) in lakeOutflowGraph)
+        {
+            foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
             {
-                lakeTrees[lowestLakeId] = (lowestLakeTarget, lowestLakeTargetNode);
-                lakeOutflowGraph.Remove(lowestLakeId);
-            }
-            else
-            {
-                ReportProgress("No more lake connections found");
-                break;
+                sortedConnections.Add((sourceLakeId, targetLakeId, sourceNode, targetNode, passHeight));
             }
         }
 
+        // Sort connections by pass height (ascending)
+        sortedConnections.Sort((a, b) => a.passHeight.CompareTo(b.passHeight));
+
+        // Process lakes in order of pass height
+        bool madeProgress;
+        do
+        {
+            madeProgress = false;
+            foreach (var (sourceLake, targetLake, sourceNode, targetNode, _) in sortedConnections)
+            {
+                // Skip if this lake already has a receiver
+                if (lakeTrees.ContainsKey(sourceLake))
+                    continue;
+
+                // Skip if target lake isn't yet in the tree
+                if (!lakeTrees.ContainsKey(targetLake))
+                    continue;
+
+                // Connect this lake to its target
+                lakeTrees[sourceLake] = (targetLake, targetNode);
+                madeProgress = true;
+            }
+        } while (madeProgress);
+
         foreach (var (sourceLakeId, (_, targetNode)) in lakeTrees)
         {
-            _receivers[sourceLakeId] = targetNode; // Set the receiver for the lake
             if (targetNode == -1)
                 continue;
+
+            _receivers[sourceLakeId] = targetNode; // Set the receiver for the lake
+
+            if (!_children.ContainsKey(targetNode))
+                _children[targetNode] = new List<int>();
+
             _children[targetNode].Add(sourceLakeId); // Add the lake as a child of its receiver
         }
     }
@@ -239,73 +245,71 @@ public partial class WorldGenerator
             _drainageArea[cell.Index] = nodeArea;
         }
 
-        // Store cells in breadth-first traversal order (from leaves to roots)
-        var traversalOrder = new List<CellData>();
+        // Collect all river mouths (roots)
+        var riverMouths = _streamGraph.Where(c => c.IsRiverMouth).ToList();
 
-        // Queue for breadth-first traversal
-        var queue = new Queue<CellData>();
+        // Perform post-order traversal starting from each river mouth to collect nodes in processing order
+        var postOrderList = new List<int>();
         var visited = new HashSet<int>();
 
-        // Start with leaf nodes (nodes that have no children)
-        foreach (var cell in _streamGraph)
+        foreach (var riverMouth in riverMouths)
         {
-            if (!_children.ContainsKey(cell.Index) || _children[cell.Index].Count == 0)
+            var stack = new Stack<int>();
+            stack.Push(riverMouth.Index);
+
+            while (stack.Count > 0)
             {
-                queue.Enqueue(cell);
-                visited.Add(cell.Index);
-            }
-        }
+                int currentIndex = stack.Pop();
 
-        // Perform breadth-first traversal
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-            traversalOrder.Add(current);
-
-            // If this node has a receiver, process it next (if all its other children have been visited)
-            if (_receivers.TryGetValue(current.Index, out var receiverIndex))
-            {
-                if (receiverIndex == -1) break;
-
-                var receiver = _cellDatas[receiverIndex];
-                var allChildrenVisited = true;
-
-                if (_children.TryGetValue(receiver.Index, out var receiverChildren))
+                if (visited.Contains(currentIndex))
                 {
-                    foreach (var childIndex in receiverChildren)
+                    postOrderList.Add(currentIndex);
+                }
+                else
+                {
+                    visited.Add(currentIndex);
+                    stack.Push(currentIndex); // Push back as visited
+
+                    // Push children (nodes that flow into currentIndex)
+                    if (_children.TryGetValue(currentIndex, out var children))
                     {
-                        if (!visited.Contains(childIndex))
+                        foreach (var childIndex in children)
                         {
-                            allChildrenVisited = false;
-                            break;
+                            stack.Push(childIndex);
                         }
                     }
                 }
-
-                if (allChildrenVisited && !visited.Contains(receiver.Index))
-                {
-                    queue.Enqueue(receiver);
-                    visited.Add(receiver.Index);
-                }
             }
         }
 
-        // Process nodes in reverse traversal order (from leaves to roots)
-        for (int i = 0; i < traversalOrder.Count; i++)
+        // Process each node in post-order to compute drainage area and slopes
+        foreach (var index in postOrderList)
         {
-            var cell = traversalOrder[i];
-
-            // If this node has a receiver, add its drainage area to the receiver's
-            if (_receivers.TryGetValue(cell.Index, out var receiverIndex))
+            // Accumulate drainage area from children
+            if (_children.TryGetValue(index, out var children))
             {
-                _drainageArea[receiverIndex] += _drainageArea[cell.Index];
+                foreach (var childIndex in children)
+                {
+                    _drainageArea[index] += _drainageArea[childIndex];
+                }
+            }
 
-                // Calculate the slope between this node and its receiver
+            // Compute slope for this node if it has a receiver
+            if (_receivers.TryGetValue(index, out int receiverIndex))
+            {
+                var cell = _cellDatas[index];
                 var receiver = _cellDatas[receiverIndex];
-                var distance = (_points[cell.Index] - _points[receiverIndex]).Length();
+                var distance = (_points[index] - _points[receiverIndex]).Length();
 
-                // Store the slope value if needed (could be stored in CellData or a separate map)
-                // For now, we'll calculate it on demand in the SolvePowerEquation method
+                if (distance < 0.001f)
+                {
+                    // Avoid division by zero
+                    cell.Slope = 0.0f;
+                }
+                else
+                {
+                    cell.Slope = (float)((cell.Height - receiver.Height) / distance);
+                }
             }
         }
     }
@@ -368,10 +372,10 @@ public partial class WorldGenerator
             if (distance < 0.001f) continue;
 
             // Get the drainage area for this node
-            float drainageArea = _drainageArea.GetValueOrDefault(cell.Index, 1.0f);
+            float drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
 
             // Apply uplift
-            float uplift = cell.Uplift * dt;
+            float uplift = 100; // cell.Uplift > 0.01f ? cell.Uplift * 0.3f : 0.01f;
 
             // Calculate the term for the stream power equation
             float erosionTerm = (float)(k * Mathf.Pow(drainageArea, m) / distance);
@@ -390,9 +394,6 @@ public partial class WorldGenerator
             // Update the height
             cell.Height = newHeight;
 
-            // Propagate height changes to uplift for the next iteration
-            // This is necessary to maintain continuity between iterations
-            cell.Uplift += (newHeight - oldHeight) / dt;
 
             // Track the maximum change for convergence check
             maxChange = Mathf.Max(maxChange, Mathf.Abs(newHeight - oldHeight));

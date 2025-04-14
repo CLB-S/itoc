@@ -14,8 +14,9 @@ public class CellData
     public Vector2 TectonicMovement;
     public PlateType PlateType;
     public uint PlateSeed;
-    public float Uplift = 0;
+    public float Uplift = 0.1f;
     public float Height = 0;
+    public float Slope = 0;
     public bool IsRiverMouth = false;
     public CellData Receiver;
     public bool RoundPlateJunction = false;
@@ -268,7 +269,8 @@ public partial class WorldGenerator
         for (var i = 0; i < _cellDatas.Count; i++)
         {
             posList.Add(_points[i]);
-            dataList.Add(_cellDatas[i].Uplift);
+            dataList.Add(_cellDatas[i].Height);
+            // dataList.Add(_cellDatas[i].Uplift);
         }
 
         _heightMapInterpolator = new IdwInterpolator(posList, dataList); // TODO: Settings

@@ -11,7 +11,7 @@ public class IdwInterpolator
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 1.3,
+    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 1.5,
         int numNeighbors = 10)
     {
         var positionsList = positions.ToList();

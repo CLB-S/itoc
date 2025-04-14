@@ -134,8 +134,8 @@ public partial class WorldTest : Node2D
                             DrawColoredPolygon(points, color);
                             break;
                         case ColorPreset.Height:
-                            var height = cellData.Uplift / _worldGenerator.Settings.MaxAltitude;
-                            DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
+                            var height = cellData.Height / _worldGenerator.Settings.MaxAltitude;
+                            // DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
                             break;
                         case ColorPreset.PlateTypes:
                             DrawColoredPolygon(points,
@@ -204,6 +204,10 @@ public partial class WorldTest : Node2D
                             if (cell.Index == receiverIndex) continue;
                             var start = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
                             var end = _worldGenerator.SamplePoints[receiverIndex] * _scalingFactor;
+
+                            if ((start - end).LengthSquared() >
+                                _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
+
 
                             // Calculate line width based on drainage area
                             float width = 1.0f;

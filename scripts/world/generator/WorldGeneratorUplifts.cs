@@ -76,7 +76,7 @@ public partial class WorldGenerator
                         cellP.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
 
                         var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
-                        altitude = altitude * altitude - 0.25f;
+                        altitude = altitude * altitude - 0.2f;
                         cellQ.Uplift += altitude;
                     }
                 }

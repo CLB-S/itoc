@@ -24,7 +24,7 @@ public partial class PlayerController : CharacterBody3D
 
     [ExportGroup("Flying Settings")]
     [Export] public float FlyingSpeed = 20.0f;
-    [Export] public float FlyingSprintSpeed = 40.0f;
+    [Export] public float FlyingSprintSpeed = 200.0f;
     [Export] public float FlyingAcceleration = 15.0f;
     [Export] public float FlyingVerticalSpeed = 7.0f;
     [Export] public float DoubleTapThreshold = 0.25f; // Time window for double tap
