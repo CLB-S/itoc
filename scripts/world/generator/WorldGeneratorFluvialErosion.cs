@@ -131,7 +131,8 @@ public partial class WorldGenerator
 
         ReportProgress($"Found {_lakes.Count} lakes.");
 
-        var lakeGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, float passHeight)>>();
+        // All outflows of a lake. Dictionary<int sourceLakeId, Dictionary<int targetLakeId, (int sourceNode, int targetNode, float passHeight)>>
+        var outflowGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, float passHeight)>>();
 
         // For each cell in a lake
         foreach (var cell in _streamGraph)
@@ -148,32 +149,61 @@ public partial class WorldGenerator
                 float passHeight = Mathf.Max(cell.Height, neighbor.Height);
                 var targetLake = _lakeIdentifiers[neighbor.Index];
 
-                if (!lakeGraph.ContainsKey(cell.Index))
+                if (!outflowGraph.ContainsKey(cell.Index))
                 {
-                    lakeGraph[cell.Index] = new Dictionary<int, (int, int, float)>();
+                    outflowGraph[cell.Index] = new Dictionary<int, (int, int, float)>();
                 }
 
                 // Update the pass height if this one is lower
-                if (lakeGraph[cell.Index].ContainsKey(targetLake))
+                if (outflowGraph[cell.Index].ContainsKey(targetLake))
                 {
-                    var existingPass = lakeGraph[cell.Index][targetLake];
+                    var existingPass = outflowGraph[cell.Index][targetLake];
                     if (passHeight < existingPass.passHeight)
                     {
-                        lakeGraph[cell.Index][targetLake] = (cell.Index, neighbor.Index, passHeight);
+                        outflowGraph[cell.Index][targetLake] = (cell.Index, neighbor.Index, passHeight);
                     }
                 }
                 else
                 {
-                    lakeGraph[cell.Index][targetLake] = (cell.Index, neighbor.Index, passHeight);
+                    outflowGraph[cell.Index][targetLake] = (cell.Index, neighbor.Index, passHeight);
                 }
             }
         }
 
-        ReportProgress($"Found {lakeGraph.Count} passes between lakes");
+        ReportProgress($"Found {outflowGraph.Count} passes between lakes");
 
-        // TODO: Extraction of the lake connections.
+        // Extraction of the lake connections
+        var lakeTrees = new Dictionary<int, int>(); // Maps lake ID to its receiver lake ID
+        var lakeChildren = new Dictionary<int, List<int>>(); // Maps lake ID to its children lake IDs
+        var candidateArcs = new SortedDictionary<float, List<(int sourceId, int targetId, int sourceNode, int targetNode)>>();
 
-        // TODO: Stream tree update.
+        // Identify all unique lake IDs
+        foreach (var lakeId in _riverMouths)
+        {
+            lakeTrees[lakeId] = -1; // -1 indicates a root lake (no receiver)
+            lakeChildren[lakeId] = new List<int>();
+        }
+
+        foreach (var (sourceLakeId, outflows) in outflowGraph)
+        {
+            foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
+            {
+                if (lakeTrees.ContainsKey(targetLakeId))
+                {
+                    // Store the outflow information in the candidate arcs
+                    if (!candidateArcs.ContainsKey(passHeight))
+                    {
+                        candidateArcs[passHeight] = new List<(int, int, int, int)>();
+                    }
+
+                    candidateArcs[passHeight].Add((sourceLakeId, targetLakeId, sourceNode, targetNode));
+                }
+            }
+        }
+
+        var (_, info) = candidateArcs.First();
+        lakeTrees[info[0].targetId] = info[0].sourceId;
+
 
     }
 
