@@ -9,16 +9,16 @@ namespace WorldGenerator;
 
 public class CellData
 {
-    public int TriangleIndex;
+    public int Index { get => Cell.Index; }
     public VoronoiCell Cell;
     public Vector2 TectonicMovement;
     public PlateType PlateType;
     public uint PlateSeed;
-    public float Altitude = 0;
+    public float Uplift = 0;
+    public float Height = 0;
+    public bool IsRiverMouth = false;
     public bool RoundPlateJunction = false;
-    public float Precipitation;
-    public float Flux;
-    public RiverSegment River;
+    public int TriangleIndex;
 }
 
 public class GenerationStep
@@ -26,12 +26,24 @@ public class GenerationStep
     public GenerationState State { get; }
     public Action Action { get; }
     public bool Optional { get; }
+    public Func<bool> ShouldRepeat { get; }
+    public GenerationState? RepeatToState { get; }
 
     public GenerationStep(GenerationState state, Action action, bool optional = false)
     {
         State = state;
         Action = action;
         Optional = optional;
+        ShouldRepeat = () => false;
+    }
+
+    public GenerationStep(GenerationState state, Action action, Func<bool> shouldRepeat, GenerationState repeatToState, bool optional = false)
+    {
+        State = state;
+        Action = action;
+        Optional = optional;
+        ShouldRepeat = shouldRepeat;
+        RepeatToState = repeatToState;
     }
 }
 
@@ -42,9 +54,12 @@ public enum GenerationState
     GeneratingPoints,
     CreatingVoronoi,
     InitializingTectonics,
-    CalculatingAltitudes,
-    PropagatingAltitudes,
-    CalculatingWaterFlux,
+    CalculatingInitialUplifts,
+    PropagatingUplifts,
+    ComputingStreamTrees,
+    LakeOverflow,
+    ComputingDrainageAndSlopes,
+    SolvingPowerEquation, // If not converged, goto `ComputingStreamTrees`.
     InitInterpolator,
     Custom,
     Completed,
@@ -96,9 +111,17 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CreatingVoronoi, CreateVoronoiDiagram));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics, InitializeTectonicProperties));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingAltitudes, CalculateAltitudes));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingAltitudes, PropagateAltitudes));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingWaterFlux, CalculateWaterFlux));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts, CalculateInitialUplifts));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
+
+        // Add the stream generation cycle
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingStreamTrees, ComputeStreamTrees));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.LakeOverflow, ProcessLakeOverflow));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingDrainageAndSlopes, ComputeDrainageAndSlopes));
+        _generationPipeline.AddLast(
+            new GenerationStep(GenerationState.SolvingPowerEquation, SolvePowerEquation,
+                               () => !_powerEquationConverged, GenerationState.ComputingStreamTrees));
+
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 
@@ -182,10 +205,32 @@ public partial class WorldGenerator
             while (currentNode != null)
             {
                 var step = currentNode.Value;
-                currentNode = currentNode.Next;
 
                 UpdateState(step.State);
                 await Task.Run(step.Action);
+
+                // Check if we need to repeat certain steps
+                if (step.ShouldRepeat() && step.RepeatToState.HasValue)
+                {
+                    // Find the node we should go back to
+                    var repeatNode = _generationPipeline.First;
+                    while (repeatNode != null && repeatNode.Value.State != step.RepeatToState.Value)
+                    {
+                        repeatNode = repeatNode.Next;
+                    }
+
+                    if (repeatNode != null)
+                    {
+                        ReportProgress($"Repeating from {step.RepeatToState.Value} state");
+                        currentNode = repeatNode;
+                        continue;
+                    }
+                }
+                else
+                {
+                    currentNode = currentNode.Next;
+                }
+
             }
 
             CompleteGeneration();
@@ -213,28 +258,6 @@ public partial class WorldGenerator
         });
     }
 
-    // private void ResolveDepressions()
-    // {
-    //     var landCells = _cellDatas.Values.Where(c => c.PlateType != PlateType.Oceans).ToList();
-    //     bool hasDepressions;
-
-    //     do
-    //     {
-    //         hasDepressions = false;
-    //         foreach (var cell in landCells)
-    //         {
-    //             var lowestNeighbor = GetNeighborCells(cell)
-    //                 .OrderBy(n => _cellDatas[n].Altitude).First();
-
-    //             if (cell.Altitude <= _cellDatas[lowestNeighbor].Altitude)
-    //             {
-    //                 cell.Altitude = _cellDatas[lowestNeighbor].Altitude * 1.05;
-    //                 hasDepressions = true;
-    //             }
-    //         }
-    //     } while (hasDepressions);
-    // }
-
     private void InitInterpolator()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
@@ -242,7 +265,7 @@ public partial class WorldGenerator
         for (var i = 0; i < _cellDatas.Count; i++)
         {
             posList.Add(_points[i]);
-            dataList.Add(_cellDatas[i].Altitude);
+            dataList.Add(_cellDatas[i].Uplift);
         }
 
         _heightMapInterpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
@@ -301,7 +324,7 @@ public partial class WorldGenerator
 
     private void ResetGenerator()
     {
-
+        _powerEquationConverged = false;
     }
 }
 

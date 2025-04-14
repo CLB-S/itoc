@@ -12,6 +12,7 @@ public partial class WorldGenerator
     private Dictionary<int, int> _edgePointsMap;
     private Delaunator _delaunator;
     private Dictionary<int, CellData> _cellDatas;
+    private float _cellArea;
     private Edge[] _edges;
 
     public IReadOnlyList<Vector2> SamplePoints { get => _points; }
@@ -45,6 +46,8 @@ public partial class WorldGenerator
             FractalOctaves = 4,
             DomainWarpEnabled = false
         };
+
+        _cellArea = Settings.MinimumCellDistance * Settings.MinimumCellDistance * 1.2f;
     }
 
     private void GeneratePoints()

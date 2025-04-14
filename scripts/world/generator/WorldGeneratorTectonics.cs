@@ -46,6 +46,9 @@ public partial class WorldGenerator
             cellData.TectonicMovement = new Vector2(Mathf.Cos(phi), Mathf.Sin(phi)) * r;
             cellData.PlateType = RandomPlateType(rng);
             cellData.PlateSeed = seed;
+
+            if (cellData.PlateType == PlateType.Continent)
+                _streamGraph.Add(cellData);
         }
     }
 }

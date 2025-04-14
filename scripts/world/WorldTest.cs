@@ -48,16 +48,16 @@ public partial class WorldTest : Node2D
         _worldGenerator = new WorldGenerator();
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
-        _worldGenerator.GenerationStartedEvent += (_, _) => GenerateMapButton.Disabled = true;
+        _worldGenerator.GenerationStartedEvent += (_, _) => CallDeferred(MethodName.SetGenerateMapButtonAvailability, false);
         _worldGenerator.GenerationCompletedEvent += (_, _) =>
         {
-            GenerateMapButton.Disabled = false;
-            QueueRedraw();
+            CallDeferred(MethodName.SetGenerateMapButtonAvailability, true);
+            CallDeferred(MethodName.QueueRedraw);
         };
 
         _worldGenerator.GenerationFailedEvent += (_, ex) =>
         {
-            GenerateMapButton.Disabled = false;
+            CallDeferred(MethodName.SetGenerateMapButtonAvailability, true);
             Log($"[color=red]Generation failed:[/color]\n{ex.Message}");
         };
 
@@ -68,6 +68,11 @@ public partial class WorldTest : Node2D
     {
         GD.Print(message);
         TerminalLabel?.CallDeferred(RichTextLabel.MethodName.AppendText, message + "\n");
+    }
+
+    private void SetGenerateMapButtonAvailability(bool isEnabled)
+    {
+        GenerateMapButton.Disabled = !isEnabled;
     }
 
     private void DrawArrow(Vector2 start, Vector2 end, Color color, bool twoLineHead = false)
@@ -128,7 +133,7 @@ public partial class WorldTest : Node2D
                             DrawColoredPolygon(points, color);
                             break;
                         case ColorPreset.Height:
-                            var height = cellData.Altitude / _worldGenerator.Settings.MaxAltitude;
+                            var height = cellData.Uplift / _worldGenerator.Settings.MaxAltitude;
                             DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
                             break;
                         case ColorPreset.PlateTypes:

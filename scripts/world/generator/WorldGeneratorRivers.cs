@@ -1,3 +1,6 @@
+// Depracated.
+/*
+
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,14 +28,14 @@ public partial class WorldGenerator
         _rivers = [];
         var orderedCells = _cellDatas.Values
             .Where(c => c.PlateType != PlateType.Oceans)
-            .OrderByDescending(c => c.Altitude)
+            .OrderByDescending(c => c.Uplift)
             .ToList();
 
         foreach (var cell in orderedCells)
         {
-            var neighbors = GetNeighborCells(cell);
-            var lowest = neighbors.OrderBy(n => _cellDatas[n].Altitude).First();
-            if (_cellDatas[lowest].Altitude < 0)
+            var neighbors = GetNeighborCellIndices(cell);
+            var lowest = neighbors.OrderBy(n => _cellDatas[n].Uplift).First();
+            if (_cellDatas[lowest].Uplift < 0)
                 continue;
 
             _cellDatas[lowest].Flux += 1f + cell.Flux;
@@ -75,3 +78,4 @@ public partial class WorldGenerator
         riverSeg.Width = baseWidth + widthGrowth * riverSeg.Path.Count;
     }
 }
+*/

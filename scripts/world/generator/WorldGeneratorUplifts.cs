@@ -7,9 +7,9 @@ public partial class WorldGenerator
 {
     private List<int> _initialAltitudeIndices;
 
-    private void CalculateAltitudes()
+    private void CalculateInitialUplifts()
     {
-        ReportProgress("Calculating altitudes");
+        ReportProgress("Calculating initial uplifts.");
         _initialAltitudeIndices = new List<int>();
 
         foreach (var edge in _edges)
@@ -30,8 +30,8 @@ public partial class WorldGenerator
 
                 cellP.RoundPlateJunction = true;
                 cellQ.RoundPlateJunction = true;
-                _initialAltitudeIndices.Add(cellP.Cell.Index);
-                _initialAltitudeIndices.Add(cellQ.Cell.Index);
+                _initialAltitudeIndices.Add(cellP.Index);
+                _initialAltitudeIndices.Add(cellQ.Index);
 
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
                 {
@@ -46,8 +46,8 @@ public partial class WorldGenerator
                         altitude = 1 - 0.75f * (relativeMovement - 1) * (relativeMovement - 1);
                     }
 
-                    cellP.Altitude += altitude * Settings.MaxAltitude;
-                    cellQ.Altitude += altitude * Settings.MaxAltitude;
+                    cellP.Uplift += altitude * Settings.MaxAltitude;
+                    cellQ.Uplift += altitude * Settings.MaxAltitude;
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Oceans)
                 {
@@ -56,11 +56,13 @@ public partial class WorldGenerator
                     if (relativeMovement > 0)
                         altitude += 0.25f * (1 - (1 - relativeMovement) * (1 - relativeMovement));
 
-                    cellP.Altitude += altitude * Settings.MaxAltitude;
-                    cellQ.Altitude += altitude * Settings.MaxAltitude;
+                    cellP.Uplift += altitude * Settings.MaxAltitude;
+                    cellQ.Uplift += altitude * Settings.MaxAltitude;
                 }
                 else if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
+                    cellP.IsRiverMouth = true;
+
                     if (relativeMovement < 0)
                     {
                         // cellP.Altitude = -50f * relativeMovement;
@@ -68,15 +70,17 @@ public partial class WorldGenerator
                     }
                     else
                     {
-                        cellP.Altitude += 1 - (relativeMovement - 1) * (relativeMovement - 1);
+                        cellP.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
 
                         var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                         altitude = altitude * altitude - 0.25f;
-                        cellQ.Altitude += altitude;
+                        cellQ.Uplift += altitude;
                     }
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
                 {
+                    cellQ.IsRiverMouth = true;
+
                     if (relativeMovement < 0)
                     {
                         // cellP.Altitude = -100f * relativeMovement;
@@ -84,11 +88,11 @@ public partial class WorldGenerator
                     }
                     else
                     {
-                        cellQ.Altitude += 1 - (relativeMovement - 1) * (relativeMovement - 1);
+                        cellQ.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
 
                         var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                         altitude = altitude * altitude - 0.25f;
-                        cellP.Altitude += altitude;
+                        cellP.Uplift += altitude;
                     }
                 }
             }
@@ -96,8 +100,10 @@ public partial class WorldGenerator
 
     }
 
-    private void PropagateAltitudes()
+    private void PropagateUplifts()
     {
+        ReportProgress("Propagating uplifts.");
+
         var used = new HashSet<int>();
         var queue = new PriorityQueue<int, double>();
         var sharpness = Settings.AltitudePropagationSharpness;
@@ -105,30 +111,30 @@ public partial class WorldGenerator
         foreach (var i in _initialAltitudeIndices)
         {
             used.Add(i);
-            queue.Enqueue(i, -Mathf.Abs(_cellDatas[i].Altitude));
+            queue.Enqueue(i, -Mathf.Abs(_cellDatas[i].Uplift));
         }
 
         while (queue.Count > 0)
         {
             var currentIndex = queue.Dequeue();
             var currentCell = _cellDatas[currentIndex];
-            var parentHeight = currentCell.Altitude;
+            var parentHeight = currentCell.Uplift;
 
             var propagatedHeight = parentHeight * Settings.AltitudePropagationDecrement;
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 
-            foreach (var neighborIndex in GetNeighborCells(currentIndex))
+            foreach (var neighborIndex in GetNeighborCellIndices(currentIndex))
                 if (!used.Contains(neighborIndex))
                 {
                     var neighbor = _cellDatas[neighborIndex];
                     var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + (float)_rng.Randf() * sharpness;
                     var heightContribution = propagatedHeight * mod;
 
-                    neighbor.Altitude += heightContribution;
+                    neighbor.Uplift += heightContribution;
 
                     used.Add(neighborIndex);
-                    queue.Enqueue(neighborIndex, -Mathf.Abs(_cellDatas[neighborIndex].Altitude));
+                    queue.Enqueue(neighborIndex, -Mathf.Abs(_cellDatas[neighborIndex].Uplift));
                 }
         }
     }

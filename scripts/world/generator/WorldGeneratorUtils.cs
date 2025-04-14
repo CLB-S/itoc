@@ -77,12 +77,12 @@ public partial class WorldGenerator
         ) + Settings.Bounds.Position;
     }
 
-    private IEnumerable<int> GetNeighborCells(CellData cell)
+    private IEnumerable<int> GetNeighborCellIndices(CellData cell)
     {
-        return GetNeighborCells(cell.Cell.Index);
+        return GetNeighborCellIndices(cell.Index);
     }
 
-    private IEnumerable<int> GetNeighborCells(int index)
+    private IEnumerable<int> GetNeighborCellIndices(int index)
     {
         foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
         {
@@ -93,5 +93,17 @@ public partial class WorldGenerator
 
             yield return neighborIndex;
         }
+    }
+
+    private IEnumerable<CellData> GetNeighborCells(CellData cell)
+    {
+        foreach (var i in GetNeighborCellIndices(cell))
+            yield return _cellDatas[i];
+    }
+
+    private IEnumerable<CellData> GetNeighborCells(int index)
+    {
+        foreach (var i in GetNeighborCellIndices(index))
+            yield return _cellDatas[i];
     }
 }
