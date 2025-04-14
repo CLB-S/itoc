@@ -34,18 +34,15 @@ public partial class WorldGenerator
         // For each node, find its receiver (neighbor with lowest elevation)
         foreach (var cell in _streamGraph)
         {
-            // Skip nodes that are on the border (outflow points)
-            if (cell.IsRiverMouth) continue;
-
             var lowestNeighbor = GetLowestNeighbor(cell);
+            if (!_children.ContainsKey(lowestNeighbor.Index))
+                _children[lowestNeighbor.Index] = new List<int>();
             if (lowestNeighbor != cell)
             {
                 // Set the receiver for this node
                 _receivers[cell.Index] = lowestNeighbor.Index;
 
                 // Add this node as a child of its receiver
-                if (!_children.ContainsKey(lowestNeighbor.Index))
-                    _children[lowestNeighbor.Index] = new List<int>();
                 _children[lowestNeighbor.Index].Add(cell.Index);
             }
             else
@@ -132,79 +129,98 @@ public partial class WorldGenerator
         ReportProgress($"Found {_lakes.Count} lakes.");
 
         // All outflows of a lake. Dictionary<int sourceLakeId, Dictionary<int targetLakeId, (int sourceNode, int targetNode, float passHeight)>>
-        var outflowGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, float passHeight)>>();
+        var lakeOutflowGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, float passHeight)>>();
 
         // For each cell in a lake
         foreach (var cell in _streamGraph)
         {
-            if (!_lakeIdentifiers.TryGetValue(cell.Index, out var sourceLakeId))
-                throw new InvalidOperationException("Cell is not part of a lake.");
+            var sourceLakeId = _lakeIdentifiers[cell.Index];
 
             if (cell.IsRiverMouth)
                 continue; // Skip river mouths
 
             foreach (var neighbor in GetNeighborCells(cell))
             {
+                if (!_lakeIdentifiers.TryGetValue(neighbor.Index, out var targetLakeId))
+                    continue; // Skip if the neighbor is not a lake
+
+                if (targetLakeId == sourceLakeId) continue;
+
+                if (!lakeOutflowGraph.ContainsKey(sourceLakeId))
+                    lakeOutflowGraph[sourceLakeId] = new Dictionary<int, (int, int, float)>();
+
                 // Calculate pass height (maximum height of the two connecting nodes)
                 float passHeight = Mathf.Max(cell.Height, neighbor.Height);
-                var targetLake = _lakeIdentifiers[neighbor.Index];
-
-                if (!outflowGraph.ContainsKey(cell.Index))
-                {
-                    outflowGraph[cell.Index] = new Dictionary<int, (int, int, float)>();
-                }
 
                 // Update the pass height if this one is lower
-                if (outflowGraph[cell.Index].ContainsKey(targetLake))
+                if (lakeOutflowGraph[sourceLakeId].ContainsKey(targetLakeId))
                 {
-                    var existingPass = outflowGraph[cell.Index][targetLake];
+                    var existingPass = lakeOutflowGraph[sourceLakeId][targetLakeId];
                     if (passHeight < existingPass.passHeight)
                     {
-                        outflowGraph[cell.Index][targetLake] = (cell.Index, neighbor.Index, passHeight);
+                        lakeOutflowGraph[sourceLakeId][targetLakeId] = (cell.Index, neighbor.Index, passHeight);
                     }
                 }
                 else
                 {
-                    outflowGraph[cell.Index][targetLake] = (cell.Index, neighbor.Index, passHeight);
+                    lakeOutflowGraph[sourceLakeId][targetLakeId] = (cell.Index, neighbor.Index, passHeight);
                 }
             }
         }
 
-        ReportProgress($"Found {outflowGraph.Count} passes between lakes");
+        ReportProgress($"Found {lakeOutflowGraph.Count} passes between lakes");
 
         // Extraction of the lake connections
-        var lakeTrees = new Dictionary<int, int>(); // Maps lake ID to its receiver lake ID
-        var lakeChildren = new Dictionary<int, List<int>>(); // Maps lake ID to its children lake IDs
-        var candidateArcs = new SortedDictionary<float, List<(int sourceId, int targetId, int sourceNode, int targetNode)>>();
+        var lakeTrees = new Dictionary<int, (int targetLake, int targetNode)>(); // Maps lake ID to its receiver lake ID
 
         // Identify all unique lake IDs
         foreach (var lakeId in _riverMouths)
         {
-            lakeTrees[lakeId] = -1; // -1 indicates a root lake (no receiver)
-            lakeChildren[lakeId] = new List<int>();
+            lakeTrees[lakeId] = (-1, -1); // -1 indicates a root lake (no receiver)
         }
 
-        foreach (var (sourceLakeId, outflows) in outflowGraph)
+        while (lakeOutflowGraph.Count > 0)
         {
-            foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
+            var lowestLakeId = -1;
+            var lowestLakeTarget = -1;
+            var lowestLakeTargetNode = -1;
+            var lowestPassHeight = -1.0f;
+            foreach (var (sourceLakeId, outflows) in lakeOutflowGraph)
             {
-                if (lakeTrees.ContainsKey(targetLakeId))
+                foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
                 {
-                    // Store the outflow information in the candidate arcs
-                    if (!candidateArcs.ContainsKey(passHeight))
+                    if (lakeTrees.ContainsKey(targetLakeId))
                     {
-                        candidateArcs[passHeight] = new List<(int, int, int, int)>();
+                        if (lowestLakeId == -1 || passHeight < lowestPassHeight)
+                        {
+                            lowestLakeId = sourceLakeId;
+                            lowestLakeTarget = targetLakeId;
+                            lowestLakeTargetNode = targetNode;
+                            lowestPassHeight = passHeight;
+                        }
                     }
-
-                    candidateArcs[passHeight].Add((sourceLakeId, targetLakeId, sourceNode, targetNode));
                 }
+            }
+
+            if (lowestLakeId != -1)
+            {
+                lakeTrees[lowestLakeId] = (lowestLakeTarget, lowestLakeTargetNode);
+                lakeOutflowGraph.Remove(lowestLakeId);
+            }
+            else
+            {
+                ReportProgress("No more lake connections found");
+                break;
             }
         }
 
-        var (_, info) = candidateArcs.First();
-        lakeTrees[info[0].targetId] = info[0].sourceId;
-
-
+        foreach (var (sourceLakeId, (_, targetNode)) in lakeTrees)
+        {
+            _receivers[sourceLakeId] = targetNode; // Set the receiver for the lake
+            if (targetNode == -1)
+                continue;
+            _children[targetNode].Add(sourceLakeId); // Add the lake as a child of its receiver
+        }
     }
 
     private void ComputeDrainageAndSlopes()
@@ -249,6 +265,8 @@ public partial class WorldGenerator
             // If this node has a receiver, process it next (if all its other children have been visited)
             if (_receivers.TryGetValue(current.Index, out var receiverIndex))
             {
+                if (receiverIndex == -1) break;
+
                 var receiver = _cellDatas[receiverIndex];
                 var allChildrenVisited = true;
 

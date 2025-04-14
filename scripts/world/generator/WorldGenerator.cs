@@ -113,8 +113,8 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CreatingVoronoi, CreateVoronoiDiagram));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics, InitializeTectonicProperties));
-        // _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts, CalculateInitialUplifts));
-        // _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts, CalculateInitialUplifts));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
 
         // Add the stream generation cycle
         _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingStreamTrees, ComputeStreamTrees));
