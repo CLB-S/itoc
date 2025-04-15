@@ -20,6 +20,39 @@ public partial class WorldGenerator
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
     public IReadOnlyDictionary<int, float> DrainageArea => _drainageArea;
 
+    private void FindRiverMouths()
+    {
+        ReportProgress("Finding river mouths");
+
+        foreach (var edge in _voronoiEdges)
+        {
+            var cellPId = _delaunator.Triangles[edge.Index];
+            var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
+            var cellP = _cellDatas[cellPId];
+            var cellQ = _cellDatas[cellQId];
+
+            if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
+            {
+                if (((Rect2)Settings.Bounds).HasPoint(SamplePoints[cellPId]))
+                {
+                    cellP.IsRiverMouth = true;
+                    cellP.Receiver = cellQ;
+                    _riverMouths.Add(cellP.Index);
+                }
+            }
+            else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
+            {
+                if (((Rect2)Settings.Bounds).HasPoint(SamplePoints[cellQId]))
+                {
+                    cellQ.IsRiverMouth = true;
+                    cellQ.Receiver = cellP;
+                    _riverMouths.Add(cellQ.Index);
+                }
+            }
+        }
+
+    }
+
     private void ComputeStreamTrees()
     {
         ReportProgress("Computing stream trees");
@@ -299,7 +332,7 @@ public partial class WorldGenerator
             {
                 var cell = _cellDatas[index];
                 var receiver = _cellDatas[receiverIndex];
-                var distance = (_points[index] - _points[receiverIndex]).Length();
+                var distance = UniformDistance(_points[index], _points[receiverIndex]);
 
                 if (distance < 0.001f)
                 {
@@ -366,7 +399,7 @@ public partial class WorldGenerator
             var receiver = _cellDatas[receiverIndex];
 
             // Calculate the slope between this node and its receiver
-            var distance = (_points[cell.Index] - _points[receiverIndex]).Length();
+            var distance = UniformDistance(_points[cell.Index], _points[receiverIndex]);
 
             // Skip if distance is zero to avoid division by zero
             if (distance < 0.001f) continue;

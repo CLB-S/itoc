@@ -62,10 +62,6 @@ public partial class WorldGenerator
                 }
                 else if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
-                    cellP.IsRiverMouth = true;
-                    cellP.Receiver = cellQ;
-                    _riverMouths.Add(cellP.Index);
-
                     if (relativeMovement < 0)
                     {
                         // cellP.Altitude = -50f * relativeMovement;
@@ -82,10 +78,6 @@ public partial class WorldGenerator
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
                 {
-                    cellQ.IsRiverMouth = true;
-                    cellQ.Receiver = cellP;
-                    _riverMouths.Add(cellQ.Index);
-
                     if (relativeMovement < 0)
                     {
                         // cellP.Altitude = -100f * relativeMovement;

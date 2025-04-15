@@ -77,6 +77,20 @@ public partial class WorldGenerator
         ) + Settings.Bounds.Position;
     }
 
+    public double UniformDistance(Vector2 pos1, Vector2 pos2)
+    {
+        var dx = Mathf.Abs(pos1.X - pos2.X);
+        var dy = Mathf.Abs(pos1.Y - pos2.Y);
+
+        if (dx > Settings.Bounds.Size.X / 2)
+            dx = Settings.Bounds.Size.X - dx;
+
+        if (dy > Settings.Bounds.Size.Y / 2)
+            dy = Settings.Bounds.Size.Y - dy;
+
+        return Mathf.Sqrt(dx * dx + dy * dy);
+    }
+
     private IEnumerable<int> GetNeighborCellIndices(CellData cell)
     {
         return GetNeighborCellIndices(cell.Index);

@@ -58,6 +58,7 @@ public enum GenerationState
     InitializingTectonics,
     CalculatingInitialUplifts,
     PropagatingUplifts,
+    FindingRiverMouths,
     ComputingStreamTrees,
     IdentifyingLakes,
     LakeOverflow,
@@ -118,6 +119,7 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
 
         // Add the stream generation cycle
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.FindingRiverMouths, FindRiverMouths));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingStreamTrees, ComputeStreamTrees));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.IdentifyingLakes, IdentifyLakes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.LakeOverflow, ProcessLakeOverflow));

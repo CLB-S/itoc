@@ -47,7 +47,7 @@ public partial class WorldGenerator
             cellData.PlateType = RandomPlateType(rng);
             cellData.PlateSeed = seed;
 
-            if (cellData.PlateType == PlateType.Continent)
+            if (cellData.PlateType == PlateType.Continent && ((Rect2)Settings.Bounds).HasPoint(_points[i]))
                 _streamGraph.Add(cellData);
         }
     }
