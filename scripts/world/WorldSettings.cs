@@ -12,7 +12,7 @@ public class WorldSettings
     public float MaxAltitude = 1000.0f;
 
     public Rect2I Bounds = new Rect2I(-10000, -10000, 20000, 20000);
-    public float MinimumCellDistance = 50;
+    public float MinimumCellDistance = 100;
     public float AltitudePropagationDecrement = 0.8f;
     public float AltitudePropagationSharpness = 0.1f;
     public float NoiseFrequency = 20.0f;
@@ -22,7 +22,7 @@ public class WorldSettings
     public float ErosionRate { get; set; } = 5f;
     public float TimeStep { get; set; } = 0.1f;
     public float ErosionConvergenceThreshold { get; set; } = 0.02f;
-    public int MaxErosionIterations { get; set; } = 200;
+    public int MaxErosionIterations { get; set; } = 100;
 
     public WorldSettings(ulong seed = 234)
     {

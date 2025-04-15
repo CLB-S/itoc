@@ -46,8 +46,6 @@ public partial class WorldGenerator
             FractalOctaves = 4,
             DomainWarpEnabled = false
         };
-
-        _cellArea = Settings.MinimumCellDistance * Settings.MinimumCellDistance * 1.2f;
     }
 
     private void GeneratePoints()
@@ -55,6 +53,10 @@ public partial class WorldGenerator
         ReportProgress("Generating points");
         _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End, Settings.MinimumCellDistance, _rng);
         _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
+
+        _cellArea = (float)Settings.Bounds.Area / _points.Count;
+
+        ReportProgress($"{_points.Count} points generated. Average area: {_cellArea}");
     }
 
     private void CreateVoronoiDiagram()

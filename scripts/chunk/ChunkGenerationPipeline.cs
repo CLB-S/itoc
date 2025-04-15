@@ -70,9 +70,9 @@ public class ChunkGenerationPipeline
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
                     var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;
-                    if (actualY < height - ChunkMesher.CS)
+                    if (actualY < height)
                     {
-                        if (actualY <= height - ChunkMesher.CS - 4)
+                        if (actualY <= height - 4)
                             _chunkData.SetBlock(x, y, z, "stone");
                         else
                         {
@@ -82,9 +82,9 @@ public class ChunkGenerationPipeline
                                 _chunkData.SetBlock(x, y, z, "snow");
                             else if (actualY >= 100)
                                 _chunkData.SetBlock(x, y, z, "stone");
-                            else if (actualY == height - ChunkMesher.CS - 1)
+                            else if (actualY == height - 1)
                                 _chunkData.SetBlock(x, y, z, "grass_block");
-                            else if (actualY > height - ChunkMesher.CS - 4)
+                            else if (actualY > height - 4)
                                 _chunkData.SetBlock(x, y, z, "dirt");
                         }
                     }

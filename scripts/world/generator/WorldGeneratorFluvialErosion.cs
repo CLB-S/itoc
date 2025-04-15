@@ -50,7 +50,6 @@ public partial class WorldGenerator
                 }
             }
         }
-
     }
 
     private void ComputeStreamTrees()
@@ -355,7 +354,7 @@ public partial class WorldGenerator
         float k = Settings.ErosionRate; // Erodibility coefficient
         float m = 0.5f; // Drainage area exponent (typically 0.5)
         float dt = Settings.TimeStep; // Time step
-        float maxChange = 0.0f; // Track maximum height change for convergence check
+        double maxChange = 0.0; // Track maximum height change for convergence check
 
         // Sort nodes from downstream to upstream to ensure proper calculation order
         var sortedNodes = new List<CellData>();
@@ -408,25 +407,24 @@ public partial class WorldGenerator
             float drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
 
             // Apply uplift
-            float uplift = 100; // cell.Uplift > 0.01f ? cell.Uplift * 0.3f : 0.01f;
+            var uplift = 1000.0; // cell.Uplift > 0.01f ? cell.Uplift * 0.3f : 0.01f;
 
             // Calculate the term for the stream power equation
-            float erosionTerm = (float)(k * Mathf.Pow(drainageArea, m) / distance);
+            var erosionTerm = k * Mathf.Pow(drainageArea, m) / distance;
 
             // Calculate the new height using the implicit scheme from the paper
-            float oldHeight = cell.Height;
-            float newHeight = (oldHeight + dt * (uplift + erosionTerm * receiver.Height)) / (1 + erosionTerm * dt);
+            var oldHeight = cell.Height;
+            var newHeight = (oldHeight + dt * (uplift + erosionTerm * receiver.Height)) / (1 + erosionTerm * dt);
 
             // Apply thermal erosion correction: limit the maximum slope
-            float maxSlopeHeight = (float)(receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(30.0f)));
+            var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(30.0f));
             if (newHeight > maxSlopeHeight)
             {
                 newHeight = maxSlopeHeight;
             }
 
             // Update the height
-            cell.Height = newHeight;
-
+            cell.Height = (float)newHeight;
 
             // Track the maximum change for convergence check
             maxChange = Mathf.Max(maxChange, Mathf.Abs(newHeight - oldHeight));

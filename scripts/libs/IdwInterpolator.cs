@@ -11,8 +11,8 @@ public class IdwInterpolator
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 1.5,
-        int numNeighbors = 10)
+    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 1,
+        int numNeighbors = 6)
     {
         var positionsList = positions.ToList();
         var heightsList = heights.ToList();
@@ -45,11 +45,11 @@ public class IdwInterpolator
 
         foreach (var (pos, height) in neighbors)
         {
-            var distance = L2Norm(pos, [x, y]);
+            var distance = L2Norm(pos, [x, y]) / 3000;
 
-            if (distance <= 0) return height;
+            // if (distance <= 0) return height;
 
-            var weight = 1.0 / Mathf.Pow(distance, _power);
+            var weight = Mathf.Exp(-distance);// 1.0 / Mathf.Pow(distance + 5, _power);
             weightedSum += weight * height;
             totalWeight += weight;
         }

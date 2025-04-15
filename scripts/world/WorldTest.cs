@@ -135,7 +135,7 @@ public partial class WorldTest : Node2D
                             break;
                         case ColorPreset.Height:
                             var height = cellData.Height / _worldGenerator.Settings.MaxAltitude;
-                            // DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
+                            DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
                             break;
                         case ColorPreset.PlateTypes:
                             DrawColoredPolygon(points,
