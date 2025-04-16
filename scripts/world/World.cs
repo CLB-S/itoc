@@ -33,7 +33,7 @@ public partial class World : Node
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scripts/world/debug_cube.tscn");
 
-        return; // DEBUG
+        // return; // DEBUG
 
         _worldGenerator = new WorldGenerator.WorldGenerator(Settings);
         await _worldGenerator.GenerateWorldAsync(); //TODO: GUI

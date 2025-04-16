@@ -41,7 +41,7 @@ public partial class WorldGenerator
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
-            Frequency = Settings.NoiseFrequency / sizeY,
+            // Frequency = Settings.NoiseFrequency / sizeY,
             FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
             FractalOctaves = 4,
             DomainWarpEnabled = false
