@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://b4g0spdwms0iv" path="res://scripts/graphics/EnvironmentController.cs" id="1_lquwl"]
 [ext_resource type="PackedScene" uid="uid://c367kt62qvrax" path="res://scripts/player/player.tscn" id="2_0xm2m"]
-[ext_resource type="PackedScene" uid="uid://bbjl30lukp4w3" path="res://scripts/gui/hud.tscn" id="2_1bvp3"]
-[ext_resource type="PackedScene" uid="uid://db8v3c26ehokt" path="res://scripts/gui/paused.tscn" id="3_1bvp3"]
-[ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scripts/gui/info.tscn" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://bbjl30lukp4w3" path="res://scenes/gui/hud.tscn" id="2_1bvp3"]
+[ext_resource type="PackedScene" uid="uid://db8v3c26ehokt" path="res://scenes/gui/paused.tscn" id="3_1bvp3"]
+[ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scenes/gui/info.tscn" id="3_h2yge"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h2yge"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -40,6 +40,7 @@ directional_shadow_blend_splits = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
 
 [node name="GUIs" type="Control" parent="."]
+texture_filter = 1
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

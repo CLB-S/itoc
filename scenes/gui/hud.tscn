@@ -1,0 +1,90 @@
+[gd_scene load_steps=4 format=3 uid="uid://bbjl30lukp4w3"]
+
+[ext_resource type="Texture2D" uid="uid://cvftjfrhfkqi8" path="res://assets/gui/crosshair.png" id="1_86rft"]
+[ext_resource type="PackedScene" uid="uid://dbha3pwst3je2" path="res://scenes/gui/hotbar_item_slot.tscn" id="2_624ws"]
+[ext_resource type="Script" uid="uid://dhp88707jyena" path="res://scripts/gui/GuiInventoryHotbar.cs" id="2_qxonp"]
+
+[node name="Hud" type="Control"]
+texture_filter = 1
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Crosshair" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_86rft")
+
+[node name="InventoryHotbar" type="GridContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -360.0
+offset_top = -104.0
+offset_right = 360.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+columns = 9
+script = ExtResource("2_qxonp")
+
+[node name="HotbarItemSlot1" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot2" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot3" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot4" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot5" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot6" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot7" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot8" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HotbarItemSlot9" parent="InventoryHotbar" instance=ExtResource("2_624ws")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

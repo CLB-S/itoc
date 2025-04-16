@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://chvtooxig8a2d"]
+
+[ext_resource type="Texture2D" uid="uid://dxwmwrr7e6afo" path="res://assets/gui/slot_pressed.png" id="1_22018"]
+[ext_resource type="Texture2D" uid="uid://cq4xf28ka3i3v" path="res://assets/gui/slot_normal.png" id="1_ni2k5"]
+[ext_resource type="Texture2D" uid="uid://cktxihv0txeg7" path="res://assets/gui/slot_hover.png" id="2_ni2k5"]
+[ext_resource type="PackedScene" uid="uid://2wkwwwgtb67n" path="res://scenes/gui/block_item.tscn" id="3_klr5o"]
+
+[node name="ItemSlot" type="TextureButton"]
+texture_filter = 1
+offset_right = 80.0
+offset_bottom = 80.0
+texture_normal = ExtResource("1_ni2k5")
+texture_pressed = ExtResource("1_22018")
+texture_hover = ExtResource("2_ni2k5")
+stretch_mode = 0
+
+[node name="BlockItem" parent="." instance=ExtResource("3_klr5o")]
+layout_mode = 1

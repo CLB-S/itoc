@@ -37,6 +37,7 @@ public abstract class Block : IEquatable<Block>
     public abstract void LoadResources();
 
     public abstract Material GetMaterial(Direction face = Direction.PositiveY);
+    public abstract Texture2D GetTexture(Direction face = Direction.PositiveY);
 
     public abstract bool Equals(Block other);
 
