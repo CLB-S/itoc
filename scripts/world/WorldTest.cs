@@ -134,7 +134,7 @@ public partial class WorldTest : Node2D
                             DrawColoredPolygon(points, color);
                             break;
                         case ColorPreset.Height:
-                            var height = cellData.Height / _worldGenerator.Settings.MaxAltitude;
+                            var height = cellData.Height / _worldGenerator.Settings.MaxAltitude - 0.01f;
                             DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
                             break;
                         case ColorPreset.PlateTypes:
@@ -208,15 +208,14 @@ public partial class WorldTest : Node2D
                             if ((start - end).LengthSquared() >
                                 _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
 
-
                             // Calculate line width based on drainage area
                             float width = 1.0f;
-                            // if (_worldGenerator.DrainageArea != null &&
-                            //     _worldGenerator.DrainageArea.TryGetValue(cell.Index, out var drainage))
-                            // {
-                            //     // Scale the width logarithmically with the drainage area
-                            //     width = Mathf.Log(1 + drainage * 0.01f) * 1.5f;
-                            // }
+                            if (_worldGenerator.DrainageArea != null &&
+                                _worldGenerator.DrainageArea.TryGetValue(cell.Index, out var drainage))
+                            {
+                                // Scale the width logarithmically with the drainage area
+                                width = Mathf.Log(1 + drainage * 0.0005f) * 0.5f;
+                            }
 
                             // Calculate color based on water flow
                             // Deeper blue for higher drainage areas
@@ -240,16 +239,16 @@ public partial class WorldTest : Node2D
 
                         // Draw lake node as a circle
                         var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
-                        DrawCircle(pos, 5f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
+                        DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
                     }
                 }
 
                 // Draw river mouths with a different color
-                foreach (var cell in streamGraph.Where(c => c.IsRiverMouth))
-                {
-                    var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
-                    DrawCircle(pos, 6f, new Color(0.0f, 0.2f, 0.6f, 0.8f));
-                }
+                // foreach (var cell in streamGraph.Where(c => c.IsRiverMouth))
+                // {
+                //     var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+                //     DrawCircle(pos, 3f, new Color(0.0f, 0.2f, 0.6f, 0.8f));
+                // }
             }
         }
 

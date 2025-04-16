@@ -6,7 +6,7 @@ public class WorldSettings
     public ulong Seed = 234;
 
     #region Generation Settings
-    public float ContinentRatio = 0.6f;
+    public float ContinentRatio = 0.5f;
     public float PlateMergeRatio = 0.13f;
     public float MaxTectonicMovement = 10.0f;
     public float MaxAltitude = 1000.0f;
@@ -15,14 +15,14 @@ public class WorldSettings
     public float MinimumCellDistance = 100;
     public float AltitudePropagationDecrement = 0.8f;
     public float AltitudePropagationSharpness = 0.1f;
-    public float NoiseFrequency = 20.0f;
+    public float NoiseFrequency = 5.0f;
     #endregion
 
     // Fluvial erosion settings
-    public float ErosionRate { get; set; } = 5f;
-    public float TimeStep { get; set; } = 0.1f;
-    public float ErosionConvergenceThreshold { get; set; } = 0.02f;
-    public int MaxErosionIterations { get; set; } = 100;
+    public float ErosionRate = 5f;
+    public float TimeStep = 0.1f;
+    public float ErosionConvergenceThreshold = 0.02f;
+    public int MaxErosionIterations = 150;
 
     public WorldSettings(ulong seed = 234)
     {

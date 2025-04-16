@@ -99,7 +99,7 @@ text = "Continent Ratio:"
 layout_mode = 2
 max_value = 1.0
 step = 0.05
-value = 0.4
+value = 0.5
 
 [node name="HSplitContainer3" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
@@ -123,7 +123,7 @@ text = "Cell Distance:"
 
 [node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer4"]
 layout_mode = 2
-value = 5.0
+value = 100.0
 
 [node name="RegenerateButton" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
