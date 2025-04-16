@@ -24,6 +24,7 @@ public partial class WorldGenerator
     {
         ReportProgress("Finding river mouths");
 
+        _riverMouths.Clear();
         foreach (var edge in _voronoiEdges)
         {
             var cellPId = _delaunator.Triangles[edge.Index];

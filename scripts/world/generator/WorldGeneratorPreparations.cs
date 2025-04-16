@@ -31,7 +31,7 @@ public partial class WorldGenerator
             Frequency = Settings.NoiseFrequency / sizeY,
             CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.CellValue,
             DomainWarpEnabled = true,
-            DomainWarpAmplitude = 0.09 * sizeY,
+            DomainWarpAmplitude = 0.75 * sizeY / Settings.NoiseFrequency,
             DomainWarpFrequency = Settings.NoiseFrequency / sizeY,
             DomainWarpFractalType = FastNoiseLite.DomainWarpFractalTypeEnum.None,
             FractalType = FastNoiseLite.FractalTypeEnum.None

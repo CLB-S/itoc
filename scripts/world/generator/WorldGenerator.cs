@@ -202,6 +202,8 @@ public partial class WorldGenerator
                     ResetGenerator();
 
                 State = GenerationState.Initializing;
+                _powerEquationConverged = false;
+                _iterationCount = 0;
             }
 
             GenerationStartedEvent?.Invoke(this, EventArgs.Empty);

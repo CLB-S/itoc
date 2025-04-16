@@ -32,6 +32,7 @@ public partial class WorldGenerator
     private void InitializeTectonicProperties()
     {
         ReportProgress("Initializing tectonic properties");
+        _streamGraph.Clear();
         using var rng = new RandomNumberGenerator();
         foreach (var (i, cellData) in _cellDatas)
         {
