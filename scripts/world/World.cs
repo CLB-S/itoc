@@ -6,38 +6,29 @@ using Godot;
 public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
+    public WorldGenerator.WorldGenerator Generator { get; private set; }
+    public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
+    public static World Instance { get; private set; } //TODO: Remove after gui.
 
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
     public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
-    public WorldSettings Settings = new();
     public bool DebugDrawChunkBounds = false;
     public bool UseDebugMaterial = false;
     public ShaderMaterial DebugMaterial;
-    private PackedScene _debugCube;
 
-    private WorldGenerator.WorldGenerator _worldGenerator;
+    private PackedScene _debugCube;
     private ChunkGenerator.ChunkFactory _chunkFactory;
     private bool _ready = false; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly HashSet<Vector2I> _queuedChunkColumns = new();
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
-    public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
-
-    public static World Instance { get; private set; } //TODO: Remove after gui.
-
-    public override async void _Ready()
+    public override void _Ready()
     {
         Instance = this;
-
+        Generator = Core.Instance.WorldGenerator;
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
-
-        // return; // DEBUG
-
-        _worldGenerator = new WorldGenerator.WorldGenerator(Settings);
-        await _worldGenerator.GenerateWorldAsync(); //TODO: GUI
-        GD.Print("World pre-generation finished.");
 
         _chunkFactory = new ChunkGenerator.ChunkFactory();
         _chunkFactory.Start();
@@ -64,7 +55,7 @@ public partial class World : Node
             var pos = _chunkColumnsGenerationQueue.Dequeue();
             _queuedChunkColumns.Remove(pos);
 
-            var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(_worldGenerator, pos, ChunkColumnGenerationCallback);
+            var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
             _chunkFactory.Enqueue(columnRequest);
             processed++;
         }
@@ -163,7 +154,7 @@ public partial class World : Node
                 if (Chunks.ContainsKey(chunkPos)) continue;
 
                 var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                var request = new ChunkGenerator.ChunkGenerationRequest(_worldGenerator, chunkPos, result, ChunkGenerationCallback, createCollisionShape);
+                var request = new ChunkGenerator.ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback, createCollisionShape);
                 _chunkFactory.Enqueue(request);
             }
         }

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="itoc"
-run/main_scene="uid://g8ki650u2whs"
+run/main_scene="uid://5e2p7bsjwin2"
 config/features=PackedStringArray("4.5", "C#", "Double Precision", "GL Compatibility")
 run/max_fps=144
 config/icon="res://icon.svg"
@@ -21,7 +21,6 @@ config/icon="res://icon.svg"
 Core="*res://scripts/Core.cs"
 GuiManager="*res://scripts/gui/GuiManager.cs"
 CameraHelper="*res://scripts/camera/CameraHelper.cs"
-World="*res://scripts/world/World.cs"
 
 [display]
 

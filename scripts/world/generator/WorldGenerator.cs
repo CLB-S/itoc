@@ -199,7 +199,7 @@ public partial class WorldGenerator
             lock (_stateLock)
             {
                 if (State == GenerationState.Completed)
-                    ResetGenerator();
+                    throw new InvalidOperationException("World generation has already been completed.");
 
                 State = GenerationState.Initializing;
                 _powerEquationConverged = false;
@@ -278,11 +278,6 @@ public partial class WorldGenerator
     {
         UpdateState(GenerationState.Failed);
         GenerationFailedEvent?.Invoke(this, ex);
-    }
-
-    private void ResetGenerator()
-    {
-        _powerEquationConverged = false;
     }
 }
 

@@ -67,7 +67,7 @@ public partial class Chunk : StaticBody3D
 
         _collisionShape3D = new CollisionShape3D();
         _collisionDebugMeshInstance = new MeshInstance3D();
-        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
+        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
         _collisionDebugMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
         AddChild(_collisionShape3D);
         AddChild(_collisionDebugMeshInstance);

@@ -1,0 +1,152 @@
+[gd_scene load_steps=4 format=3 uid="uid://5e2p7bsjwin2"]
+
+[ext_resource type="Shader" uid="uid://do6gmb0ip0gt5" path="res://assets/gui/loading_screen_shader.gdshader" id="1_0bqu8"]
+[ext_resource type="Script" uid="uid://bm6156mqho8ng" path="res://scripts/gui/GuiStartScreen.cs" id="1_lc11f"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jau3w"]
+shader = ExtResource("1_0bqu8")
+
+[node name="StartScreen" type="Node" node_paths=PackedStringArray("LoadingScreen")]
+script = ExtResource("1_lc11f")
+LoadingScreen = NodePath("CanvasLayer/Control/LoadingScreen")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 48.0
+offset_top = -271.5
+offset_right = 448.0
+offset_bottom = 271.5
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 128
+text = "ITOC"
+
+[node name="HSeparator" type="HSeparator" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Buttons" type="Control" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Control/VBoxContainer/Buttons"]
+layout_mode = 1
+offset_left = 12.0
+offset_right = 312.0
+offset_bottom = 348.0
+theme_override_constants/separation = 36
+
+[node name="StartButton" type="TextureButton" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/StartButton"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -33.5
+offset_right = 113.0
+offset_bottom = 33.5
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "Start"
+
+[node name="WorldMapButton" type="TextureButton" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/WorldMapButton"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -33.5
+offset_right = 254.0
+offset_bottom = 33.5
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "World Map"
+
+[node name="SettingsButton" type="TextureButton" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/SettingsButton"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -33.5
+offset_right = 186.0
+offset_bottom = 33.5
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "Settings"
+
+[node name="QuitButton" type="TextureButton" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/QuitButton"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -33.5
+offset_right = 101.0
+offset_bottom = 33.5
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "Quit"
+
+[node name="LoadingScreen" type="Control" parent="CanvasLayer/Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control/LoadingScreen"]
+material = SubResource("ShaderMaterial_jau3w")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/LoadingScreen"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -247.0
+offset_top = -83.0
+offset_right = -24.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 48
+text = "Loading..."
+
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/StartButton" to="." method="OnStartButtonPressed"]
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/QuitButton" to="." method="OnQuitButtonPressed"]
