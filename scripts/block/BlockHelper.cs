@@ -8,7 +8,7 @@ public static class BlockHelper
         {
             Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
             TextureRepeat = true,
-            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.NearestWithMipmaps,
             AlbedoTexture = texture
             // CullMode = BaseMaterial3D.CullModeEnum.Disabled,
         };
@@ -21,7 +21,7 @@ public static class BlockHelper
         {
             Transparency = BaseMaterial3D.TransparencyEnum.Disabled,
             TextureRepeat = true,
-            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
+            TextureFilter = BaseMaterial3D.TextureFilterEnum.NearestWithMipmaps,
             AlbedoTexture = texture
             // CullMode = BaseMaterial3D.CullModeEnum.Disabled,
         };
