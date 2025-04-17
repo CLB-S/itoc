@@ -6,9 +6,9 @@ public partial class GuiInventoryHotbar : GridContainer
     private GuiHotbarSlot[] _slots;
     private int _activeSlotIndex = 0;
 
-    public Block ActiveBlock
+    public IItem ActiveItem
     {
-        get => _slots[_activeSlotIndex].Block;
+        get => _slots[_activeSlotIndex].Item;
     }
 
     public override void _Ready()
@@ -20,6 +20,13 @@ public partial class GuiInventoryHotbar : GridContainer
         }
 
         _slots[_activeSlotIndex].IsActive = true;
+
+        _slots[0].SetItem(BlockManager.Instance.GetBlock("dirt"));
+        _slots[1].SetItem(BlockManager.Instance.GetBlock("stone"));
+        _slots[2].SetItem(BlockManager.Instance.GetBlock("grass_block"));
+        _slots[3].SetItem(BlockManager.Instance.GetBlock("sand"));
+        _slots[4].SetItem(BlockManager.Instance.GetBlock("snow"));
+        _slots[5].SetItem(BlockManager.Instance.GetBlock("debug"));
     }
 
     public void SetActiveSlot(int index)
@@ -30,5 +37,15 @@ public partial class GuiInventoryHotbar : GridContainer
         _slots[_activeSlotIndex].IsActive = false;
         _activeSlotIndex = index;
         _slots[_activeSlotIndex].IsActive = true;
+    }
+
+    public void NextSlot()
+    {
+        SetActiveSlot((_activeSlotIndex + 1) % _slots.Length);
+    }
+
+    public void PreviousSlot()
+    {
+        SetActiveSlot((_activeSlotIndex - 1 + _slots.Length) % _slots.Length);
     }
 }

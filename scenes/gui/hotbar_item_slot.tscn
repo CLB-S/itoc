@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://dbha3pwst3je2"]
 
 [ext_resource type="Script" uid="uid://pnm46fasp0eo" path="res://scripts/gui/GuiHotbarSlot.cs" id="1_5lcox"]
-[ext_resource type="PackedScene" uid="uid://2wkwwwgtb67n" path="res://scenes/gui/block_item.tscn" id="1_px0g6"]
 [ext_resource type="Texture2D" uid="uid://cq4xf28ka3i3v" path="res://assets/gui/slot_normal.png" id="1_ymenu"]
 [ext_resource type="Texture2D" uid="uid://cktxihv0txeg7" path="res://assets/gui/slot_hover.png" id="3_bom0a"]
+[ext_resource type="Script" uid="uid://e163r1i37v04" path="res://scripts/gui/GuiItem.cs" id="4_5lcox"]
 
 [node name="HotbarItemSlot" type="TextureRect"]
 texture_filter = 1
@@ -13,5 +13,11 @@ script = ExtResource("1_5lcox")
 TextureNormal = ExtResource("1_ymenu")
 TextureActive = ExtResource("3_bom0a")
 
-[node name="BlockItem" parent="." instance=ExtResource("1_px0g6")]
+[node name="Item" type="Control" parent="."]
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_5lcox")

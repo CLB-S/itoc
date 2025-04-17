@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://g8ki650u2whs"]
+[gd_scene load_steps=10 format=3 uid="uid://g8ki650u2whs"]
 
 [ext_resource type="Script" uid="uid://b4g0spdwms0iv" path="res://scripts/graphics/EnvironmentController.cs" id="1_lquwl"]
 [ext_resource type="PackedScene" uid="uid://c367kt62qvrax" path="res://scripts/player/player.tscn" id="2_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://bbjl30lukp4w3" path="res://scenes/gui/hud.tscn" id="2_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://db8v3c26ehokt" path="res://scenes/gui/paused.tscn" id="3_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scenes/gui/info.tscn" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://c042hy7ajq2u2" path="res://scripts/gui/GuiHud.cs" id="4_7mycd"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_h2yge"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -36,8 +37,9 @@ transform = Transform3D(-0.291577, 0.670504, -0.682207, 0.263516, 0.741906, 0.61
 shadow_enabled = true
 directional_shadow_blend_splits = true
 
-[node name="Player" parent="." instance=ExtResource("2_0xm2m")]
+[node name="Player" parent="." node_paths=PackedStringArray("Hud") instance=ExtResource("2_0xm2m")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50, 0)
+Hud = NodePath("../GUIs/Hud")
 
 [node name="GUIs" type="Control" parent="."]
 texture_filter = 1
@@ -50,6 +52,7 @@ grow_vertical = 2
 
 [node name="Hud" parent="GUIs" instance=ExtResource("2_1bvp3")]
 layout_mode = 1
+script = ExtResource("4_7mycd")
 
 [node name="Info" parent="GUIs" instance=ExtResource("3_h2yge")]
 layout_mode = 1

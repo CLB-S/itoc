@@ -5,7 +5,10 @@ public partial class GuiHotbarSlot : TextureRect
 {
     [Export] public Texture2D TextureNormal;
     [Export] public Texture2D TextureActive;
-    public Block Block { get => _blockItem.Block; set => _blockItem.SetBlock(value); }
+
+    private GuiItem _itemControl;
+
+    public IItem Item => _itemControl.Item;
 
     private bool _isActive = false;
     public bool IsActive
@@ -18,22 +21,20 @@ public partial class GuiHotbarSlot : TextureRect
         }
     }
 
-    private GuiBlockItem _blockItem;
     public override void _Ready()
     {
-        _blockItem = GetNode<GuiBlockItem>("BlockItem");
+        _itemControl = GetNode<GuiItem>("Item");
         UpdateTexture();
     }
 
     public void Clear()
     {
-        _blockItem.Clear();
+        _itemControl.Clear();
     }
 
-    public void SetBlock(Block block)
+    public void SetItem(IItem item)
     {
-        _blockItem.SetBlock(block);
-        UpdateTexture();
+        _itemControl.SetItem(item);
     }
 
     private void UpdateTexture()
