@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://cfnidhkhnbkyk"]
 
-[ext_resource type="Shader" uid="uid://d1yd7dsdxruwq" path="res://scripts/chunk/chunk_debug_shader_material.gdshader" id="1_68o8n"]
+[ext_resource type="Shader" uid="uid://d1yd7dsdxruwq" path="res://assets/graphics/chunk_debug_shader_material.gdshader" id="1_68o8n"]
 
 [resource]
 render_priority = 0

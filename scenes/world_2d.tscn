@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://dnbce5r6br382"]
 
-[ext_resource type="Script" uid="uid://dve6fx2002n8g" path="res://scripts/world/WorldTest.cs" id="1_m1jws"]
-[ext_resource type="Shader" uid="uid://dx5sokiwa158o" path="res://scripts/world/world_2d.gdshader" id="2_a8jty"]
-[ext_resource type="Script" uid="uid://dteeikkfn2w8b" path="res://scripts/misc/ObjectRotator.cs" id="3_yvewi"]
+[ext_resource type="Script" uid="uid://dve6fx2002n8g" path="res://scripts/world/WorldTest.cs" id="1_ieres"]
+[ext_resource type="Script" uid="uid://dteeikkfn2w8b" path="res://scripts/misc/ObjectRotator.cs" id="2_6cuhj"]
+[ext_resource type="Shader" uid="uid://dx5sokiwa158o" path="res://assets/graphics/world_height_map.gdshader" id="3_vydw8"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_m1jws"]
 viewport_path = NodePath("SubViewport")
@@ -13,7 +13,7 @@ subdivide_depth = 1000
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_a8jty"]
 render_priority = 0
-shader = ExtResource("2_a8jty")
+shader = ExtResource("3_vydw8")
 shader_parameter/height_scale = 0.15
 shader_parameter/texture_scale = Vector2(1, 1)
 
@@ -22,9 +22,9 @@ shader_parameter/texture_scale = Vector2(1, 1)
 [node name="Camera2D" type="Camera2D" parent="."]
 
 [node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "HeightMapSubViewportSprite")]
-script = ExtResource("1_m1jws")
+script = ExtResource("1_ieres")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
-HeightMapMesh = NodePath("../SubViewport/MeshInstance3D")
+HeightMapMesh = NodePath("../SubViewport/HeightMapMeshInstance3D")
 GenerateMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/RegenerateButton")
 GenerateHeightMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton")
 HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
@@ -32,14 +32,14 @@ HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
 [node name="HeightMapSubViewportSprite" type="Sprite2D" parent="." node_paths=PackedStringArray("TargetObject")]
 visible = false
 texture = SubResource("ViewportTexture_m1jws")
-script = ExtResource("3_yvewi")
-TargetObject = NodePath("../SubViewport/MeshInstance3D")
+script = ExtResource("2_6cuhj")
+TargetObject = NodePath("../SubViewport/HeightMapMeshInstance3D")
 
 [node name="SubViewport" type="SubViewport" parent="."]
 transparent_bg = true
 size = Vector2i(1024, 1024)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="SubViewport"]
+[node name="HeightMapMeshInstance3D" type="MeshInstance3D" parent="SubViewport"]
 mesh = SubResource("PlaneMesh_yvewi")
 surface_material_override/0 = SubResource("ShaderMaterial_a8jty")
 
@@ -81,7 +81,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Seed:"
 
-[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer"]
+[node name="SeedSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer"]
 layout_mode = 2
 max_value = 1e+07
 value = 234.0
@@ -95,7 +95,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Continent Ratio:"
 
-[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer2"]
+[node name="ContinentRatioSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer2"]
 layout_mode = 2
 max_value = 1.0
 step = 0.05
@@ -108,7 +108,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Plate Merge Ratio:"
 
-[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer3"]
+[node name="PlateMergeRatioSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer3"]
 layout_mode = 2
 max_value = 1.0
 step = 0.01
@@ -121,7 +121,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Cell Distance:"
 
-[node name="SpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer4"]
+[node name="CellDistanceSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer4"]
 layout_mode = 2
 value = 100.0
 
@@ -202,10 +202,10 @@ scroll_following = true
 vertical_alignment = 2
 drag_and_drop_selection_enabled = false
 
-[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
-[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/SpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
-[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/SpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
-[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/SpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SeedSpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/ContinentRatioSpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/CellDistanceSpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/RegenerateButton" to="Map" method="OnRegenerateButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton" to="Map" method="OnGenerateHeightMapButtonPressed"]
 [connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]

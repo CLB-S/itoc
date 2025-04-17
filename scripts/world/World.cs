@@ -30,8 +30,8 @@ public partial class World : Node
     {
         Instance = this;
 
-        DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://scripts/chunk/chunk_debug_shader_material.tres");
-        _debugCube = ResourceLoader.Load<PackedScene>("res://scripts/world/debug_cube.tscn");
+        DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
+        _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
 
         // return; // DEBUG
 
