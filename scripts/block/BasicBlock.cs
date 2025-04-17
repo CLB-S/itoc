@@ -5,7 +5,7 @@ public class BasicBlock : Block
 {
     private Material _material;
     private string _materialPath;
-    public Texture2D Texture;
+    private Texture2D _texture;
 
     public BasicBlock(string blockId, string blockName) : base(blockId, blockName)
     {
@@ -29,7 +29,8 @@ public class BasicBlock : Block
         }
 
         var path = $"res://assets/blocks/{BlockId}.png";
-        _material = BlockHelper.GetMaterialByTexture(path);
+        _texture = ResourceLoader.Load(path) as Texture2D;
+        _material = BlockHelper.GetMaterialByTexture(_texture);
     }
 
     public override Material GetMaterial(Direction face = Direction.PositiveX)
@@ -37,9 +38,13 @@ public class BasicBlock : Block
         return _material;
     }
 
+    public override Texture2D GetTexture(Direction face = Direction.PositiveY)
+    {
+        return _texture;
+    }
+
     public override bool Equals(Block other)
     {
         return other.BlockId == BlockId;
     }
-
 }

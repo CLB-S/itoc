@@ -63,19 +63,18 @@ public static class ChunkMesher
                 meshData.FaceMasks[baIndex + 4 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] >> 1);
                 meshData.FaceMasks[baIndex + 5 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] << 1);
 
-                //TODO: BUGGY!
+                if (meshData.WaterMasks != null)
+                {
+                    // Water top face.
+                    meshData.FaceMasks[baIndex + 0 * CS_2] |= (meshData.WaterMasks[a * CS_P + b] & ~((1UL << 63) | 1) & (~meshData.WaterMasks[aCS_P + CS_P + b])) >> 1; // +Y
 
-                // if (meshData.WaterMasks != null)
-                // {
-                //     columnBits = (meshData.WaterMasks[a * CS_P + b] | meshData.OpaqueMask[a * CS_P + b]) & ~((1UL << 63) | 1);
-
-                //     meshData.FaceMasks[baIndex + 0 * CS_2] |= (columnBits & (~meshData.WaterMasks[aCS_P + CS_P + b])) >> 1; // +Y
-                //     meshData.FaceMasks[baIndex + 1 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P - CS_P + b] | meshData.OpaqueMask[aCS_P - CS_P + b]))) >> 1;
-                //     meshData.FaceMasks[abIndex + 2 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + b + 1] | meshData.OpaqueMask[aCS_P + b + 1]))) >> 1;
-                //     meshData.FaceMasks[abIndex + 3 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + (b - 1)] | meshData.OpaqueMask[aCS_P + (b - 1)]))) >> 1;
-                //     meshData.FaceMasks[baIndex + 4 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] >> 1) | (meshData.OpaqueMask[aCS_P + b] >> 1)));
-                //     meshData.FaceMasks[baIndex + 5 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] << 1) | (meshData.OpaqueMask[aCS_P + b] << 1)));
-                // }
+                    columnBits = (meshData.WaterMasks[a * CS_P + b] | meshData.OpaqueMask[a * CS_P + b]) & ~((1UL << 63) | 1);
+                    meshData.FaceMasks[baIndex + 1 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P - CS_P + b] | meshData.OpaqueMask[aCS_P - CS_P + b]))) >> 1;
+                    meshData.FaceMasks[abIndex + 2 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + b + 1] | meshData.OpaqueMask[aCS_P + b + 1]))) >> 1;
+                    meshData.FaceMasks[abIndex + 3 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + (b - 1)] | meshData.OpaqueMask[aCS_P + (b - 1)]))) >> 1;
+                    meshData.FaceMasks[baIndex + 4 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] >> 1) | (meshData.OpaqueMask[aCS_P + b] >> 1)));
+                    meshData.FaceMasks[baIndex + 5 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] << 1) | (meshData.OpaqueMask[aCS_P + b] << 1)));
+                }
             }
         }
 

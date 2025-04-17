@@ -32,6 +32,8 @@ public partial class PlayerController : CharacterBody3D
     [ExportGroup("Block Interaction Settings")]
     [Export] public float BlockInteractionMaxDistance = 5.0f;
 
+    [ExportGroup("GUI")]
+    [Export] public GuiHud Hud;
 
     // Nodes
     private Node3D _head;
@@ -54,6 +56,9 @@ public partial class PlayerController : CharacterBody3D
     // Flying
     private bool _isFlying = false;
     private float _lastJumpPressTime = -1f;
+
+    // Inventory
+    public IItem ItemHandhelding { get => Hud.InventoryHotbar.ActiveItem; }
 
     public override void _Ready()
     {
@@ -82,6 +87,8 @@ public partial class PlayerController : CharacterBody3D
                 0
             );
         }
+
+        HandleInventoryHotbarInput(@event);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -137,8 +144,8 @@ public partial class PlayerController : CharacterBody3D
                     };
 
                     var resultCube = spaceState.IntersectShape(queryCube, 1);
-                    if (resultCube.Count == 0)
-                        World.Instance.SetBlock(pos, "debug");
+                    if (resultCube.Count == 0 && ItemHandhelding?.Type == ItemType.Block)
+                        World.Instance.SetBlock(pos, ItemHandhelding as Block);
                 }
 
                 if (breakBlockPressed)
@@ -151,6 +158,29 @@ public partial class PlayerController : CharacterBody3D
             {
                 GD.PushError(e.ToString());
             }
+    }
+
+    private void HandleInventoryHotbarInput(InputEvent @event)
+    {
+        if (@event is InputEventKey keyEvent)
+        {
+            for (int i = 1; i <= 9; i++)
+            {
+                if (keyEvent.IsActionPressed($"hotbar{i}"))
+                {
+                    Hud.InventoryHotbar.SetActiveSlot(i - 1);
+                }
+            }
+
+            if (keyEvent.IsActionPressed("hotbar_next"))
+            {
+                Hud.InventoryHotbar.NextSlot();
+            }
+            else if (keyEvent.IsActionPressed("hotbar_prev"))
+            {
+                Hud.InventoryHotbar.PreviousSlot();
+            }
+        }
     }
 
     private void HandleMovement(double delta)
