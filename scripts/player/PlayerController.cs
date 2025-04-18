@@ -162,24 +162,21 @@ public partial class PlayerController : CharacterBody3D
 
     private void HandleInventoryHotbarInput(InputEvent @event)
     {
-        if (@event is InputEventKey keyEvent)
+        for (int i = 1; i <= 9; i++)
         {
-            for (int i = 1; i <= 9; i++)
+            if (@event.IsActionPressed($"hotbar{i}"))
             {
-                if (keyEvent.IsActionPressed($"hotbar{i}"))
-                {
-                    Hud.InventoryHotbar.SetActiveSlot(i - 1);
-                }
+                Hud.InventoryHotbar.SetActiveSlot(i - 1);
             }
+        }
 
-            if (keyEvent.IsActionPressed("hotbar_next"))
-            {
-                Hud.InventoryHotbar.NextSlot();
-            }
-            else if (keyEvent.IsActionPressed("hotbar_prev"))
-            {
-                Hud.InventoryHotbar.PreviousSlot();
-            }
+        if (@event.IsActionPressed("hotbar_next"))
+        {
+            Hud.InventoryHotbar.NextSlot();
+        }
+        else if (@event.IsActionPressed("hotbar_prev"))
+        {
+            Hud.InventoryHotbar.PreviousSlot();
         }
     }
 
