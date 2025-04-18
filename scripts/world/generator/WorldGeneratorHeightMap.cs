@@ -15,10 +15,9 @@ public partial class WorldGenerator
         {
             posList.Add(_points[i]);
             dataList.Add(_cellDatas[i].Height);
-            // dataList.Add(_cellDatas[i].Uplift);
         }
 
-        _heightMapInterpolator = new IdwInterpolator(posList, dataList); // TODO: Settings
+        _heightMapInterpolator = new IdwInterpolator(posList, dataList);
     }
 
     public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)

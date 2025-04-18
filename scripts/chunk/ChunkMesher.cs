@@ -258,7 +258,7 @@ public static class ChunkMesher
         {
             _arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
             _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                block.GetMaterial(dir)); // TODO: Need direction.
+                block.GetMaterial(dir));
         }
 
         return _arrayMesh;

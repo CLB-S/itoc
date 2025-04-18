@@ -8,7 +8,7 @@ public partial class World : Node
     public const int ChunkSize = ChunkMesher.CS;
     public WorldGenerator.WorldGenerator Generator { get; private set; }
     public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
-    public static World Instance { get; private set; } //TODO: Remove after gui.
+    public static World Instance { get; private set; }
 
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
     public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
