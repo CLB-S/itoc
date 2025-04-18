@@ -1,10 +1,13 @@
 using Godot;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace WorldGenerator;
 
+// By make some steps parallel, total time is reduced about 10%.
 public partial class WorldGenerator
 {
     private List<CellData> _streamGraph = new();
@@ -15,7 +18,7 @@ public partial class WorldGenerator
     private Dictionary<int, float> _drainageArea = new(); // Maps node indices to their drainage area
     private HashSet<int> _lakes = new();
     private HashSet<int> _riverMouths = new();
-    private Dictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
+    private ConcurrentDictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
 
     public IReadOnlyList<CellData> StreamGraph => _streamGraph;
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
@@ -66,23 +69,37 @@ public partial class WorldGenerator
         _lakes.Clear();
 
         // For each node, find its receiver (neighbor with lowest elevation)
-        foreach (var cell in _streamGraph)
+        var receiverPairs = new ConcurrentBag<(int CellIndex, int ReceiverIndex)>();
+        var lakes = new ConcurrentBag<int>();
+
+        Parallel.ForEach(_streamGraph, cell =>
         {
             var lowestNeighbor = GetLowestNeighbor(cell);
-            if (!_children.ContainsKey(lowestNeighbor.Index))
-                _children[lowestNeighbor.Index] = new List<int>();
             if (lowestNeighbor != cell)
             {
-                // Set the receiver for this node
-                _receivers[cell.Index] = lowestNeighbor.Index;
-
-                // Add this node as a child of its receiver
-                _children[lowestNeighbor.Index].Add(cell.Index);
+                receiverPairs.Add((cell.Index, lowestNeighbor.Index));
             }
             else
             {
-                _lakes.Add(cell.Index);
+                lakes.Add(cell.Index);
             }
+        });
+
+        // Update _receivers and _children sequentially
+        foreach (var pair in receiverPairs)
+        {
+            _receivers[pair.CellIndex] = pair.ReceiverIndex;
+            if (!_children.TryGetValue(pair.ReceiverIndex, out var childrenList))
+            {
+                childrenList = new List<int>();
+                _children[pair.ReceiverIndex] = childrenList;
+            }
+            childrenList.Add(pair.CellIndex);
+        }
+
+        foreach (var lakeIndex in lakes)
+        {
+            _lakes.Add(lakeIndex);
         }
     }
 
@@ -112,13 +129,14 @@ public partial class WorldGenerator
 
         _lakeIdentifiers.Clear();
         // Assign lake identifiers to all nodes in each lake's drainage area
-        foreach (var lakeIndex in _lakes)
+        Parallel.ForEach(_lakes, lakeIndex =>
         {
             AssignLakeIdentifiers(lakeIndex, lakeIndex, _lakeIdentifiers);
-        }
+        });
     }
 
-    private void AssignLakeIdentifiers(int nodeIndex, int lakeId, Dictionary<int, int> lakeIdentifiers)
+
+    private void AssignLakeIdentifiers(int nodeIndex, int lakeId, ConcurrentDictionary<int, int> lakeIdentifiers)
     {
         // Use a queue for breadth-first traversal to avoid stack overflow
         var queue = new Queue<int>();
