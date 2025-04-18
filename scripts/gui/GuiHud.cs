@@ -9,4 +9,10 @@ public partial class GuiHud : Control
     {
         InventoryHotbar = GetNode<GuiInventoryHotbar>("InventoryHotbar");
     }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event.IsActionPressed("hide_hud"))
+            Visible = !Visible;
+    }
 }

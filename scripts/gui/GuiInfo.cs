@@ -4,8 +4,6 @@ public partial class GuiInfo : RichTextLabel
 {
     public override void _Process(double delta)
     {
-        if (Input.IsActionJustPressed("info")) Visible = !Visible;
-
         if (!Visible) return;
 
         // 更新性能信息
@@ -40,6 +38,12 @@ public partial class GuiInfo : RichTextLabel
         debugText += $"[color=Greenyellow]Chunk Num:[/color] {World.Instance.Chunks.Count}\n";
 
         Text = debugText;
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event.IsActionPressed("info"))
+            Visible = !Visible;
     }
 
     private string BytesToString(double size)
