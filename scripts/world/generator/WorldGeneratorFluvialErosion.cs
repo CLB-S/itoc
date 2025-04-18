@@ -14,6 +14,7 @@ public partial class WorldGenerator
     private Dictionary<int, List<int>> _children = new(); // Maps node indices to their children node indices
     private Dictionary<int, float> _drainageArea = new(); // Maps node indices to their drainage area
     private HashSet<int> _lakes = new();
+    private HashSet<int> _riverMouths = new();
     private Dictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
 
     public IReadOnlyList<CellData> StreamGraph => _streamGraph;

@@ -7,11 +7,12 @@ namespace WorldGenerator;
 public partial class WorldGenerator
 {
     private HashSet<int> _initialAltitudeIndices = new();
-    private HashSet<int> _riverMouths = new();
 
     private void CalculateInitialUplifts()
     {
         ReportProgress("Calculating initial uplifts.");
+
+        _initialAltitudeIndices.Clear();
 
         foreach (var edge in _voronoiEdges)
         {

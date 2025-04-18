@@ -251,20 +251,17 @@ public partial class WorldTest : Node2D
                 }
 
                 // Draw lake areas in a lighter blue color
-                var lakes = new HashSet<int>();
-                foreach (var cell in streamGraph)
-                {
-                    // A cell is part of a lake if it's not a receiver for any other node
-                    // or if it's at the bottom of a depression
-                    if (!receivers.ContainsKey(cell.Index) && !cell.IsRiverMouth)
-                    {
-                        lakes.Add(cell.Index);
-
-                        // Draw lake node as a circle
-                        var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
-                        DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
-                    }
-                }
+                // foreach (var cell in streamGraph)
+                // {
+                //     // A cell is part of a lake if it's not a receiver for any other node
+                //     // or if it's at the bottom of a depression
+                //     if (!receivers.ContainsKey(cell.Index) && !cell.IsRiverMouth)
+                //     {
+                //         // Draw lake node as a circle
+                //         var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+                //         DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
+                //     }
+                // }
 
                 // Draw river mouths with a different color
                 // foreach (var cell in streamGraph.Where(c => c.IsRiverMouth))
