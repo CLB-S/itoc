@@ -285,11 +285,21 @@ public static class ChunkMesher
 
         var baseIndex = surfaceArrayData.Vertices.Count;
         Vector3[] corners;
-        if (dir != Direction.NegativeY && block.BlockId == "water")
-            corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
+        if (block.BlockId == "water")
+        {
+            if (dir == Direction.PositiveY)
+                corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
+            else if (dir == Direction.PositiveZ || dir == Direction.NegativeZ)
+                corners = GetQuadCorners(dir, x, y, z, w, h - 0.1f);
+            else if (dir == Direction.NegativeX)
+                corners = GetQuadCorners(dir, x, y, z, w - 0.1f, h);
+            else if (dir == Direction.PositiveX)
+                corners = GetQuadCorners(dir, x, y - 0.1f, z, w - 0.1f, h);
+            else
+                corners = GetQuadCorners(dir, x, y, z, w, h);
+        }
         else
             corners = GetQuadCorners(dir, x, y, z, w, h);
-
 
         surfaceArrayData.Vertices.AddRange(corners);
 
