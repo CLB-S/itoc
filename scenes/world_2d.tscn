@@ -21,12 +21,17 @@ shader_parameter/texture_scale = Vector2(1, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "HeightMapSubViewportSprite")]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "HeightMapSubViewportSprite")]
 script = ExtResource("1_ieres")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
 HeightMapMesh = NodePath("../SubViewport/HeightMapMeshInstance3D")
 GenerateMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/RegenerateButton")
 GenerateHeightMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton")
+StartGameButton = NodePath("../CanvasLayer/Control/StartButton")
+SeedSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer/SeedSpinBox")
+ContinentRatioSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer2/ContinentRatioSpinBox")
+PlateMergeRatioSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox")
+CellDistanceSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer4/CellDistanceSpinBox")
 HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
 
 [node name="HeightMapSubViewportSprite" type="Sprite2D" parent="." node_paths=PackedStringArray("TargetObject")]
@@ -202,6 +207,23 @@ scroll_following = true
 vertical_alignment = 2
 drag_and_drop_selection_enabled = false
 
+[node name="StartButton" type="Button" parent="CanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -204.0
+offset_top = -77.0
+offset_right = -24.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 36
+text = "Start
+"
+
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer/SeedSpinBox" to="Map" method="OnSeedSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/ContinentRatioSpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
@@ -214,3 +236,4 @@ drag_and_drop_selection_enabled = false
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton3" to="Map" method="OnDrawRiversToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton4" to="Map" method="OnDrawInterpolatedHeightMapToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton5" to="Map" method="OnShow3DHeightMapToggled"]
+[connection signal="pressed" from="CanvasLayer/Control/StartButton" to="Map" method="OnStartGameButtonPressed"]

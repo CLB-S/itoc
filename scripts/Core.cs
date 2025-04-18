@@ -34,20 +34,17 @@ public partial class Core : Node
         GetWindow().MoveToCenter();
 
         WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
-        WorldGenerator.GenerationCompletedEvent += (_, _) =>
-        {
-            CallDeferred(MethodName.WorldGenerationCompleted);
-        };
     }
 
-    public void StartGame()
+    public void GenerateWorldAndStartGame()
     {
+        WorldGenerator.GenerationCompletedEvent += (_, _) => CallDeferred(MethodName.GotoWorldScene);
         Task.Run(WorldGenerator.GenerateWorldAsync);
     }
 
-    private void WorldGenerationCompleted()
+    public void GotoWorldScene()
     {
-        DeferredGotoScene("res://scenes/world.tscn");
+        GotoScene("res://scenes/world.tscn");
     }
 
     public void GotoScene(string path)
@@ -60,7 +57,6 @@ public partial class Core : Node
 
         // The solution is to defer the load to a later time, when
         // we can be sure that no code from the current scene is running:
-
         CallDeferred(MethodName.DeferredGotoScene, path);
     }
 

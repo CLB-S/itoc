@@ -149,4 +149,5 @@ theme_override_font_sizes/font_size = 48
 text = "Loading..."
 
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/StartButton" to="." method="OnStartButtonPressed"]
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/WorldMapButton" to="." method="OnWorld2dButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/QuitButton" to="." method="OnQuitButtonPressed"]

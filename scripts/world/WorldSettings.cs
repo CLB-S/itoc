@@ -15,8 +15,17 @@ public class WorldSettings
     public float MaxAltitude = 1000.0f;
 
     public Rect2I Bounds = new Rect2I(-20000, -20000, 40000, 40000);
-    public float MinimumCellDistance { get => _minimumCellDistance * Bounds.Size.Y / 200.0f; set => _minimumCellDistance = value; }
-    public float NoiseFrequency { get => _noiseFrequency * Bounds.Size.Y / 4000.0f; set => _noiseFrequency = value; }
+    public float MinimumCellDistance
+    {
+        get => _minimumCellDistance * Bounds.Size.Y / 200.0f;
+        set => _minimumCellDistance = value * 200.0f / Bounds.Size.Y;
+    }
+
+    public float NoiseFrequency
+    {
+        get => _noiseFrequency * Bounds.Size.Y / 4000.0f;
+        set => _noiseFrequency = value * 4000.0f / Bounds.Size.Y;
+    }
 
     public float AltitudePropagationDecrement = 0.8f;
     public float AltitudePropagationSharpness = 0.1f;

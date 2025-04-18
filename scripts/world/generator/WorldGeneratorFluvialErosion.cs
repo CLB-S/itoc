@@ -22,7 +22,7 @@ public partial class WorldGenerator
 
     private void FindRiverMouths()
     {
-        ReportProgress("Finding river mouths");
+        // ReportProgress("Finding river mouths");
 
         _riverMouths.Clear();
         foreach (var edge in _voronoiEdges)
@@ -55,7 +55,7 @@ public partial class WorldGenerator
 
     private void ComputeStreamTrees()
     {
-        ReportProgress("Computing stream trees");
+        // ReportProgress("Computing stream trees");
 
         if (_streamGraph.Count == 0) return;
 
@@ -107,7 +107,7 @@ public partial class WorldGenerator
 
     private void IdentifyLakes()
     {
-        ReportProgress("Identifying lakes");
+        // ReportProgress("Identifying lakes");
 
         _lakeIdentifiers.Clear();
         // Assign lake identifiers to all nodes in each lake's drainage area
@@ -150,7 +150,7 @@ public partial class WorldGenerator
 
     private void ProcessLakeOverflow()
     {
-        ReportProgress("Processing lake overflow");
+        // ReportProgress("Processing lake overflow");
 
         // Exit if there are no lakes to process
         if (_lakes.Count == 0)
@@ -159,7 +159,7 @@ public partial class WorldGenerator
             return;
         }
 
-        ReportProgress($"Found {_lakes.Count} lakes.");
+        // ReportProgress($"Found {_lakes.Count} lakes.");
 
         // All outflows of a lake. Dictionary<int sourceLakeId, Dictionary<int targetLakeId, (int sourceNode, int targetNode, float passHeight)>>
         var lakeOutflowGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, float passHeight)>>();
@@ -202,7 +202,7 @@ public partial class WorldGenerator
             }
         }
 
-        ReportProgress($"Found {lakeOutflowGraph.Count} passes between lakes");
+        // ReportProgress($"Found {lakeOutflowGraph.Count} passes between lakes");
 
         // Extraction of the lake connections
         var lakeTrees = new Dictionary<int, (int targetLake, int targetNode)>(); // Maps lake ID to its receiver lake ID
@@ -264,7 +264,7 @@ public partial class WorldGenerator
 
     private void ComputeDrainageAndSlopes()
     {
-        ReportProgress("Computing drainage and slopes");
+        // ReportProgress("Computing drainage and slopes");
 
         // Reset the drainage area map
         _drainageArea.Clear();
@@ -349,7 +349,7 @@ public partial class WorldGenerator
 
     private void SolvePowerEquation()
     {
-        ReportProgress("Solving stream power equation");
+        // ReportProgress("Solving stream power equation");
 
         // Parameters for the stream power equation
         float k = Settings.ErosionRate; // Erodibility coefficient
@@ -435,6 +435,6 @@ public partial class WorldGenerator
         _powerEquationConverged = maxChange < Settings.ErosionConvergenceThreshold ||
                                    ++_iterationCount >= Settings.MaxErosionIterations;
 
-        ReportProgress($"[{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved. Max height change: {maxChange}. Converged: {_powerEquationConverged}");
+        ReportProgress($"[{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved. Max height change: {maxChange:f4}. Converged: {_powerEquationConverged}");
     }
 }

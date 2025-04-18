@@ -7,8 +7,13 @@ public partial class GuiStartScreen : Node
 
     public void OnStartButtonPressed()
     {
-        Core.Instance.StartGame();
+        Core.Instance.GenerateWorldAndStartGame();
         LoadingScreen.Visible = true;
+    }
+
+    public void OnWorld2dButtonPressed()
+    {
+        Core.Instance.GotoScene("res://scenes/world_2d.tscn");
     }
 
     public void OnQuitButtonPressed()

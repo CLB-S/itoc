@@ -199,7 +199,7 @@ public partial class WorldGenerator
             lock (_stateLock)
             {
                 if (State == GenerationState.Completed)
-                    throw new InvalidOperationException("World generation has already been completed.");
+                    ReportProgress("Warning: World generation has already been completed. Regenerating...");
 
                 State = GenerationState.Initializing;
                 _powerEquationConverged = false;
@@ -229,7 +229,7 @@ public partial class WorldGenerator
 
                     if (repeatNode != null)
                     {
-                        ReportProgress($"Repeating from {step.RepeatToState.Value} state");
+                        // ReportProgress($"Repeating from {step.RepeatToState.Value} state");
                         currentNode = repeatNode;
                         continue;
                     }

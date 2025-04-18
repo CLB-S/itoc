@@ -23,6 +23,12 @@ public partial class WorldTest : Node2D
     [Export] public MeshInstance3D HeightMapMesh;
     [Export] public Button GenerateMapButton;
     [Export] public Button GenerateHeightMapButton;
+    [Export] public Button StartGameButton;
+    [Export] public SpinBox SeedSpinBox;
+    [Export] public SpinBox ContinentRatioSpinBox;
+    [Export] public SpinBox PlateMergeRatioSpinBox;
+    [Export] public SpinBox CellDistanceSpinBox;
+
     [Export] public Node2D HeightMapSubViewportSprite;
     [Export] public Rect2 DrawingRect = new Rect2(-500, -500, 1000, 1000);
 
@@ -34,7 +40,7 @@ public partial class WorldTest : Node2D
     public bool DrawRivers = false;
     public bool DrawInterpolatedHeightMap = false;
 
-    private WorldGenerator _worldGenerator;
+    private WorldGenerator _worldGenerator { get => Core.Instance.WorldGenerator; }
 
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
@@ -46,13 +52,25 @@ public partial class WorldTest : Node2D
         if (TerminalLabel != null)
             TerminalLabel.GetVScrollBar().Visible = false;
 
-        _worldGenerator = new WorldGenerator();
+        StartGameButton.Disabled = true;
+
+        SeedSpinBox.Value = _worldGenerator.Settings.Seed;
+        ContinentRatioSpinBox.Value = _worldGenerator.Settings.ContinentRatio;
+        PlateMergeRatioSpinBox.Value = _worldGenerator.Settings.PlateMergeRatio;
+        CellDistanceSpinBox.Value = _worldGenerator.Settings.MinimumCellDistance;
+
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
-        _worldGenerator.GenerationStartedEvent += (_, _) => CallDeferred(MethodName.SetGenerateMapButtonAvailability, false);
+        _worldGenerator.GenerationStartedEvent += (_, _) =>
+        {
+            CallDeferred(MethodName.SetGenerateMapButtonAvailability, false);
+            CallDeferred(MethodName.SetStartGameButtonAvailability, false);
+        };
+
         _worldGenerator.GenerationCompletedEvent += (_, _) =>
         {
             CallDeferred(MethodName.SetGenerateMapButtonAvailability, true);
+            CallDeferred(MethodName.SetStartGameButtonAvailability, true);
             CallDeferred(MethodName.QueueRedraw);
         };
 
@@ -74,6 +92,11 @@ public partial class WorldTest : Node2D
     private void SetGenerateMapButtonAvailability(bool isEnabled)
     {
         GenerateMapButton.Disabled = !isEnabled;
+    }
+
+    private void SetStartGameButtonAvailability(bool isEnabled)
+    {
+        StartGameButton.Disabled = !isEnabled;
     }
 
     private void DrawArrow(Vector2 start, Vector2 end, Color color, bool twoLineHead = false)
@@ -352,6 +375,15 @@ public partial class WorldTest : Node2D
 
         if (DrawInterpolatedHeightMap)
             QueueRedraw();
+    }
+
+    public void OnStartGameButtonPressed()
+    {
+        if (_worldGenerator.State == GenerationState.Completed)
+        {
+            StartGameButton.Disabled = true;
+            Core.Instance.GotoWorldScene();
+        }
     }
 
     public void OnDrawingCorlorPresetSelected(int value)

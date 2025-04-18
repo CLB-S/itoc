@@ -23,10 +23,19 @@ public partial class World : Node
     private readonly HashSet<Vector2I> _queuedChunkColumns = new();
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
+    private PlayerController _player;
+    private bool _playerSpawned = false; // TODO: Spawn player. Implement `GetHeight(Vector2 pos)`
+
     public override void _Ready()
     {
+        if (Instance != null)
+            throw new System.Exception("World singleton already exists!");
+
         Instance = this;
         Generator = Core.Instance.WorldGenerator;
+
+        _player = GetNode<PlayerController>("../Player");
+
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
 
