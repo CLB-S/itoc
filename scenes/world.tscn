@@ -19,13 +19,14 @@ sky_material = SubResource("ProceduralSkyMaterial_h2yge")
 background_mode = 2
 sky = SubResource("Sky_1bvp3")
 tonemap_mode = 2
+ssao_enabled = true
 fog_enabled = true
-fog_mode = 1
-fog_density = 1.0
-fog_aerial_perspective = 0.3
+fog_sun_scatter = 0.2
+fog_density = 0.0005
 fog_sky_affect = 0.5
 fog_depth_begin = 150.0
 fog_depth_end = 250.0
+volumetric_fog_density = 0.005
 
 [node name="Main" type="Node"]
 
