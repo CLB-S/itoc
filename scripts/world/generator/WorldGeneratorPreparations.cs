@@ -23,16 +23,15 @@ public partial class WorldGenerator
     {
         ReportProgress("Initializing resources");
         _rng = new RandomNumberGenerator { Seed = Settings.Seed };
-        var sizeY = Settings.Bounds.Size.Y;
         _plateNoise = new FastNoiseLite
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
-            Frequency = Settings.NoiseFrequency / sizeY,
+            Frequency = Settings.NoiseFrequency,
             CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.CellValue,
             DomainWarpEnabled = true,
-            DomainWarpAmplitude = 0.75 * sizeY / Settings.NoiseFrequency,
-            DomainWarpFrequency = Settings.NoiseFrequency / sizeY,
+            DomainWarpAmplitude = 0.75 / Settings.NoiseFrequency,
+            DomainWarpFrequency = Settings.NoiseFrequency,
             DomainWarpFractalType = FastNoiseLite.DomainWarpFractalTypeEnum.None,
             FractalType = FastNoiseLite.FractalTypeEnum.None
         };
@@ -51,7 +50,7 @@ public partial class WorldGenerator
     private void GeneratePoints()
     {
         ReportProgress("Generating points");
-        _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End, Settings.MinimumCellDistance, _rng);
+        _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End, Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
         _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
 
         _cellArea = (float)Settings.Bounds.Area / _points.Count;

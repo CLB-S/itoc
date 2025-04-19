@@ -3,9 +3,6 @@ using System;
 
 public class WorldSettings
 {
-    private float _minimumCellDistance = 1.0f;
-    private float _noiseFrequency = 1.0f;
-
     public ulong Seed = 234;
 
     #region Generation Settings
@@ -15,17 +12,21 @@ public class WorldSettings
     public float MaxAltitude = 1000.0f;
 
     public Rect2I Bounds = new Rect2I(-20000, -20000, 40000, 40000);
+    public int PoisosonDiskSamplingIterations = 8;
+    public float NormalizedMinimumCellDistance { get; set; } = 1.0f;
     public float MinimumCellDistance
     {
-        get => _minimumCellDistance * Bounds.Size.Y / 200.0f;
-        set => _minimumCellDistance = value * 200.0f / Bounds.Size.Y;
+        get => NormalizedMinimumCellDistance * Bounds.Size.Y / 200.0f;
+        set => NormalizedMinimumCellDistance = value * 200.0f / Bounds.Size.Y;
     }
 
+    public float NormalizedNoiseFrequency { get; set; } = 1.0f;
     public float NoiseFrequency
     {
-        get => _noiseFrequency * Bounds.Size.Y / 4000.0f;
-        set => _noiseFrequency = value * 4000.0f / Bounds.Size.Y;
+        get => NormalizedNoiseFrequency / 4000.0f;
+        set => NormalizedNoiseFrequency = value * 4000.0f;
     }
+
 
     public float AltitudePropagationDecrement = 0.8f;
     public float AltitudePropagationSharpness = 0.1f;

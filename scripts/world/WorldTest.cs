@@ -28,6 +28,7 @@ public partial class WorldTest : Node2D
     [Export] public SpinBox ContinentRatioSpinBox;
     [Export] public SpinBox PlateMergeRatioSpinBox;
     [Export] public SpinBox CellDistanceSpinBox;
+    [Export] public SpinBox NoiseFrequencySpinBox;
 
     [Export] public Node2D HeightMapSubViewportSprite;
     [Export] public Rect2 DrawingRect = new Rect2(-500, -500, 1000, 1000);
@@ -54,10 +55,11 @@ public partial class WorldTest : Node2D
 
         StartGameButton.Disabled = true;
 
-        SeedSpinBox.Value = _worldGenerator.Settings.Seed;
-        ContinentRatioSpinBox.Value = _worldGenerator.Settings.ContinentRatio;
-        PlateMergeRatioSpinBox.Value = _worldGenerator.Settings.PlateMergeRatio;
-        CellDistanceSpinBox.Value = _worldGenerator.Settings.MinimumCellDistance;
+        SeedSpinBox.SetValueNoSignal(_worldGenerator.Settings.Seed);
+        ContinentRatioSpinBox.SetValueNoSignal(_worldGenerator.Settings.ContinentRatio);
+        PlateMergeRatioSpinBox.SetValueNoSignal(_worldGenerator.Settings.PlateMergeRatio);
+        CellDistanceSpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedMinimumCellDistance);
+        NoiseFrequencySpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedNoiseFrequency);
 
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
@@ -343,7 +345,12 @@ public partial class WorldTest : Node2D
 
     public void OnCellDistanceSpinBoxValueChanged(float value)
     {
-        _worldGenerator.Settings.MinimumCellDistance = value;
+        _worldGenerator.Settings.NormalizedMinimumCellDistance = value;
+    }
+
+    public void OnNoiseFrequencySpinBoxValueChanged(float value)
+    {
+        _worldGenerator.Settings.NormalizedNoiseFrequency = value;
     }
 
     public void OnRegenerateButtonPressed()

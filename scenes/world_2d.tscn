@@ -21,7 +21,7 @@ shader_parameter/texture_scale = Vector2(1, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "HeightMapSubViewportSprite")]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "NoiseFrequencySpinBox", "HeightMapSubViewportSprite")]
 script = ExtResource("1_ieres")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
 HeightMapMesh = NodePath("../SubViewport/HeightMapMeshInstance3D")
@@ -32,6 +32,7 @@ SeedSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer/See
 ContinentRatioSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer2/ContinentRatioSpinBox")
 PlateMergeRatioSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox")
 CellDistanceSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer4/CellDistanceSpinBox")
+NoiseFrequencySpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer5/NoiseFrequencySpinBox")
 HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
 
 [node name="HeightMapSubViewportSprite" type="Sprite2D" parent="." node_paths=PackedStringArray("TargetObject")]
@@ -89,7 +90,6 @@ text = "Seed:"
 [node name="SeedSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer"]
 layout_mode = 2
 max_value = 1e+07
-value = 234.0
 rounded = true
 allow_greater = true
 
@@ -104,7 +104,6 @@ text = "Continent Ratio:"
 layout_mode = 2
 max_value = 1.0
 step = 0.05
-value = 0.5
 
 [node name="HSplitContainer3" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
@@ -117,7 +116,6 @@ text = "Plate Merge Ratio:"
 layout_mode = 2
 max_value = 1.0
 step = 0.01
-value = 0.13
 
 [node name="HSplitContainer4" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
@@ -128,7 +126,20 @@ text = "Cell Distance:"
 
 [node name="CellDistanceSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer4"]
 layout_mode = 2
-value = 100.0
+max_value = 100000.0
+step = 0.1
+
+[node name="HSplitContainer5" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer5"]
+layout_mode = 2
+text = "Noise Frequency:"
+
+[node name="NoiseFrequencySpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer5"]
+layout_mode = 2
+max_value = 100000.0
+step = 0.1
 
 [node name="RegenerateButton" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
@@ -228,6 +239,7 @@ text = "Start
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer2/ContinentRatioSpinBox" to="Map" method="OnContinentRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/CellDistanceSpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer5/NoiseFrequencySpinBox" to="Map" method="OnNoiseFrequencySpinBoxValueChanged"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/RegenerateButton" to="Map" method="OnRegenerateButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton" to="Map" method="OnGenerateHeightMapButtonPressed"]
 [connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
