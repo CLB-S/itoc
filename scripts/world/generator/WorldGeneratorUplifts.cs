@@ -107,7 +107,7 @@ public partial class WorldGenerator
 
         var used = new HashSet<int>();
         var queue = new PriorityQueue<int, double>();
-        var sharpness = Settings.AltitudePropagationSharpness;
+        var sharpness = Settings.UpliftPropagationSharpness;
 
         foreach (var i in _initialAltitudeIndices)
         {
@@ -121,7 +121,7 @@ public partial class WorldGenerator
             var currentCell = _cellDatas[currentIndex];
             var parentHeight = currentCell.Uplift;
 
-            var propagatedHeight = parentHeight * Settings.AltitudePropagationDecrement;
+            var propagatedHeight = parentHeight * Settings.UpliftPropagationDecrement;
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 
@@ -129,7 +129,7 @@ public partial class WorldGenerator
                 if (!used.Contains(neighborIndex) && _cellDatas[neighborIndex].PlateType == PlateType.Continent)
                 {
                     var neighbor = _cellDatas[neighborIndex];
-                    var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + (float)_rng.Randf() * sharpness;
+                    var mod = sharpness == 0 ? 1.0f : 1.0f + (float)(_rng.Randf() - 0.5) * sharpness;
                     var heightContribution = propagatedHeight * mod;
 
                     neighbor.Uplift += heightContribution;

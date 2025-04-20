@@ -373,7 +373,7 @@ public partial class WorldGenerator
         // Parameters for the stream power equation
         float k = Settings.ErosionRate; // Erodibility coefficient
         float m = 0.5f; // Drainage area exponent (typically 0.5)
-        float dt = Settings.TimeStep; // Time step
+        float dt = Settings.ErosionTimeStep; // Time step
         double maxChange = 0.0; // Track maximum height change for convergence check
 
         // Sort nodes from downstream to upstream to ensure proper calculation order
@@ -427,7 +427,7 @@ public partial class WorldGenerator
             float drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
 
             // Apply uplift
-            var uplift = cell.Uplift > 0.01f ? cell.Uplift * 0.3f : 0.01f;
+            var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01f;
 
             // Calculate the term for the stream power equation
             var erosionTerm = k * Mathf.Pow(drainageArea, m) / distance;

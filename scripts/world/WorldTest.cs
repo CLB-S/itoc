@@ -198,7 +198,7 @@ public partial class WorldTest : Node2D
                     DrawMesh(mesh, null, modulate: color);
                     break;
                 case ColorPreset.Height:
-                    var height = cellData.Height * 1.3f / _worldGenerator.Settings.MaxUplift - 0.005f;
+                    var height = cellData.Height * 1.8f / _worldGenerator.Settings.MaxUplift - 0.005f;
                     DrawMesh(mesh, null, modulate: ColorUtils.GetHeightColor((float)height));
                     break;
                 case ColorPreset.PlateTypes:
