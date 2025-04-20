@@ -32,8 +32,6 @@ public partial class WorldGenerator
 
                 cellP.RoundPlateJunction = true;
                 cellQ.RoundPlateJunction = true;
-                _initialAltitudeIndices.Add(cellP.Index);
-                _initialAltitudeIndices.Add(cellQ.Index);
 
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
                 {
@@ -48,8 +46,10 @@ public partial class WorldGenerator
                         altitude = 1 - 0.75f * (relativeMovement - 1) * (relativeMovement - 1);
                     }
 
-                    cellP.Uplift += altitude * Settings.MaxAltitude;
-                    cellQ.Uplift += altitude * Settings.MaxAltitude;
+                    cellP.Uplift += altitude * Settings.MaxUplift;
+                    cellQ.Uplift += altitude * Settings.MaxUplift;
+                    _initialAltitudeIndices.Add(cellP.Index);
+                    _initialAltitudeIndices.Add(cellQ.Index);
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Oceans)
                 {
@@ -58,8 +58,10 @@ public partial class WorldGenerator
                     if (relativeMovement > 0)
                         altitude += 0.25f * (1 - (1 - relativeMovement) * (1 - relativeMovement));
 
-                    cellP.Uplift += altitude * Settings.MaxAltitude;
-                    cellQ.Uplift += altitude * Settings.MaxAltitude;
+                    cellP.Uplift += altitude * Settings.MaxUplift;
+                    cellQ.Uplift += altitude * Settings.MaxUplift;
+                    _initialAltitudeIndices.Add(cellP.Index);
+                    _initialAltitudeIndices.Add(cellQ.Index);
                 }
                 else if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
@@ -71,10 +73,11 @@ public partial class WorldGenerator
                     else
                     {
                         cellP.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
+                        _initialAltitudeIndices.Add(cellP.Index);
 
-                        var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
-                        altitude = altitude * altitude - 0.2f;
-                        cellQ.Uplift += altitude;
+                        // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                        // altitude = altitude * altitude - 0.2f;
+                        // cellQ.Uplift += altitude;
                     }
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
@@ -87,10 +90,11 @@ public partial class WorldGenerator
                     else
                     {
                         cellQ.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
+                        _initialAltitudeIndices.Add(cellQ.Index);
 
-                        var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
-                        altitude = altitude * altitude - 0.25f;
-                        cellP.Uplift += altitude;
+                        // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                        // altitude = altitude * altitude - 0.25f;
+                        // cellP.Uplift += altitude;
                     }
                 }
             }
@@ -122,7 +126,7 @@ public partial class WorldGenerator
                 continue;
 
             foreach (var neighborIndex in GetNeighborCellIndices(currentIndex))
-                if (!used.Contains(neighborIndex))
+                if (!used.Contains(neighborIndex) && _cellDatas[neighborIndex].PlateType == PlateType.Continent)
                 {
                     var neighbor = _cellDatas[neighborIndex];
                     var mod = sharpness == 0 ? 1.0f : 1.1f - sharpness + (float)_rng.Randf() * sharpness;

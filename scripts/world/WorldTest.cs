@@ -12,6 +12,7 @@ public partial class WorldTest : Node2D
     public enum ColorPreset
     {
         Plates,
+        Uplift,
         Height,
         PlateTypes,
         Precipitation,
@@ -38,7 +39,7 @@ public partial class WorldTest : Node2D
     public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
     public bool DrawTectonicMovement = false;
     public bool DrawCellOutlines = false;
-    public bool DrawRivers = false;
+    public bool DrawRivers = true;
     public bool DrawInterpolatedHeightMap = false;
 
     private WorldGenerator _worldGenerator { get => Core.Instance.WorldGenerator; }
@@ -191,8 +192,13 @@ public partial class WorldTest : Node2D
                     color = ColorUtils.RandomColorHSV(cellData.PlateSeed);
                     DrawMesh(mesh, null, modulate: color);
                     break;
+                case ColorPreset.Uplift:
+                    var uplift = cellData.Uplift / _worldGenerator.Settings.MaxUplift;
+                    color = new Color(uplift, uplift, uplift);
+                    DrawMesh(mesh, null, modulate: color);
+                    break;
                 case ColorPreset.Height:
-                    var height = cellData.Height / _worldGenerator.Settings.MaxAltitude - 0.01f;
+                    var height = cellData.Height * 1.3f / _worldGenerator.Settings.MaxUplift - 0.005f;
                     DrawMesh(mesh, null, modulate: ColorUtils.GetHeightColor((float)height));
                     break;
                 case ColorPreset.PlateTypes:

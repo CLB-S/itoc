@@ -427,7 +427,7 @@ public partial class WorldGenerator
             float drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
 
             // Apply uplift
-            var uplift = 600.0; // cell.Uplift > 0.01f ? cell.Uplift * 0.3f : 0.01f;
+            var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01f;
 
             // Calculate the term for the stream power equation
             var erosionTerm = k * Mathf.Pow(drainageArea, m) / distance;
