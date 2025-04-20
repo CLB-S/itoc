@@ -2,8 +2,8 @@
 
 [sub_resource type="BoxMesh" id="BoxMesh_m1jws"]
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_m1jws"]
-viewport_path = NodePath("3D in 2D/SubViewport")
+[sub_resource type="ViewportTexture" id="ViewportTexture_hrj28"]
+viewport_path = NodePath("SubViewport")
 
 [node name="3Din2D" type="Node"]
 
@@ -23,4 +23,4 @@ size = 2.709
 transform = Transform3D(0.993152, -0.0682659, 0.0948064, -0.0486846, 0.495852, 0.867041, -0.106199, -0.86572, 0.489133, 0, 0, 0)
 
 [node name="SubViewportSprite" type="Sprite2D" parent="."]
-texture = SubResource("ViewportTexture_m1jws")
+texture = SubResource("ViewportTexture_hrj28")
