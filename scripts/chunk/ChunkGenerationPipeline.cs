@@ -77,7 +77,7 @@ public class ChunkGenerationPipeline
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
                     var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;
-                    if (actualY < height)
+                    if (actualY <= height)
                     {
                         string blockType = DetermineBlockType(actualY, height, maxSlope, baseDirtDepth);
                         _chunkData.SetBlock(x, y, z, blockType);
@@ -135,19 +135,20 @@ public class ChunkGenerationPipeline
         if (actualY <= 3)
             return "sand"; // maxSlope <= 1 ? "sand" : "gravel";
 
-        if (_rng.Randf() > 1 - (actualY - 250) / 50.0f)
-            return maxSlope <= 2 ? "snow" : "stone";
-
-        if (_rng.Randf() < (actualY - 170) / 50.0f)
-            return maxSlope <= 1 ? "grass_block" : "stone";
-
         // Depth-based layers
         if (actualY > height - dirtDepth)
         {
             // Surface layers
-            if (actualY == height - 1)
+            if (actualY == height)
             {
                 if (maxSlope > 1.5) return "stone";
+
+                if (_rng.Randf() > 1 - (actualY - 250) / 50.0f)
+                    return maxSlope <= 2 ? "snow" : "stone";
+
+                if (_rng.Randf() < (actualY - 170) / 50.0f)
+                    return maxSlope <= 1 ? "grass_block" : "stone";
+
                 return "grass_block";
             }
             return maxSlope > 2.5 ? "stone" : "dirt";
