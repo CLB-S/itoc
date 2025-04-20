@@ -14,7 +14,7 @@ public class Settings
     public int WindowHeight { get; set; } = 1080;
 
     // Performance
-    public int MaxChunkGenerationsPerFrame { get; set; } = 3;
+    public int MaxChunkGenerationsPerFrame { get; set; } = 1;
     public bool DrawDebugChunkCollisionShape { get; set; } = false;
 
     private static readonly string SettingsPath = "user://settings.yml";
