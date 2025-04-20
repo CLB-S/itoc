@@ -46,6 +46,8 @@ public partial class WorldTest : Node2D
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
 
+    private List<(Mesh, CellData)> _polygons = new List<(Mesh, CellData)>(10000);
+
     public override void _Ready()
     {
         base._Ready();
@@ -71,6 +73,8 @@ public partial class WorldTest : Node2D
 
         _worldGenerator.GenerationCompletedEvent += (_, _) =>
         {
+            CalculatePolygonMeshes();
+
             CallDeferred(MethodName.SetGenerateMapButtonAvailability, true);
             CallDeferred(MethodName.SetStartGameButtonAvailability, true);
             CallDeferred(MethodName.QueueRedraw);
@@ -138,11 +142,9 @@ public partial class WorldTest : Node2D
         }
     }
 
-    public override void _Draw()
+    private void CalculatePolygonMeshes()
     {
-        Log($"Redrawing...");
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
+        _polygons.Clear();
 
         if (_worldGenerator.CellDatas != null)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
@@ -151,29 +153,59 @@ public partial class WorldTest : Node2D
 
                 if (cellData.Cell.Points.Length >= 3)
                 {
-                    var points = cellData.Cell.Points.Select(p => p * _scalingFactor).ToArray();
-                    switch (DrawingCorlorPreset)
-                    {
-                        case ColorPreset.Plates:
-                            var color = ColorUtils.RandomColorHSV(cellData.PlateSeed);
-                            DrawColoredPolygon(points, color);
-                            break;
-                        case ColorPreset.Height:
-                            var height = cellData.Height / _worldGenerator.Settings.MaxAltitude - 0.01f;
-                            DrawColoredPolygon(points, ColorUtils.GetHeightColor((float)height));
-                            break;
-                        case ColorPreset.PlateTypes:
-                            DrawColoredPolygon(points,
-                                new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
-                                    (int)cellData.PlateType));
-                            break;
-                            // case ColorPreset.Precipitation:
-                            //     DrawColoredPolygon(points,
-                            //         new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
-                            //     break;
-                    }
+                    var indices = new List<int>();
+                    var vertices = new List<Vector3>();
+
+                    var polygonPoints = cellData.Cell.Points.Select(p => p * _scalingFactor).ToArray();
+                    var triangles = Geometry2D.TriangulatePolygon(polygonPoints);
+                    indices.AddRange(triangles);
+                    vertices.AddRange(polygonPoints.Select(p => new Vector3(p.X, p.Y, 0)));
+
+                    // Initialize the ArrayMesh.
+                    var arrMesh = new ArrayMesh();
+                    Godot.Collections.Array arrays = [];
+                    arrays.Resize((int)Mesh.ArrayType.Max);
+                    arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
+                    arrays[(int)Mesh.ArrayType.Index] = indices.ToArray();
+
+                    // Create the Mesh.
+                    arrMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+
+                    _polygons.Add((arrMesh, cellData));
                 }
             }
+    }
+
+    public override void _Draw()
+    {
+        Log($"Redrawing...");
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        foreach (var (mesh, cellData) in _polygons)
+        {
+            Color color;
+            switch (DrawingCorlorPreset)
+            {
+                case ColorPreset.Plates:
+                    color = ColorUtils.RandomColorHSV(cellData.PlateSeed);
+                    DrawMesh(mesh, null, modulate: color);
+                    break;
+                case ColorPreset.Height:
+                    var height = cellData.Height / _worldGenerator.Settings.MaxAltitude - 0.01f;
+                    DrawMesh(mesh, null, modulate: ColorUtils.GetHeightColor((float)height));
+                    break;
+                case ColorPreset.PlateTypes:
+                    color = new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
+                           (int)cellData.PlateType);
+                    DrawMesh(mesh, null, modulate: color);
+                    break;
+                    // case ColorPreset.Precipitation:
+                    //     DrawColoredPolygon(points,
+                    //         new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
+                    //     break;
+            }
+        }
 
         if (DrawCellOutlines && _worldGenerator.CellEdges != null)
         {
