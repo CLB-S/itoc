@@ -132,18 +132,24 @@ public partial class World : Node
                 if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
                     chunkColumn = null;
 
+        // Reset the generation queue and queued set to ensure proper sorting by new player position
+        _queuedChunkColumns.Clear();
+        _chunkColumnsGenerationQueue.Clear();
+
         // To generate
         var toGenerate = new List<Vector2I>();
         foreach (var pos in renderArea)
-            if (!ChunkColumns.ContainsKey(pos) && !_queuedChunkColumns.Contains(pos))
+            if (!ChunkColumns.ContainsKey(pos))
                 toGenerate.Add(pos);
 
         // Sort by distance.
         toGenerate.Sort((a, b) => a.DistanceTo(playerChunkXZ).CompareTo(b.DistanceTo(playerChunkXZ)));
 
         foreach (var pos in toGenerate)
-            if (_queuedChunkColumns.Add(pos))
-                _chunkColumnsGenerationQueue.Enqueue(pos);
+        {
+            _queuedChunkColumns.Add(pos);
+            _chunkColumnsGenerationQueue.Enqueue(pos);
+        }
     }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)
