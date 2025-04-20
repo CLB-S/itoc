@@ -69,7 +69,8 @@ public partial class WorldGenerator
         for (var i = 0; i < _cells.Length; i++)
             _cellDatas[_cells[i].Index] = new CellData
             {
-                Cell = _cells[i]
+                Cell = _cells[i],
+                Area = (float)GeometryUtils.CalculatePolygonArea(_cells[i].Points),
             };
 
         for (var i = 0; i < _delaunator.Triangles.Length; i++)

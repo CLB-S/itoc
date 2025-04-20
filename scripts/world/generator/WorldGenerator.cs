@@ -17,6 +17,7 @@ public class CellData
     public float Uplift = 0.1f;
     public float Height = 0;
     public float Slope = 0;
+    public float Area = 0;
     public bool IsRiverMouth = false;
     public CellData Receiver;
     public bool RoundPlateJunction = false;
