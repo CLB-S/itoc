@@ -38,6 +38,8 @@ public partial class World : Node
         Instance = this;
         Generator = Core.Instance.WorldGenerator;
 
+        Time += Settings.MinutesPerDay * 60.0f / 3; // 8:00 AM
+
         _player = GetNode<PlayerController>("../Player");
 
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
