@@ -47,6 +47,7 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkPos.X}, {chunkPos.Y}, {chunkPos.Z}");
         debugTextBuilder.AppendLine($"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
         debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {World.Instance.Chunks.Count}");
+        debugTextBuilder.AppendLine($"[color=Greenyellow]ChunkColumn Num:[/color] {World.Instance.ChunkColumns.Count}");
         debugTextBuilder.AppendLine($"[color=green]Time:[/color] {worldTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Local Time:[/color] {localTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Sunrise:[/color] {sunriseTime:0.00}");

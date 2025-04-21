@@ -61,13 +61,15 @@ public partial class ChunkFactory : IDisposable
 
                 try
                 {
+                    // TODO: Take all _chunkColumnQueue before any _chunkQueue is so stupid.
+
                     if (_chunkColumnQueue.TryTake(out var columnRequest))
                     {
                         columnRequest.Callback?.Invoke(columnRequest.Excute());
                     }
                     else if (_chunkQueue.TryTake(out var request))
                     {
-                        var result = new ChunkGenerationPipeline().Excute(request);
+                        var result = new ChunkGenerationPipeline(request).Excute();
                         request.Callback?.Invoke(result);
                     }
                     else

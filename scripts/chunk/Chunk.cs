@@ -22,6 +22,7 @@ public partial class Chunk : StaticBody3D
     private MeshInstance3D _meshInstance;
 
     public ChunkData ChunkData { get; private set; }
+    public ChunkColumn ChunkColumn { get; private set; }
     public Vector3I ChunkPosition { get; private set; }
 
     public ChunkState State { get; private set; } = ChunkState.Unloaded;
@@ -31,6 +32,7 @@ public partial class Chunk : StaticBody3D
         _mesh = result.Mesh;
         _collisionShape = result.CollisionShape;
         ChunkData = result.ChunkData;
+        ChunkColumn = result.ChunkColumn;
         ChunkPosition = ChunkData.GetPosition();
         Position = ChunkPosition * World.ChunkSize;
         Name = $"Chunk_{ChunkPosition.X}_{ChunkPosition.Y}_{ChunkPosition.Z}";
@@ -268,6 +270,13 @@ public partial class Chunk : StaticBody3D
         FreeUpResources();
 
         State = ChunkState.Unloaded;
+        ChunkColumn.Chunks.Remove(ChunkPosition, out _);
+        if (ChunkColumn.Chunks.Count == 0)
+        {
+            World.Instance.ChunkColumns.Remove(ChunkColumn.Position, out _);
+            ChunkColumn = null;
+        }
+
         QueueFree();
     }
 

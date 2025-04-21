@@ -24,7 +24,6 @@ public partial class World : Node
     private ChunkGenerator.ChunkFactory _chunkFactory;
     private bool _ready = false; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
-    private readonly HashSet<Vector2I> _queuedChunkColumns = new();
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
     private PlayerController _player;
@@ -68,7 +67,6 @@ public partial class World : Node
         while (_chunkColumnsGenerationQueue.Count > 0 && processed < Core.Instance.Settings.MaxChunkGenerationsPerFrame)
         {
             var pos = _chunkColumnsGenerationQueue.Dequeue();
-            _queuedChunkColumns.Remove(pos);
 
             var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
             _chunkFactory.Enqueue(columnRequest);
@@ -138,10 +136,6 @@ public partial class World : Node
                 if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
                     chunkColumn = null;
 
-        // Reset the generation queue and queued set to ensure proper sorting by new player position
-        _queuedChunkColumns.Clear();
-        _chunkColumnsGenerationQueue.Clear();
-
         // To generate
         var toGenerate = new List<Vector2I>();
         foreach (var pos in renderArea)
@@ -151,11 +145,10 @@ public partial class World : Node
         // Sort by distance.
         toGenerate.Sort((a, b) => a.DistanceTo(playerChunkXZ).CompareTo(b.DistanceTo(playerChunkXZ)));
 
+        // Reset the generation queue and queued set to ensure proper sorting by new player position
+        _chunkColumnsGenerationQueue.Clear();
         foreach (var pos in toGenerate)
-        {
-            _queuedChunkColumns.Add(pos);
             _chunkColumnsGenerationQueue.Enqueue(pos);
-        }
     }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)

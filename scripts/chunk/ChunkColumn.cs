@@ -10,7 +10,6 @@ public class ChunkColumn
     public float HeightMapLow;
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
 
-
     private ChunkColumn() { }
     public ChunkColumn(Vector2I position, float[,] heightMap)
     {

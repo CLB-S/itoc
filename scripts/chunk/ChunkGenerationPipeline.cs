@@ -16,67 +16,63 @@ public enum ChunkGenerationState
     Completed,
     Failed
 }
-
-public class GenerationStep
-{
-    public ChunkGenerationState State { get; }
-    public Action<ChunkGenerationRequest> Action { get; }
-    public bool Optional { get; }
-
-    public GenerationStep(ChunkGenerationState state, Action<ChunkGenerationRequest> action, bool optional = false)
-    {
-        State = state;
-        Action = action;
-        Optional = optional;
-    }
-}
-
 public class ChunkGenerationPipeline
 {
+    public class GenerationStep
+    {
+        public ChunkGenerationState State { get; }
+        public Action Action { get; }
+        public bool Optional { get; }
+
+        public GenerationStep(ChunkGenerationState state, Action action, bool optional = false)
+        {
+            State = state;
+            Action = action;
+            Optional = optional;
+        }
+    }
+
+
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
 
     private ChunkData _chunkData;
+    private ChunkGenerationRequest _request;
     private Mesh _mesh;
     private Shape3D _shape;
     private RandomNumberGenerator _rng;
     private readonly Stopwatch _stopwatch = new();
     private readonly LinkedList<GenerationStep> _generationPipeline = new();
 
-    public ChunkGenerationPipeline()
+    public ChunkGenerationPipeline(ChunkGenerationRequest request)
     {
         InitializePipeline();
+        _request = request;
+        _chunkData = new ChunkData(_request.ChunkPosition);
+        _rng = new RandomNumberGenerator();
+        _rng.Seed = _request.WorldGenerator.Settings.Seed + (uint)(_request.ChunkPosition.X + _request.ChunkPosition.Y + _request.ChunkPosition.Z);
     }
 
     private void InitializePipeline()
     {
-        _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Initializing, Initialize));
-        // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, TerrainTest));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.HeightMap, SetBlocksByHeightMap));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.Meshing, Meshing));
         _generationPipeline.AddLast(new GenerationStep(ChunkGenerationState.CollisionShape, CreateCollisionShape));
     }
 
-    private void Initialize(ChunkGenerationRequest request)
-    {
-        _chunkData = new ChunkData(request.ChunkPosition);
-        _rng = new RandomNumberGenerator();
-        _rng.Seed = request.WorldGenerator.Settings.Seed + (uint)(request.ChunkPosition.X + request.ChunkPosition.Y + request.ChunkPosition.Z);
-    }
-
-    private void SetBlocksByHeightMap(ChunkGenerationRequest request)
+    private void SetBlocksByHeightMap()
     {
         for (var x = 0; x < ChunkMesher.CS_P; x++)
             for (var z = 0; z < ChunkMesher.CS_P; z++)
             {
-                var height = Mathf.FloorToInt(request.ChunkColumn.HeightMap[x, z]);
+                var height = Mathf.FloorToInt(_request.ChunkColumn.HeightMap[x, z]);
 
                 // Calculate slope steepness
-                float maxSlope = CalculateSlope(request, x, z);
+                float maxSlope = CalculateSlope(x, z);
 
                 int baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
-                    var actualY = request.ChunkPosition.Y * ChunkMesher.CS + y;
+                    var actualY = _request.ChunkPosition.Y * ChunkMesher.CS + y;
                     if (actualY <= height)
                     {
                         string blockType = DetermineBlockType(actualY, height, maxSlope, baseDirtDepth);
@@ -90,7 +86,7 @@ public class ChunkGenerationPipeline
             }
     }
 
-    private static float CalculateSlope(ChunkGenerationRequest request, int x, int z)
+    private float CalculateSlope(int x, int z)
     {
         float maxSlope = 0;
 
@@ -117,8 +113,8 @@ public class ChunkGenerationPipeline
             if (neighborBX < 0 || neighborBX >= ChunkMesher.CS_P || neighborBZ < 0 || neighborBZ >= ChunkMesher.CS_P)
                 continue;
 
-            var neighborHeightA = request.ChunkColumn.HeightMap[neighborAX, neighborAZ];
-            var neighborHeightB = request.ChunkColumn.HeightMap[neighborBX, neighborBZ];
+            var neighborHeightA = _request.ChunkColumn.HeightMap[neighborAX, neighborAZ];
+            var neighborHeightB = _request.ChunkColumn.HeightMap[neighborBX, neighborBZ];
 
             var slope = Mathf.Abs(neighborHeightA - neighborHeightB) / 2.0f;
             if (slope > maxSlope)
@@ -157,21 +153,21 @@ public class ChunkGenerationPipeline
         return "stone";
     }
 
-    private void Meshing(ChunkGenerationRequest request)
+    private void Meshing()
     {
         var meshData = new ChunkMesher.MeshData(_chunkData.OpaqueMask, _chunkData.TransparentMasks);
         ChunkMesher.MeshChunk(_chunkData, meshData);
         _mesh = ChunkMesher.GenerateMesh(meshData);
     }
 
-    private void CreateCollisionShape(ChunkGenerationRequest request)
+    private void CreateCollisionShape()
     {
-        if (request.CreateCollisionShape)
+        if (_request.CreateCollisionShape)
             _shape = _mesh?.CreateTrimeshShape();
     }
 
 
-    public ChunkGenerationResult Excute(ChunkGenerationRequest request)
+    public ChunkGenerationResult Excute()
     {
         try
         {
@@ -187,7 +183,7 @@ public class ChunkGenerationPipeline
                 currentNode = currentNode.Next;
 
                 State = step.State;
-                step.Action(request);
+                step.Action();
             }
 
             return CompleteGeneration();
@@ -204,7 +200,7 @@ public class ChunkGenerationPipeline
         State = ChunkGenerationState.Completed;
         ReportProgress("Generation completed");
         // GenerationCompletedEvent?.Invoke(this, EventArgs.Empty);
-        return new ChunkGenerationResult(_chunkData, _mesh, _shape);
+        return new ChunkGenerationResult(_chunkData, _mesh, _shape, _request.ChunkColumn);
     }
 
     private ChunkGenerationResult HandleError(Exception ex)

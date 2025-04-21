@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
 using Godot;
 
 namespace ChunkGenerator;
@@ -30,5 +26,10 @@ public class ChunkGenerationRequest
         ChunkColumn = chunkColumn;
         Callback = callback;
         CreateCollisionShape = createCollisionShape;
+    }
+
+    public ChunkGenerationResult Execute()
+    {
+        return new ChunkGenerationPipeline(this).Excute();
     }
 }
