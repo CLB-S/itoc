@@ -7,7 +7,11 @@ public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
     public WorldGenerator.WorldGenerator Generator { get; private set; }
+    public WorldSettings Settings { get => Generator.Settings; }
+
     public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
+    public double Time { get; private set; } = 0.0;
+
     public static World Instance { get; private set; }
 
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
@@ -24,6 +28,7 @@ public partial class World : Node
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
     private PlayerController _player;
+    public Vector3 PlayerPos { get; private set; } = Vector3.Zero;
     private bool _playerSpawned = false; // TODO: Spawn player. Implement `GetHeight(Vector2 pos)`
 
     public override void _Ready()
@@ -49,13 +54,14 @@ public partial class World : Node
     {
         if (!_ready) return;
 
-        var playerPos = GetPlayerPosition();
+        Time += delta;
+        PlayerPos = GetPlayerPosition();
 
-        if ((playerPos - _lastPlayerPosition).Length() > ChunkSize / 2)
+        if ((PlayerPos - _lastPlayerPosition).Length() > ChunkSize / 2)
         {
-            PlayerChunk = WorldToChunkPosition(playerPos);
+            PlayerChunk = WorldToChunkPosition(PlayerPos);
             UpdateChunkLoading();
-            _lastPlayerPosition = playerPos;
+            _lastPlayerPosition = PlayerPos;
         }
 
         var processed = 0;

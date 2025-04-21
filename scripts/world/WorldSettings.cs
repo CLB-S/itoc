@@ -6,6 +6,7 @@ public class WorldSettings
     #region General Settings
     public ulong Seed = 234;
     public Rect2I Bounds = new Rect2I(-20000, -20000, 40000, 40000);
+    public Vector2 WorldCenter { get => Bounds.Position + Bounds.Size / 2; }
     public int PoisosonDiskSamplingIterations = 8;
     public float NormalizedMinimumCellDistance { get; set; } = 0.8f;
     public float MinimumCellDistance
@@ -36,6 +37,12 @@ public class WorldSettings
     public float ErosionTimeStep = 0.1f;
     public float ErosionConvergenceThreshold = 0.02f;
     public int MaxErosionIterations = 150;
+    #endregion
+
+    #region Orbital Settings
+    public float OrbitalInclinationAngle = 20.0f;
+    public float OrbitalRevolutionDays = 64.0f;
+    public float MinutesPerDay = 30.0f;
     #endregion
 
 
