@@ -24,7 +24,7 @@ public class ChunkColumnGenerationRequest
         Callback = callback;
     }
 
-    public ChunkColumn Excute()
+    public ChunkColumn Execute()
     {
         var heightMap = WorldGenerator.CalculateChunkHeightMap(ChunkColumnPosition);
         return new ChunkColumn(ChunkColumnPosition, heightMap);

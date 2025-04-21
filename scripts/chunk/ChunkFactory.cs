@@ -65,11 +65,11 @@ public partial class ChunkFactory : IDisposable
 
                     if (_chunkColumnQueue.TryTake(out var columnRequest))
                     {
-                        columnRequest.Callback?.Invoke(columnRequest.Excute());
+                        columnRequest.Callback?.Invoke(columnRequest.Execute());
                     }
                     else if (_chunkQueue.TryTake(out var request))
                     {
-                        var result = new ChunkGenerationPipeline(request).Excute();
+                        var result = new ChunkGenerationPipeline(request).Execute();
                         request.Callback?.Invoke(result);
                     }
                     else

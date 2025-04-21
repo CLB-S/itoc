@@ -30,6 +30,6 @@ public class ChunkGenerationRequest
 
     public ChunkGenerationResult Execute()
     {
-        return new ChunkGenerationPipeline(this).Excute();
+        return new ChunkGenerationPipeline(this).Execute();
     }
 }
