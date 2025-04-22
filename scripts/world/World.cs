@@ -115,6 +115,7 @@ public partial class World : Node
         chunk.SetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z), block);
     }
 
+    // TODO: Generate 3x3x3 chunks around the player if these chunks are not generated and coressponding ChunkColumns are generated. 
     private void UpdateChunkLoading()
     {
         var playerChunkXZ = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
@@ -139,7 +140,7 @@ public partial class World : Node
                 if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
                     chunkColumn = null;
 
-        // To generate
+        // To generate ChunkColumns
         var toGenerate = new List<Vector2I>();
         foreach (var pos in renderArea)
             if (!ChunkColumns.ContainsKey(pos))
@@ -152,6 +153,43 @@ public partial class World : Node
         _chunkColumnsGenerationQueue.Clear();
         foreach (var pos in toGenerate)
             _chunkColumnsGenerationQueue.Enqueue(pos);
+
+        // Generate 3x3x3 chunks around the player for existing ChunkColumns
+        GeneratePlayerSurroundingChunks();
+    }
+
+    private void GeneratePlayerSurroundingChunks()
+    {
+        // Generate 3x3x3 area around player
+        for (var x = -1; x <= 1; x++)
+        {
+            for (var y = -1; y <= 1; y++)
+            {
+                for (var z = -1; z <= 1; z++)
+                {
+                    var chunkPos = PlayerChunk + new Vector3I(x, y, z);
+                    var columnPos = new Vector2I(chunkPos.X, chunkPos.Z);
+
+                    // Skip if chunk already exists
+                    if (Chunks.ContainsKey(chunkPos))
+                        continue;
+
+                    // Only generate chunks for columns that already exist
+                    if (ChunkColumns.TryGetValue(columnPos, out var chunkColumn))
+                    {
+                        var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
+                        var request = new ChunkGenerator.ChunkGenerationRequest(
+                            Generator,
+                            chunkPos,
+                            chunkColumn,
+                            ChunkGenerationCallback,
+                            createCollisionShape
+                        );
+                        _chunkFactory.Enqueue(request);
+                    }
+                }
+            }
+        }
     }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)
