@@ -51,6 +51,7 @@ public partial class World : Node
         _ready = true;
     }
 
+    // TODO: Chunk generation logic should be revised. 
     public override void _Process(double delta)
     {
         if (!_ready) return;
@@ -186,11 +187,13 @@ public partial class World : Node
 
         var position = result.ChunkData.GetPosition();
         var positionXZ = new Vector2I(position.X, position.Z);
-        if (!Chunks.ContainsKey(position) && ChunkColumns.ContainsKey(positionXZ))
+        var playerPosition = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
+        if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out ChunkColumn value)
+            && playerPosition.DistanceTo(positionXZ) <= Core.Instance.Settings.RenderDistance)
         {
             var chunk = new Chunk(result);
             Chunks[position] = chunk;
-            ChunkColumns[positionXZ].Chunks[position] = chunk;
+            value.Chunks[position] = chunk;
             chunk.Load();
             CallDeferred(Node.MethodName.AddChild, chunk);
         }
