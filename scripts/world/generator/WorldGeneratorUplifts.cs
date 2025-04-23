@@ -1,12 +1,11 @@
-using Godot;
 using System.Collections.Generic;
-using DelaunatorSharp;
+using Godot;
 
 namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
-    private HashSet<int> _initialAltitudeIndices = new();
+    private readonly HashSet<int> _initialAltitudeIndices = new();
 
     private void CalculateInitialUplifts()
     {
@@ -24,8 +23,8 @@ public partial class WorldGenerator
             {
                 // [-1, 1]
                 var l = _points[cellPId] - _points[cellQId];
-                var relativeMovement = ((cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
-                                       (2 * l.Length() * Settings.MaxTectonicMovement));
+                var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
+                                       (2 * l.Length() * Settings.MaxTectonicMovement);
 
                 if (Mathf.Abs(relativeMovement) < 0.25)
                     continue;
@@ -129,7 +128,7 @@ public partial class WorldGenerator
                 if (!used.Contains(neighborIndex) && _cellDatas[neighborIndex].PlateType == PlateType.Continent)
                 {
                     var neighbor = _cellDatas[neighborIndex];
-                    var mod = sharpness == 0 ? 1.0f : 1.0f + (double)(_rng.Randf() - 0.5) * sharpness;
+                    var mod = sharpness == 0 ? 1.0f : 1.0f + (_rng.Randf() - 0.5) * sharpness;
                     var heightContribution = propagatedHeight * mod;
 
                     neighbor.Uplift += heightContribution;

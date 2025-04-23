@@ -3,7 +3,6 @@ using Godot;
 
 namespace ChunkGenerator;
 
-
 public class ChunkGenerationRequest
 {
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;

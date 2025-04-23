@@ -1,10 +1,9 @@
-using System;
 using Godot;
 
 public class BasicBlock : Block
 {
     private Material _material;
-    private string _materialPath;
+    private readonly string _materialPath;
     private Texture2D _texture;
 
     public BasicBlock(string blockId, string blockName) : base(blockId, blockName)
@@ -18,7 +17,7 @@ public class BasicBlock : Block
 
     public override void LoadResources()
     {
-        if (!String.IsNullOrEmpty(_materialPath))
+        if (!string.IsNullOrEmpty(_materialPath))
         {
             var material = ResourceLoader.Load(_materialPath) as Material;
             if (material != null)

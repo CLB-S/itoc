@@ -3,10 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Godot;
+using Environment = System.Environment;
 
 namespace ChunkGenerator;
 
-public partial class ChunkFactory : IDisposable
+public class ChunkFactory : IDisposable
 {
     private readonly BlockingCollection<ChunkGenerationRequest> _chunkQueue = new();
     private readonly BlockingCollection<ChunkColumnGenerationRequest> _chunkColumnQueue = new();
@@ -17,13 +18,15 @@ public partial class ChunkFactory : IDisposable
     private readonly SemaphoreSlim _throttler;
     private readonly int _maxConcurrentJobs;
 
-    private ChunkFactory() { }
+    private ChunkFactory()
+    {
+    }
 
     public ChunkFactory(int maxConcurrentJobs = 0)
     {
         _maxConcurrentJobs = maxConcurrentJobs > 0
             ? maxConcurrentJobs
-            : Math.Max(1, System.Environment.ProcessorCount - 2);
+            : Math.Max(1, Environment.ProcessorCount - 2);
 
         _throttler = new SemaphoreSlim(_maxConcurrentJobs);
 
@@ -54,7 +57,6 @@ public partial class ChunkFactory : IDisposable
     {
         var ct = (CancellationToken)obj;
         while (!ct.IsCancellationRequested)
-        {
             try
             {
                 _throttler.Wait(ct);
@@ -89,7 +91,6 @@ public partial class ChunkFactory : IDisposable
             {
                 GD.PrintErr($"Chunk generation failed: {e}");
             }
-        }
     }
 
     public void Stop()
@@ -98,10 +99,8 @@ public partial class ChunkFactory : IDisposable
         _cts.Cancel();
 
         foreach (var thread in _workerThreads)
-        {
             if (thread.IsAlive)
                 thread.Join();
-        }
 
         Dispose();
     }
@@ -120,10 +119,8 @@ public partial class ChunkFactory : IDisposable
 
             // Wait for all threads to finish
             foreach (var thread in _workerThreads)
-            {
                 if (thread.IsAlive)
                     thread.Join();
-            }
 
             // Dispose managed resources
             _chunkQueue?.Dispose();

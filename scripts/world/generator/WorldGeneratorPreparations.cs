@@ -1,7 +1,7 @@
-using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using DelaunatorSharp;
+using Godot;
 using PatternSystem;
 
 namespace WorldGenerator;
@@ -16,9 +16,9 @@ public partial class WorldGenerator
     private double _cellArea;
     private Edge[] _voronoiEdges;
 
-    public IReadOnlyList<Vector2> SamplePoints { get => _points; }
-    public IReadOnlyDictionary<int, CellData> CellDatas { get => _cellDatas; }
-    public IReadOnlyCollection<Edge> CellEdges { get => _voronoiEdges; }
+    public IReadOnlyList<Vector2> SamplePoints => _points;
+    public IReadOnlyDictionary<int, CellData> CellDatas => _cellDatas;
+    public IReadOnlyCollection<Edge> CellEdges => _voronoiEdges;
 
     private void InitializeResources()
     {
@@ -56,7 +56,8 @@ public partial class WorldGenerator
     private void GeneratePoints()
     {
         ReportProgress("Generating points");
-        _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End, Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
+        _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End,
+            Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
         _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
 
         _cellArea = Settings.Bounds.Area / _points.Count;
@@ -76,7 +77,7 @@ public partial class WorldGenerator
             _cellDatas[_cells[i].Index] = new CellData
             {
                 Cell = _cells[i],
-                Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points),
+                Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points)
             };
 
         for (var i = 0; i < _delaunator.Triangles.Length; i++)

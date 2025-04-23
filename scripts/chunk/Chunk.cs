@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ChunkGenerator;
 using Godot;
 
 public partial class Chunk : StaticBody3D
@@ -9,7 +10,7 @@ public partial class Chunk : StaticBody3D
         Unloaded,
         DataReady,
         Render,
-        Physics,
+        Physics
     }
 
     private Mesh _mesh;
@@ -21,13 +22,13 @@ public partial class Chunk : StaticBody3D
 
     private MeshInstance3D _meshInstance;
 
-    public ChunkData ChunkData { get; private set; }
+    public ChunkData ChunkData { get; }
     public ChunkColumn ChunkColumn { get; private set; }
     public Vector3I ChunkPosition { get; private set; }
 
     public ChunkState State { get; private set; } = ChunkState.Unloaded;
 
-    public Chunk(ChunkGenerator.ChunkGenerationResult result)
+    public Chunk(ChunkGenerationResult result)
     {
         _mesh = result.Mesh;
         _collisionShape = result.CollisionShape;
@@ -44,13 +45,8 @@ public partial class Chunk : StaticBody3D
     {
         var distance = ChunkPosition.DistanceTo(World.Instance.PlayerChunk);
         if (distance > Core.Instance.Settings.PhysicsDistance + 1)
-        {
             UnloadPhysics();
-        }
-        else if (distance <= Core.Instance.Settings.PhysicsDistance)
-        {
-            LoadPhysics();
-        }
+        else if (distance <= Core.Instance.Settings.PhysicsDistance) LoadPhysics();
     }
 
     public void Load()
@@ -69,7 +65,8 @@ public partial class Chunk : StaticBody3D
 
         _collisionShape3D = new CollisionShape3D();
         _collisionDebugMeshInstance = new MeshInstance3D();
-        _collisionDebugMeshInstance.MaterialOverride = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
+        _collisionDebugMeshInstance.MaterialOverride =
+            ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
         _collisionDebugMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
         AddChild(_collisionShape3D);
         AddChild(_collisionDebugMeshInstance);
@@ -226,7 +223,6 @@ public partial class Chunk : StaticBody3D
             neighbourChunk.ChunkData.SetBlock(x + 1, y + 1, 0, block);
             neighbourChunk.UpdateMesh();
         }
-
     }
 
 

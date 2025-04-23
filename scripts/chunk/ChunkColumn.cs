@@ -1,6 +1,6 @@
-using Godot;
 using System.Collections.Concurrent;
 using System.Linq;
+using Godot;
 
 public class ChunkColumn
 {
@@ -10,7 +10,10 @@ public class ChunkColumn
     public double HeightMapLow;
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
 
-    private ChunkColumn() { }
+    private ChunkColumn()
+    {
+    }
+
     public ChunkColumn(Vector2I position, double[,] heightMap)
     {
         Position = position;

@@ -1,5 +1,5 @@
-using Godot;
 using System;
+using Godot;
 
 public partial class PlayerController : CharacterBody3D
 {
@@ -54,11 +54,11 @@ public partial class PlayerController : CharacterBody3D
     private float _cameraTilt;
 
     // Flying
-    private bool _isFlying = false;
+    private bool _isFlying;
     private float _lastJumpPressTime = -1f;
 
     // Inventory
-    public IItem ItemHandhelding { get => Hud.InventoryHotbar.ActiveItem; }
+    public IItem ItemHandhelding => Hud.InventoryHotbar.ActiveItem;
 
     public override void _Ready()
     {
@@ -162,22 +162,13 @@ public partial class PlayerController : CharacterBody3D
 
     private void HandleInventoryHotbarInput(InputEvent @event)
     {
-        for (int i = 1; i <= 9; i++)
-        {
+        for (var i = 1; i <= 9; i++)
             if (@event.IsActionPressed($"hotbar{i}"))
-            {
                 Hud.InventoryHotbar.SetActiveSlot(i - 1);
-            }
-        }
 
         if (@event.IsActionPressed("hotbar_next"))
-        {
             Hud.InventoryHotbar.NextSlot();
-        }
-        else if (@event.IsActionPressed("hotbar_prev"))
-        {
-            Hud.InventoryHotbar.PreviousSlot();
-        }
+        else if (@event.IsActionPressed("hotbar_prev")) Hud.InventoryHotbar.PreviousSlot();
     }
 
     private void HandleMovement(double delta)

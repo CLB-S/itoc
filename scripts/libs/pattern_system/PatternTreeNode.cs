@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace PatternSystem;
 
 public abstract class PatternTreeNode

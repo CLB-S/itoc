@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,7 +5,7 @@ namespace PatternSystem;
 
 public abstract class MultiChildOperationNode : PatternTreeNode, IOperator
 {
-    private List<PatternTreeNode> _children;
+    private readonly List<PatternTreeNode> _children;
 
     public IEnumerable<PatternTreeNode> Children => _children;
 

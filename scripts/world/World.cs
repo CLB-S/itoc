@@ -1,16 +1,17 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using ChunkGenerator;
 using Godot;
 
 public partial class World : Node
 {
     public const int ChunkSize = ChunkMesher.CS;
     public WorldGenerator.WorldGenerator Generator { get; private set; }
-    public WorldSettings Settings { get => Generator.Settings; }
+    public WorldSettings Settings => Generator.Settings;
 
     public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
-    public double Time { get; private set; } = 0.0;
+    public double Time { get; private set; }
 
     public static World Instance { get; private set; }
 
@@ -21,19 +22,19 @@ public partial class World : Node
     public ShaderMaterial DebugMaterial;
 
     private PackedScene _debugCube;
-    private ChunkGenerator.ChunkFactory _chunkFactory;
-    private bool _ready = false; //TODO: State
+    private ChunkFactory _chunkFactory;
+    private bool _ready; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
     private PlayerController _player;
     public Vector3 PlayerPos { get; private set; } = Vector3.Zero;
-    private bool _playerSpawned = false; // TODO: Spawn player. Implement `GetHeight(Vector2 pos)`
+    private bool _playerSpawned; // TODO: Spawn player. Implement `GetHeight(Vector2 pos)`
 
     public override void _Ready()
     {
         if (Instance != null)
-            throw new System.Exception("World singleton already exists!");
+            throw new Exception("World singleton already exists!");
 
         Instance = this;
         Generator = Core.Instance.WorldGenerator;
@@ -45,7 +46,7 @@ public partial class World : Node
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
 
-        _chunkFactory = new ChunkGenerator.ChunkFactory();
+        _chunkFactory = new ChunkFactory();
         _chunkFactory.Start();
 
         _ready = true;
@@ -71,7 +72,7 @@ public partial class World : Node
         {
             var pos = _chunkColumnsGenerationQueue.Dequeue();
 
-            var columnRequest = new ChunkGenerator.ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
+            var columnRequest = new ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
             _chunkFactory.Enqueue(columnRequest);
             processed++;
         }
@@ -162,9 +163,7 @@ public partial class World : Node
     {
         // Generate 3x3x3 area around player
         for (var x = -1; x <= 1; x++)
-        {
             for (var y = -1; y <= 1; y++)
-            {
                 for (var z = -1; z <= 1; z++)
                 {
                     var chunkPos = PlayerChunk + new Vector3I(x, y, z);
@@ -178,7 +177,7 @@ public partial class World : Node
                     if (ChunkColumns.TryGetValue(columnPos, out var chunkColumn))
                     {
                         var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                        var request = new ChunkGenerator.ChunkGenerationRequest(
+                        var request = new ChunkGenerationRequest(
                             Generator,
                             chunkPos,
                             chunkColumn,
@@ -188,8 +187,6 @@ public partial class World : Node
                         _chunkFactory.Enqueue(request);
                     }
                 }
-            }
-        }
     }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)
@@ -209,13 +206,14 @@ public partial class World : Node
                 if (Chunks.ContainsKey(chunkPos)) continue;
 
                 var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                var request = new ChunkGenerator.ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback, createCollisionShape);
+                var request = new ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback,
+                    createCollisionShape);
                 _chunkFactory.Enqueue(request);
             }
         }
     }
 
-    private void ChunkGenerationCallback(ChunkGenerator.ChunkGenerationResult result)
+    private void ChunkGenerationCallback(ChunkGenerationResult result)
     {
         if (result == null) return;
 
@@ -226,8 +224,9 @@ public partial class World : Node
         var position = result.ChunkData.GetPosition();
         var positionXZ = new Vector2I(position.X, position.Z);
         var playerPosition = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
-        if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out ChunkColumn value)
-            && playerPosition.DistanceTo(positionXZ) <= Core.Instance.Settings.RenderDistance)
+        if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out var value)
+                                          && playerPosition.DistanceTo(positionXZ) <=
+                                          Core.Instance.Settings.RenderDistance)
         {
             var chunk = new Chunk(result);
             Chunks[position] = chunk;

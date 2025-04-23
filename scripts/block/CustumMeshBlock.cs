@@ -1,5 +1,3 @@
-
-
 // WARNING: By deepseek. Not revised.
 
 // public class CustomMeshBlock : Block
@@ -27,3 +25,4 @@
 //     public override Mesh GetMesh(string modelType) => _customMesh;
 //     public override Material GetMaterial(Direction face) => _material;
 // }
+

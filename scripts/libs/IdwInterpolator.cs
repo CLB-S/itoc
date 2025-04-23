@@ -58,17 +58,18 @@ public class IdwInterpolator
             // This should not happen unless all weights are zero, which is impossible with distance > 0
             return 0.0f;
 
-        return (double)(weightedSum / totalWeight);
+        return weightedSum / totalWeight;
     }
 
-    public double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, bool parallel = false, int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
+    public double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, bool parallel = false,
+        int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
     {
         if (upscaleLevel < 0)
             throw new ArgumentException("Upscale level must be non-negative.");
 
         // Calculate low resolution dimensions
-        int lowResX = resolutionX >> upscaleLevel;
-        int lowResY = resolutionY >> upscaleLevel;
+        var lowResX = resolutionX >> upscaleLevel;
+        var lowResY = resolutionY >> upscaleLevel;
 
         lowResX = Math.Max(lowResX, 1);
         lowResY = Math.Max(lowResY, 1);
@@ -80,14 +81,14 @@ public class IdwInterpolator
         return UpscaleHeightMap(lowResMap, resolutionX, resolutionY);
     }
 
-    private double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, bool parallel, Func<double, double, double> noiseFunc = null)
+    private double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, bool parallel,
+        Func<double, double, double> noiseFunc = null)
     {
         var heightMap = new double[resolutionX, resolutionY];
         var stepX = resolutionX > 1 ? (double)(rect.Size.X - 1) / (resolutionX - 1) : 0;
         var stepY = resolutionY > 1 ? (double)(rect.Size.Y - 1) / (resolutionY - 1) : 0;
 
         if (parallel)
-        {
             Parallel.For(0, resolutionX, i =>
             {
                 var x = resolutionX > 1 ? rect.Position.X + 0.5 + i * stepX : rect.Position.X + rect.Size.X / 2;
@@ -99,9 +100,7 @@ public class IdwInterpolator
                         heightMap[i, j] += noiseFunc(x, y);
                 }
             });
-        }
         else
-        {
             for (var i = 0; i < resolutionX; i++)
             {
                 var x = resolutionX > 1 ? rect.Position.X + i * stepX : rect.Position.X + rect.Size.X / 2;
@@ -113,15 +112,14 @@ public class IdwInterpolator
                         heightMap[i, j] += noiseFunc(x, y);
                 }
             }
-        }
 
         return heightMap;
     }
 
     private double[,] UpscaleHeightMap(double[,] lowResMap, int targetX, int targetY)
     {
-        int lowResX = lowResMap.GetLength(0);
-        int lowResY = lowResMap.GetLength(1);
+        var lowResX = lowResMap.GetLength(0);
+        var lowResY = lowResMap.GetLength(1);
 
         var highResMap = new double[targetX, targetY];
 
@@ -129,8 +127,8 @@ public class IdwInterpolator
         if (lowResX == 1 && lowResY == 1)
         {
             var val = lowResMap[0, 0];
-            for (int x = 0; x < targetX; x++)
-                for (int y = 0; y < targetY; y++)
+            for (var x = 0; x < targetX; x++)
+                for (var y = 0; y < targetY; y++)
                     highResMap[x, y] = val;
             return highResMap;
         }
@@ -138,59 +136,61 @@ public class IdwInterpolator
         // Handle case where one dimension is 1
         if (lowResX == 1)
         {
-            for (int y = 0; y < targetY; y++)
+            for (var y = 0; y < targetY; y++)
             {
-                double t = (double)y / (targetY - 1) * (lowResY - 1);
-                int y0 = (int)Math.Floor(t);
-                int y1 = Math.Min(y0 + 1, lowResY - 1);
-                double ty = t - y0;
+                var t = (double)y / (targetY - 1) * (lowResY - 1);
+                var y0 = (int)Math.Floor(t);
+                var y1 = Math.Min(y0 + 1, lowResY - 1);
+                var ty = t - y0;
 
-                double val = Lerp(lowResMap[0, y0], lowResMap[0, y1], ty);
-                for (int x = 0; x < targetX; x++)
+                var val = Lerp(lowResMap[0, y0], lowResMap[0, y1], ty);
+                for (var x = 0; x < targetX; x++)
                     highResMap[x, y] = val;
             }
+
             return highResMap;
         }
 
         if (lowResY == 1)
         {
-            for (int x = 0; x < targetX; x++)
+            for (var x = 0; x < targetX; x++)
             {
-                double t = (double)x / (targetX - 1) * (lowResX - 1);
-                int x0 = (int)Math.Floor(t);
-                int x1 = Math.Min(x0 + 1, lowResX - 1);
-                double tx = t - x0;
+                var t = (double)x / (targetX - 1) * (lowResX - 1);
+                var x0 = (int)Math.Floor(t);
+                var x1 = Math.Min(x0 + 1, lowResX - 1);
+                var tx = t - x0;
 
-                double val = Lerp(lowResMap[x0, 0], lowResMap[x1, 0], tx);
-                for (int y = 0; y < targetY; y++)
+                var val = Lerp(lowResMap[x0, 0], lowResMap[x1, 0], tx);
+                for (var y = 0; y < targetY; y++)
                     highResMap[x, y] = val;
             }
+
             return highResMap;
         }
 
         // Bilinear interpolation for 2D case
-        for (int x = 0; x < targetX; x++)
+        for (var x = 0; x < targetX; x++)
         {
-            double tx = (double)x / (targetX - 1) * (lowResX - 1);
-            int x0 = (int)Math.Floor(tx);
-            int x1 = Math.Min(x0 + 1, lowResX - 1);
-            double fx = tx - x0;
+            var tx = (double)x / (targetX - 1) * (lowResX - 1);
+            var x0 = (int)Math.Floor(tx);
+            var x1 = Math.Min(x0 + 1, lowResX - 1);
+            var fx = tx - x0;
 
-            for (int y = 0; y < targetY; y++)
+            for (var y = 0; y < targetY; y++)
             {
-                double ty = (double)y / (targetY - 1) * (lowResY - 1);
-                int y0 = (int)Math.Floor(ty);
-                int y1 = Math.Min(y0 + 1, lowResY - 1);
-                double fy = ty - y0;
+                var ty = (double)y / (targetY - 1) * (lowResY - 1);
+                var y0 = (int)Math.Floor(ty);
+                var y1 = Math.Min(y0 + 1, lowResY - 1);
+                var fy = ty - y0;
 
                 // Bilinear interpolation
-                double v00 = lowResMap[x0, y0];
-                double v10 = lowResMap[x1, y0];
-                double v01 = lowResMap[x0, y1];
-                double v11 = lowResMap[x1, y1];
+                var v00 = lowResMap[x0, y0];
+                var v10 = lowResMap[x1, y0];
+                var v01 = lowResMap[x0, y1];
+                var v11 = lowResMap[x1, y1];
 
-                double v0 = Lerp(v00, v10, fx);
-                double v1 = Lerp(v01, v11, fx);
+                var v0 = Lerp(v00, v10, fx);
+                var v1 = Lerp(v01, v11, fx);
                 highResMap[x, y] = Lerp(v0, v1, fy);
             }
         }
@@ -198,33 +198,39 @@ public class IdwInterpolator
         return highResMap;
     }
 
-    public double[,] ConstructChunkHeightMap(Rect2I chunkRect, int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
+    public double[,] ConstructChunkHeightMap(Rect2I chunkRect, int upscaleLevel = 3,
+        Func<double, double, double> noiseFunc = null)
     {
         // Center
         var heightMap = new double[chunkRect.Size.X, chunkRect.Size.Y];
         var centerRect = new Rect2I(chunkRect.Position + Vector2I.One, chunkRect.Size - 2 * Vector2I.One);
-        var centerHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, chunkRect.Size.Y - 2, centerRect, upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
+        var centerHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, chunkRect.Size.Y - 2, centerRect,
+            upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
 
-        for (int x = 1; x < chunkRect.Size.X - 1; x++)
-            for (int y = 1; y < chunkRect.Size.Y - 1; y++)
+        for (var x = 1; x < chunkRect.Size.X - 1; x++)
+            for (var y = 1; y < chunkRect.Size.Y - 1; y++)
                 heightMap[x, y] = centerHeightMap[x - 1, y - 1];
 
         // Four edges
         var topRect = new Rect2I(chunkRect.Position + new Vector2I(1, chunkRect.Size.Y - 1), chunkRect.Size.X - 2, 1);
-        var topHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, topRect, upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
+        var topHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, topRect, upscaleLevel: upscaleLevel,
+            noiseFunc: noiseFunc);
         var bottomRect = new Rect2I(chunkRect.Position + new Vector2I(1, 0), chunkRect.Size.X - 2, 1);
-        var bottomHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, bottomRect, upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
-        for (int x = 1; x < chunkRect.Size.X - 1; x++)
+        var bottomHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, bottomRect, upscaleLevel: upscaleLevel,
+            noiseFunc: noiseFunc);
+        for (var x = 1; x < chunkRect.Size.X - 1; x++)
         {
             heightMap[x, chunkRect.Size.Y - 1] = topHeightMap[x - 1, 0];
             heightMap[x, 0] = bottomHeightMap[x - 1, 0];
         }
 
         var leftRect = new Rect2I(chunkRect.Position + new Vector2I(0, 1), 1, chunkRect.Size.Y - 2);
-        var leftHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, leftRect, upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
+        var leftHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, leftRect, upscaleLevel: upscaleLevel,
+            noiseFunc: noiseFunc);
         var rightRect = new Rect2I(chunkRect.Position + new Vector2I(chunkRect.Size.X - 1, 1), 1, chunkRect.Size.Y - 2);
-        var rightHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, rightRect, upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
-        for (int y = 1; y < chunkRect.Size.Y - 1; y++)
+        var rightHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, rightRect, upscaleLevel: upscaleLevel,
+            noiseFunc: noiseFunc);
+        for (var y = 1; y < chunkRect.Size.Y - 1; y++)
         {
             heightMap[0, y] = leftHeightMap[0, y - 1];
             heightMap[chunkRect.Size.X - 1, y] = rightHeightMap[0, y - 1];
@@ -234,11 +240,16 @@ public class IdwInterpolator
         heightMap[0, 0] = GetHeight(chunkRect.Position.X + 0.5, chunkRect.Position.Y + 0.5) +
                           (noiseFunc != null ? noiseFunc(chunkRect.Position.X + 0.5, chunkRect.Position.Y + 0.5) : 0);
         heightMap[chunkRect.Size.X - 1, 0] = GetHeight(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5) +
-                                             (noiseFunc != null ? noiseFunc(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5) : 0);
+                                             (noiseFunc != null
+                                                 ? noiseFunc(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5)
+                                                 : 0);
         heightMap[0, chunkRect.Size.Y - 1] = GetHeight(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5) +
-                                             (noiseFunc != null ? noiseFunc(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5) : 0);
-        heightMap[chunkRect.Size.X - 1, chunkRect.Size.Y - 1] = GetHeight(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5) +
-                                                               (noiseFunc != null ? noiseFunc(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5) : 0);
+                                             (noiseFunc != null
+                                                 ? noiseFunc(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5)
+                                                 : 0);
+        heightMap[chunkRect.Size.X - 1, chunkRect.Size.Y - 1] =
+            GetHeight(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5) +
+            (noiseFunc != null ? noiseFunc(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5) : 0);
 
         return heightMap;
     }

@@ -1,12 +1,11 @@
-using Godot;
 using System.Collections.Generic;
 using DelaunatorSharp;
+using Godot;
 
 namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
-
     private static Dictionary<int, int> RepeatPointsRoundEdges(List<Vector2> points, Rect2 rect, double edgeDistance)
     {
         var indexMap = new Dictionary<int, int>();

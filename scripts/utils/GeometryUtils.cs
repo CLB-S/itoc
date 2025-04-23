@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public static class GeometryUtils
 {
@@ -9,12 +8,12 @@ public static class GeometryUtils
             return 0;
 
         double area = 0;
-        int n = vertices.Length;
+        var n = vertices.Length;
 
-        for (int i = 0; i < n; i++)
+        for (var i = 0; i < n; i++)
         {
-            Vector2 current = vertices[i];
-            Vector2 next = vertices[(i + 1) % n];
+            var current = vertices[i];
+            var next = vertices[(i + 1) % n];
             area += current.X * next.Y - current.Y * next.X;
         }
 

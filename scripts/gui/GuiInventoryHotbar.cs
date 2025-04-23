@@ -1,23 +1,17 @@
-using Godot;
 using System;
+using Godot;
 
 public partial class GuiInventoryHotbar : GridContainer
 {
     private GuiHotbarSlot[] _slots;
-    private int _activeSlotIndex = 0;
+    private int _activeSlotIndex;
 
-    public IItem ActiveItem
-    {
-        get => _slots[_activeSlotIndex].Item;
-    }
+    public IItem ActiveItem => _slots[_activeSlotIndex].Item;
 
     public override void _Ready()
     {
         _slots = new GuiHotbarSlot[GetChildCount()];
-        for (int i = 0; i < GetChildCount(); i++)
-        {
-            _slots[i] = GetChild<GuiHotbarSlot>(i);
-        }
+        for (var i = 0; i < GetChildCount(); i++) _slots[i] = GetChild<GuiHotbarSlot>(i);
 
         _slots[_activeSlotIndex].IsActive = true;
 

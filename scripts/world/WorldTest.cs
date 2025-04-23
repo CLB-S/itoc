@@ -1,9 +1,9 @@
-using Godot;
-using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Godot;
+using Godot.Collections;
 
 namespace WorldGenerator;
 
@@ -15,7 +15,7 @@ public partial class WorldTest : Node2D
         Uplift,
         Height,
         PlateTypes,
-        Precipitation,
+        Precipitation
     }
 
     // [Export] public ulong Seed { get; set; } = 0;
@@ -32,7 +32,7 @@ public partial class WorldTest : Node2D
     [Export] public SpinBox NoiseFrequencySpinBox;
 
     [Export] public Node2D HeightMapSubViewportSprite;
-    [Export] public Rect2 DrawingRect = new Rect2(-500, -500, 1000, 1000);
+    [Export] public Rect2 DrawingRect = new(-500, -500, 1000, 1000);
 
     public ImageTexture HeightMapTexture;
 
@@ -42,12 +42,12 @@ public partial class WorldTest : Node2D
     public bool DrawRivers = true;
     public bool DrawInterpolatedHeightMap = false;
 
-    private WorldGenerator _worldGenerator { get => Core.Instance.WorldGenerator; }
+    private WorldGenerator _worldGenerator => Core.Instance.WorldGenerator;
 
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
 
-    private List<(Mesh, CellData)> _polygons = new List<(Mesh, CellData)>(10000);
+    private readonly List<(Mesh, CellData)> _polygons = new(10000);
 
     public override void _Ready()
     {
@@ -78,7 +78,7 @@ public partial class WorldTest : Node2D
 
             CallDeferred(MethodName.SetGenerateMapButtonAvailability, true);
             CallDeferred(MethodName.SetStartGameButtonAvailability, true);
-            CallDeferred(MethodName.QueueRedraw);
+            CallDeferred(CanvasItem.MethodName.QueueRedraw);
         };
 
         _worldGenerator.GenerationFailedEvent += (_, ex) =>
@@ -166,7 +166,7 @@ public partial class WorldTest : Node2D
 
                     // Initialize the ArrayMesh.
                     var arrMesh = new ArrayMesh();
-                    Godot.Collections.Array arrays = [];
+                    Array arrays = [];
                     arrays.Resize((int)Mesh.ArrayType.Max);
                     arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
                     arrays[(int)Mesh.ArrayType.Index] = indices.ToArray();
@@ -181,7 +181,7 @@ public partial class WorldTest : Node2D
 
     public override void _Draw()
     {
-        Log($"Redrawing...");
+        Log("Redrawing...");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
@@ -205,7 +205,7 @@ public partial class WorldTest : Node2D
                     break;
                 case ColorPreset.PlateTypes:
                     color = new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
-                           (int)cellData.PlateType);
+                        (int)cellData.PlateType);
                     DrawMesh(mesh, null, modulate: color);
                     break;
                     // case ColorPreset.Precipitation:
@@ -238,7 +238,8 @@ public partial class WorldTest : Node2D
         //     DrawCircle(i, 2f, Colors.White);
         // }
 
-        if (DrawInterpolatedHeightMap && HeightMapTexture != null) DrawTextureRect(HeightMapTexture, DrawingRect, false);
+        if (DrawInterpolatedHeightMap && HeightMapTexture != null)
+            DrawTextureRect(HeightMapTexture, DrawingRect, false);
 
         if (DrawTectonicMovement)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
@@ -258,12 +259,9 @@ public partial class WorldTest : Node2D
             var receivers = _worldGenerator.Receivers;
 
             if (streamGraph != null && receivers != null && receivers.Count > 0)
-            {
                 // Draw stream connections (edges in the stream tree)
                 foreach (var cell in streamGraph)
-                {
                     if (receivers.TryGetValue(cell.Index, out var receiverIndex))
-                    {
                         if (_worldGenerator.CellDatas.TryGetValue(receiverIndex, out var receiver))
                         {
                             if (cell.Index == receiverIndex) continue;
@@ -271,16 +269,15 @@ public partial class WorldTest : Node2D
                             var end = _worldGenerator.SamplePoints[receiverIndex] * _scalingFactor;
 
                             if ((start - end).LengthSquared() >
-                                _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
+                                _worldGenerator.Settings.MinimumCellDistance *
+                                _worldGenerator.Settings.MinimumCellDistance * 5) continue;
 
                             // Calculate line width based on drainage area
                             var width = 1.0;
                             if (_worldGenerator.DrainageArea != null &&
                                 _worldGenerator.DrainageArea.TryGetValue(cell.Index, out var drainage))
-                            {
                                 // Scale the width logarithmically with the drainage area
                                 width = Mathf.Log(1 + drainage * 0.0005f) * 0.5f;
-                            }
 
                             // Calculate color based on water flow
                             // Deeper blue for higher drainage areas
@@ -289,29 +286,24 @@ public partial class WorldTest : Node2D
 
                             DrawLine(start, end, color, width);
                         }
-                    }
-                }
-
-                // Draw lake areas in a lighter blue color
-                // foreach (var cell in streamGraph)
-                // {
-                //     // A cell is part of a lake if it's not a receiver for any other node
-                //     // or if it's at the bottom of a depression
-                //     if (!receivers.ContainsKey(cell.Index) && !cell.IsRiverMouth)
-                //     {
-                //         // Draw lake node as a circle
-                //         var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
-                //         DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
-                //     }
-                // }
-
-                // Draw river mouths with a different color
-                // foreach (var cell in streamGraph.Where(c => c.IsRiverMouth))
-                // {
-                //     var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
-                //     DrawCircle(pos, 3f, new Color(0.0f, 0.2f, 0.6f, 0.8f));
-                // }
-            }
+            // Draw lake areas in a lighter blue color
+            // foreach (var cell in streamGraph)
+            // {
+            //     // A cell is part of a lake if it's not a receiver for any other node
+            //     // or if it's at the bottom of a depression
+            //     if (!receivers.ContainsKey(cell.Index) && !cell.IsRiverMouth)
+            //     {
+            //         // Draw lake node as a circle
+            //         var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+            //         DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
+            //     }
+            // }
+            // Draw river mouths with a different color
+            // foreach (var cell in streamGraph.Where(c => c.IsRiverMouth))
+            // {
+            //     var pos = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
+            //     DrawCircle(pos, 3f, new Color(0.0f, 0.2f, 0.6f, 0.8f));
+            // }
         }
 
         // Draw rivers (deprecated)
@@ -410,7 +402,9 @@ public partial class WorldTest : Node2D
         Log("Generating height map...");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        await Task.Run(() => HeightMapTexture = _worldGenerator.GetFullHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
+        await Task.Run(() =>
+            HeightMapTexture =
+                _worldGenerator.GetFullHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
         GenerateHeightMapButton.Disabled = false;
         var mat = HeightMapMesh.GetSurfaceOverrideMaterial(0) as ShaderMaterial;
         mat.SetShaderParameter("heightmap", HeightMapTexture);

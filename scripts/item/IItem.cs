@@ -1,6 +1,3 @@
-using Godot;
-using System;
-
 public interface IItem
 {
     ItemType Type { get; }

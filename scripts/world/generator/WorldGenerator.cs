@@ -1,17 +1,16 @@
-using Godot;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using PatternSystem;
-
 using DelaunatorSharp;
+using Godot;
+using PatternSystem;
 
 namespace WorldGenerator;
 
 public class CellData
 {
-    public int Index { get => Cell.Index; }
+    public int Index => Cell.Index;
     public VoronoiCell Cell;
     public Vector2 TectonicMovement;
     public PlateType PlateType;
@@ -42,7 +41,8 @@ public class GenerationStep
         ShouldRepeat = () => false;
     }
 
-    public GenerationStep(GenerationState state, Action action, Func<bool> shouldRepeat, GenerationState repeatToState, bool optional = false)
+    public GenerationStep(GenerationState state, Action action, Func<bool> shouldRepeat, GenerationState repeatToState,
+        bool optional = false)
     {
         State = state;
         Action = action;
@@ -98,7 +98,7 @@ public partial class WorldGenerator
     private PatternTree _heightPattern;
 
     // Configuration
-    public WorldSettings Settings { get; private set; }
+    public WorldSettings Settings { get; }
 
     public WorldGenerator()
     {
@@ -117,8 +117,10 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, InitializeResources));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CreatingVoronoi, CreateVoronoiDiagram));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics, InitializeTectonicProperties));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts, CalculateInitialUplifts));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics,
+            InitializeTectonicProperties));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts,
+            CalculateInitialUplifts));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
 
         // Add the stream generation cycle
@@ -126,10 +128,11 @@ public partial class WorldGenerator
         _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingStreamTrees, ComputeStreamTrees));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.IdentifyingLakes, IdentifyLakes));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.LakeOverflow, ProcessLakeOverflow));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingDrainageAndSlopes, ComputeDrainageAndSlopes));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingDrainageAndSlopes,
+            ComputeDrainageAndSlopes));
         _generationPipeline.AddLast(
             new GenerationStep(GenerationState.SolvingPowerEquation, SolvePowerEquation,
-                               () => !_powerEquationConverged, GenerationState.ComputingStreamTrees));
+                () => !_powerEquationConverged, GenerationState.ComputingStreamTrees));
 
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
@@ -147,6 +150,7 @@ public partial class WorldGenerator
                 _generationPipeline.AddAfter(node, step);
                 return;
             }
+
             node = node.Next;
         }
 
@@ -172,6 +176,7 @@ public partial class WorldGenerator
                 _generationPipeline.AddBefore(node, step);
                 return;
             }
+
             node = node.Next;
         }
 
@@ -191,6 +196,7 @@ public partial class WorldGenerator
                 _generationPipeline.Remove(node);
                 return;
             }
+
             node = node.Next;
         }
     }
@@ -226,22 +232,18 @@ public partial class WorldGenerator
                     // Find the node we should go back to
                     var repeatNode = _generationPipeline.First;
                     while (repeatNode != null && repeatNode.Value.State != step.RepeatToState.Value)
-                    {
                         repeatNode = repeatNode.Next;
-                    }
 
                     if (repeatNode != null)
                     {
                         // ReportProgress($"Repeating from {step.RepeatToState.Value} state");
                         currentNode = repeatNode;
-                        continue;
                     }
                 }
                 else
                 {
                     currentNode = currentNode.Next;
                 }
-
             }
 
             CompleteGeneration();
@@ -283,5 +285,3 @@ public partial class WorldGenerator
         GenerationFailedEvent?.Invoke(this, ex);
     }
 }
-
-

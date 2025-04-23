@@ -16,6 +16,7 @@ public enum ChunkGenerationState
     Completed,
     Failed
 }
+
 public class ChunkGenerationPipeline
 {
     public class GenerationStep
@@ -35,11 +36,11 @@ public class ChunkGenerationPipeline
 
     public ChunkGenerationState State { get; private set; } = ChunkGenerationState.NotStarted;
 
-    private ChunkData _chunkData;
-    private ChunkGenerationRequest _request;
+    private readonly ChunkData _chunkData;
+    private readonly ChunkGenerationRequest _request;
     private Mesh _mesh;
     private Shape3D _shape;
-    private RandomNumberGenerator _rng;
+    private readonly RandomNumberGenerator _rng;
     private readonly Stopwatch _stopwatch = new();
     private readonly LinkedList<GenerationStep> _generationPipeline = new();
 
@@ -49,7 +50,8 @@ public class ChunkGenerationPipeline
         _request = request;
         _chunkData = new ChunkData(_request.ChunkPosition);
         _rng = new RandomNumberGenerator();
-        _rng.Seed = _request.WorldGenerator.Settings.Seed + (uint)(_request.ChunkPosition.X + _request.ChunkPosition.Y + _request.ChunkPosition.Z);
+        _rng.Seed = _request.WorldGenerator.Settings.Seed +
+                    (uint)(_request.ChunkPosition.X + _request.ChunkPosition.Y + _request.ChunkPosition.Z);
     }
 
     private void InitializePipeline()
@@ -67,15 +69,15 @@ public class ChunkGenerationPipeline
                 var height = Mathf.FloorToInt(_request.ChunkColumn.HeightMap[x, z]);
 
                 // Calculate slope steepness
-                double maxSlope = CalculateSlope(x, z);
+                var maxSlope = CalculateSlope(x, z);
 
-                int baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
+                var baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
                 {
                     var actualY = _request.ChunkPosition.Y * ChunkMesher.CS + y;
                     if (actualY <= height)
                     {
-                        string blockType = DetermineBlockType(actualY, height, maxSlope, baseDirtDepth);
+                        var blockType = DetermineBlockType(actualY, height, maxSlope, baseDirtDepth);
                         _chunkData.SetBlock(x, y, z, blockType);
                     }
                     else if (actualY <= 0)
@@ -92,24 +94,24 @@ public class ChunkGenerationPipeline
 
         int[][] neighborOffsets =
         [
-            [-1,1],
-            [0,1],
-            [1,0],
-            [1,1]
+            [-1, 1],
+            [0, 1],
+            [1, 0],
+            [1, 1]
         ];
 
         foreach (var offset in neighborOffsets)
         {
-            int dx = offset[0];
-            int dz = offset[1];
+            var dx = offset[0];
+            var dz = offset[1];
 
-            int neighborAX = x + dx;
-            int neighborAZ = z + dz;
+            var neighborAX = x + dx;
+            var neighborAZ = z + dz;
             if (neighborAX < 0 || neighborAX >= ChunkMesher.CS_P || neighborAZ < 0 || neighborAZ >= ChunkMesher.CS_P)
                 continue;
 
-            int neighborBX = x - dx;
-            int neighborBZ = z - dz;
+            var neighborBX = x - dx;
+            var neighborBZ = z - dz;
             if (neighborBX < 0 || neighborBX >= ChunkMesher.CS_P || neighborBZ < 0 || neighborBZ >= ChunkMesher.CS_P)
                 continue;
 
@@ -147,6 +149,7 @@ public class ChunkGenerationPipeline
 
                 return "grass_block";
             }
+
             return maxSlope > 2.5 ? "stone" : "dirt";
         }
 
@@ -220,5 +223,4 @@ public class ChunkGenerationPipeline
         //     CurrentState = State
         // });
     }
-
 }

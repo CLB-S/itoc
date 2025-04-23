@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace PatternSystem;
 
 public abstract class SingleChildOperationNode : PatternTreeNode, IOperator
 {
-    private PatternTreeNode _child;
+    private readonly PatternTreeNode _child;
 
     public IEnumerable<PatternTreeNode> Children => [_child];
 

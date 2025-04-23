@@ -16,11 +16,13 @@ public partial class EnvironmentController : WorldEnvironment
         var time = World.Instance.Time;
         var worldSettings = World.Instance.Settings;
         var playerPos = World.Instance.PlayerPos;
-        var normalizedPos = (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / worldSettings.Bounds.Size + Vector2.One / 2;
+        var normalizedPos =
+            (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / worldSettings.Bounds.Size +
+            Vector2.One / 2;
         var latitude = Mathf.Lerp(-90, 90, -normalizedPos.Y);
         var longitude = Mathf.Lerp(-180, 180, normalizedPos.X);
 
-        (var solarElevation, var solarAzimuth) = OrbitalUtils.CalculateSunPosition(time, latitude, longitude,
+        var (solarElevation, solarAzimuth) = OrbitalUtils.CalculateSunPosition(time, latitude, longitude,
             worldSettings.OrbitalInclinationAngle, worldSettings.OrbitalRevolutionDays, worldSettings.MinutesPerDay);
         SunLight.RotationDegrees = new Vector3(solarElevation, solarAzimuth, 0);
     }

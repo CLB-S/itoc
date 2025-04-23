@@ -5,40 +5,39 @@ using System.Collections.Generic;
 
 public class Palette<T> where T : IEquatable<T>
 {
-    private List<T> _entries = new List<T>();
-    private int _bitsPerEntry;
-    private ulong _mask;
-    private T _defaultValue;
+    private readonly List<T> _entries = new();
+    private readonly T _defaultValue;
 
     public Palette(T defaultValue)
     {
-        _bitsPerEntry = 4; // Default to 4 bits
-        _mask = (1UL << _bitsPerEntry) - 1UL;
+        BitsPerEntry = 4; // Default to 4 bits
+        Mask = (1UL << BitsPerEntry) - 1UL;
         _defaultValue = defaultValue;
         _entries.Add(defaultValue); // Default value by default
     }
 
     public int GetId(T value)
     {
-        for (int i = 0; i < _entries.Count; i++)
-        {
+        for (var i = 0; i < _entries.Count; i++)
             if (_entries[i] == null)
             {
                 if (value == null) return i;
             }
-            else if (_entries[i].Equals(value)) return i;
-        }
+            else if (_entries[i].Equals(value))
+            {
+                return i;
+            }
 
         // Not found, add to palette
-        int newId = _entries.Count;
+        var newId = _entries.Count;
         _entries.Add(value);
 
         // Check if we need more bits
-        int requiredBits = (int)Math.Ceiling(Math.Log2(_entries.Count));
-        if (requiredBits > _bitsPerEntry)
+        var requiredBits = (int)Math.Ceiling(Math.Log2(_entries.Count));
+        if (requiredBits > BitsPerEntry)
         {
-            _bitsPerEntry = requiredBits;
-            _mask = (1UL << _bitsPerEntry) - 1UL;
+            BitsPerEntry = requiredBits;
+            Mask = (1UL << BitsPerEntry) - 1UL;
         }
 
         return newId;
@@ -50,7 +49,8 @@ public class Palette<T> where T : IEquatable<T>
         return _entries[id];
     }
 
-    public int BitsPerEntry => _bitsPerEntry;
+    public int BitsPerEntry { get; private set; }
+
     public int Count => _entries.Count;
-    public ulong Mask => _mask;
+    public ulong Mask { get; private set; }
 }

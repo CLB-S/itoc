@@ -1,12 +1,10 @@
 using Godot;
-using System;
-using System.Collections.Generic;
 
 namespace PatternSystem;
 
 public class FastNoiseLiteNode : PatternTreeNode
 {
-    private FastNoiseLite _noiseGenerator;
+    private readonly FastNoiseLite _noiseGenerator;
     private FastNoiseLiteSettings _settings;
 
     public FastNoiseLiteNode(FastNoiseLite fastNoiseLite)
@@ -42,7 +40,8 @@ public class FastNoiseLiteNode : PatternTreeNode
     {
         _settings = settings;
         _noiseGenerator = new FastNoiseLite();
-        _noiseGenerator.SetCellularDistanceFunction((FastNoiseLite.CellularDistanceFunctionEnum)settings.CellularDistanceFunction);
+        _noiseGenerator.SetCellularDistanceFunction(
+            (FastNoiseLite.CellularDistanceFunctionEnum)settings.CellularDistanceFunction);
         _noiseGenerator.SetCellularJitter(settings.CellularJitter);
         _noiseGenerator.SetCellularReturnType((FastNoiseLite.CellularReturnTypeEnum)settings.CellularReturnType);
         _noiseGenerator.SetDomainWarpAmplitude(settings.DomainWarpAmplitude);
@@ -50,7 +49,8 @@ public class FastNoiseLiteNode : PatternTreeNode
         _noiseGenerator.SetDomainWarpFractalGain(settings.DomainWarpFractalGain);
         _noiseGenerator.SetDomainWarpFractalLacunarity(settings.DomainWarpFractalLacunarity);
         _noiseGenerator.SetDomainWarpFractalOctaves(settings.DomainWarpFractalOctaves);
-        _noiseGenerator.SetDomainWarpFractalType((FastNoiseLite.DomainWarpFractalTypeEnum)settings.DomainWarpFractalType);
+        _noiseGenerator.SetDomainWarpFractalType(
+            (FastNoiseLite.DomainWarpFractalTypeEnum)settings.DomainWarpFractalType);
         _noiseGenerator.SetDomainWarpFrequency(settings.DomainWarpFrequency);
         _noiseGenerator.SetDomainWarpType((FastNoiseLite.DomainWarpTypeEnum)settings.DomainWarpType);
         _noiseGenerator.SetFractalGain(settings.FractalGain);
@@ -82,7 +82,7 @@ public class FastNoiseLiteSettings
     public double CellularJitter = 1.0;
     public CellularReturnType CellularReturnType = CellularReturnType.Distance;
     public double DomainWarpAmplitude = 30.0;
-    public bool DomainWarpEnabled = false;
+    public bool DomainWarpEnabled;
     public double DomainWarpFractalGain = 0.5;
     public double DomainWarpFractalLacunarity = 6.0;
     public int DomainWarpFractalOctaves = 5;
@@ -94,11 +94,11 @@ public class FastNoiseLiteSettings
     public int FractalOctaves = 5;
     public double FractalPingPongStrength = 2.0;
     public FractalType FractalType = FractalType.Fbm;
-    public double FractalWeightedStrength = 0.0;
+    public double FractalWeightedStrength;
     public double Frequency = 0.01;
     public NoiseType NoiseType = NoiseType.SimplexSmooth;
     public Vector3 Offset = Vector3.Zero;
-    public int Seed = 0;
+    public int Seed;
 }
 
 public enum NoiseType
@@ -108,7 +108,7 @@ public enum NoiseType
     Cellular,
     Perlin,
     ValueCubic,
-    Value,
+    Value
 }
 
 public enum FractalType

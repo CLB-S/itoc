@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public partial class GuiItem : Control
 {
@@ -32,8 +31,6 @@ public partial class GuiItem : Control
         else
         {
             GD.PrintErr($"Unsupported item type: {item.Type}");
-            return;
         }
     }
-
 }

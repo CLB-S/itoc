@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Godot;
+using Array = Godot.Collections.Array;
+using Vector2 = Godot.Vector2;
+using Vector3 = Godot.Vector3;
 
 public static class ChunkMesher
 {
@@ -42,9 +46,9 @@ public static class ChunkMesher
         meshData.Quads.Clear();
         meshData.QuadBlocks.Clear();
 
-        Array.Clear(meshData.FaceMasks, 0, meshData.FaceMasks.Length);
-        Array.Clear(meshData.ForwardMerged, 0, meshData.ForwardMerged.Length);
-        Array.Clear(meshData.RightMerged, 0, meshData.RightMerged.Length);
+        System.Array.Clear(meshData.FaceMasks, 0, meshData.FaceMasks.Length);
+        System.Array.Clear(meshData.ForwardMerged, 0, meshData.ForwardMerged.Length);
+        System.Array.Clear(meshData.RightMerged, 0, meshData.RightMerged.Length);
 
         // Hidden face culling
         for (var a = 1; a < CS_P - 1; a++)
@@ -56,7 +60,8 @@ public static class ChunkMesher
                 var abIndex = a - 1 + (b - 1) * CS;
 
                 var columnBits = meshData.OpaqueMask[a * CS_P + b] & ~((1UL << 63) | 1);
-                meshData.FaceMasks[baIndex + 0 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
+                meshData.FaceMasks[baIndex + 0 * CS_2] =
+                    (columnBits & ~meshData.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
                 meshData.FaceMasks[baIndex + 1 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P - CS_P + b]) >> 1;
                 meshData.FaceMasks[abIndex + 2 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + b + 1]) >> 1;
                 meshData.FaceMasks[abIndex + 3 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + (b - 1)]) >> 1;
@@ -66,14 +71,26 @@ public static class ChunkMesher
                 if (meshData.WaterMasks != null)
                 {
                     // Water top face.
-                    meshData.FaceMasks[baIndex + 0 * CS_2] |= (meshData.WaterMasks[a * CS_P + b] & ~((1UL << 63) | 1) & (~meshData.WaterMasks[aCS_P + CS_P + b])) >> 1; // +Y
+                    meshData.FaceMasks[baIndex + 0 * CS_2] |= (meshData.WaterMasks[a * CS_P + b] & ~((1UL << 63) | 1) &
+                                                               ~meshData.WaterMasks[aCS_P + CS_P + b]) >> 1; // +Y
 
-                    columnBits = (meshData.WaterMasks[a * CS_P + b] | meshData.OpaqueMask[a * CS_P + b]) & ~((1UL << 63) | 1);
-                    meshData.FaceMasks[baIndex + 1 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P - CS_P + b] | meshData.OpaqueMask[aCS_P - CS_P + b]))) >> 1;
-                    meshData.FaceMasks[abIndex + 2 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + b + 1] | meshData.OpaqueMask[aCS_P + b + 1]))) >> 1;
-                    meshData.FaceMasks[abIndex + 3 * CS_2] |= (columnBits & (~(meshData.WaterMasks[aCS_P + (b - 1)] | meshData.OpaqueMask[aCS_P + (b - 1)]))) >> 1;
-                    meshData.FaceMasks[baIndex + 4 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] >> 1) | (meshData.OpaqueMask[aCS_P + b] >> 1)));
-                    meshData.FaceMasks[baIndex + 5 * CS_2] |= columnBits & (~((meshData.WaterMasks[aCS_P + b] << 1) | (meshData.OpaqueMask[aCS_P + b] << 1)));
+                    columnBits = (meshData.WaterMasks[a * CS_P + b] | meshData.OpaqueMask[a * CS_P + b]) &
+                                 ~((1UL << 63) | 1);
+                    meshData.FaceMasks[baIndex + 1 * CS_2] |= (columnBits &
+                                                               ~(meshData.WaterMasks[aCS_P - CS_P + b] |
+                                                                 meshData.OpaqueMask[aCS_P - CS_P + b])) >> 1;
+                    meshData.FaceMasks[abIndex + 2 * CS_2] |= (columnBits &
+                                                               ~(meshData.WaterMasks[aCS_P + b + 1] |
+                                                                 meshData.OpaqueMask[aCS_P + b + 1])) >> 1;
+                    meshData.FaceMasks[abIndex + 3 * CS_2] |= (columnBits &
+                                                               ~(meshData.WaterMasks[aCS_P + (b - 1)] |
+                                                                 meshData.OpaqueMask[aCS_P + (b - 1)])) >> 1;
+                    meshData.FaceMasks[baIndex + 4 * CS_2] |= columnBits &
+                                                              ~((meshData.WaterMasks[aCS_P + b] >> 1) |
+                                                                (meshData.OpaqueMask[aCS_P + b] >> 1));
+                    meshData.FaceMasks[baIndex + 5 * CS_2] |= columnBits &
+                                                              ~((meshData.WaterMasks[aCS_P + b] << 1) |
+                                                                (meshData.OpaqueMask[aCS_P + b] << 1));
                 }
             }
         }
@@ -96,7 +113,7 @@ public static class ChunkMesher
                     byte rightMerged = 1;
                     while (bitsHere != 0)
                     {
-                        var bitPos = System.Numerics.BitOperations.TrailingZeroCount(bitsHere);
+                        var bitPos = BitOperations.TrailingZeroCount(bitsHere);
                         var block = chunkData.GetBlock(axis, forward + 1, bitPos + 1, layer + 1);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[bitPos];
 
@@ -180,7 +197,7 @@ public static class ChunkMesher
 
                     while (bitsHere != 0)
                     {
-                        var bitPos = System.Numerics.BitOperations.TrailingZeroCount(bitsHere);
+                        var bitPos = BitOperations.TrailingZeroCount(bitsHere);
                         bitsHere &= ~(1UL << bitPos);
 
                         var block = chunkData.GetBlock(axis, right + 1, forward + 1, bitPos);
@@ -245,7 +262,7 @@ public static class ChunkMesher
     {
         if (meshData.Quads.Count == 0) return null;
 
-        var surfaceArrayDict = new Dictionary<(Block, Direction), SurfaceArrayData>();
+        var surfaceArrayDict = new System.Collections.Generic.Dictionary<(Block, Direction), SurfaceArrayData>();
 
         for (var face = 0; face < 6; face++)
             for (var i = meshData.FaceVertexBegin[face];
@@ -265,7 +282,7 @@ public static class ChunkMesher
     }
 
     private static void ParseQuad(Direction dir, Block block, ulong quad,
-        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
+        System.Collections.Generic.Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
         var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
         if (!surfaceArrayDict.ContainsKey(blockDirPair))
@@ -299,7 +316,9 @@ public static class ChunkMesher
                 corners = GetQuadCorners(dir, x, y, z, w, h);
         }
         else
+        {
             corners = GetQuadCorners(dir, x, y, z, w, h);
+        }
 
         surfaceArrayData.Vertices.AddRange(corners);
 
@@ -405,9 +424,9 @@ public static class ChunkMesher
         public readonly List<Vector2> UVs = new();
         public readonly List<Vector3> Vertices = new();
 
-        public Godot.Collections.Array GetSurfaceArray()
+        public Array GetSurfaceArray()
         {
-            var surfaceArray = new Godot.Collections.Array();
+            var surfaceArray = new Array();
             surfaceArray.Resize((int)Mesh.ArrayType.Max);
 
             surfaceArray[(int)Mesh.ArrayType.Vertex] = Vertices.ToArray();

@@ -1,13 +1,11 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace PatternSystem;
 
 public abstract class DualChildOperationNode : PatternTreeNode, IOperator
 {
-    private PatternTreeNode _primaryChild;
-    private PatternTreeNode _secondaryChild;
+    private readonly PatternTreeNode _primaryChild;
+    private readonly PatternTreeNode _secondaryChild;
 
     public IEnumerable<PatternTreeNode> Children => [_primaryChild, _secondaryChild];
 

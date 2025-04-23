@@ -5,7 +5,7 @@ namespace WorldGenerator;
 public enum PlateType
 {
     Continent,
-    Oceans,
+    Oceans
 }
 
 public partial class WorldGenerator

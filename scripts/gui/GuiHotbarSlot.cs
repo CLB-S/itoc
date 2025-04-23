@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public partial class GuiHotbarSlot : TextureRect
 {
@@ -10,7 +9,8 @@ public partial class GuiHotbarSlot : TextureRect
 
     public IItem Item => _itemControl.Item;
 
-    private bool _isActive = false;
+    private bool _isActive;
+
     public bool IsActive
     {
         get => _isActive;

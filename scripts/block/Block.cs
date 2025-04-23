@@ -1,13 +1,13 @@
 using System;
-using System.Text.RegularExpressions;
 using Godot;
 
 public abstract class Block : IEquatable<Block>, IItem
 {
     /// <summary>
-    /// The namespaced ID of the block (e.g. "stone")
+    ///     The namespaced ID of the block (e.g. "stone")
     /// </summary>
     public string BlockId { get; }
+
     public string BlockName { get; }
     public Color Color { get; set; } = Colors.White;
     public float Hardness { get; set; } = 1.0f;
@@ -20,12 +20,13 @@ public abstract class Block : IEquatable<Block>, IItem
     public ItemType Type => ItemType.Block;
     public string Id => BlockId;
     public string Name => BlockName;
-    public string Description => String.Empty;
+    public string Description => string.Empty;
 
     protected Block(string blockId, string blockName)
     {
         if (!StringUtils.IsValidId(blockId))
-            throw new ArgumentException($"Invalid block ID format: {blockId}. Must be in format 'block_id' using lowercase letters, numbers and underscores");
+            throw new ArgumentException(
+                $"Invalid block ID format: {blockId}. Must be in format 'block_id' using lowercase letters, numbers and underscores");
 
         BlockId = blockId;
         BlockName = blockName;
@@ -33,7 +34,7 @@ public abstract class Block : IEquatable<Block>, IItem
 
     public static bool IsTransparent(string blockId)
     {
-        return String.IsNullOrEmpty(blockId) || !BlockManager.Instance.GetBlock(blockId).IsOpaque;
+        return string.IsNullOrEmpty(blockId) || !BlockManager.Instance.GetBlock(blockId).IsOpaque;
     }
 
     public abstract void LoadResources();
@@ -44,5 +45,4 @@ public abstract class Block : IEquatable<Block>, IItem
     public abstract bool Equals(Block other);
 
     // public virtual Mesh GetMesh(string modelType = "cube") => null;
-
 }

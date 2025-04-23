@@ -1,6 +1,5 @@
-using Godot;
-using System;
 using System.Collections.Generic;
+using Godot;
 
 public class ChunkData
 {
@@ -9,15 +8,19 @@ public class ChunkData
     public readonly int Z;
 
     /// <summary>
-    /// Mask for opaque blocks.
+    ///     Mask for opaque blocks.
     /// </summary>
     public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
-    public ulong[] TransparentMasks;
-    private Palette<Block> _palette = new Palette<Block>(null);
-    private List<ulong> _data = new List<ulong>();
-    private int _entriesPerLong;
 
-    private ChunkData() { }
+    public ulong[] TransparentMasks;
+    private readonly Palette<Block> _palette = new(null);
+    private readonly List<ulong> _data = new();
+    private readonly int _entriesPerLong;
+
+    private ChunkData()
+    {
+    }
+
     public ChunkData(int x, int y, int z)
     {
         X = x;
@@ -26,12 +29,14 @@ public class ChunkData
         _entriesPerLong = 64 / _palette.BitsPerEntry;
 
         // Initialize with all air blocks
-        int totalEntries = ChunkMesher.CS_P3;
-        int longCount = (totalEntries + _entriesPerLong - 1) / _entriesPerLong;
+        var totalEntries = ChunkMesher.CS_P3;
+        var longCount = (totalEntries + _entriesPerLong - 1) / _entriesPerLong;
         _data = new List<ulong>(new ulong[longCount]);
     }
 
-    public ChunkData(Vector3I pos) : this(pos.X, pos.Y, pos.Z) { }
+    public ChunkData(Vector3I pos) : this(pos.X, pos.Y, pos.Z)
+    {
+    }
 
     public Vector3I GetPosition()
     {
@@ -40,13 +45,13 @@ public class ChunkData
 
     public Block GetBlock(int axis, int a, int b, int c)
     {
-        int index = ChunkMesher.GetAxisIndex(axis, a, b, c);
+        var index = ChunkMesher.GetAxisIndex(axis, a, b, c);
         return GetBlock(index);
     }
 
     public Block GetBlock(int x, int y, int z)
     {
-        int index = ChunkMesher.GetIndex(x, y, z);
+        var index = ChunkMesher.GetIndex(x, y, z);
         return GetBlock(index);
     }
 
@@ -57,12 +62,12 @@ public class ChunkData
 
     public Block GetBlock(int index)
     {
-        int longIndex = index / _entriesPerLong;
-        int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
+        var longIndex = index / _entriesPerLong;
+        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
 
         if (longIndex >= _data.Count) return null;
 
-        ulong value = (_data[longIndex] >> bitOffset) & _palette.Mask;
+        var value = (_data[longIndex] >> bitOffset) & _palette.Mask;
         return _palette.GetValue((int)value);
     }
 
@@ -80,16 +85,16 @@ public class ChunkData
 
     public void SetBlock(int x, int y, int z, Block block)
     {
-        int index = ChunkMesher.GetIndex(x, y, z);
-        int longIndex = index / _entriesPerLong;
-        int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
+        var index = ChunkMesher.GetIndex(x, y, z);
+        var longIndex = index / _entriesPerLong;
+        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
 
-        int paletteId = _palette.GetId(block);
+        var paletteId = _palette.GetId(block);
 
         // Check if we need to resize the data array
         if (longIndex >= _data.Count)
         {
-            int needed = longIndex - _data.Count + 1;
+            var needed = longIndex - _data.Count + 1;
             _data.AddRange(new ulong[needed]);
         }
 
@@ -120,6 +125,6 @@ public class ChunkData
     public int GetBytes()
     {
         return (_data.Count * sizeof(ulong)
-               + OpaqueMask.Length * sizeof(ulong)) / 8;
+                + OpaqueMask.Length * sizeof(ulong)) / 8;
     }
 }

@@ -6,11 +6,13 @@ public class PatternTree : PatternTreeNode
 {
     public string Id { get; private set; }
     public string Name { get; private set; }
-    public PatternTreeNode RootNode { get; private set; }
+    public PatternTreeNode RootNode { get; }
+
     public PatternTree(string patternId, string patternName, PatternTreeNode root)
     {
         if (!StringUtils.IsValidId(patternId))
-            throw new ArgumentException($"Invalid block ID format: {patternId}. Must be in format 'pattern_id' using lowercase letters, numbers and underscores");
+            throw new ArgumentException(
+                $"Invalid block ID format: {patternId}. Must be in format 'pattern_id' using lowercase letters, numbers and underscores");
 
         Id = patternId;
         Name = patternName;

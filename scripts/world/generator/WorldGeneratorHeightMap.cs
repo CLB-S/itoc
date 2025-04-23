@@ -1,7 +1,6 @@
-using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Godot;
 
 namespace WorldGenerator;
 
@@ -32,11 +31,12 @@ public partial class WorldGenerator
 
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, noiseFunc: (x, y) =>
-            ((_heightPattern.Evaluate(x, y) - 0.5) * 30));
+        return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, (x, y) =>
+            (_heightPattern.Evaluate(x, y) - 0.5) * 30);
     }
 
-    public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false, int upscaleLevel = 2)
+    public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
+        int upscaleLevel = 2)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
@@ -57,6 +57,4 @@ public partial class WorldGenerator
 
         return ImageTexture.CreateFromImage(image);
     }
-
-
 }
