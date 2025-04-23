@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using PatternSystem;
+
 using DelaunatorSharp;
 
 namespace WorldGenerator;
@@ -92,8 +94,8 @@ public partial class WorldGenerator
     private IdwInterpolator _heightMapInterpolator;
 
     // World data properties
-    private Noise _plateNoise;
-    private Noise _heightNoise;
+    private PatternTree _platePattern;
+    private PatternTree _heightPattern;
 
     // Configuration
     public WorldSettings Settings { get; private set; }

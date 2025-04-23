@@ -38,7 +38,7 @@ public partial class WorldGenerator
         {
             var pos = UniformPosition(_points[i]);
             var mappedX = 2 * Mathf.Pi * pos.X / Settings.Bounds.Size.X;
-            var noiseValue = _plateNoise.GetNoise3D(Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+            var noiseValue = _platePattern.Evaluate(Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
                 Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi, pos.Y);
             var seed = MergeNoiseValue(noiseValue).ToString().Hash();
             rng.Seed = seed;

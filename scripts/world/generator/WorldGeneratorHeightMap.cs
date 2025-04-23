@@ -33,7 +33,7 @@ public partial class WorldGenerator
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
         return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, noiseFunc: (x, y) =>
-            (float)((_heightNoise.GetNoise2D(x, y) - 0.5) * 30));
+            (float)((_heightPattern.Evaluate(x, y) - 0.5) * 30));
     }
 
     public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false, int upscaleLevel = 2)

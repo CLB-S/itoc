@@ -2,6 +2,7 @@ using Godot;
 using System.Collections.Generic;
 using System.Linq;
 using DelaunatorSharp;
+using PatternSystem;
 
 namespace WorldGenerator;
 
@@ -23,7 +24,8 @@ public partial class WorldGenerator
     {
         ReportProgress("Initializing resources");
         _rng = new RandomNumberGenerator { Seed = Settings.Seed };
-        _plateNoise = new FastNoiseLite
+
+        var plateNoise = new FastNoiseLite
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
@@ -36,7 +38,9 @@ public partial class WorldGenerator
             FractalType = FastNoiseLite.FractalTypeEnum.None
         };
 
-        _heightNoise = new FastNoiseLite
+        _platePattern = new PatternTree("plate_pattern", "Plate Pattern", new FastNoiseLiteNode(plateNoise));
+
+        var heightNoise = new FastNoiseLite
         {
             Seed = (int)Settings.Seed,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
@@ -45,6 +49,8 @@ public partial class WorldGenerator
             FractalOctaves = 4,
             DomainWarpEnabled = false
         };
+
+        _heightPattern = new PatternTree("height_pattern", "Height Pattern", new FastNoiseLiteNode(heightNoise));
     }
 
     private void GeneratePoints()
