@@ -159,6 +159,8 @@ public partial class WorldTest : Node2D
 
                     var polygonPoints = cellData.Cell.Points.Select(p => p * _scalingFactor).ToArray();
                     var triangles = Geometry2D.TriangulatePolygon(polygonPoints);
+                    if (triangles == null || triangles.Length == 0) continue;
+
                     indices.AddRange(triangles);
                     vertices.AddRange(polygonPoints.Select(p => new Vector3(p.X, p.Y, 0)));
 
