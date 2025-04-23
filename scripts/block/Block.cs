@@ -22,12 +22,9 @@ public abstract class Block : IEquatable<Block>, IItem
     public string Name => BlockName;
     public string Description => String.Empty;
 
-
-    private static readonly Regex _blockIdRegex = new Regex(@"^[a-z0-9_]+$", RegexOptions.Compiled);
-
     protected Block(string blockId, string blockName)
     {
-        if (!_blockIdRegex.IsMatch(blockId))
+        if (!StringUtils.IsValidId(blockId))
             throw new ArgumentException($"Invalid block ID format: {blockId}. Must be in format 'block_id' using lowercase letters, numbers and underscores");
 
         BlockId = blockId;
