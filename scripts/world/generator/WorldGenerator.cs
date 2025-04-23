@@ -16,10 +16,10 @@ public class CellData
     public Vector2 TectonicMovement;
     public PlateType PlateType;
     public uint PlateSeed;
-    public float Uplift = 0.1f;
-    public float Height = 0;
-    public float Slope = 0;
-    public float Area = 0;
+    public double Uplift = 0.1;
+    public double Height = 0;
+    public double Slope = 0;
+    public double Area = 0;
     public bool IsRiverMouth = false;
     public CellData Receiver;
     public bool RoundPlateJunction = false;

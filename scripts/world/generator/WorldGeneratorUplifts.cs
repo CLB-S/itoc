@@ -24,10 +24,10 @@ public partial class WorldGenerator
             {
                 // [-1, 1]
                 var l = _points[cellPId] - _points[cellQId];
-                var relativeMovement = (float)((cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
+                var relativeMovement = ((cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
                                        (2 * l.Length() * Settings.MaxTectonicMovement));
 
-                if (Mathf.Abs(relativeMovement) < 0.25f)
+                if (Mathf.Abs(relativeMovement) < 0.25)
                     continue;
 
                 cellP.RoundPlateJunction = true;
@@ -35,10 +35,10 @@ public partial class WorldGenerator
 
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
                 {
-                    float altitude;
+                    double altitude;
                     if (relativeMovement < 0)
                     {
-                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0f + 0.5f;
+                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0 + 0.5;
                         altitude *= altitude;
                     }
                     else
@@ -129,7 +129,7 @@ public partial class WorldGenerator
                 if (!used.Contains(neighborIndex) && _cellDatas[neighborIndex].PlateType == PlateType.Continent)
                 {
                     var neighbor = _cellDatas[neighborIndex];
-                    var mod = sharpness == 0 ? 1.0f : 1.0f + (float)(_rng.Randf() - 0.5) * sharpness;
+                    var mod = sharpness == 0 ? 1.0f : 1.0f + (double)(_rng.Randf() - 0.5) * sharpness;
                     var heightContribution = propagatedHeight * mod;
 
                     neighbor.Uplift += heightContribution;

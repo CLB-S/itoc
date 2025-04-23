@@ -7,11 +7,11 @@ using Supercluster.KDTree;
 
 public class IdwInterpolator
 {
-    private readonly KDTree<double, float> _kdTree;
+    private readonly KDTree<double, double> _kdTree;
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<float> heights, double power = 2,
+    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<double> heights, double power = 2,
         int numNeighbors = 20)
     {
         var positionsList = positions.ToList();
@@ -22,7 +22,7 @@ public class IdwInterpolator
 
         var pointsData = positions.Select(p => new[] { p.X, p.Y }).ToArray();
 
-        _kdTree = new KDTree<double, float>(2, pointsData, heights.ToArray(), L2Norm);
+        _kdTree = new KDTree<double, double>(2, pointsData, heights.ToArray(), L2Norm);
 
         _power = power;
         _numNeighbors = numNeighbors;
@@ -36,7 +36,7 @@ public class IdwInterpolator
         return dist;
     }
 
-    public float GetHeight(double x, double y)
+    public double GetHeight(double x, double y)
     {
         var neighbors = _kdTree.NearestNeighbors([x, y], _numNeighbors);
 
@@ -58,10 +58,10 @@ public class IdwInterpolator
             // This should not happen unless all weights are zero, which is impossible with distance > 0
             return 0.0f;
 
-        return (float)(weightedSum / totalWeight);
+        return (weightedSum / totalWeight);
     }
 
-    public float[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, bool parallel = false, int upscaleLevel = 3, Func<double, double, float> noiseFunc = null)
+    public double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, bool parallel = false, int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
     {
         if (upscaleLevel < 0)
             throw new ArgumentException("Upscale level must be non-negative.");
@@ -80,11 +80,11 @@ public class IdwInterpolator
         return UpscaleHeightMap(lowResMap, resolutionX, resolutionY);
     }
 
-    private float[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, bool parallel, Func<double, double, float> noiseFunc = null)
+    private double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, bool parallel, Func<double, double, double> noiseFunc = null)
     {
-        var heightMap = new float[resolutionX, resolutionY];
-        var stepX = resolutionX > 1 ? (double)(rect.Size.X - 1) / (resolutionX - 1) : 0;
-        var stepY = resolutionY > 1 ? (double)(rect.Size.Y - 1) / (resolutionY - 1) : 0;
+        var heightMap = new double[resolutionX, resolutionY];
+        var stepX = resolutionX > 1 ? (rect.Size.X - 1) / (resolutionX - 1) : 0;
+        var stepY = resolutionY > 1 ? (rect.Size.Y - 1) / (resolutionY - 1) : 0;
 
         if (parallel)
         {
@@ -118,12 +118,12 @@ public class IdwInterpolator
         return heightMap;
     }
 
-    private float[,] UpscaleHeightMap(float[,] lowResMap, int targetX, int targetY)
+    private double[,] UpscaleHeightMap(double[,] lowResMap, int targetX, int targetY)
     {
         int lowResX = lowResMap.GetLength(0);
         int lowResY = lowResMap.GetLength(1);
 
-        var highResMap = new float[targetX, targetY];
+        var highResMap = new double[targetX, targetY];
 
         // Handle case where lowRes is 1x1
         if (lowResX == 1 && lowResY == 1)
@@ -140,12 +140,12 @@ public class IdwInterpolator
         {
             for (int y = 0; y < targetY; y++)
             {
-                float t = (float)y / (targetY - 1) * (lowResY - 1);
+                double t = y / (targetY - 1) * (lowResY - 1);
                 int y0 = (int)Math.Floor(t);
                 int y1 = Math.Min(y0 + 1, lowResY - 1);
-                float ty = t - y0;
+                double ty = t - y0;
 
-                float val = Lerp(lowResMap[0, y0], lowResMap[0, y1], ty);
+                double val = Lerp(lowResMap[0, y0], lowResMap[0, y1], ty);
                 for (int x = 0; x < targetX; x++)
                     highResMap[x, y] = val;
             }
@@ -156,12 +156,12 @@ public class IdwInterpolator
         {
             for (int x = 0; x < targetX; x++)
             {
-                float t = (float)x / (targetX - 1) * (lowResX - 1);
+                double t = x / (targetX - 1) * (lowResX - 1);
                 int x0 = (int)Math.Floor(t);
                 int x1 = Math.Min(x0 + 1, lowResX - 1);
-                float tx = t - x0;
+                double tx = t - x0;
 
-                float val = Lerp(lowResMap[x0, 0], lowResMap[x1, 0], tx);
+                double val = Lerp(lowResMap[x0, 0], lowResMap[x1, 0], tx);
                 for (int y = 0; y < targetY; y++)
                     highResMap[x, y] = val;
             }
@@ -171,26 +171,26 @@ public class IdwInterpolator
         // Bilinear interpolation for 2D case
         for (int x = 0; x < targetX; x++)
         {
-            float tx = (float)x / (targetX - 1) * (lowResX - 1);
+            double tx = x / (targetX - 1) * (lowResX - 1);
             int x0 = (int)Math.Floor(tx);
             int x1 = Math.Min(x0 + 1, lowResX - 1);
-            float fx = tx - x0;
+            double fx = tx - x0;
 
             for (int y = 0; y < targetY; y++)
             {
-                float ty = (float)y / (targetY - 1) * (lowResY - 1);
+                double ty = y / (targetY - 1) * (lowResY - 1);
                 int y0 = (int)Math.Floor(ty);
                 int y1 = Math.Min(y0 + 1, lowResY - 1);
-                float fy = ty - y0;
+                double fy = ty - y0;
 
                 // Bilinear interpolation
-                float v00 = lowResMap[x0, y0];
-                float v10 = lowResMap[x1, y0];
-                float v01 = lowResMap[x0, y1];
-                float v11 = lowResMap[x1, y1];
+                double v00 = lowResMap[x0, y0];
+                double v10 = lowResMap[x1, y0];
+                double v01 = lowResMap[x0, y1];
+                double v11 = lowResMap[x1, y1];
 
-                float v0 = Lerp(v00, v10, fx);
-                float v1 = Lerp(v01, v11, fx);
+                double v0 = Lerp(v00, v10, fx);
+                double v1 = Lerp(v01, v11, fx);
                 highResMap[x, y] = Lerp(v0, v1, fy);
             }
         }
@@ -198,10 +198,10 @@ public class IdwInterpolator
         return highResMap;
     }
 
-    public float[,] ConstructChunkHeightMap(Rect2I chunkRect, int upscaleLevel = 3, Func<double, double, float> noiseFunc = null)
+    public double[,] ConstructChunkHeightMap(Rect2I chunkRect, int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
     {
         // Center
-        var heightMap = new float[chunkRect.Size.X, chunkRect.Size.Y];
+        var heightMap = new double[chunkRect.Size.X, chunkRect.Size.Y];
         var centerRect = new Rect2I(chunkRect.Position + Vector2I.One, chunkRect.Size - 2 * Vector2I.One);
         var centerHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, chunkRect.Size.Y - 2, centerRect, upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
 
@@ -244,11 +244,6 @@ public class IdwInterpolator
     }
 
     private static double Lerp(double a, double b, double t)
-    {
-        return a + (b - a) * t;
-    }
-
-    private static float Lerp(float a, float b, float t)
     {
         return a + (b - a) * t;
     }

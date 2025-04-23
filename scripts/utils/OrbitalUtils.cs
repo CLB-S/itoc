@@ -7,7 +7,7 @@ public static class OrbitalUtils
     /// Calculates the local time in seconds。
     /// </summary>
     /// <param name="longitude"> The longitude in degrees. [-180 180]</param>
-    public static double LocalTime(double currentTimeSeconds, double longitude, float minutesPerDay)
+    public static double LocalTime(double currentTimeSeconds, double longitude, double minutesPerDay)
     {
         double T_day = minutesPerDay * 60;
         double timeInDay = currentTimeSeconds % T_day;
@@ -26,7 +26,7 @@ public static class OrbitalUtils
     /// <param name="latitude"> The latitude in degrees. [-90 90]</param>
     /// <param name="longitude"> The longitude in degrees. [-180 180]</param>
     /// <returns> The solar elevation and azimuth angles in degrees.</returns>
-    public static (double SolarElevation, double SolarAzimuth) CalculateSunPosition(double currentTimeSeconds, double latitude, double longitude, float orbitalInclinationAngle, float orbitalRevolutionDays, float minutesPerDay)
+    public static (double SolarElevation, double SolarAzimuth) CalculateSunPosition(double currentTimeSeconds, double latitude, double longitude, double orbitalInclinationAngle, double orbitalRevolutionDays, double minutesPerDay)
     {
         double T_orbital = orbitalRevolutionDays * minutesPerDay * 60;
         double T_day = minutesPerDay * 60;
@@ -67,7 +67,7 @@ public static class OrbitalUtils
     /// Calculates the sunrise and sunset times in seconds.
     /// </summary>
     /// <param name="latitude"> The latitude in degrees. [-90 90]</param>
-    public static (double? SunriseTime, double? SunsetTime) CalculateSunriseSunset(double currentTimeSeconds, double latitude, float orbitalInclinationAngle, float orbitalRevolutionDays, float minutesPerDay)
+    public static (double? SunriseTime, double? SunsetTime) CalculateSunriseSunset(double currentTimeSeconds, double latitude, double orbitalInclinationAngle, double orbitalRevolutionDays, double minutesPerDay)
     {
         double T_orbital = orbitalRevolutionDays * minutesPerDay * 60;
         double T_day = minutesPerDay * 60;

@@ -10,7 +10,7 @@ public partial class WorldGenerator
     private void InitInterpolator()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
-        var dataList = new List<float>(_cellDatas.Count);
+        var dataList = new List<double>(_cellDatas.Count);
         for (var i = 0; i < _cellDatas.Count; i++)
         {
             posList.Add(_points[i]);
@@ -20,12 +20,12 @@ public partial class WorldGenerator
         _heightMapInterpolator = new IdwInterpolator(posList, dataList);
     }
 
-    public float[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
     {
         return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
-    public float[,] CalculateChunkHeightMap(Vector2I chunkPos)
+    public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
@@ -33,10 +33,10 @@ public partial class WorldGenerator
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
         return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, noiseFunc: (x, y) =>
-            (float)((_heightPattern.Evaluate(x, y) - 0.5) * 30));
+            ((_heightPattern.Evaluate(x, y) - 0.5) * 30));
     }
 
-    public float[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false, int upscaleLevel = 2)
+    public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false, int upscaleLevel = 2)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");

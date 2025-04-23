@@ -193,7 +193,7 @@ public partial class WorldTest : Node2D
                     DrawMesh(mesh, null, modulate: color);
                     break;
                 case ColorPreset.Uplift:
-                    var uplift = cellData.Uplift / _worldGenerator.Settings.MaxUplift;
+                    var uplift = (float)(cellData.Uplift / _worldGenerator.Settings.MaxUplift);
                     color = new Color(uplift, uplift, uplift);
                     DrawMesh(mesh, null, modulate: color);
                     break;
@@ -272,7 +272,7 @@ public partial class WorldTest : Node2D
                                 _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
 
                             // Calculate line width based on drainage area
-                            float width = 1.0f;
+                            var width = 1.0;
                             if (_worldGenerator.DrainageArea != null &&
                                 _worldGenerator.DrainageArea.TryGetValue(cell.Index, out var drainage))
                             {
@@ -282,7 +282,7 @@ public partial class WorldTest : Node2D
 
                             // Calculate color based on water flow
                             // Deeper blue for higher drainage areas
-                            var alpha = Mathf.Clamp(width / 5.0f, 0.5f, 1.0f);
+                            var alpha = (float)Mathf.Clamp(width / 5.0, 0.5, 1.0);
                             var color = new Color(0.1f, 0.4f, 0.8f, alpha);
 
                             DrawLine(start, end, color, width);

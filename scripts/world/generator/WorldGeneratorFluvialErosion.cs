@@ -15,14 +15,14 @@ public partial class WorldGenerator
     private int _iterationCount = 0;
     private Dictionary<int, int> _receivers = new(); // Maps node indices to their receiver node indices
     private Dictionary<int, List<int>> _children = new(); // Maps node indices to their children node indices
-    private Dictionary<int, float> _drainageArea = new(); // Maps node indices to their drainage area
+    private Dictionary<int, double> _drainageArea = new(); // Maps node indices to their drainage area
     private HashSet<int> _lakes = new();
     private HashSet<int> _riverMouths = new();
     private ConcurrentDictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
 
     public IReadOnlyList<CellData> StreamGraph => _streamGraph;
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
-    public IReadOnlyDictionary<int, float> DrainageArea => _drainageArea;
+    public IReadOnlyDictionary<int, double> DrainageArea => _drainageArea;
 
     private void FindRiverMouths()
     {
@@ -109,7 +109,7 @@ public partial class WorldGenerator
             return cell; // River mouths have no neighbors
 
         CellData lowest = null;
-        float lowestElevation = float.MaxValue;
+        double lowestElevation = double.MaxValue;
 
         foreach (var neighbor in GetNeighborCells(cell))
         {
@@ -180,8 +180,8 @@ public partial class WorldGenerator
 
         // ReportProgress($"Found {_lakes.Count} lakes.");
 
-        // All outflows of a lake. Dictionary<int sourceLakeId, Dictionary<int targetLakeId, (int sourceNode, int targetNode, float passHeight)>>
-        var lakeOutflowGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, float passHeight)>>();
+        // All outflows of a lake. Dictionary<int sourceLakeId, Dictionary<int targetLakeId, (int sourceNode, int targetNode, double passHeight)>>
+        var lakeOutflowGraph = new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, double passHeight)>>();
 
         // For each cell in a lake
         foreach (var cell in _streamGraph)
@@ -200,10 +200,10 @@ public partial class WorldGenerator
                 if (targetLakeId == sourceLakeId) continue;
 
                 if (!lakeOutflowGraph.ContainsKey(sourceLakeId))
-                    lakeOutflowGraph[sourceLakeId] = new Dictionary<int, (int, int, float)>();
+                    lakeOutflowGraph[sourceLakeId] = new Dictionary<int, (int, int, double)>();
 
                 // Calculate pass height (maximum height of the two connecting nodes)
-                float passHeight = Mathf.Max(cell.Height, neighbor.Height);
+                double passHeight = Mathf.Max(cell.Height, neighbor.Height);
 
                 // Update the pass height if this one is lower
                 if (lakeOutflowGraph[sourceLakeId].ContainsKey(targetLakeId))
@@ -233,7 +233,7 @@ public partial class WorldGenerator
         }
 
         // Create a list of all lake connections sorted by pass height
-        var sortedConnections = new List<(int sourceLake, int targetLake, int sourceNode, int targetNode, float passHeight)>();
+        var sortedConnections = new List<(int sourceLake, int targetLake, int sourceNode, int targetNode, double passHeight)>();
 
         foreach (var (sourceLakeId, outflows) in lakeOutflowGraph)
         {
@@ -356,11 +356,11 @@ public partial class WorldGenerator
                 if (distance < 0.001f)
                 {
                     // Avoid division by zero
-                    cell.Slope = 0.0f;
+                    cell.Slope = 0.0;
                 }
                 else
                 {
-                    cell.Slope = (float)((cell.Height - receiver.Height) / distance);
+                    cell.Slope = (cell.Height - receiver.Height) / distance;
                 }
             }
         }
@@ -371,9 +371,9 @@ public partial class WorldGenerator
         // ReportProgress("Solving stream power equation");
 
         // Parameters for the stream power equation
-        float k = Settings.ErosionRate; // Erodibility coefficient
-        float m = 0.5f; // Drainage area exponent (typically 0.5)
-        float dt = Settings.ErosionTimeStep; // Time step
+        double k = Settings.ErosionRate; // Erodibility coefficient
+        double m = 0.5; // Drainage area exponent (typically 0.5)
+        double dt = Settings.ErosionTimeStep; // Time step
         double maxChange = 0.0; // Track maximum height change for convergence check
 
         // Sort nodes from downstream to upstream to ensure proper calculation order
@@ -424,10 +424,10 @@ public partial class WorldGenerator
             if (distance < 0.001f) continue;
 
             // Get the drainage area for this node
-            float drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
+            double drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
 
             // Apply uplift
-            var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01f;
+            var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01;
 
             // Calculate the term for the stream power equation
             var erosionTerm = k * Mathf.Pow(drainageArea, m) / distance;
@@ -444,7 +444,7 @@ public partial class WorldGenerator
             }
 
             // Update the height
-            cell.Height = (float)newHeight;
+            cell.Height = (double)newHeight;
 
             // Track the maximum change for convergence check
             maxChange = Mathf.Max(maxChange, Mathf.Abs(newHeight - oldHeight));

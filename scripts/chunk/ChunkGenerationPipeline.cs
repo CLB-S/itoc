@@ -67,7 +67,7 @@ public class ChunkGenerationPipeline
                 var height = Mathf.FloorToInt(_request.ChunkColumn.HeightMap[x, z]);
 
                 // Calculate slope steepness
-                float maxSlope = CalculateSlope(x, z);
+                double maxSlope = CalculateSlope(x, z);
 
                 int baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
                 for (var y = 0; y < ChunkMesher.CS_P; y++)
@@ -86,9 +86,9 @@ public class ChunkGenerationPipeline
             }
     }
 
-    private float CalculateSlope(int x, int z)
+    private double CalculateSlope(int x, int z)
     {
-        float maxSlope = 0;
+        double maxSlope = 0;
 
         int[][] neighborOffsets =
         [
@@ -125,7 +125,7 @@ public class ChunkGenerationPipeline
         return maxSlope;
     }
 
-    private string DetermineBlockType(int actualY, int height, float maxSlope, int dirtDepth)
+    private string DetermineBlockType(int actualY, int height, double maxSlope, int dirtDepth)
     {
         // Elevation-based blocks
         if (actualY <= 3)

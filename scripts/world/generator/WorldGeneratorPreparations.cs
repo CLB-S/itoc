@@ -13,7 +13,7 @@ public partial class WorldGenerator
     private Dictionary<int, int> _edgePointsMap;
     private Delaunator _delaunator;
     private Dictionary<int, CellData> _cellDatas;
-    private float _cellArea;
+    private double _cellArea;
     private Edge[] _voronoiEdges;
 
     public IReadOnlyList<Vector2> SamplePoints { get => _points; }
@@ -59,7 +59,7 @@ public partial class WorldGenerator
         _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End, Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
         _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
 
-        _cellArea = (float)Settings.Bounds.Area / _points.Count;
+        _cellArea = Settings.Bounds.Area / _points.Count;
 
         ReportProgress($"{_points.Count} points generated. Average area: {_cellArea}");
     }
@@ -76,7 +76,7 @@ public partial class WorldGenerator
             _cellDatas[_cells[i].Index] = new CellData
             {
                 Cell = _cells[i],
-                Area = (float)GeometryUtils.CalculatePolygonArea(_cells[i].Points),
+                Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points),
             };
 
         for (var i = 0; i < _delaunator.Triangles.Length; i++)
