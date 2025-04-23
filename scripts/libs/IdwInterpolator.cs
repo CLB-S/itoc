@@ -58,7 +58,7 @@ public class IdwInterpolator
             // This should not happen unless all weights are zero, which is impossible with distance > 0
             return 0.0f;
 
-        return (weightedSum / totalWeight);
+        return (double)(weightedSum / totalWeight);
     }
 
     public double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, bool parallel = false, int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
@@ -83,8 +83,8 @@ public class IdwInterpolator
     private double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, bool parallel, Func<double, double, double> noiseFunc = null)
     {
         var heightMap = new double[resolutionX, resolutionY];
-        var stepX = resolutionX > 1 ? (rect.Size.X - 1) / (resolutionX - 1) : 0;
-        var stepY = resolutionY > 1 ? (rect.Size.Y - 1) / (resolutionY - 1) : 0;
+        var stepX = resolutionX > 1 ? (double)(rect.Size.X - 1) / (resolutionX - 1) : 0;
+        var stepY = resolutionY > 1 ? (double)(rect.Size.Y - 1) / (resolutionY - 1) : 0;
 
         if (parallel)
         {
@@ -140,7 +140,7 @@ public class IdwInterpolator
         {
             for (int y = 0; y < targetY; y++)
             {
-                double t = y / (targetY - 1) * (lowResY - 1);
+                double t = (double)y / (targetY - 1) * (lowResY - 1);
                 int y0 = (int)Math.Floor(t);
                 int y1 = Math.Min(y0 + 1, lowResY - 1);
                 double ty = t - y0;
@@ -156,7 +156,7 @@ public class IdwInterpolator
         {
             for (int x = 0; x < targetX; x++)
             {
-                double t = x / (targetX - 1) * (lowResX - 1);
+                double t = (double)x / (targetX - 1) * (lowResX - 1);
                 int x0 = (int)Math.Floor(t);
                 int x1 = Math.Min(x0 + 1, lowResX - 1);
                 double tx = t - x0;
@@ -171,14 +171,14 @@ public class IdwInterpolator
         // Bilinear interpolation for 2D case
         for (int x = 0; x < targetX; x++)
         {
-            double tx = x / (targetX - 1) * (lowResX - 1);
+            double tx = (double)x / (targetX - 1) * (lowResX - 1);
             int x0 = (int)Math.Floor(tx);
             int x1 = Math.Min(x0 + 1, lowResX - 1);
             double fx = tx - x0;
 
             for (int y = 0; y < targetY; y++)
             {
-                double ty = y / (targetY - 1) * (lowResY - 1);
+                double ty = (double)y / (targetY - 1) * (lowResY - 1);
                 int y0 = (int)Math.Floor(ty);
                 int y1 = Math.Min(y0 + 1, lowResY - 1);
                 double fy = ty - y0;
