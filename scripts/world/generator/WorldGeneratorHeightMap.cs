@@ -6,7 +6,7 @@ namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
-    private void InitInterpolator()
+    protected void InitInterpolator()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
         var dataList = new List<double>(_cellDatas.Count);
@@ -24,6 +24,11 @@ public partial class WorldGenerator
         return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
+    protected virtual double NoiseOverlay(double x, double y)
+    {
+        return (_heightPattern.Evaluate(x, y) - 0.5) * 30;
+    }
+
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
     {
         if (State != GenerationState.Completed)
@@ -31,8 +36,7 @@ public partial class WorldGenerator
 
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, (x, y) =>
-            (_heightPattern.Evaluate(x, y) - 0.5) * 30);
+        return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, NoiseOverlay);
     }
 
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,

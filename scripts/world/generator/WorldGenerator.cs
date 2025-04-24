@@ -88,7 +88,7 @@ public partial class WorldGenerator
 
     public GenerationState State { get; private set; } = GenerationState.NotStarted;
 
-    private readonly LinkedList<GenerationStep> _generationPipeline = new();
+    protected readonly LinkedList<GenerationStep> _generationPipeline = new();
     private readonly Stopwatch _stopwatch = new();
     private readonly object _stateLock = new();
     private IdwInterpolator _heightMapInterpolator;
@@ -112,7 +112,7 @@ public partial class WorldGenerator
         Settings = settings;
     }
 
-    private void InitializePipeline()
+    protected virtual void InitializePipeline()
     {
         _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, InitializeResources));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));

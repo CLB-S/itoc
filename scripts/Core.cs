@@ -33,7 +33,8 @@ public partial class Core : Node
         Settings.ApplyGraphicsSettings();
         GetWindow().MoveToCenter();
 
-        WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
+        // WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
+        WorldGenerator = new WorldGenerator.DebugWorldGenerator(WorldSettings);
     }
 
     public void GenerateWorldAndStartGame()

@@ -7,7 +7,7 @@ public partial class WorldGenerator
 {
     private readonly HashSet<int> _initialAltitudeIndices = new();
 
-    private void CalculateInitialUplifts()
+    protected void CalculateInitialUplifts()
     {
         ReportProgress("Calculating initial uplifts.");
 
@@ -100,7 +100,7 @@ public partial class WorldGenerator
         }
     }
 
-    private void PropagateUplifts()
+    protected void PropagateUplifts()
     {
         ReportProgress("Propagating uplifts.");
 

@@ -29,7 +29,7 @@ public partial class WorldGenerator
         return value;
     }
 
-    private void InitializeTectonicProperties()
+    protected void InitializeTectonicProperties()
     {
         ReportProgress("Initializing tectonic properties");
         _streamGraph.Clear();

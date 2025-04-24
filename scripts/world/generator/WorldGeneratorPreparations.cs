@@ -12,7 +12,7 @@ public partial class WorldGenerator
     private List<Vector2> _points;
     private Dictionary<int, int> _edgePointsMap;
     private Delaunator _delaunator;
-    private Dictionary<int, CellData> _cellDatas;
+    protected Dictionary<int, CellData> _cellDatas;
     private double _cellArea;
     private Edge[] _voronoiEdges;
 
@@ -20,7 +20,7 @@ public partial class WorldGenerator
     public IReadOnlyDictionary<int, CellData> CellDatas => _cellDatas;
     public IReadOnlyCollection<Edge> CellEdges => _voronoiEdges;
 
-    private void InitializeResources()
+    protected void InitializeResources()
     {
         ReportProgress("Initializing resources");
         _rng = new RandomNumberGenerator { Seed = Settings.Seed };
@@ -53,7 +53,7 @@ public partial class WorldGenerator
         _heightPattern = new PatternTree("height_pattern", "Height Pattern", new FastNoiseLiteNode(heightNoise));
     }
 
-    private void GeneratePoints()
+    protected void GeneratePoints()
     {
         ReportProgress("Generating points");
         _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End,
@@ -65,7 +65,7 @@ public partial class WorldGenerator
         ReportProgress($"{_points.Count} points generated. Average area: {_cellArea}");
     }
 
-    private void CreateVoronoiDiagram()
+    protected void CreateVoronoiDiagram()
     {
         ReportProgress("Creating Voronoi diagram");
         _delaunator = new Delaunator(_points.ToArray());

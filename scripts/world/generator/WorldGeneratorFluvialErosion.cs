@@ -10,7 +10,7 @@ namespace WorldGenerator;
 public partial class WorldGenerator
 {
     private readonly List<CellData> _streamGraph = new();
-    private bool _powerEquationConverged;
+    protected bool _powerEquationConverged { get; private set; } = false;
     private int _iterationCount;
     private readonly Dictionary<int, int> _receivers = new(); // Maps node indices to their receiver node indices
     private readonly Dictionary<int, List<int>> _children = new(); // Maps node indices to their children node indices
@@ -23,7 +23,7 @@ public partial class WorldGenerator
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
     public IReadOnlyDictionary<int, double> DrainageArea => _drainageArea;
 
-    private void FindRiverMouths()
+    protected void FindRiverMouths()
     {
         // ReportProgress("Finding river mouths");
 
@@ -56,7 +56,7 @@ public partial class WorldGenerator
         }
     }
 
-    private void ComputeStreamTrees()
+    protected void ComputeStreamTrees()
     {
         // ReportProgress("Computing stream trees");
 
@@ -114,7 +114,7 @@ public partial class WorldGenerator
         return lowest.Height < cell.Height ? lowest : cell;
     }
 
-    private void IdentifyLakes()
+    protected void IdentifyLakes()
     {
         // ReportProgress("Identifying lakes");
 
@@ -151,7 +151,7 @@ public partial class WorldGenerator
     }
 
 
-    private void ProcessLakeOverflow()
+    protected void ProcessLakeOverflow()
     {
         // ReportProgress("Processing lake overflow");
 
@@ -217,8 +217,8 @@ public partial class WorldGenerator
             new List<(int sourceLake, int targetLake, int sourceNode, int targetNode, double passHeight)>();
 
         foreach (var (sourceLakeId, outflows) in lakeOutflowGraph)
-        foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
-            sortedConnections.Add((sourceLakeId, targetLakeId, sourceNode, targetNode, passHeight));
+            foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
+                sortedConnections.Add((sourceLakeId, targetLakeId, sourceNode, targetNode, passHeight));
 
         // Sort connections by pass height (ascending)
         sortedConnections.Sort((a, b) => a.passHeight.CompareTo(b.passHeight));
@@ -258,7 +258,7 @@ public partial class WorldGenerator
         }
     }
 
-    private void ComputeDrainageAndSlopes()
+    protected void ComputeDrainageAndSlopes()
     {
         // ReportProgress("Computing drainage and slopes");
 
@@ -331,7 +331,7 @@ public partial class WorldGenerator
         }
     }
 
-    private void SolvePowerEquation()
+    protected void SolvePowerEquation()
     {
         // ReportProgress("Solving stream power equation");
 
