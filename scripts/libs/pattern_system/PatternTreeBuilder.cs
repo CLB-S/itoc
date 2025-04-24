@@ -10,6 +10,10 @@ public class PatternTreeBuilder
     private readonly string _id;
     private readonly string _name;
 
+    public PatternTreeBuilder()
+    {
+    }
+
     public PatternTreeBuilder(string id, string name)
     {
         _id = id;
@@ -34,14 +38,38 @@ public class PatternTreeBuilder
         return this;
     }
 
-    public PatternTreeBuilder ApplySingleOperation<T>(Func<PatternTreeNode, T> nodeConstructor)
+    public PatternTreeBuilder WithMathExpression(string mathExpression)
+    {
+        _currentNode = new MathExpressionNode(mathExpression);
+        return this;
+    }
+
+    public PatternTreeBuilder WithMathExpression(PatternTreeNode node, string mathExpression)
+    {
+        _currentNode = new MathExpressionNode(node, mathExpression);
+        return this;
+    }
+
+    public PatternTreeBuilder WithMathExpression(IEnumerable<PatternTreeNode> nodes, string mathExpression)
+    {
+        _currentNode = new MathExpressionNode(nodes, mathExpression);
+        return this;
+    }
+
+    public PatternTreeBuilder ApplyOperation<T>(Func<PatternTreeNode, T> nodeConstructor)
         where T : SingleChildOperationNode
     {
         _currentNode = nodeConstructor(_currentNode);
         return this;
     }
 
-    public PatternTreeBuilder ApplyDualOperation<T>(PatternTreeNode secondNode,
+    public PatternTreeBuilder ApplyMathExpression(string mathExpression)
+    {
+        _currentNode = new MathExpressionNode(_currentNode, mathExpression);
+        return this;
+    }
+
+    public PatternTreeBuilder ApplyOperation<T>(PatternTreeNode secondNode,
         Func<PatternTreeNode, PatternTreeNode, T> nodeConstructor)
         where T : DualChildOperationNode
     {
@@ -49,12 +77,31 @@ public class PatternTreeBuilder
         return this;
     }
 
-    public PatternTreeBuilder ApplyMultiOperation<T>(IEnumerable<PatternTreeNode> nodes,
-        Func<IEnumerable<PatternTreeNode>, T> nodeConstructor)
+    public PatternTreeBuilder ApplyMathExpression(PatternTreeNode secondNode, string mathExpression)
+    {
+        _currentNode = new MathExpressionNode(new List<PatternTreeNode> { _currentNode, secondNode }, mathExpression);
+        return this;
+    }
+
+    public PatternTreeBuilder ApplyOperation<T>(IEnumerable<PatternTreeNode> nodes,
+        Func<PatternTreeNode, IEnumerable<PatternTreeNode>, T> nodeConstructor)
         where T : MultiChildOperationNode
     {
-        _currentNode = nodeConstructor(nodes);
+        _currentNode = nodeConstructor(_currentNode, nodes);
         return this;
+    }
+
+    public PatternTreeBuilder ApplyMathExpression(IEnumerable<PatternTreeNode> additionalNodes, string mathExpression)
+    {
+        var allNodes = new List<PatternTreeNode> { _currentNode };
+        allNodes.AddRange(additionalNodes);
+        _currentNode = new MathExpressionNode(allNodes, mathExpression);
+        return this;
+    }
+
+    public PatternTreeNode BuildNode()
+    {
+        return _currentNode;
     }
 
     public PatternTree Build()

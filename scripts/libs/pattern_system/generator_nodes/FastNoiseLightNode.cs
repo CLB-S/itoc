@@ -82,7 +82,7 @@ public class FastNoiseLiteSettings
     public double CellularJitter = 1.0;
     public CellularReturnType CellularReturnType = CellularReturnType.Distance;
     public double DomainWarpAmplitude = 30.0;
-    public bool DomainWarpEnabled;
+    public bool DomainWarpEnabled = false;
     public double DomainWarpFractalGain = 0.5;
     public double DomainWarpFractalLacunarity = 6.0;
     public int DomainWarpFractalOctaves = 5;
@@ -94,11 +94,11 @@ public class FastNoiseLiteSettings
     public int FractalOctaves = 5;
     public double FractalPingPongStrength = 2.0;
     public FractalType FractalType = FractalType.Fbm;
-    public double FractalWeightedStrength;
+    public double FractalWeightedStrength = 0.0;
     public double Frequency = 0.01;
     public NoiseType NoiseType = NoiseType.SimplexSmooth;
     public Vector3 Offset = Vector3.Zero;
-    public int Seed;
+    public int Seed = 0;
 }
 
 public enum NoiseType
