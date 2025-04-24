@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Threading.Tasks;
 using DelaunatorSharp;
 using Godot;
 using PatternSystem;
+using YamlDotNet.Serialization;
 
 namespace WorldGenerator;
 
@@ -17,15 +19,19 @@ public class DebugWorldGenerator : WorldGenerator
     {
         // var math = new MathExpressionNode("30 * sin((0.03 * Px)^2 + (0.03 * Py)^2)");
 
-        _debugHeightPattern = new PatternTreeBuilder()
+        _debugHeightPattern = new PatternTreeBuilder("debug_tree", "Debug Tree ⭐")
             .WithFastNoiseLite(new FastNoiseLiteSettings
             {
                 NoiseType = NoiseType.Cellular,
-                Frequency = 0.02f,
+                Frequency = 0.02,
                 FractalType = FractalType.None
             })
             .ApplyMathExpression("50 * sin(0.01 * Px + 0.01 * Py) * x + 30")
-            .BuildNode();
+            .Build();
+
+        GD.Print(PatternTreeJsonConverter.Serialize(_debugHeightPattern));
+
+        // new PatternTreeJsonExample();
     }
 
     protected override double NoiseOverlay(double x, double y)

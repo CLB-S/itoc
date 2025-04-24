@@ -6,6 +6,7 @@ public class FastNoiseLiteNode : PatternTreeNode
 {
     private readonly FastNoiseLite _noiseGenerator;
     private FastNoiseLiteSettings _settings;
+    public FastNoiseLiteSettings Settings => _settings;
 
     public FastNoiseLiteNode(FastNoiseLite fastNoiseLite)
     {
