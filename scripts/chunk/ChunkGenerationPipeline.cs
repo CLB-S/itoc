@@ -129,13 +129,13 @@ public class ChunkGenerationPipeline
 
     private string DetermineBlockType(int actualY, int height, double maxSlope, int dirtDepth)
     {
-        // Elevation-based blocks
-        if (actualY <= 3)
-            return "sand"; // maxSlope <= 1 ? "sand" : "gravel";
-
         // Depth-based layers
         if (actualY > height - dirtDepth)
         {
+            // Elevation-based blocks
+            if (actualY <= 3)
+                return "sand"; // maxSlope <= 1 ? "sand" : "gravel";
+
             // Surface layers
             if (actualY == height)
             {
