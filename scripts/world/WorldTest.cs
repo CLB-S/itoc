@@ -273,17 +273,15 @@ public partial class WorldTest : Node2D
                                 _worldGenerator.Settings.MinimumCellDistance *
                                 _worldGenerator.Settings.MinimumCellDistance * 5) continue;
 
-                            // Calculate line width based on drainage area
-                            var width = 1.0;
-                            if (_worldGenerator.DrainageArea != null &&
-                                _worldGenerator.DrainageArea.TryGetValue(cell.Index, out var drainage))
-                                // Scale the width logarithmically with the drainage area
-                                width = Mathf.Log(1 + drainage * 0.0005f) * 0.5f;
+                            var drainage = _worldGenerator.DrainageArea[cell.Index];
+                            if (drainage < 1000000) continue;
+
+                            var width = Mathf.Log(1 + (drainage - 900000) * 0.0005f) * 0.5f;
 
                             // Calculate color based on water flow
                             // Deeper blue for higher drainage areas
-                            var alpha = (float)Mathf.Clamp(width / 5.0, 0.5, 1.0);
-                            var color = new Color(0.1f, 0.4f, 0.8f, alpha);
+                            // var alpha = (float)Mathf.Clamp(width / 5.0, 0.7, 1.0);
+                            var color = new Color(0.1f, 0.4f, 0.8f);
 
                             DrawLine(start, end, color, width);
                         }
