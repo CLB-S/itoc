@@ -1,4 +1,5 @@
 using Godot;
+using System.Threading.Tasks;
 
 namespace WorldGenerator;
 
@@ -33,9 +34,16 @@ public partial class WorldGenerator
     {
         ReportProgress("Initializing tectonic properties");
         _streamGraph.Clear();
-        using var rng = new RandomNumberGenerator();
-        foreach (var (i, cellData) in _cellDatas)
+
+        // Use Parallel.ForEach to process cells in parallel
+        Parallel.ForEach(_cellDatas, cellDataPair =>
         {
+            var i = cellDataPair.Key;
+            var cellData = cellDataPair.Value;
+
+            // Create a thread-local RNG instance
+            using var rng = new RandomNumberGenerator();
+
             var pos = UniformPosition(_points[i]);
             var mappedX = 2 * Mathf.Pi * pos.X / Settings.Bounds.Size.X;
             var noiseValue = _platePattern.Evaluate(Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
@@ -47,7 +55,11 @@ public partial class WorldGenerator
             cellData.TectonicMovement = new Vector2(Mathf.Cos(phi), Mathf.Sin(phi)) * r;
             cellData.PlateType = RandomPlateType(rng);
             cellData.PlateSeed = seed;
+        });
 
+        // After parallel processing, add continental cells to the stream graph
+        foreach (var (i, cellData) in _cellDatas)
+        {
             if (cellData.PlateType == PlateType.Continent && ((Rect2)Settings.Bounds).HasPoint(_points[i]))
                 _streamGraph.Add(cellData);
         }
