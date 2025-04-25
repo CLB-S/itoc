@@ -32,7 +32,7 @@ public partial class GuiInfo : RichTextLabel
         var normalizedPos =
             (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / worldSettings.Bounds.Size +
             Vector2.One / 2;
-        var latitude = Mathf.Lerp(-90, 90, -normalizedPos.Y);
+        var latitude = -Mathf.Lerp(-90, 90, normalizedPos.Y);
         var longitude = Mathf.Lerp(-180, 180, normalizedPos.X);
         var localTime = OrbitalUtils.LocalTime(worldTime, longitude, worldSettings.MinutesPerDay);
         var (sunriseTime, sunsetTime) = OrbitalUtils.CalculateSunriseSunset(worldTime, latitude,
@@ -48,6 +48,7 @@ public partial class GuiInfo : RichTextLabel
         // debugTextBuilder.AppendLine($"[color=yellow]Chunk Mem:[/color] {BytesToString(chunkMem)}");
         debugTextBuilder.AppendLine($"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}");
         debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkPos.X}, {chunkPos.Y}, {chunkPos.Z}");
+        debugTextBuilder.AppendLine($"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
         debugTextBuilder.AppendLine(
             $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
         debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {World.Instance.Chunks.Count}");
