@@ -40,9 +40,20 @@ public partial class WorldGenerator
 
         _platePattern = new PatternTree("plate_pattern", "Plate Pattern", new FastNoiseLiteNode(plateNoise));
 
+        var upliftNoise = new FastNoiseLiteSettings
+        {
+            Seed = (int)Settings.Seed + 1,
+            NoiseType = NoiseType.Perlin,
+            FractalType = FractalType.None,
+            Frequency = Settings.NoiseFrequency * 1.3,
+            DomainWarpEnabled = false
+        };
+
+        _upliftPattern = new PatternTree("uplift_pattern", "Uplift Pattern", new FastNoiseLiteNode(upliftNoise));
+
         var heightNoise = new FastNoiseLite
         {
-            Seed = (int)Settings.Seed,
+            Seed = (int)Settings.Seed + 2,
             NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
             // Frequency = Settings.NoiseFrequency / sizeY,
             FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
