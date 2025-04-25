@@ -16,7 +16,7 @@ public class WorldSettings
         set => NormalizedMinimumCellDistance = value * 200.0f / Bounds.Size.Y;
     }
 
-    public double NormalizedNoiseFrequency { get; set; } = 1.0;
+    public double NormalizedNoiseFrequency { get; set; } = 0.8;
 
     public double NoiseFrequency
     {
@@ -28,8 +28,8 @@ public class WorldSettings
 
     #region Tectonic Settings
 
-    public double ContinentRatio = 0.6;
-    public double PlateMergeRatio = 0.13;
+    public double ContinentRatio = 0.8;
+    public double PlateMergeRatio = 0.0;
     public double MaxTectonicMovement = 10.0;
     public double MaxUplift = 1300.0;
     public double UpliftPropagationDecrement = 0.8;

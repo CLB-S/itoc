@@ -26,39 +26,46 @@ public partial class WorldGenerator
                 var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
                                        (2 * l.Length() * Settings.MaxTectonicMovement);
 
-                if (Mathf.Abs(relativeMovement) < 0.25)
-                    continue;
+                if (Mathf.Abs(relativeMovement) < 0.5)
+                    relativeMovement = Mathf.Pow(relativeMovement * 2, 3) / 2;
+                else if (relativeMovement > 0.5)
+                    relativeMovement = 1 - 2 * (1 - relativeMovement) * (1 - relativeMovement);
+                else if (relativeMovement < -0.5)
+                    relativeMovement = -1 + 2 * (1 + relativeMovement) * (1 + relativeMovement);
+
+                // if (Mathf.Abs(relativeMovement) < 0.15)
+                //     continue;
 
                 cellP.RoundPlateJunction = true;
                 cellQ.RoundPlateJunction = true;
 
+                double uplift;
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
                 {
-                    double altitude;
                     if (relativeMovement < 0)
                     {
-                        altitude = Mathf.Pow(relativeMovement, 3) / 2.0 + 0.5;
-                        altitude *= altitude;
+                        uplift = Mathf.Pow(relativeMovement, 3) / 4.0 + 0.25;
+                        uplift *= uplift;
                     }
                     else
                     {
-                        altitude = 1 - 0.75f * (relativeMovement - 1) * (relativeMovement - 1);
+                        uplift = 1 - 0.75f * (1 - relativeMovement) * (1 - relativeMovement);
                     }
 
-                    cellP.Uplift += altitude * Settings.MaxUplift;
-                    cellQ.Uplift += altitude * Settings.MaxUplift;
+                    cellP.Uplift += uplift * Settings.MaxUplift;
+                    cellQ.Uplift += uplift * Settings.MaxUplift;
                     _initialAltitudeIndices.Add(cellP.Index);
                     _initialAltitudeIndices.Add(cellQ.Index);
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Oceans)
                 {
-                    var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
-                    altitude = altitude * altitude * 0.5f - 0.3f;
+                    uplift = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
+                    uplift = uplift * uplift * 0.5f - 0.3f;
                     if (relativeMovement > 0)
-                        altitude += 0.25f * (1 - (1 - relativeMovement) * (1 - relativeMovement));
+                        uplift += 0.25f * (1 - (1 - relativeMovement) * (1 - relativeMovement));
 
-                    cellP.Uplift += altitude * Settings.MaxUplift;
-                    cellQ.Uplift += altitude * Settings.MaxUplift;
+                    cellP.Uplift += uplift * Settings.MaxUplift;
+                    cellQ.Uplift += uplift * Settings.MaxUplift;
                     _initialAltitudeIndices.Add(cellP.Index);
                     _initialAltitudeIndices.Add(cellQ.Index);
                 }
@@ -71,7 +78,8 @@ public partial class WorldGenerator
                     }
                     else
                     {
-                        cellP.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
+                        uplift = 1 - 0.75 * (1 - relativeMovement) * (1 - relativeMovement) * (1 - relativeMovement);
+                        cellP.Uplift += uplift * Settings.MaxUplift;
                         _initialAltitudeIndices.Add(cellP.Index);
 
                         // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
@@ -88,7 +96,8 @@ public partial class WorldGenerator
                     }
                     else
                     {
-                        cellQ.Uplift += 1 - (relativeMovement - 1) * (relativeMovement - 1);
+                        uplift = 1 - 0.75 * (1 - relativeMovement) * (1 - relativeMovement) * (1 - relativeMovement);
+                        cellQ.Uplift += uplift * Settings.MaxUplift;
                         _initialAltitudeIndices.Add(cellQ.Index);
 
                         // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
