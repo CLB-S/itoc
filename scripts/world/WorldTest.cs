@@ -188,6 +188,7 @@ public partial class WorldTest : Node2D
         foreach (var (mesh, cellData) in _polygons)
         {
             Color color;
+            var plateType = (int)cellData.PlateType;
             switch (DrawingCorlorPreset)
             {
                 case ColorPreset.Plates:
@@ -196,7 +197,8 @@ public partial class WorldTest : Node2D
                     break;
                 case ColorPreset.Uplift:
                     var uplift = (float)(cellData.Uplift / _worldGenerator.Settings.MaxUplift);
-                    color = new Color(uplift, uplift, uplift);
+                    color = new Color(0.2f * plateType, 0.2f * plateType, plateType);
+                    color = new Color(uplift, uplift, uplift).Lerp(color, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
                 case ColorPreset.Height:
@@ -204,8 +206,7 @@ public partial class WorldTest : Node2D
                     DrawMesh(mesh, null, modulate: ColorUtils.GetHeightColor((float)height));
                     break;
                 case ColorPreset.PlateTypes:
-                    color = new Color(0.2f * (int)cellData.PlateType, 0.2f * (int)cellData.PlateType,
-                        (int)cellData.PlateType);
+                    color = new Color(0.2f * plateType, 0.2f * plateType, plateType);
                     DrawMesh(mesh, null, modulate: color);
                     break;
                     // case ColorPreset.Precipitation:
