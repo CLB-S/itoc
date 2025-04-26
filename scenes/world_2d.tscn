@@ -56,7 +56,11 @@ projection = 1
 size = 3.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewport"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(0.993152, -0.0682659, 0.0948064, -0.0486846, 0.495852, 0.867041, -0.106199, -0.86572, 0.489133, 0, 0, 0)
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="SubViewport"]
+transform = Transform3D(0.945025, 0.0693418, 0.319561, -0.0559315, -0.928579, 0.366897, 0.322179, -0.364601, -0.873652, 0, 0, 0)
+light_energy = 0.4
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
