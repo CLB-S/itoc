@@ -52,6 +52,11 @@ public abstract class PatternTreeNode
         return EvaluateSeamless(position.X, position.Y, bounds);
     }
 
+    public string ToJson()
+    {
+        return PatternTreeJsonConverter.Serialize(this);
+    }
+
     public PatternTreeNode Multiply(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Multiply);
     public PatternTreeNode Add(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Add);
     public PatternTreeNode Subtract(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Subtract);

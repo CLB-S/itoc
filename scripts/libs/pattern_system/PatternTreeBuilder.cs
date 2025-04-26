@@ -62,6 +62,12 @@ public class PatternTreeBuilder
         return this;
     }
 
+    public PatternTreeBuilder ApplyOperation(SingleOperationType operationType)
+    {
+        _currentNode = new SingleChildOperationNode(_currentNode, operationType);
+        return this;
+    }
+
     public PatternTreeBuilder ApplyOperation(Func<PatternTreeNode, PositionTransformNode> nodeConstructor)
     {
         _currentNode = nodeConstructor(_currentNode);
