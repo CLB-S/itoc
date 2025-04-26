@@ -9,7 +9,7 @@ public partial class WorldGenerator
 
     private void SetInitialUplift(CellData cell, double uplift)
     {
-        var f = _upliftPattern.Evaluate(SamplePoints[cell.Index]);
+        var f = _upliftPattern.EvaluateSeamlessX(SamplePoints[cell.Index], Settings.Bounds);
 
         cell.Uplift += uplift * Settings.MaxUplift * (1 + (1 - f) * Settings.UpliftNoiseIntensity);
         _initialAltitudeIndices.Add(cell.Index);

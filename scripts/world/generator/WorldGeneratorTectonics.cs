@@ -45,9 +45,7 @@ public partial class WorldGenerator
             using var rng = new RandomNumberGenerator();
 
             var pos = UniformPosition(_points[i]);
-            var mappedX = 2 * Mathf.Pi * pos.X / Settings.Bounds.Size.X;
-            var noiseValue = _platePattern.Evaluate(Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi, pos.Y);
+            var noiseValue = _platePattern.EvaluateSeamlessX(pos, Settings.Bounds);
             var seed = MergeNoiseValue(noiseValue).ToString().Hash();
             rng.Seed = seed;
             var r = rng.Randf() * Settings.MaxTectonicMovement;
