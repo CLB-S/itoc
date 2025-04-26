@@ -45,7 +45,7 @@ public partial class WorldGenerator
             Seed = (int)Settings.Seed + 1,
             NoiseType = NoiseType.Perlin,
             FractalType = FractalType.None,
-            Frequency = Settings.NoiseFrequency * 1.3,
+            Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency,
             DomainWarpEnabled = false
         };
 

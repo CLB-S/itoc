@@ -24,6 +24,10 @@ public class WorldSettings
         set => NormalizedNoiseFrequency = value * 4000.0;
     }
 
+    public double UpliftNoiseFrequency { get; set; } = 0.7;
+    public double UpliftNoiseIntensity { get; set; } = -0.3;
+
+
     #endregion
 
     #region Tectonic Settings

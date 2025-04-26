@@ -11,7 +11,7 @@ public partial class WorldGenerator
     {
         var f = _upliftPattern.Evaluate(SamplePoints[cell.Index]);
 
-        cell.Uplift += uplift * Settings.MaxUplift * (f * 0.2 + 0.8);
+        cell.Uplift += uplift * Settings.MaxUplift * (1 + (1 - f) * Settings.UpliftNoiseIntensity);
         _initialAltitudeIndices.Add(cell.Index);
     }
 
@@ -132,7 +132,7 @@ public partial class WorldGenerator
             var currentCell = _cellDatas[currentIndex];
             var parentHeight = currentCell.Uplift;
 
-            var propagatedHeight = parentHeight * Settings.UpliftPropagationDecrement;
+            var propagatedHeight = parentHeight * Mathf.Pow(Settings.UpliftPropagationDecrement, Settings.NormalizedMinimumCellDistance);
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 
