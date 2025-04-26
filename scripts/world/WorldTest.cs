@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using Godot.Collections;
+using Array = Godot.Collections.Array;
 
 namespace WorldGenerator;
 
@@ -15,13 +16,15 @@ public partial class WorldTest : Node2D
         Uplift,
         Height,
         PlateTypes,
-        Precipitation
+        Temperature,
+        Precipitation,
     }
 
     // [Export] public ulong Seed { get; set; } = 0;
 
     [Export] public RichTextLabel TerminalLabel;
     [Export] public MeshInstance3D HeightMapMesh;
+    [Export] public OptionButton ColorPresetOptionButton;
     [Export] public Button GenerateMapButton;
     [Export] public Button GenerateHeightMapButton;
     [Export] public Button StartGameButton;
@@ -43,9 +46,10 @@ public partial class WorldTest : Node2D
     public bool DrawInterpolatedHeightMap = false;
 
     private WorldGenerator _worldGenerator => Core.Instance.WorldGenerator;
-
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
+
+    private Gradient _temperatureGradient;
 
     private readonly List<(Mesh, CellData)> _polygons = new(10000);
 
@@ -63,6 +67,14 @@ public partial class WorldTest : Node2D
         PlateMergeRatioSpinBox.SetValueNoSignal(_worldGenerator.Settings.PlateMergeRatio);
         CellDistanceSpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedMinimumCellDistance);
         NoiseFrequencySpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedNoiseFrequency);
+
+        ColorPresetOptionButton.Clear();
+        foreach (var value in Enum.GetValues(typeof(ColorPreset)))
+            ColorPresetOptionButton.AddItem(value.ToString(), (int)value);
+
+        ColorPresetOptionButton.Selected = (int)DrawingCorlorPreset;
+
+        _temperatureGradient = ResourceLoader.Load<Gradient>("res://assets/world/temperature_gradient.tres");
 
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
@@ -189,6 +201,7 @@ public partial class WorldTest : Node2D
         {
             Color color;
             var plateType = (int)cellData.PlateType;
+            var plateColor = new Color(0.2f * plateType, 0.2f * plateType, plateType);
             switch (DrawingCorlorPreset)
             {
                 case ColorPreset.Plates:
@@ -197,8 +210,7 @@ public partial class WorldTest : Node2D
                     break;
                 case ColorPreset.Uplift:
                     var uplift = (float)(cellData.Uplift / _worldGenerator.Settings.MaxUplift);
-                    color = new Color(0.2f * plateType, 0.2f * plateType, plateType);
-                    color = new Color(uplift, uplift, uplift).Lerp(color, 0.5);
+                    color = new Color(uplift, uplift, uplift).Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
                 case ColorPreset.Height:
@@ -206,13 +218,21 @@ public partial class WorldTest : Node2D
                     DrawMesh(mesh, null, modulate: ColorUtils.GetHeightColor((float)height));
                     break;
                 case ColorPreset.PlateTypes:
-                    color = new Color(0.2f * plateType, 0.2f * plateType, plateType);
+                    DrawMesh(mesh, null, modulate: plateColor);
+                    break;
+                case ColorPreset.Precipitation:
+                    var precipitation = (float)(cellData.Precipitation / _worldGenerator.Settings.MaxPrecipitation);
+                    color = new Color(precipitation, precipitation, precipitation).Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
-                    // case ColorPreset.Precipitation:
-                    //     DrawColoredPolygon(points,
-                    //         new Color((float)cellData.Precipitation, (float)cellData.Precipitation, (float)cellData.Precipitation));
-                    //     break;
+                case ColorPreset.Temperature:
+                    var temperature = cellData.Temperature;
+                    var minTemp = _worldGenerator.Settings.PolarTemperature;
+                    var maxTemp = _worldGenerator.Settings.EquatorialTemperature;
+                    var temperatureColor = _temperatureGradient.Sample((float)((temperature - minTemp) / (maxTemp - minTemp)));
+                    color = temperatureColor.Lerp(plateColor, 0.5);
+                    DrawMesh(mesh, null, modulate: color);
+                    break;
             }
         }
 

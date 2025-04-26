@@ -90,12 +90,12 @@ public partial class WorldGenerator
         return Mathf.Sqrt(dx * dx + dy * dy);
     }
 
-    private IEnumerable<int> GetNeighborCellIndices(CellData cell)
+    public IEnumerable<int> GetNeighborCellIndices(CellData cell)
     {
         return GetNeighborCellIndices(cell.Index);
     }
 
-    private IEnumerable<int> GetNeighborCellIndices(int index)
+    public IEnumerable<int> GetNeighborCellIndices(int index)
     {
         foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
         {
@@ -108,15 +108,29 @@ public partial class WorldGenerator
         }
     }
 
-    private IEnumerable<CellData> GetNeighborCells(CellData cell)
+    public IEnumerable<CellData> GetNeighborCells(CellData cell)
     {
         foreach (var i in GetNeighborCellIndices(cell))
             yield return _cellDatas[i];
     }
 
-    private IEnumerable<CellData> GetNeighborCells(int index)
+    public IEnumerable<CellData> GetNeighborCells(int index)
     {
         foreach (var i in GetNeighborCellIndices(index))
             yield return _cellDatas[i];
+    }
+
+    public double GetLatitude(Vector2 position)
+    {
+        var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
+            Vector2.One / 2;
+        return -Mathf.Lerp(-90, 90, normalizedPos.Y);
+    }
+
+    public double GetLongitude(Vector2 position)
+    {
+        var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
+            Vector2.One / 2;
+        return Mathf.Lerp(-180, 180, normalizedPos.X);
     }
 }

@@ -50,7 +50,15 @@ public class WorldSettings
 
     public double OrbitalInclinationAngle = 20.0;
     public double OrbitalRevolutionDays = 64.0;
-    public double MinutesPerDay = 30.0;
+    public double MinutesPerDay = 0.5;
+
+    #endregion
+
+    #region Climate Settings
+
+    public double EquatorialTemperature = 40.0;
+    public double PolarTemperature = -30.0;
+    public double MaxPrecipitation = 1.703;
 
     #endregion
 

@@ -85,11 +85,17 @@ public partial class WorldGenerator
         _cellDatas = new Dictionary<int, CellData>(_cells.Length);
 
         for (var i = 0; i < _cells.Length; i++)
+        {
+            var latitude = GetLatitude(_points[_cells[i].Index]);
+
             _cellDatas[_cells[i].Index] = new CellData
             {
                 Cell = _cells[i],
-                Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points)
+                Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points),
+                Precipitation = ClimateUtils.GetPrecipitation(latitude, Settings.MaxPrecipitation),
+                Temperature = ClimateUtils.GetTemperature(latitude, Settings.EquatorialTemperature, Settings.PolarTemperature),
             };
+        }
 
         for (var i = 0; i < _delaunator.Triangles.Length; i++)
             _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;

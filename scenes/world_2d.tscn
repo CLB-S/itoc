@@ -21,10 +21,11 @@ shader_parameter/texture_scale = Vector2(1, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "NoiseFrequencySpinBox", "HeightMapSubViewportSprite")]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "ColorPresetOptionButton", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "NoiseFrequencySpinBox", "HeightMapSubViewportSprite")]
 script = ExtResource("1_ieres")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
 HeightMapMesh = NodePath("../SubViewport/HeightMapMeshInstance3D")
+ColorPresetOptionButton = NodePath("../CanvasLayer/Control/VBoxContainer2/HSplitContainer/ColorPresetOptionButton")
 GenerateMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/RegenerateButton")
 GenerateHeightMapButton = NodePath("../CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton")
 StartGameButton = NodePath("../CanvasLayer/Control/StartButton")
@@ -55,11 +56,7 @@ projection = 1
 size = 3.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewport"]
-transform = Transform3D(0.993152, -0.0682659, 0.0948064, -0.0486846, 0.495852, 0.867041, -0.106199, -0.86572, 0.489133, 0, 0, 0)
-
-[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="SubViewport"]
-transform = Transform3D(0.945025, 0.0693418, 0.319561, -0.0559315, -0.928579, 0.366897, 0.322179, -0.364601, -0.873652, 0, 0, 0)
-light_energy = 0.4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -169,20 +166,8 @@ layout_mode = 2
 layout_mode = 2
 text = "ColorPreset:"
 
-[node name="OptionButton" type="OptionButton" parent="CanvasLayer/Control/VBoxContainer2/HSplitContainer"]
+[node name="ColorPresetOptionButton" type="OptionButton" parent="CanvasLayer/Control/VBoxContainer2/HSplitContainer"]
 layout_mode = 2
-selected = 2
-item_count = 5
-popup/item_0/text = "Plates"
-popup/item_0/id = 0
-popup/item_1/text = "Uplift"
-popup/item_1/id = 1
-popup/item_2/text = "Height"
-popup/item_2/id = 2
-popup/item_3/text = "PlateTypes"
-popup/item_3/id = 3
-popup/item_4/text = "Precipitation"
-popup/item_4/id = 4
 
 [node name="CheckButton" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
 layout_mode = 2
@@ -245,7 +230,7 @@ text = "Start
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer5/NoiseFrequencySpinBox" to="Map" method="OnNoiseFrequencySpinBoxValueChanged"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/RegenerateButton" to="Map" method="OnRegenerateButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton" to="Map" method="OnGenerateHeightMapButtonPressed"]
-[connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/OptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
+[connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/ColorPresetOptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton" to="Map" method="OnDrawTectonicMovementToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton2" to="Map" method="OnDrawCellOutlinesToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton3" to="Map" method="OnDrawRiversToggled"]

@@ -22,6 +22,8 @@ public class CellData
     public bool IsRiverMouth = false;
     public CellData Receiver;
     public bool RoundPlateJunction = false;
+    public double Precipitation = 0;
+    public double Temperature = 0;
     public int TriangleIndex;
 }
 
