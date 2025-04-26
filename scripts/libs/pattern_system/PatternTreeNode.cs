@@ -51,4 +51,21 @@ public abstract class PatternTreeNode
     {
         return EvaluateSeamless(position.X, position.Y, bounds);
     }
+
+    public PatternTreeNode Multiply(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Multiply);
+    public PatternTreeNode Add(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Add);
+    public PatternTreeNode Subtract(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Subtract);
+    public PatternTreeNode Divide(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Divide);
+    public PatternTreeNode Mod(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Mod);
+    public PatternTreeNode Power(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Power);
+    public PatternTreeNode Min(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Min);
+    public PatternTreeNode Max(double value) => new DualChildOperationNode(this, new ConstantNode(value), DualOperationType.Max);
+    public PatternTreeNode Add(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Add);
+    public PatternTreeNode Subtract(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Subtract);
+    public PatternTreeNode Multiply(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Multiply);
+    public PatternTreeNode Divide(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Divide);
+    public PatternTreeNode Mod(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Mod);
+    public PatternTreeNode Power(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Power);
+    public PatternTreeNode Min(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Min);
+    public PatternTreeNode Max(PatternTreeNode node) => new DualChildOperationNode(this, node, DualOperationType.Max);
 }

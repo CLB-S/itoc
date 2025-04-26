@@ -147,13 +147,19 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
         else
         {
             // Write node type
-            writer.WriteString(TypePropertyName, value.GetType().Name);
+            writer.WriteString(TypePropertyName, value?.GetType().Name);
 
-            // Write node-specific properties
-            writer.WritePropertyName(PropertiesPropertyName);
-            writer.WriteStartObject();
-            WriteNodeProperties(writer, value);
-            writer.WriteEndObject();
+            if (!(value is PositionXNode ||
+                 value is PositionYNode ||
+                 value is PositionZNode ||
+                 value is PositionTransformNode))
+            {
+                // Write node-specific properties
+                writer.WritePropertyName(PropertiesPropertyName);
+                writer.WriteStartObject();
+                WriteNodeProperties(writer, value);
+                writer.WriteEndObject();
+            }
 
             // Write children if applicable
             if (value is IOperator operatorNode)
@@ -277,9 +283,29 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
     {
         switch (nodeType)
         {
+            case null:
+                return null;
+
             case nameof(ConstantNode):
                 double value = properties["Value"].GetDouble();
                 return new ConstantNode(value);
+
+            case nameof(PositionXNode):
+                return new PositionXNode();
+
+            case nameof(PositionYNode):
+                return new PositionYNode();
+
+            case nameof(PositionZNode):
+                return new PositionZNode();
+
+            case nameof(PositionTransformNode):
+                return new PositionTransformNode(
+                    children.Count > 0 ? children[0] : null,
+                    children.Count > 1 ? children[1] : null,
+                    children.Count > 2 ? children[2] : null,
+                    children.Count > 3 ? children[3] : null
+                );
 
             case nameof(FastNoiseLiteNode):
                 // Create settings with defaults

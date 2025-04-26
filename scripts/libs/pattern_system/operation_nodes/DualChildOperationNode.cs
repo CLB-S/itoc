@@ -7,7 +7,7 @@ namespace PatternSystem;
 public enum DualOperationType
 {
     Add,
-    Minus,
+    Subtract,
     Multiply,
     Divide,
     Mod,
@@ -36,7 +36,7 @@ public class DualChildOperationNode : PatternTreeNode, IOperator
     {
         return OperationType switch
         {
-            DualOperationType.Minus => primaryValue - secondaryValue,
+            DualOperationType.Subtract => primaryValue - secondaryValue,
             DualOperationType.Multiply => primaryValue * secondaryValue,
             DualOperationType.Divide => primaryValue / secondaryValue,
             DualOperationType.Mod => primaryValue % secondaryValue,
