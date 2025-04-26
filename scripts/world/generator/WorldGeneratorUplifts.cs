@@ -7,6 +7,14 @@ public partial class WorldGenerator
 {
     private readonly HashSet<int> _initialAltitudeIndices = new();
 
+    private void SetInitialUplift(CellData cell, double uplift)
+    {
+        var f = _upliftPattern.Evaluate(SamplePoints[cell.Index]);
+
+        cell.Uplift += uplift * Settings.MaxUplift * (f * 0.2 + 0.8);
+        _initialAltitudeIndices.Add(cell.Index);
+    }
+
     protected void CalculateInitialUplifts()
     {
         ReportProgress("Calculating initial uplifts.");
@@ -52,10 +60,9 @@ public partial class WorldGenerator
                         uplift = 1 - 0.75f * (1 - relativeMovement) * (1 - relativeMovement);
                     }
 
-                    cellP.Uplift += uplift * Settings.MaxUplift;
-                    cellQ.Uplift += uplift * Settings.MaxUplift;
-                    _initialAltitudeIndices.Add(cellP.Index);
-                    _initialAltitudeIndices.Add(cellQ.Index);
+                    SetInitialUplift(cellP, uplift);
+                    SetInitialUplift(cellQ, uplift);
+
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Oceans)
                 {
@@ -64,10 +71,8 @@ public partial class WorldGenerator
                     if (relativeMovement > 0)
                         uplift += 0.25f * (1 - (1 - relativeMovement) * (1 - relativeMovement));
 
-                    cellP.Uplift += uplift * Settings.MaxUplift;
-                    cellQ.Uplift += uplift * Settings.MaxUplift;
-                    _initialAltitudeIndices.Add(cellP.Index);
-                    _initialAltitudeIndices.Add(cellQ.Index);
+                    SetInitialUplift(cellP, uplift);
+                    SetInitialUplift(cellQ, uplift);
                 }
                 else if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
@@ -79,8 +84,7 @@ public partial class WorldGenerator
                     else
                     {
                         uplift = 1 - 0.75 * (1 - relativeMovement) * (1 - relativeMovement) * (1 - relativeMovement);
-                        cellP.Uplift += uplift * Settings.MaxUplift;
-                        _initialAltitudeIndices.Add(cellP.Index);
+                        SetInitialUplift(cellP, uplift);
 
                         // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                         // altitude = altitude * altitude - 0.2f;
@@ -97,8 +101,7 @@ public partial class WorldGenerator
                     else
                     {
                         uplift = 1 - 0.75 * (1 - relativeMovement) * (1 - relativeMovement) * (1 - relativeMovement);
-                        cellQ.Uplift += uplift * Settings.MaxUplift;
-                        _initialAltitudeIndices.Add(cellQ.Index);
+                        SetInitialUplift(cellQ, uplift);
 
                         // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
                         // altitude = altitude * altitude - 0.25f;
