@@ -14,6 +14,7 @@ public partial class WorldTest : Node2D
     {
         Plates,
         Uplift,
+        // UpliftPattern,
         Height,
         PlateTypes,
         Temperature,
@@ -50,6 +51,7 @@ public partial class WorldTest : Node2D
     private Vector2 _scalingFactor;
 
     private Gradient _temperatureGradient;
+    private Gradient _heightmapGradient;
 
     private readonly List<(Mesh, CellData)> _polygons = new(10000);
 
@@ -75,6 +77,7 @@ public partial class WorldTest : Node2D
         ColorPresetOptionButton.Selected = (int)DrawingCorlorPreset;
 
         _temperatureGradient = ResourceLoader.Load<Gradient>("res://assets/world/temperature_gradient.tres");
+        _heightmapGradient = ResourceLoader.Load<Gradient>("res://assets/world/heightmap_gradient.tres");
 
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
@@ -213,9 +216,15 @@ public partial class WorldTest : Node2D
                     color = new Color(uplift, uplift, uplift).Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
+                // case ColorPreset.UpliftPattern:
+                //     var upliftPatternValue = (float)(0.5 * _worldGenerator._upliftPattern.EvaluateSeamlessX(
+                //         _worldGenerator.SamplePoints[cellData.Index], _worldGenerator.Settings.Bounds) + 0.5);
+                //     color = new Color(upliftPatternValue, upliftPatternValue, upliftPatternValue).Lerp(plateColor, 0.5);
+                //     DrawMesh(mesh, null, modulate: color);
+                //     break;
                 case ColorPreset.Height:
-                    var height = cellData.Height * 1.8f / _worldGenerator.Settings.MaxUplift - 0.005f;
-                    DrawMesh(mesh, null, modulate: ColorUtils.GetHeightColor((float)height));
+                    var height = (float)((cellData.Height * 1.2 / _worldGenerator.MaxHeight + 1) * 0.5 - 0.01);
+                    DrawMesh(mesh, null, modulate: _heightmapGradient.Sample(height));
                     break;
                 case ColorPreset.PlateTypes:
                     DrawMesh(mesh, null, modulate: plateColor);

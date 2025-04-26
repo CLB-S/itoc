@@ -98,6 +98,8 @@ public partial class WorldGenerator
     // World data properties
     private PatternTree _platePattern;
     private PatternTree _upliftPattern;
+    private PatternTree _temperaturePattern;
+    private PatternTree _precitipationPattern;
     private PatternTree _heightPattern;
 
     // Configuration

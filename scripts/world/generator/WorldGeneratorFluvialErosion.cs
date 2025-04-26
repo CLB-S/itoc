@@ -10,7 +10,6 @@ namespace WorldGenerator;
 public partial class WorldGenerator
 {
     private readonly List<CellData> _streamGraph = new();
-    protected bool _powerEquationConverged { get; private set; } = false;
     private int _iterationCount;
     private readonly Dictionary<int, int> _receivers = new(); // Maps node indices to their receiver node indices
     private readonly Dictionary<int, List<int>> _children = new(); // Maps node indices to their children node indices
@@ -19,6 +18,9 @@ public partial class WorldGenerator
     private readonly HashSet<int> _riverMouths = new();
     private readonly ConcurrentDictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
 
+    protected bool _powerEquationConverged { get; private set; } = false;
+
+    public double MaxHeight { get; protected set; } = 0;
     public IReadOnlyList<CellData> StreamGraph => _streamGraph;
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
     public IReadOnlyDictionary<int, double> DrainageArea => _drainageArea;
@@ -400,6 +402,8 @@ public partial class WorldGenerator
             // Apply thermal erosion correction: limit the maximum slope
             var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(30.0f));
             if (newHeight > maxSlopeHeight) newHeight = maxSlopeHeight;
+
+            if (newHeight > MaxHeight) MaxHeight = newHeight;
 
             // Update the height
             cell.Height = newHeight;

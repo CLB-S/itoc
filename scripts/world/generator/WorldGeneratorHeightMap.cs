@@ -55,7 +55,7 @@ public partial class WorldGenerator
         for (var x = 0; x < resolutionX; x++)
             for (var y = 0; y < resolutionY; y++)
             {
-                var h = (float)(0.5 * (1 + heightMap[x, y] / Settings.MaxUplift));
+                var h = (float)(0.5 * (1 + heightMap[x, y] / MaxHeight));
                 image.SetPixel(x, y, new Color(h, h, h));
             }
 
