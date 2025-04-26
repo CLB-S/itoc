@@ -24,6 +24,6 @@ public partial class EnvironmentController : WorldEnvironment
 
         var (solarElevation, solarAzimuth) = OrbitalUtils.CalculateSunPosition(time, latitude, longitude,
             worldSettings.OrbitalInclinationAngle, worldSettings.OrbitalRevolutionDays, worldSettings.MinutesPerDay);
-        SunLight.RotationDegrees = new Vector3(solarElevation, -solarAzimuth, 0);
+        SunLight.RotationDegrees = new Vector3(180 + solarElevation, -solarAzimuth, 0);
     }
 }

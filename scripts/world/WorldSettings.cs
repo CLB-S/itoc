@@ -54,7 +54,7 @@ public class WorldSettings
 
     public double OrbitalInclinationAngle = 20.0;
     public double OrbitalRevolutionDays = 64.0;
-    public double MinutesPerDay = 0.5;
+    public double MinutesPerDay = 30.0;
 
     #endregion
 
