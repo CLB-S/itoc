@@ -21,11 +21,6 @@ public partial class EnvironmentController : WorldEnvironment
     [Export] public Color DayFogColor = new Color(0.75f, 0.75f, 0.85f);
     [Export] public Color NightFogColor = new Color(0.05f, 0.05f, 0.1f);
 
-    [Export] public double SunriseBeginOffset = 0.5 / 24; // time before sunrise in percentage of day
-    [Export] public double SunriseEndOffset = 0.5 / 24;   // time after sunrise in percentage of day
-    [Export] public double SunsetBeginOffset = 0.5 / 24;  // time before sunset in percentage of day
-    [Export] public double SunsetEndOffset = 0.5 / 24;    // time after sunset in percentage of day
-
     [Export] public double SunLightEnergy = 1.0;
     [Export] public double MoonLightEnergy = 0.1;
 
@@ -33,6 +28,12 @@ public partial class EnvironmentController : WorldEnvironment
     [Export] public double DayGlowIntensity = 0.3;
     [Export] public double NightGlowIntensity = 1.0;
     [Export] public double SunsetGlowIntensity = 2.5;
+
+    // Solar elevation angle thresholds for day/night transitions
+    [Export] public double SunriseElevationStart = -6.0; // Civil twilight starts at -6 degrees
+    [Export] public double SunriseElevationEnd = 12.0;    // Full daylight when sun is at 3 degrees
+    [Export] public double SunsetElevationStart = 12.0;   // Sunset begins when sun is at 3 degrees
+    [Export] public double SunsetElevationEnd = -6.0;    // Civil twilight ends at -6 degrees
 
     private Sky _sky;
     private ProceduralSkyMaterial _skyMaterial;
@@ -90,11 +91,6 @@ public partial class EnvironmentController : WorldEnvironment
         var (solarElevation, solarAzimuth) = OrbitalUtils.CalculateSunPosition(time, latitude, longitude,
             worldSettings.OrbitalInclinationAngle, worldSettings.OrbitalRevolutionDays, worldSettings.MinutesPerDay);
 
-        // Get local time and sunrise/sunset info
-        var localTime = OrbitalUtils.LocalTime(time, longitude, worldSettings.MinutesPerDay);
-        var (sunriseTime, sunsetTime) = OrbitalUtils.CalculateSunriseSunset(time, latitude,
-            worldSettings.OrbitalInclinationAngle, worldSettings.OrbitalRevolutionDays, worldSettings.MinutesPerDay);
-
         // Update sun position
         SunLight.RotationDegrees = new Vector3(180 + solarElevation, -solarAzimuth, 0);
 
@@ -104,53 +100,39 @@ public partial class EnvironmentController : WorldEnvironment
             MoonLight.RotationDegrees = new Vector3(solarElevation, -solarAzimuth, 0);
         }
 
-        // Calculate time-of-day factors for visual transitions
+        // Calculate time-of-day factors for visual transitions based on solar elevation
         var dayFactor = 0.0;
         var sunsetFactor = 0.0;
 
-        if (sunriseTime != null && sunsetTime != null)
+        // Day factor varies from 0 (night) to 1 (day) based on solar elevation
+        if (solarElevation >= SunriseElevationStart && solarElevation <= SunriseElevationEnd)
         {
-            var sunriseStart = sunriseTime.Value - SunriseBeginOffset * _dayLength;
-            var sunriseEnd = sunriseTime.Value + SunriseEndOffset * _dayLength;
-            var sunsetStart = sunsetTime.Value - SunsetBeginOffset * _dayLength;
-            var sunsetEnd = sunsetTime.Value + SunsetEndOffset * _dayLength;
-
-            // Wrap to ensure correct handling across day boundaries
-            if (sunriseStart < 0) sunriseStart += _dayLength;
-            if (sunsetEnd > _dayLength) sunsetEnd -= _dayLength;
-
-            // Day factor varies from 0 (night) to 1 (day)
-            if (localTime >= sunriseStart && localTime <= sunriseEnd)
-            {
-                dayFactor = Mathf.InverseLerp(sunriseStart, sunriseEnd, localTime);
-            }
-            else if (localTime > sunriseEnd && localTime < sunsetStart)
-            {
-                dayFactor = 1.0;
-            }
-            else if (localTime >= sunsetStart && localTime <= sunsetEnd)
-            {
-                dayFactor = 1.0 - Mathf.InverseLerp(sunsetStart, sunsetEnd, localTime);
-            }
-
-            // Sunset factor for the orange glow during sunrise/sunset
-            if (localTime >= sunriseStart && localTime <= sunriseEnd)
-            {
-                // Bell curve for sunrise: peaks in the middle
-                var t = Mathf.InverseLerp(sunriseStart, sunriseEnd, localTime);
-                sunsetFactor = 4.0 * t * (1.0 - t); // Parabola that peaks at 1 when t = 0.5
-            }
-            else if (localTime >= sunsetStart && localTime <= sunsetEnd)
-            {
-                // Bell curve for sunset: peaks in the middle
-                var t = Mathf.InverseLerp(sunsetStart, sunsetEnd, localTime);
-                sunsetFactor = 4.0 * t * (1.0 - t);
-            }
+            // Sunrise transition
+            dayFactor = Mathf.InverseLerp(SunriseElevationStart, SunriseElevationEnd, solarElevation);
         }
-        else
+        else if (solarElevation > SunriseElevationEnd && solarElevation > SunsetElevationStart)
         {
-            // Polar regions (no sunrise/sunset) - use solar elevation
-            dayFactor = Mathf.Max(0, Mathf.Min(1, (solarElevation + 12) / 24)); // Simple mapping from elevation to dayFactor
+            // Full day
+            dayFactor = 1.0;
+        }
+        else if (solarElevation <= SunsetElevationStart && solarElevation >= SunsetElevationEnd)
+        {
+            // Sunset transition
+            dayFactor = Mathf.InverseLerp(SunsetElevationEnd, SunsetElevationStart, solarElevation);
+        }
+
+        // Sunset factor for the orange glow during sunrise/sunset
+        if (solarElevation >= SunriseElevationStart && solarElevation <= SunriseElevationEnd)
+        {
+            // Bell curve for sunrise: peaks in the middle
+            var t = Mathf.InverseLerp(SunriseElevationStart, SunriseElevationEnd, solarElevation);
+            sunsetFactor = 4.0 * t * (1.0 - t); // Parabola that peaks at 1 when t = 0.5
+        }
+        else if (solarElevation <= SunsetElevationStart && solarElevation >= SunsetElevationEnd)
+        {
+            // Bell curve for sunset: peaks in the middle
+            var t = Mathf.InverseLerp(SunsetElevationEnd, SunsetElevationStart, solarElevation);
+            sunsetFactor = 4.0 * t * (1.0 - t);
         }
 
         // Update light energies
