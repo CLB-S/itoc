@@ -79,26 +79,109 @@ public class FastNoiseLiteNode : PatternTreeNode
 
 public class FastNoiseLiteSettings
 {
+    /// <summary>
+    /// Default: <c>CellularDistanceFunction.Euclidean</c>
+    /// </summary>
     public CellularDistanceFunction CellularDistanceFunction = CellularDistanceFunction.Euclidean;
+
+    /// <summary>
+    /// Default: <c>1.0</c>
+    /// </summary>
     public double CellularJitter = 1.0;
+
+    /// <summary>
+    /// Default: <c>CellularReturnType.Distance</c>
+    /// </summary>
     public CellularReturnType CellularReturnType = CellularReturnType.Distance;
+
+    /// <summary>
+    /// Default: <c>30.0</c>
+    /// </summary>
     public double DomainWarpAmplitude = 30.0;
+
+    /// <summary>
+    /// Default: <c>false</c>
+    /// </summary>
     public bool DomainWarpEnabled = false;
+
+    /// <summary>
+    /// Default: <c>0.5</c>
+    /// </summary>
     public double DomainWarpFractalGain = 0.5;
+
+    /// <summary>
+    /// Default: <c>6.0</c>
+    /// </summary>
     public double DomainWarpFractalLacunarity = 6.0;
+
+    /// <summary>
+    /// Default: <c>5</c>
+    /// </summary>
     public int DomainWarpFractalOctaves = 5;
+
+    /// <summary>
+    /// Default: <c>DomainWarpFractalType.Progressive</c>
+    /// </summary>
     public DomainWarpFractalType DomainWarpFractalType = DomainWarpFractalType.Progressive;
+
+    /// <summary>
+    /// Default: <c>0.05</c>
+    /// </summary>
     public double DomainWarpFrequency = 0.05;
+
+    /// <summary>
+    /// Default: <c>DomainWarpType.Simplex</c>
+    /// </summary>
     public DomainWarpType DomainWarpType = DomainWarpType.Simplex;
+
+    /// <summary>
+    /// Default: <c>0.5</c>
+    /// </summary>
     public double FractalGain = 0.5;
+
+    /// <summary>
+    /// Default: <c>2.0</c>
+    /// </summary>
     public double FractalLacunarity = 2.0;
+
+    /// <summary>
+    /// Default: <c>5</c>
+    /// </summary>
     public int FractalOctaves = 5;
+
+    /// <summary>
+    /// Default: <c>2.0</c>
+    /// </summary>
     public double FractalPingPongStrength = 2.0;
+
+    /// <summary>
+    /// Default: <c>FractalType.Fbm</c>
+    /// </summary>
     public FractalType FractalType = FractalType.Fbm;
+
+    /// <summary>
+    /// Default: <c>0.0</c>
+    /// </summary>
     public double FractalWeightedStrength = 0.0;
+
+    /// <summary>
+    /// Default: <c>0.01</c>
+    /// </summary>
     public double Frequency = 0.01;
+
+    /// <summary>
+    /// Default: <c>NoiseType.SimplexSmooth</c>
+    /// </summary>
     public NoiseType NoiseType = NoiseType.SimplexSmooth;
+
+    /// <summary>
+    /// Default: <c>Vector3.Zero</c>
+    /// </summary>
     public Vector3 Offset = Vector3.Zero;
+
+    /// <summary>
+    /// Default: <c>0</c>
+    /// </summary>
     public int Seed = 0;
 }
 

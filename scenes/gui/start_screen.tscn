@@ -66,6 +66,22 @@ grow_vertical = 2
 theme_override_font_sizes/font_size = 48
 text = "Start"
 
+[node name="DebugWorldButton" type="TextureButton" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/DebugWorldButton"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -33.5
+offset_right = 113.0
+offset_bottom = 33.5
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "Debug World"
+
 [node name="WorldMapButton" type="TextureButton" parent="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer"]
 custom_minimum_size = Vector2(120, 60)
 layout_mode = 2
@@ -149,5 +165,6 @@ theme_override_font_sizes/font_size = 48
 text = "Loading..."
 
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/StartButton" to="." method="OnStartButtonPressed"]
+[connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/DebugWorldButton" to="." method="OnDebugWorldButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/WorldMapButton" to="." method="OnWorld2dButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/Buttons/VBoxContainer/QuitButton" to="." method="OnQuitButtonPressed"]

@@ -10,6 +10,12 @@ public partial class GuiStartScreen : Node
         LoadingScreen.Visible = true;
     }
 
+    public void OnDebugWorldButtonPressed()
+    {
+        Core.Instance.GenerateWorldAndStartGame(new WorldGenerator.DebugWorldGenerator(Core.Instance.WorldSettings));
+        LoadingScreen.Visible = true;
+    }
+
     public void OnWorld2dButtonPressed()
     {
         Core.Instance.GotoScene("res://scenes/world_2d.tscn");

@@ -4,6 +4,58 @@ using Godot;
 
 namespace PatternSystem;
 
+public static class PatternTreeBuilderExample
+{
+    public static void Example()
+    {
+        var f = new PatternTreeBuilder()
+            .WithNode(new PositionXNode())
+            .Add(new PositionYNode())
+            .Multiply(0.01)
+            .ApplyOperation(SingleOperationType.Sin)
+            .Multiply(50)
+            .BuildNode();
+
+        var examplePattern = new PatternTreeBuilder("debug_tree", "Debug Tree ⭐")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                NoiseType = NoiseType.Cellular,
+                Frequency = 0.02,
+                FractalType = FractalType.None
+            })
+            .Multiply(f)
+            .Add(30)
+            .Build();
+
+        var json = examplePattern.ToJson();
+        GD.Print(json);
+
+        var deserialized = PatternTreeJsonConverter.Deserialize(json);
+
+        // Math expressions are more flexible and support more operations, but might be a little bit slower. (Untested yet)
+        var samePatternUsingMathExpression = new PatternTreeBuilder("debug_tree", "Debug Tree ⭐")
+               .WithFastNoiseLite(new FastNoiseLiteSettings
+               {
+                   NoiseType = NoiseType.Cellular,
+                   Frequency = 0.02,
+                   FractalType = FractalType.None
+               })
+               .ApplyMathExpression("50 * sin(0.01 * Px + 0.01 * Py) * x + 30")
+               .Build();
+
+        var scalingPattern = new PatternTreeBuilder()
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                NoiseType = NoiseType.Cellular,
+                Frequency = 0.02,
+                FractalType = FractalType.None
+            })
+            .ScaleYBy(2)
+            .Multiply(30).Add(20)
+            .BuildNode();
+    }
+}
+
 public class PatternTreeBuilder
 {
     private PatternTreeNode _currentNode;
@@ -23,6 +75,12 @@ public class PatternTreeBuilder
     public PatternTreeBuilder WithNode(PatternTreeNode node)
     {
         _currentNode = node;
+        return this;
+    }
+
+    public PatternTreeBuilder WithConstant(double value)
+    {
+        _currentNode = new ConstantNode(value);
         return this;
     }
 

@@ -82,6 +82,8 @@ public partial class WorldGenerator
                 // Frequency = Settings.NoiseFrequency / sizeY,
                 FractalOctaves = 4,
             })
+            .Subtract(0.5) // Remove later after adding oceans.
+            .Multiply(30)
             .Build();
 
     }

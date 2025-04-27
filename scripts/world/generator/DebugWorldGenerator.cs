@@ -17,51 +17,28 @@ public class DebugWorldGenerator : WorldGenerator
 
     public DebugWorldGenerator(WorldSettings settings) : base(settings)
     {
-        var f = new PatternTreeBuilder()
-            .WithNode(new PositionXNode())
-            .Add(new PositionYNode())
-            .Multiply(0.01)
-            .ApplyOperation(SingleOperationType.Sin)
-            .Multiply(50)
-            .BuildNode();
-
         _debugHeightPattern = new PatternTreeBuilder("debug_tree", "Debug Tree ⭐")
             .WithFastNoiseLite(new FastNoiseLiteSettings
             {
-                NoiseType = NoiseType.Cellular,
-                Frequency = 0.02,
-                FractalType = FractalType.None
+                NoiseType = NoiseType.Simplex,
+                Frequency = 0.001,
+                FractalOctaves = 3,
+                FractalType = FractalType.Ridged,
+                FractalGain = 0.8,
+                FractalWeightedStrength = 0.4
             })
-            .Multiply(f)
-            .Add(30)
-            .Build();
-
-        var json = _debugHeightPattern.ToJson();
-        GD.Print(json);
-
-        var deserialized = PatternTreeJsonConverter.Deserialize(json);
-
-        // Math expressions are more flexible and support more operations, but might be a little bit slower. (Untested yet)
-        var samePatternUsingMathExpression = new PatternTreeBuilder("debug_tree", "Debug Tree ⭐")
-               .WithFastNoiseLite(new FastNoiseLiteSettings
-               {
-                   NoiseType = NoiseType.Cellular,
-                   Frequency = 0.02,
-                   FractalType = FractalType.None
-               })
-               .ApplyMathExpression("50 * sin(0.01 * Px + 0.01 * Py) * x + 30")
-               .Build();
-
-        var scalingPattern = new PatternTreeBuilder()
-            .WithFastNoiseLite(new FastNoiseLiteSettings
+            .Max(-0.3)
+            .Multiply(Mathf.Pi / 2)
+            .ApplyOperation(SingleOperationType.Sin)
+            .Multiply(50)
+            .Add(new FastNoiseLiteNode(new FastNoiseLiteSettings
             {
-                NoiseType = NoiseType.Cellular,
-                Frequency = 0.02,
-                FractalType = FractalType.None
-            })
-            .ScaleYBy(2)
-            .Multiply(30).Add(20)
-            .BuildNode();
+                NoiseType = NoiseType.Perlin,
+                // Frequency = 0.01,
+                FractalOctaves = 4
+            }).Multiply(40))
+            .Add(80)
+            .Build();
     }
 
     protected override double NoiseOverlay(double x, double y)
