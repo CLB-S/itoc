@@ -51,6 +51,7 @@ public partial class WorldTest : Node2D
     private Vector2 _scalingFactor;
 
     private Gradient _temperatureGradient;
+    private Gradient _precipitationGradient;
     private Gradient _heightmapGradient;
 
     private readonly List<(Mesh, CellData)> _polygons = new(10000);
@@ -76,8 +77,9 @@ public partial class WorldTest : Node2D
 
         ColorPresetOptionButton.Selected = (int)DrawingCorlorPreset;
 
-        _temperatureGradient = ResourceLoader.Load<Gradient>("res://assets/world/temperature_gradient.tres");
-        _heightmapGradient = ResourceLoader.Load<Gradient>("res://assets/world/heightmap_gradient.tres");
+        _temperatureGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/temperature_gradient.tres");
+        _precipitationGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/rainbow_gradient.tres");
+        _heightmapGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/heightmap_gradient.tres");
 
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
@@ -230,8 +232,8 @@ public partial class WorldTest : Node2D
                     DrawMesh(mesh, null, modulate: plateColor);
                     break;
                 case ColorPreset.Precipitation:
-                    var precipitation = (float)(cellData.Precipitation / _worldGenerator.Settings.MaxPrecipitation);
-                    color = new Color(precipitation, precipitation, precipitation).Lerp(plateColor, 0.5);
+                    var precipitation = cellData.Precipitation / _worldGenerator.Settings.MaxPrecipitation;
+                    color = _precipitationGradient.Sample((float)(precipitation / _worldGenerator.Settings.MaxPrecipitation)).Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
                 case ColorPreset.Temperature:

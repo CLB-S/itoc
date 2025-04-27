@@ -25,43 +25,65 @@ public partial class WorldGenerator
         ReportProgress("Initializing resources");
         _rng = new RandomNumberGenerator { Seed = Settings.Seed };
 
-        var plateNoise = new FastNoiseLite
-        {
-            Seed = (int)Settings.Seed,
-            NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular,
-            Frequency = Settings.NoiseFrequency,
-            CellularReturnType = FastNoiseLite.CellularReturnTypeEnum.CellValue,
-            DomainWarpEnabled = true,
-            DomainWarpAmplitude = 0.75 / Settings.NoiseFrequency,
-            DomainWarpFrequency = Settings.NoiseFrequency,
-            DomainWarpFractalType = FastNoiseLite.DomainWarpFractalTypeEnum.None,
-            FractalType = FastNoiseLite.FractalTypeEnum.None
-        };
+        _platePattern = new PatternTreeBuilder("plate_pattern", "Plate Pattern")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                Seed = (int)$"plate{Settings.Seed}".Hash(),
+                NoiseType = NoiseType.Cellular,
+                Frequency = Settings.NoiseFrequency,
+                CellularReturnType = CellularReturnType.CellValue,
+                DomainWarpEnabled = true,
+                DomainWarpAmplitude = 0.75 / Settings.NoiseFrequency,
+                DomainWarpFrequency = Settings.NoiseFrequency,
+                DomainWarpFractalType = DomainWarpFractalType.None,
+                FractalType = FractalType.None
+            })
+            .Build();
 
-        _platePattern = new PatternTree("plate_pattern", "Plate Pattern", new FastNoiseLiteNode(plateNoise));
+        _upliftPattern = new PatternTreeBuilder("uplift_pattern", "Uplift Pattern")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                Seed = (int)$"uplift{Settings.Seed}".Hash(),
+                NoiseType = NoiseType.Perlin,
+                FractalType = FractalType.None,
+                Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency,
+            })
+            .Build();
 
-        var upliftNoise = new FastNoiseLiteSettings
-        {
-            Seed = (int)Settings.Seed + 1,
-            NoiseType = NoiseType.Perlin,
-            FractalType = FractalType.None,
-            Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency,
-            DomainWarpEnabled = false
-        };
+        _temperaturePattern = new PatternTreeBuilder("temperature_pattern", "Temperature Pattern")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                Seed = (int)$"temperature{Settings.Seed}".Hash(),
+                NoiseType = NoiseType.Perlin,
+                FractalOctaves = 3,
+                Frequency = Settings.NoiseFrequency * Settings.TemperatureNoiseFrequency,
+            })
+            .ScaleXBy(3)
+            .Multiply(Settings.TemperatureNoiseIntensity)
+            .Build();
 
-        _upliftPattern = new PatternTree("uplift_pattern", "Uplift Pattern", new FastNoiseLiteNode(upliftNoise));
+        _precipitationPattern = new PatternTreeBuilder("precipitation_pattern", "Precipitation Pattern")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                Seed = (int)$"precipitation{Settings.Seed}".Hash(),
+                NoiseType = NoiseType.Perlin,
+                FractalOctaves = 2,
+                Frequency = Settings.NoiseFrequency * Settings.PrecipitationNoiseFrequency,
+            })
+            .ScaleXBy(2)
+            .Multiply(Settings.PrecipitationNoiseIntensity)
+            .Build();
 
-        var heightNoise = new FastNoiseLite
-        {
-            Seed = (int)Settings.Seed + 2,
-            NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,
-            // Frequency = Settings.NoiseFrequency / sizeY,
-            FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
-            FractalOctaves = 4,
-            DomainWarpEnabled = false
-        };
+        _heightPattern = new PatternTreeBuilder("height_pattern", "Height Pattern")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                Seed = (int)$"height{Settings.Seed}".Hash(),
+                NoiseType = NoiseType.Perlin,
+                // Frequency = Settings.NoiseFrequency / sizeY,
+                FractalOctaves = 4,
+            })
+            .Build();
 
-        _heightPattern = new PatternTree("height_pattern", "Height Pattern", new FastNoiseLiteNode(heightNoise));
     }
 
     protected void GeneratePoints()
@@ -88,12 +110,17 @@ public partial class WorldGenerator
         {
             var latitude = GetLatitude(_points[_cells[i].Index]);
 
+            var precipitationNoiseValue = _precipitationPattern.EvaluateSeamlessX(_points[_cells[i].Index], Settings.Bounds);
+            var temperatureNoiseValue = _temperaturePattern.EvaluateSeamlessX(_points[_cells[i].Index], Settings.Bounds);
+
             _cellDatas[_cells[i].Index] = new CellData
             {
                 Cell = _cells[i],
                 Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points),
-                Precipitation = ClimateUtils.GetPrecipitation(latitude, Settings.MaxPrecipitation),
-                Temperature = ClimateUtils.GetTemperature(latitude, Settings.EquatorialTemperature, Settings.PolarTemperature),
+                Precipitation = ClimateUtils.GetPrecipitation(latitude, Settings.MaxPrecipitation) *
+                            (1 + precipitationNoiseValue),
+                Temperature = ClimateUtils.GetTemperature(latitude, Settings.EquatorialTemperature, Settings.PolarTemperature) +
+                            temperatureNoiseValue,
             };
         }
 

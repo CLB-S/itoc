@@ -27,6 +27,11 @@ public class WorldSettings
     public double UpliftNoiseFrequency { get; set; } = 0.7;
     public double UpliftNoiseIntensity { get; set; } = -0.3;
 
+    public double TemperatureNoiseFrequency { get; set; } = 1.0;
+    public double TemperatureNoiseIntensity { get; set; } = 10.0;
+
+    public double PrecipitationNoiseFrequency { get; set; } = 1;
+    public double PrecipitationNoiseIntensity { get; set; } = 0.6;
 
     #endregion
 

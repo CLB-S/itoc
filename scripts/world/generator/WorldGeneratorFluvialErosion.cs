@@ -272,8 +272,8 @@ public partial class WorldGenerator
         {
             // Use Voronoi cell area for each cell (approximation)
             // The area represents how much rain this cell directly receives
-            var nodeArea = cell.Area;
-            _drainageArea[cell.Index] = nodeArea;
+            var nodeDrainage = cell.Area * cell.Precipitation;
+            _drainageArea[cell.Index] = nodeDrainage;
         }
 
         // Collect all river mouths (roots)
