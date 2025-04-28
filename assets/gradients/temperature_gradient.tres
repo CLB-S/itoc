@@ -1,7 +1,6 @@
 [gd_resource type="Gradient" format=3 uid="uid://whh40txuwaya"]
 
 [resource]
-offsets = PackedFloat32Array(0, 0.15, 0.5, 0.85, 1)
-colors = PackedColorArray(0.25, 0.25, 1, 1, 0.25, 0.975, 1, 1, 0.25, 1, 0.275, 1, 1, 1, 0.25, 1, 1, 0.25, 0.25, 1)
+offsets = PackedFloat32Array(0, 0.1, 0.3, 0.5, 0.6, 0.8, 0.9, 1)
+colors = PackedColorArray(0.64, 0.64, 0.64, 1, 0.4746, 0.1092, 0.84, 1, 0.25, 0.25, 1, 1, 0.25, 0.975, 1, 1, 0.25, 1, 0.275, 1, 1, 1, 0.25, 1, 1, 0.478, 0.13, 1, 0.564356, 0, 0.0613973, 1)
 metadata/_snap_enabled = true
-metadata/_snap_count = 20
