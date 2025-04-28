@@ -26,7 +26,7 @@ public partial class WorldGenerator
 
     protected virtual double NoiseOverlay(double x, double y)
     {
-        return (_heightPattern.Evaluate(x, y) - 0.5) * 30;
+        return _heightPattern.Evaluate(x, y);
     }
 
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
