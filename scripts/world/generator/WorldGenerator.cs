@@ -69,6 +69,7 @@ public enum GenerationState
     LakeOverflow,
     ComputingDrainageAndSlopes,
     SolvingPowerEquation, // If not converged, goto `ComputingStreamTrees`.
+    AdjustingTemperature,
     InitInterpolator,
     Custom,
     Completed,
@@ -139,6 +140,7 @@ public partial class WorldGenerator
             new GenerationStep(GenerationState.SolvingPowerEquation, SolvePowerEquation,
                 () => !_powerEquationConverged, GenerationState.ComputingStreamTrees));
 
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature, AdjustTemperatureAccordingToHeight));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 

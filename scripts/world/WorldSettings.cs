@@ -40,7 +40,7 @@ public class WorldSettings
     public double ContinentRatio = 0.8;
     public double PlateMergeRatio = 0.0;
     public double MaxTectonicMovement = 10.0;
-    public double MaxUplift = 1300.0;
+    public double MaxUplift = 2000.0;
     public double UpliftPropagationDecrement = 0.8;
     public double UpliftPropagationSharpness = 0.0;
 
@@ -52,6 +52,7 @@ public class WorldSettings
     public double ErosionTimeStep = 0.1;
     public double ErosionConvergenceThreshold = 2.0;
     public int MaxErosionIterations = 150;
+    public double MaxErosionSlopeAngle = 40.0;
 
     #endregion
 
@@ -68,6 +69,7 @@ public class WorldSettings
     public double EquatorialTemperature = 40.0;
     public double PolarTemperature = -30.0;
     public double MaxPrecipitation = 1.703;
+    public double TemperatureGradientWithAltitude = 1.5 / 100.0; // Higher then reality
 
     #endregion
 

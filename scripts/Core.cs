@@ -33,14 +33,13 @@ public partial class Core : Node
         Settings.ApplyGraphicsSettings();
         GetWindow().MoveToCenter();
 
+        WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
     }
 
     public void GenerateWorldAndStartGame(WorldGenerator.WorldGenerator worldGenerator = null)
     {
         if (worldGenerator != null)
             WorldGenerator = worldGenerator;
-        else
-            WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
 
         WorldGenerator.GenerationCompletedEvent += (_, _) => CallDeferred(MethodName.GotoWorldScene);
         Task.Run(WorldGenerator.GenerateWorldAsync);

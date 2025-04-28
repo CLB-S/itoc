@@ -400,7 +400,7 @@ public partial class WorldGenerator
             var newHeight = (oldHeight + dt * (uplift + erosionTerm * receiver.Height)) / (1 + erosionTerm * dt);
 
             // Apply thermal erosion correction: limit the maximum slope
-            var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(30.0f));
+            var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(Settings.MaxErosionSlopeAngle));
             if (newHeight > maxSlopeHeight) newHeight = maxSlopeHeight;
 
             if (newHeight > MaxHeight) MaxHeight = newHeight;
@@ -417,6 +417,22 @@ public partial class WorldGenerator
                                   ++_iterationCount >= Settings.MaxErosionIterations;
 
         ReportProgress(
-            $"[{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved. Max height change: {maxChange:f4}. Converged: {_powerEquationConverged}");
+            $"[{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved. Max height change: {maxChange:f4}. Max height {MaxHeight:f2}.");
+
+        if (_powerEquationConverged)
+        {
+            ReportProgress("Stream power equation converged.");
+        }
+    }
+
+    protected void AdjustTemperatureAccordingToHeight()
+    {
+        ReportProgress("Adjusting temperature");
+
+        foreach (var (i, cell) in _cellDatas)
+        {
+            if (cell.Height > 0)
+                cell.Temperature -= cell.Height * Settings.TemperatureGradientWithAltitude;
+        }
     }
 }
