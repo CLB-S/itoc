@@ -318,7 +318,15 @@ public partial class WorldTest : Node2D
 
                             DrawLine(start, end, color, width);
                         }
+
             // Draw lake areas in a lighter blue color
+            foreach (var lakeId in _worldGenerator.Lakes)
+            {
+                if (_worldGenerator.CellDatas[lakeId].IsRiverMouth) continue;
+
+                var pos = _worldGenerator.SamplePoints[lakeId] * _scalingFactor;
+                DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
+            }
             // foreach (var cell in streamGraph)
             // {
             //     // A cell is part of a lake if it's not a receiver for any other node
