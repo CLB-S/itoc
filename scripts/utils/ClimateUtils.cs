@@ -31,9 +31,9 @@ public static class ClimateUtils
     public static double GetTemperature(double latitudeDegrees, double equatorialTemperature, double polarTemperature)
     {
         var latitude = Mathf.DegToRad(latitudeDegrees);
-        var t = (equatorialTemperature + polarTemperature) / 2;
-        var dt = (equatorialTemperature - polarTemperature) / 2;
-        return t + dt * Mathf.Cos(2 * latitude);
+        var dt = (equatorialTemperature - polarTemperature * 2 / Mathf.Pi) / 2;
+        var t = equatorialTemperature - dt;
+        return t + dt * (Mathf.Abs(2 * latitude) < Mathf.Pi / 2 ? Mathf.Cos(2 * latitude) : Mathf.Pi / 2 - Mathf.Abs(2 * latitude));
     }
 
     public static Vector2 GetSurfaceWind(double latitude, double longitude,

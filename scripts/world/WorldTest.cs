@@ -239,9 +239,10 @@ public partial class WorldTest : Node2D
                     break;
                 case ColorPreset.Temperature:
                     var temperature = cellData.Temperature;
-                    var minTemp = _worldGenerator.Settings.PolarTemperature;
-                    var maxTemp = _worldGenerator.Settings.EquatorialTemperature;
-                    var temperatureColor = _temperatureGradient.Sample((float)((temperature - minTemp) / (maxTemp - minTemp)));
+                    var minTemp = _worldGenerator.Settings.PolarTemperature * 1.2;
+                    // var maxTemp = _worldGenerator.Settings.EquatorialTemperature;
+                    // minTemp < 0 < maxTemp < -minTemp
+                    var temperatureColor = _temperatureGradient.Sample((float)((temperature - minTemp) / (2 * -minTemp)));
                     color = temperatureColor.Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
@@ -305,7 +306,7 @@ public partial class WorldTest : Node2D
                                 _worldGenerator.Settings.MinimumCellDistance *
                                 _worldGenerator.Settings.MinimumCellDistance * 5) continue;
 
-                            var drainage = _worldGenerator.DrainageArea[cell.Index];
+                            var drainage = _worldGenerator.Drainages[cell.Index];
                             if (drainage < 1000000) continue;
 
                             var width = Mathf.Log(1 + (drainage - 900000) * 0.0005f) * 0.5f;

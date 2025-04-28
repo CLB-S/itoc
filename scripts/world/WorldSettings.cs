@@ -66,10 +66,10 @@ public class WorldSettings
 
     #region Climate Settings
 
-    public double EquatorialTemperature = 40.0;
-    public double PolarTemperature = -30.0;
+    public double EquatorialTemperature = 35.0;
+    public double PolarTemperature = -50;
     public double MaxPrecipitation = 1.703;
-    public double TemperatureGradientWithAltitude = 1.5 / 100.0; // Higher then reality
+    public double TemperatureGradientWithAltitude = 2 / 100.0; // Higher then reality.
 
     #endregion
 
