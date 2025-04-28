@@ -17,28 +17,7 @@ public class DebugWorldGenerator : WorldGenerator
 
     public DebugWorldGenerator(WorldSettings settings) : base(settings)
     {
-        _debugHeightPattern = new PatternTreeBuilder("debug_tree", "Debug Tree ⭐")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.Simplex,
-                Frequency = 0.001,
-                FractalOctaves = 3,
-                FractalType = FractalType.Ridged,
-                FractalGain = 0.8,
-                FractalWeightedStrength = 0.4
-            })
-            .Max(-0.3)
-            .Multiply(Mathf.Pi / 2)
-            .ApplyOperation(SingleOperationType.Sin)
-            .Multiply(50)
-            .Add(new FastNoiseLiteNode(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.Perlin,
-                // Frequency = 0.01,
-                FractalOctaves = 4
-            }).Multiply(40))
-            .Add(80)
-            .Build();
+        _debugHeightPattern = PatternLibrary.Instance.GetPattern("plain");
     }
 
     protected override double NoiseOverlay(double x, double y)
