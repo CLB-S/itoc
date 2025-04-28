@@ -195,6 +195,11 @@ layout_mode = 2
 tooltip_text = "Press right button to rotate."
 text = "Show 3D Height Map: "
 
+[node name="CheckButton6" type="CheckButton" parent="CanvasLayer/Control/VBoxContainer2"]
+layout_mode = 2
+tooltip_text = "Press right button to rotate."
+text = "Draw Winds:"
+
 [node name="RichTextLabel" type="RichTextLabel" parent="CanvasLayer/Control"]
 layout_mode = 1
 anchors_preset = 2
@@ -240,4 +245,5 @@ text = "Start
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton3" to="Map" method="OnDrawRiversToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton4" to="Map" method="OnDrawInterpolatedHeightMapToggled"]
 [connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton5" to="Map" method="OnShow3DHeightMapToggled"]
+[connection signal="toggled" from="CanvasLayer/Control/VBoxContainer2/CheckButton6" to="Map" method="OnDrawWindsToggled"]
 [connection signal="pressed" from="CanvasLayer/Control/StartButton" to="Map" method="OnStartGameButtonPressed"]

@@ -45,6 +45,7 @@ public partial class WorldTest : Node2D
     public bool DrawCellOutlines = false;
     public bool DrawRivers = true;
     public bool DrawInterpolatedHeightMap = false;
+    public bool DrawWinds = false;
 
     private WorldGenerator _worldGenerator => Core.Instance.WorldGenerator;
     private int _heightMapResolution = 1000;
@@ -336,53 +337,25 @@ public partial class WorldTest : Node2D
             // }
         }
 
-        // Draw rivers (deprecated)
-        // if (DrawRivers)
-        //     foreach (var river in _worldGenerator.Rivers.Values)
-        //     {
-        //         if (river.Path.Count < 2) continue;
+        // Draw wind vectors
+        if (DrawWinds && _worldGenerator.State == GenerationState.Completed)
+        {
+            var windSettings = new WindSettings();
+            using var rng = new RandomNumberGenerator();
+            rng.Seed = _worldGenerator.Settings.Seed;
 
-        //         var points = river.Path.ToArray();
-        //         var color = new Color(0.2f, 0.4f, 0.8f);
+            foreach (var (i, _) in _worldGenerator.CellDatas)
+            {
+                if (i % 10 != 0) continue;
 
-        //         for (var i = 0; i < points.Length - 1; i++)
-        //         {
-        //             if ((points[i] - points[i + 1]).LengthSquared() >
-        //                 _worldGenerator.Settings.MinimumCellDistance * _worldGenerator.Settings.MinimumCellDistance * 5) continue;
-        //             DrawLine(points[i] * _scalingFactor, points[i + 1] * _scalingFactor, color, river.Width);
-        //         }
-        //         // Draw main river channel
-        //         // DrawPolyline(points, color, river.Width);
-        //         // Draw river banks
-        //         // var bankColor = new Color(0.1f, 0.3f, 0.7f);
-        //         // DrawPolyline(points, bankColor, river.Width * 1.2f);
-        //     }
-
-        // DrawTextureRect(ImageTexture.CreateFromImage(_noise.GetImage((int)_worldGenerator.Settings.Bounds.Size.X, (int)_worldGenerator.Settings.Bounds.Size.Y)), Rect, false);
-
-
-        // Find neigbour cells of a cell.
-        // var itest = 99;
-        // DrawCircle(_worldGenerator.SamplePoints[_delaunator.Triangles[itest]], 6f, Colors.Blue);
-        // foreach (var item in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(itest)))
-        // {
-        //     DrawCircle(_worldGenerator.SamplePoints[_delaunator.Triangles[item]], 4f, Colors.Red);
-        // }
-
-        // DrawCircle(_worldGenerator.SamplePoints[itest], 6f, Colors.Blue);
-        // foreach (var item in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_worldGenerator.CellDatas[itest].TriangleIndex)))
-        // {
-        //     DrawCircle(_worldGenerator.SamplePoints[_delaunator.Triangles[item]], 4f, Colors.Red);
-        // }
-
-        // Find the two cells forming the edge.
-        // var edge1 = _worldGenerator.CellEdges[itest];
-        // var cellP = _delaunator.Triangles[edge1.Index];
-        // var cellQ = _delaunator.Triangles[_delaunator.Halfedges[edge1.Index]];
-
-        // DrawCircle(_worldGenerator.SamplePoints[cellP], 4f, Colors.Red);
-        // DrawCircle(_worldGenerator.SamplePoints[cellQ], 4f, Colors.Blue);
-        // DrawLine(edge1.P, edge1.Q, Colors.Aqua);
+                var pos = _worldGenerator.SamplePoints[i];
+                var longitude = _worldGenerator.GetLongitude(pos);
+                var latitude = _worldGenerator.GetLatitude(pos);
+                var wind = ClimateUtils.GetSurfaceWind(latitude, longitude, windSettings, rng);
+                var end = pos * _scalingFactor + wind * 20;
+                DrawArrow(pos * _scalingFactor, end, Colors.Black);
+            }
+        }
 
         DrawRect(DrawingRect, Colors.Red, false);
 
@@ -481,6 +454,12 @@ public partial class WorldTest : Node2D
     public void OnDrawInterpolatedHeightMapToggled(bool toggledOn)
     {
         DrawInterpolatedHeightMap = toggledOn;
+        QueueRedraw();
+    }
+
+    public void OnDrawWindsToggled(bool toggledOn)
+    {
+        DrawWinds = toggledOn;
         QueueRedraw();
     }
 
