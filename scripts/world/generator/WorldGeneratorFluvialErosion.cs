@@ -13,7 +13,8 @@ public partial class WorldGenerator
     private int _iterationCount;
     private readonly Dictionary<int, int> _receivers = new(); // Maps node indices to their receiver node indices
     private readonly Dictionary<int, List<int>> _children = new(); // Maps node indices to their children node indices
-    private readonly Dictionary<int, double> _drainageArea = new(); // Maps node indices to their drainage area
+    private readonly Dictionary<int, double> _drainageAreas = new(); // Maps node indices to their drainage area
+    private readonly Dictionary<int, double> _drainages = new(); // Maps node indices to their drainage area
     private readonly HashSet<int> _lakes = new();
     private readonly HashSet<int> _riverMouths = new();
     private readonly ConcurrentDictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
@@ -22,8 +23,9 @@ public partial class WorldGenerator
 
     public double MaxHeight { get; protected set; } = 0;
     public IReadOnlyList<CellData> StreamGraph => _streamGraph;
+    public IReadOnlySet<int> Lakes => _lakes;
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
-    public IReadOnlyDictionary<int, double> DrainageArea => _drainageArea;
+    public IReadOnlyDictionary<int, double> Drainages => _drainages;
 
     protected void FindRiverMouths()
     {
@@ -265,15 +267,16 @@ public partial class WorldGenerator
         // ReportProgress("Computing drainage and slopes");
 
         // Reset the drainage area map
-        _drainageArea.Clear();
+        _drainageAreas.Clear();
+        _drainages.Clear();
 
         // Initialize the drainage area for each node with its own area
         foreach (var cell in _streamGraph)
         {
             // Use Voronoi cell area for each cell (approximation)
             // The area represents how much rain this cell directly receives
-            var nodeDrainage = cell.Area * cell.Precipitation;
-            _drainageArea[cell.Index] = nodeDrainage;
+            _drainageAreas[cell.Index] = cell.Area;
+            _drainages[cell.Index] = cell.Area * cell.Precipitation;
         }
 
         // Collect all river mouths (roots)
@@ -315,7 +318,10 @@ public partial class WorldGenerator
             // Accumulate drainage area from children
             if (_children.TryGetValue(index, out var children))
                 foreach (var childIndex in children)
-                    _drainageArea[index] += _drainageArea[childIndex];
+                {
+                    _drainageAreas[index] += _drainageAreas[childIndex];
+                    _drainages[index] += _drainages[childIndex];
+                }
 
             // Compute slope for this node if it has a receiver
             if (_receivers.TryGetValue(index, out var receiverIndex))
@@ -387,7 +393,8 @@ public partial class WorldGenerator
             if (distance < 0.001f) continue;
 
             // Get the drainage area for this node
-            var drainageArea = _drainageArea.GetValueOrDefault(cell.Index, _cellArea);
+            // Instead of using drainage, drainage area will generate higher mountains at low latitudes.  
+            var drainageArea = _drainageAreas.GetValueOrDefault(cell.Index, _cellArea);
 
             // Apply uplift
             var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01;
