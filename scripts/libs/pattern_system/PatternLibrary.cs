@@ -38,26 +38,34 @@ public class PatternLibrary
 
     private void RegisterBuiltInPatterns()
     {
-        RegisterPattern(new PatternTreeBuilder("mountain", "Mountain")
+        RegisterPattern(new PatternTreeBuilder("mountain", "Mountain With Ridges")
             .WithFastNoiseLite(new FastNoiseLiteSettings
             {
+                Seed = 233,
                 NoiseType = NoiseType.Simplex,
-                Frequency = 0.001,
-                FractalOctaves = 3,
+                Frequency = 0.002,
                 FractalType = FractalType.Ridged,
-                FractalGain = 0.8,
-                FractalWeightedStrength = 0.4
+                FractalOctaves = 1,
             })
-            .Max(-0.3)
-            .Multiply(Mathf.Pi / 2)
-            .ApplyOperation(SingleOperationType.Sin) // Make peaks smoother.
-            .Multiply(50)
+            .Multiply(new FastNoiseLiteNode(new FastNoiseLiteSettings
+            {
+                Seed = 2332,
+                NoiseType = NoiseType.SimplexSmooth,
+                FractalType = FractalType.None,
+                Frequency = 0.0015,
+            }).Max(-0.6).Add(0.8))
             .Add(new FastNoiseLiteNode(new FastNoiseLiteSettings
             {
-                NoiseType = NoiseType.Perlin,
-                FractalOctaves = 4
-            }).Multiply(40))
-            .Add(80)
+                NoiseType = NoiseType.Simplex,
+                Frequency = 0.004,
+                FractalOctaves = 4,
+                DomainWarpEnabled = true,
+                DomainWarpAmplitude = 150,
+                DomainWarpFractalType = DomainWarpFractalType.None,
+                DomainWarpFrequency = 0.002,
+            }))
+            .Multiply(30)
+            .Add(50)
             .Build());
 
         RegisterPattern(new PatternTreeBuilder("plain", "Plain")
