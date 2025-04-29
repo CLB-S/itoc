@@ -21,7 +21,7 @@ shader_parameter/texture_scale = Vector2(1, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "ColorPresetOptionButton", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "NoiseFrequencySpinBox", "HeightMapSubViewportSprite")]
+[node name="Map" type="Node2D" parent="." node_paths=PackedStringArray("TerminalLabel", "HeightMapMesh", "ColorPresetOptionButton", "GenerateMapButton", "GenerateHeightMapButton", "StartGameButton", "SeedSpinBox", "ContinentRatioSpinBox", "PlateMergeRatioSpinBox", "CellDistanceSpinBox", "NoiseFrequencySpinBox", "ErosionRateSpinBox", "ErotionTimeStepSpinBox", "MaxErosionIterationsSpinBox", "HeightMapSubViewportSprite")]
 script = ExtResource("1_ieres")
 TerminalLabel = NodePath("../CanvasLayer/Control/RichTextLabel")
 HeightMapMesh = NodePath("../SubViewport/HeightMapMeshInstance3D")
@@ -34,6 +34,9 @@ ContinentRatioSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitCon
 PlateMergeRatioSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox")
 CellDistanceSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer4/CellDistanceSpinBox")
 NoiseFrequencySpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer5/NoiseFrequencySpinBox")
+ErosionRateSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer6/ErosionRateSpinBox")
+ErotionTimeStepSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer7/ErosionTimeStepSpinBox")
+MaxErosionIterationsSpinBox = NodePath("../CanvasLayer/Control/VBoxContainer/HSplitContainer8/MaxErosionIterationsSpinBox")
 HeightMapSubViewportSprite = NodePath("../HeightMapSubViewportSprite")
 
 [node name="HeightMapSubViewportSprite" type="Sprite2D" parent="." node_paths=PackedStringArray("TargetObject")]
@@ -142,6 +145,41 @@ layout_mode = 2
 max_value = 100000.0
 step = 0.1
 
+[node name="HSplitContainer6" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer6"]
+layout_mode = 2
+text = "Erotion Rate:"
+
+[node name="ErosionRateSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer6"]
+layout_mode = 2
+max_value = 100000.0
+step = 0.1
+
+[node name="HSplitContainer7" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer7"]
+layout_mode = 2
+text = "Erosion Time Step:"
+
+[node name="ErosionTimeStepSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer7"]
+layout_mode = 2
+max_value = 100000.0
+step = 0.1
+
+[node name="HSplitContainer8" type="HSplitContainer" parent="CanvasLayer/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer8"]
+layout_mode = 2
+text = "Max Erosion Iterations:"
+
+[node name="MaxErosionIterationsSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer8"]
+layout_mode = 2
+max_value = 100000.0
+
 [node name="RegenerateButton" type="Button" parent="CanvasLayer/Control/VBoxContainer"]
 layout_mode = 2
 text = "Regenerate
@@ -237,6 +275,9 @@ text = "Start
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer3/PlateMergeRatioSpinBox" to="Map" method="OnPlateMergeRatioSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer4/CellDistanceSpinBox" to="Map" method="OnCellDistanceSpinBoxValueChanged"]
 [connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer5/NoiseFrequencySpinBox" to="Map" method="OnNoiseFrequencySpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer6/ErosionRateSpinBox" to="Map" method="OnErosionRateSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer7/ErosionTimeStepSpinBox" to="Map" method="OnErotionTimeStepSpinBoxValueChanged"]
+[connection signal="value_changed" from="CanvasLayer/Control/VBoxContainer/HSplitContainer8/MaxErosionIterationsSpinBox" to="Map" method="OnMaxErosionIterationsSpinBoxValueChanged"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/RegenerateButton" to="Map" method="OnRegenerateButtonPressed"]
 [connection signal="pressed" from="CanvasLayer/Control/VBoxContainer/GenerateHeightMapButton" to="Map" method="OnGenerateHeightMapButtonPressed"]
 [connection signal="item_selected" from="CanvasLayer/Control/VBoxContainer2/HSplitContainer/ColorPresetOptionButton" to="Map" method="OnDrawingCorlorPresetSelected"]
