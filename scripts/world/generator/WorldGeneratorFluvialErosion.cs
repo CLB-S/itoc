@@ -36,21 +36,15 @@ public partial class WorldGenerator
         {
             var cellPId = _delaunator.Triangles[edge.Index];
             var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
-            var cellP = _cellDatas[cellPId];
-            var cellQ = _cellDatas[cellQId];
-
-            if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
+            if (_cellDatas.TryGetValue(cellPId, out var cellP) && _cellDatas.TryGetValue(cellQId, out var cellQ))
             {
-                if (((Rect2)Settings.Bounds).HasPoint(SamplePoints[cellPId]))
+                if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
                     cellP.IsRiverMouth = true;
                     cellP.Receiver = cellQ;
                     _riverMouths.Add(cellP.Index);
                 }
-            }
-            else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
-            {
-                if (((Rect2)Settings.Bounds).HasPoint(SamplePoints[cellQId]))
+                else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
                 {
                     cellQ.IsRiverMouth = true;
                     cellQ.Receiver = cellP;
@@ -438,10 +432,10 @@ public partial class WorldGenerator
     {
         ReportProgress("Adjusting temperature");
 
-        foreach (var (i, cell) in _cellDatas)
+        Parallel.ForEach(_cellDatas.Values, cell =>
         {
             if (cell.Height > 0)
                 cell.Temperature -= cell.Height * Settings.TemperatureGradientWithAltitude;
-        }
+        });
     }
 }

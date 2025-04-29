@@ -25,10 +25,10 @@ public partial class WorldGenerator
         {
             var cellPId = _delaunator.Triangles[edge.Index];
             var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
-            var cellP = _cellDatas[cellPId];
-            var cellQ = _cellDatas[cellQId];
-            if (cellP.TectonicMovement != cellQ.TectonicMovement)
+            if (_cellDatas.TryGetValue(cellPId, out var cellP) && _cellDatas.TryGetValue(cellQId, out var cellQ))
             {
+                if (cellP.TectonicMovement == cellQ.TectonicMovement) continue;
+
                 // [-1, 1]
                 var l = _points[cellPId] - _points[cellQId];
                 var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
@@ -108,6 +108,7 @@ public partial class WorldGenerator
                         // cellP.Uplift += altitude;
                     }
                 }
+
             }
         }
     }

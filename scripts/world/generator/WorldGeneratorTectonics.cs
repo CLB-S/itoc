@@ -44,7 +44,7 @@ public partial class WorldGenerator
             // Create a thread-local RNG instance
             using var rng = new RandomNumberGenerator();
 
-            var pos = UniformPosition(_points[i]);
+            var pos = _points[i];
             var noiseValue = _platePattern.EvaluateSeamlessX(pos, Settings.Bounds);
             var seed = MergeNoiseValue(noiseValue).ToString().Hash();
             rng.Seed = seed;
@@ -58,7 +58,7 @@ public partial class WorldGenerator
         // After parallel processing, add continental cells to the stream graph
         foreach (var (i, cellData) in _cellDatas)
         {
-            if (cellData.PlateType == PlateType.Continent && ((Rect2)Settings.Bounds).HasPoint(_points[i]))
+            if (cellData.PlateType == PlateType.Continent)
                 _streamGraph.Add(cellData);
         }
     }

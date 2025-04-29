@@ -110,10 +110,13 @@ public partial class WorldGenerator
 
         for (var i = 0; i < _cells.Length; i++)
         {
-            var latitude = GetLatitude(_points[_cells[i].Index]);
+            var pos = SamplePoints[_cells[i].Index];
+            if (!((Rect2)Settings.Bounds).HasPoint(pos))
+                continue;
 
-            var precipitationNoiseValue = _precipitationPattern.EvaluateSeamlessX(_points[_cells[i].Index], Settings.Bounds);
-            var temperatureNoiseValue = _temperaturePattern.EvaluateSeamlessX(_points[_cells[i].Index], Settings.Bounds);
+            var latitude = GetLatitude(pos);
+            var precipitationNoiseValue = _precipitationPattern.EvaluateSeamlessX(pos, Settings.Bounds);
+            var temperatureNoiseValue = _temperaturePattern.EvaluateSeamlessX(pos, Settings.Bounds);
 
             _cellDatas[_cells[i].Index] = new CellData
             {
@@ -127,6 +130,7 @@ public partial class WorldGenerator
         }
 
         for (var i = 0; i < _delaunator.Triangles.Length; i++)
-            _cellDatas[_delaunator.Triangles[i]].TriangleIndex = i;
+            if (_cellDatas.TryGetValue(_delaunator.Triangles[i], out var cellData))
+                cellData.TriangleIndex = i;
     }
 }
