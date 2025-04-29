@@ -34,6 +34,10 @@ public partial class WorldTest : Node2D
     [Export] public SpinBox PlateMergeRatioSpinBox;
     [Export] public SpinBox CellDistanceSpinBox;
     [Export] public SpinBox NoiseFrequencySpinBox;
+    [Export] public SpinBox ErosionRateSpinBox;
+    [Export] public SpinBox ErotionTimeStepSpinBox;
+    [Export] public SpinBox MaxErosionIterationsSpinBox;
+
 
     [Export] public Node2D HeightMapSubViewportSprite;
     [Export] public Rect2 DrawingRect = new(-500, -500, 1000, 1000);
@@ -71,6 +75,9 @@ public partial class WorldTest : Node2D
         PlateMergeRatioSpinBox.SetValueNoSignal(_worldGenerator.Settings.PlateMergeRatio);
         CellDistanceSpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedMinimumCellDistance);
         NoiseFrequencySpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedNoiseFrequency);
+        ErosionRateSpinBox.SetValueNoSignal(_worldGenerator.Settings.ErosionRate);
+        ErotionTimeStepSpinBox.SetValueNoSignal(_worldGenerator.Settings.ErosionTimeStep);
+        MaxErosionIterationsSpinBox.SetValueNoSignal(_worldGenerator.Settings.MaxErosionIterations);
 
         ColorPresetOptionButton.Clear();
         foreach (var value in Enum.GetValues(typeof(ColorPreset)))
@@ -395,6 +402,21 @@ public partial class WorldTest : Node2D
     public void OnNoiseFrequencySpinBoxValueChanged(float value)
     {
         _worldGenerator.Settings.NormalizedNoiseFrequency = value;
+    }
+
+    public void OnErosionRateSpinBoxValueChanged(float value)
+    {
+        _worldGenerator.Settings.ErosionRate = value;
+    }
+
+    public void OnErotionTimeStepSpinBoxValueChanged(float value)
+    {
+        _worldGenerator.Settings.ErosionTimeStep = value;
+    }
+
+    public void OnMaxErosionIterationsSpinBoxValueChanged(float value)
+    {
+        _worldGenerator.Settings.MaxErosionIterations = (int)value;
     }
 
     public void OnRegenerateButtonPressed()
