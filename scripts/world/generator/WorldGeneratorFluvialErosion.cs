@@ -378,6 +378,7 @@ public partial class WorldGenerator
         }
 
         // Process nodes from downstream to upstream (river mouths to sources)
+        var totalChange = 0.0;
         foreach (var cell in sortedNodes)
         {
             // If this is a river mouth or has no receiver, skip it
@@ -410,26 +411,27 @@ public partial class WorldGenerator
             var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(Settings.MaxErosionSlopeAngle));
             if (newHeight > maxSlopeHeight) newHeight = maxSlopeHeight;
 
-            if (newHeight > MaxHeight) MaxHeight = newHeight;
-
             // Update the height
             cell.Height = newHeight;
+            if (newHeight > MaxHeight) MaxHeight = newHeight;
 
             // Track the maximum change for convergence check
-            maxChange = Mathf.Max(maxChange, Mathf.Abs(newHeight - oldHeight));
+            var change = Mathf.Abs(newHeight - oldHeight);
+            totalChange += change;
+            maxChange = Mathf.Max(maxChange, change);
         }
 
         // Check for convergence
         _powerEquationConverged = maxChange < Settings.ErosionConvergenceThreshold ||
                                   ++_iterationCount >= Settings.MaxErosionIterations;
 
-        ReportProgress(
-            $"[{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved. Max height change: {maxChange:f4}. Max height {MaxHeight:f2}.");
+        ReportProgress($"""
+            [{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved.
+            Max height change: {maxChange:f4}. Total change: {totalChange:f2}
+            """);
 
         if (_powerEquationConverged)
-        {
-            ReportProgress("Stream power equation converged.");
-        }
+            ReportProgress($"Stream power equation converged. Max height {MaxHeight:f2}.");
     }
 
     protected void AdjustTemperatureAccordingToHeight()
