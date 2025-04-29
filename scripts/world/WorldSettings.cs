@@ -5,10 +5,10 @@ public class WorldSettings
     #region General Settings
 
     public ulong Seed = 234;
-    public Rect2I Bounds = new(-20000, -20000, 40000, 40000);
+    public Rect2I Bounds = new(-25000, -25000, 50000, 50000);
     public Vector2 WorldCenter => Bounds.Position + Bounds.Size / 2;
     public int PoisosonDiskSamplingIterations = 8;
-    public double NormalizedMinimumCellDistance { get; set; } = 0.8;
+    public double NormalizedMinimumCellDistance { get; set; } = 0.6;
 
     public double MinimumCellDistance
     {
@@ -48,10 +48,10 @@ public class WorldSettings
 
     #region Fluvial Erosion Settings
 
-    public double ErosionRate = 5;
-    public double ErosionTimeStep = 0.1;
-    public double ErosionConvergenceThreshold = 2.0;
-    public int MaxErosionIterations = 150;
+    public double ErosionRate = 4.0;
+    public double ErosionTimeStep = 0.2;
+    public double ErosionConvergenceThreshold = 20.0;
+    public int MaxErosionIterations = 20;
     public double MaxErosionSlopeAngle = 40.0;
 
     #endregion
