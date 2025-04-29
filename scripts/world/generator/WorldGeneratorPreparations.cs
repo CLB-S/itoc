@@ -95,9 +95,9 @@ public partial class WorldGenerator
             Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
         _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
 
-        _cellArea = Settings.Bounds.Area / _points.Count;
+        _cellArea = (double)Settings.Bounds.Size.X * Settings.Bounds.Size.Y / _points.Count;
 
-        ReportProgress($"{_points.Count} points generated. Average area: {_cellArea}");
+        ReportProgress($"{_points.Count} points generated. Average area: {_cellArea:f2}");
     }
 
     protected void CreateVoronoiDiagram()
