@@ -48,7 +48,7 @@ public class WorldSettings
 
     #region Fluvial Erosion Settings
 
-    public double ErosionRate = 4.0;
+    public double ErosionRate = 4.5;
     public double ErosionTimeStep = 0.2;
     public double ErosionConvergenceThreshold = 20.0;
     public int MaxErosionIterations = 20;
