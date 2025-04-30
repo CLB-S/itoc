@@ -36,7 +36,7 @@ public partial class WorldGenerator
 
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        return _heightMapInterpolator.ConstructChunkHeightMap(rect, 2, NoiseOverlay);
+        return HeightMapUtils.ConstructChunkHeightMap(rect, _heightMapInterpolator.GetHeight, 2, NoiseOverlay);
     }
 
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
@@ -45,7 +45,8 @@ public partial class WorldGenerator
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return _heightMapInterpolator.ConstructHeightMap(resolutionX, resolutionY, bounds, parallel, upscaleLevel);
+        return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, _heightMapInterpolator.GetHeight,
+            parallel, upscaleLevel);
     }
 
     public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)
