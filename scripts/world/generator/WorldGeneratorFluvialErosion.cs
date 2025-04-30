@@ -27,6 +27,14 @@ public partial class WorldGenerator
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
     public IReadOnlyDictionary<int, double> Drainages => _drainages;
 
+    protected void PrepareStreamGraph()
+    {
+        ComputeStreamTrees();
+        IdentifyLakes();
+        ProcessLakeOverflow();
+        ComputeDrainages();
+    }
+
     protected void FindRiverMouths()
     {
         // ReportProgress("Finding river mouths");
@@ -256,7 +264,7 @@ public partial class WorldGenerator
         }
     }
 
-    protected void ComputeDrainageAndSlopes()
+    protected void ComputeDrainages()
     {
         // ReportProgress("Computing drainage and slopes");
 
@@ -316,20 +324,6 @@ public partial class WorldGenerator
                     _drainageAreas[index] += _drainageAreas[childIndex];
                     _drainages[index] += _drainages[childIndex];
                 }
-
-            // Compute slope for this node if it has a receiver
-            if (_receivers.TryGetValue(index, out var receiverIndex))
-            {
-                var cell = _cellDatas[index];
-                var receiver = _cellDatas[receiverIndex];
-                var distance = UniformDistance(_points[index], _points[receiverIndex]);
-
-                if (distance < 0.001f)
-                    // Avoid division by zero
-                    cell.Slope = 0.0;
-                else
-                    cell.Slope = (cell.Height - receiver.Height) / distance;
-            }
         }
     }
 
@@ -426,6 +420,35 @@ public partial class WorldGenerator
 
         if (_powerEquationConverged)
             ReportProgress($"Stream power equation converged. Max height {MaxHeight:f2}.");
+    }
+
+    protected void CalculateNormals()
+    {
+        ReportProgress("Calculating normals");
+
+        foreach (var index in _cellDatas.Keys)
+            // Compute normal for this node if it has a receiver
+            if (_receivers.TryGetValue(index, out var receiverIndex))
+            {
+                var cell = _cellDatas[index];
+                var cellPos = _points[index];
+                var receiver = _cellDatas[receiverIndex];
+                var receiverPos = _points[receiverIndex];
+                var distance = UniformDistance(cellPos, receiverPos);
+
+                if (cell.Height > receiver.Height)
+                    cell.Normal = new Vector3(
+                        receiverPos.X - cellPos.X,
+                        distance * distance / (cell.Height - receiver.Height),
+                        receiverPos.Y - cellPos.Y
+                    ).Normalized();
+                else if (cell.Height < receiver.Height)
+                    cell.Normal = new Vector3(
+                        cellPos.X - receiverPos.X,
+                        distance * distance / (receiver.Height - cell.Height),
+                        cellPos.Y - receiverPos.Y
+                    ).Normalized();
+            }
     }
 
     protected void AdjustTemperatureAccordingToHeight()

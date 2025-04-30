@@ -17,7 +17,7 @@ public class CellData
     public uint PlateSeed;
     public double Uplift = 0.1;
     public double Height = 0;
-    public double Slope = 0;
+    public Vector3 Normal = Vector3.Up;
     public double Area = 0;
     public bool IsRiverMouth = false;
     public CellData Receiver;
@@ -28,8 +28,8 @@ public class CellData
 
     public override string ToString()
     {
-        return $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Slope={Slope:f2}, Area={Area:f2}, " +
-               $"Precipitation={Precipitation:f2}, Temperature={Temperature:f2}";
+        return $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Normal=({Normal.X:f2}, {Normal.Y:f2}, {Normal.Z:f2}), " +
+               $"Area={Area:f2}, Precipitation={Precipitation:f2}, Temperature={Temperature:f2}";
     }
 }
 
@@ -70,11 +70,9 @@ public enum GenerationState
     CalculatingInitialUplifts,
     PropagatingUplifts,
     FindingRiverMouths,
-    ComputingStreamTrees,
-    IdentifyingLakes,
-    LakeOverflow,
-    ComputingDrainageAndSlopes,
-    SolvingPowerEquation, // If not converged, goto `ComputingStreamTrees`.
+    PreparingStreamGraph,
+    SolvingPowerEquation, // If not converged, goto `PreparingStreamGraph`.
+    CalculatingNormals,
     AdjustingTemperature,
     InitInterpolator,
     Custom,
@@ -137,15 +135,12 @@ public partial class WorldGenerator
 
         // Add the stream generation cycle
         _generationPipeline.AddLast(new GenerationStep(GenerationState.FindingRiverMouths, FindRiverMouths));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingStreamTrees, ComputeStreamTrees));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.IdentifyingLakes, IdentifyLakes));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.LakeOverflow, ProcessLakeOverflow));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.ComputingDrainageAndSlopes,
-            ComputeDrainageAndSlopes));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.PreparingStreamGraph, PrepareStreamGraph));
         _generationPipeline.AddLast(
             new GenerationStep(GenerationState.SolvingPowerEquation, SolvePowerEquation,
-                () => !_powerEquationConverged, GenerationState.ComputingStreamTrees));
+                () => !_powerEquationConverged, GenerationState.PreparingStreamGraph));
 
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingNormals, CalculateNormals));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature, AdjustTemperatureAccordingToHeight));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
