@@ -125,7 +125,7 @@ public partial class WorldTest : Node2D
                 if (!DrawingRect.HasPoint(mousePos)) return;
 
                 var worldPos = mousePos / _scalingFactor;
-                var nearestCell = _worldGenerator.FindCellDatasNearby(worldPos);
+                var nearestCell = _worldGenerator.GetCellDatasNearby(worldPos);
                 Log(nearestCell.FirstOrDefault()?.ToString());
             }
         }
@@ -291,6 +291,24 @@ public partial class WorldTest : Node2D
         // foreach (var i in _delaunator.GetHullPoints())
         // {
         //     DrawCircle(i, 2f, Colors.White);
+        // }
+
+        // Testing `GetTriangleContainingPoint` and `GetNeighborCellIndices`
+        // if (_worldGenerator.State == GenerationState.Completed)
+        // {
+        //     var nearestNeighbor = _worldGenerator.GetCellDatasNearby(new Vector2(0, 0), 1).ToArray();
+        //     var nearestId = nearestNeighbor[0].Index;
+
+        //     foreach (var item in _worldGenerator.GetNeighborCellIndices(nearestId))
+        //     {
+        //         var pos = _worldGenerator.SamplePoints[item] * _scalingFactor;
+        //         DrawCircle(pos, 2f, Colors.Blue);
+        //     }
+
+        //     var (p0, p1, p2) = _worldGenerator.GetTriangleContainingPoint(new Vector2(0, 0));
+        //     DrawCircle(_worldGenerator.SamplePoints[p0] * _scalingFactor, 2f, Colors.Red);
+        //     DrawCircle(_worldGenerator.SamplePoints[p1] * _scalingFactor, 2f, Colors.Red);
+        //     DrawCircle(_worldGenerator.SamplePoints[p2] * _scalingFactor, 2f, Colors.Red);
         // }
 
         if (DrawInterpolatedHeightMap && HeightMapTexture != null)

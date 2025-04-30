@@ -27,22 +27,22 @@ public partial class WorldGenerator
 
     protected virtual double NoiseOverlay(double x, double y)
     {
-        return _heightPattern.Evaluate(x, y);
+        return 0; // _heightPattern.Evaluate(x, y);
     }
 
     protected virtual double GetHeight(double x, double y)
     {
-        return _heightMapInterpolator.GetHeight(x, y);
+        // return _heightMapInterpolator.GetHeight(x, y);
 
-        // var points = FindCellDatasNearby(x, y, 3).ToArray(); // TODO: Buggy.
-        // var p0 = SamplePoints[points[0].Index];
-        // var p1 = SamplePoints[points[1].Index];
-        // var p2 = SamplePoints[points[2].Index];
+        var (i0, i1, i2) = GetTriangleContainingPoint(x, y);
+        var p0 = SamplePoints[i0];
+        var p1 = SamplePoints[i1];
+        var p2 = SamplePoints[i2];
 
-        // return PhongTessellation.Interpolate(p0, p1, p2,
-        //     points[0].Height, points[1].Height, points[2].Height,
-        //     points[0].Normal, points[1].Normal, points[2].Normal,
-        //     new Vector2(x, y), 0);
+        return PhongTessellation.Interpolate(p0, p1, p2,
+            CellDatas[i0].Height, CellDatas[i1].Height, CellDatas[i2].Height,
+            CellDatas[i0].Normal, CellDatas[i1].Normal, CellDatas[i2].Normal,
+            new Vector2(x, y), 0);
     }
 
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)

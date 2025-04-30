@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DelaunatorSharp;
 using Godot;
 
@@ -151,8 +152,37 @@ public partial class WorldGenerator
             yield return _cellDatas[data.Item2];
     }
 
-    public IEnumerable<CellData> FindCellDatasNearby(Vector2 pos, int numNeighbors = 1)
+    public IEnumerable<CellData> GetCellDatasNearby(Vector2 pos, int numNeighbors = 1)
     {
         return FindCellDatasNearby(pos.X, pos.Y, numNeighbors);
+    }
+
+    public (int, int, int) GetTriangleContainingPoint(Vector2 point)
+    {
+        var mappedX = 2 * Mathf.Pi * point.X / Settings.Bounds.Size.X;
+        var p = new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                point.Y };
+
+        var nearestNeighbors = _cellDatasKdTree.NearestNeighbors(p, 2);
+
+        foreach (var nearestNeighbor in nearestNeighbors)
+        {
+            var nearestId = nearestNeighbor.Item2;
+            foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[nearestId].TriangleIndex)))
+            {
+                var triangleIndex = Delaunator.TriangleOfEdge(i);
+                var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
+                if (GeometryUtils.IsPointInTriangle(point, SamplePoints[points[0]], SamplePoints[points[1]], SamplePoints[points[2]]))
+                    return (points[0], points[1], points[2]);
+            }
+        }
+
+        throw new InvalidOperationException("No triangle found containing the point.");
+    }
+
+    public (int, int, int) GetTriangleContainingPoint(double x, double y)
+    {
+        return GetTriangleContainingPoint(new Vector2(x, y));
     }
 }
