@@ -25,6 +25,12 @@ public class CellData
     public double Precipitation = 0;
     public double Temperature = 0;
     public int TriangleIndex;
+
+    public override string ToString()
+    {
+        return $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Slope={Slope:f2}, Area={Area:f2}, " +
+               $"Precipitation={Precipitation:f2}, Temperature={Temperature:f2}";
+    }
 }
 
 public class GenerationStep
@@ -58,8 +64,8 @@ public enum GenerationState
 {
     NotStarted,
     Initializing,
-    GeneratingPoints,
-    CreatingVoronoi,
+    GeneratingSamplePoints,
+    InitializingCellDatas,
     InitializingTectonics,
     CalculatingInitialUplifts,
     PropagatingUplifts,
@@ -121,8 +127,8 @@ public partial class WorldGenerator
     protected virtual void InitializePipeline()
     {
         _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, InitializeResources));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CreatingVoronoi, CreateVoronoiDiagram));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingSamplePoints, GenerateSamplePoints));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingCellDatas, InitializeCellDatas));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics,
             InitializeTectonicProperties));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts,

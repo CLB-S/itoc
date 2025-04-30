@@ -28,8 +28,8 @@ public class DebugWorldGenerator : WorldGenerator
     protected override void InitializePipeline()
     {
         _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, InitializeResources));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingPoints, GeneratePoints));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CreatingVoronoi, CreateVoronoiDiagram));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingSamplePoints, GenerateSamplePoints));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingCellDatas, InitializeCellDatas));
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, ApplyHeight));
 

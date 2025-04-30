@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DelaunatorSharp;
 using Godot;
@@ -132,5 +133,21 @@ public partial class WorldGenerator
         var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
             Vector2.One / 2;
         return Mathf.Lerp(-180, 180, normalizedPos.X);
+    }
+
+    public IEnumerable<CellData> FindCellDatasNear(Vector2 pos, int numNeighbors = 1)
+    {
+        if (State != GenerationState.Completed)
+            throw new InvalidOperationException("Cell datas are not initialized yet.");
+
+        var mappedX = 2 * Mathf.Pi * pos.X / Settings.Bounds.Size.X;
+        var mappedPosition = new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                pos.Y };
+
+        var results = _cellDatasKdTree.NearestNeighbors(mappedPosition, numNeighbors);
+
+        foreach (var data in results)
+            yield return _cellDatas[data.Item2];
     }
 }

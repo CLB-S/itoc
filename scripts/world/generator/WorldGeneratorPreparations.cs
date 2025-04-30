@@ -3,6 +3,7 @@ using System.Linq;
 using DelaunatorSharp;
 using Godot;
 using PatternSystem;
+using Supercluster.KDTree;
 
 namespace WorldGenerator;
 
@@ -13,6 +14,8 @@ public partial class WorldGenerator
     private Dictionary<int, int> _edgePointsMap;
     private Delaunator _delaunator;
     protected Dictionary<int, CellData> _cellDatas;
+    protected KDTree<double, int> _cellDatasKdTree;
+
     private double _cellArea;
     private Edge[] _voronoiEdges;
 
@@ -88,21 +91,26 @@ public partial class WorldGenerator
 
     }
 
-    protected void GeneratePoints()
+    protected void GenerateSamplePoints()
     {
-        ReportProgress("Generating points");
+        ReportProgress("Generating sample points.");
+
         _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End,
             Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
         _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
 
+        ReportProgress("Creating Voronoi diagram");
+
+        _delaunator = new Delaunator(_points.ToArray());
+        _voronoiEdges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
+
         ReportProgress($"{_points.Count} points generated.");
     }
 
-    protected void CreateVoronoiDiagram()
+    protected void InitializeCellDatas()
     {
-        ReportProgress("Creating Voronoi diagram");
-        _delaunator = new Delaunator(_points.ToArray());
-        _voronoiEdges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
+        ReportProgress("Initializing cell datas");
+
         var _cells = _delaunator.GetVoronoiCellsBasedOnCentroids().ToArray();
         _cellDatas = new Dictionary<int, CellData>(_cells.Length);
 
@@ -131,7 +139,25 @@ public partial class WorldGenerator
             if (_cellDatas.TryGetValue(_delaunator.Triangles[i], out var cellData))
                 cellData.TriangleIndex = i;
 
+        var pointsData = _cellDatas.Keys.Select(i =>
+        {
+            var mappedX = 2 * Mathf.Pi * _points[i].X / Settings.Bounds.Size.X;
+            return new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                _points[i].Y };
+        }).ToArray();
+
+        static double l2Norm(double[] x, double[] y)
+        {
+            double dist = 0;
+            for (var i = 0; i < x.Length; i++) dist += (x[i] - y[i]) * (x[i] - y[i]);
+            return dist;
+        }
+
+        _cellDatasKdTree = new KDTree<double, int>(3, pointsData, _cellDatas.Keys.ToArray(), l2Norm);
+
         _cellArea = (double)Settings.Bounds.Size.X * Settings.Bounds.Size.Y / _cellDatas.Count;
+
         ReportProgress($"{_cellDatas.Count} cells created. Average area: {_cellArea:f2}");
     }
 }
