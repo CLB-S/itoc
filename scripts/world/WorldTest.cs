@@ -115,6 +115,22 @@ public partial class WorldTest : Node2D
         Task.Run(_worldGenerator.GenerateWorldAsync);
     }
 
+    public override void _Input(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton mouseButtonEvent)
+        {
+            if (mouseButtonEvent.IsPressed() && _worldGenerator.State == GenerationState.Completed)
+            {
+                var mousePos = GetGlobalMousePosition();
+                if (!DrawingRect.HasPoint(mousePos)) return;
+
+                var worldPos = mousePos / _scalingFactor;
+                var nearestCell = _worldGenerator.FindCellDatasNear(worldPos);
+                Log(nearestCell.FirstOrDefault()?.ToString());
+            }
+        }
+    }
+
     private void Log(string message)
     {
         GD.Print(message);
