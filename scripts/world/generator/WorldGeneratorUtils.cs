@@ -135,19 +135,24 @@ public partial class WorldGenerator
         return Mathf.Lerp(-180, 180, normalizedPos.X);
     }
 
-    public IEnumerable<CellData> FindCellDatasNear(Vector2 pos, int numNeighbors = 1)
+    public IEnumerable<CellData> FindCellDatasNearby(double x, double y, int numNeighbors = 1)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("Cell datas are not initialized yet.");
 
-        var mappedX = 2 * Mathf.Pi * pos.X / Settings.Bounds.Size.X;
+        var mappedX = 2 * Mathf.Pi * x / Settings.Bounds.Size.X;
         var mappedPosition = new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
                 Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                pos.Y };
+                y };
 
         var results = _cellDatasKdTree.NearestNeighbors(mappedPosition, numNeighbors);
 
         foreach (var data in results)
             yield return _cellDatas[data.Item2];
+    }
+
+    public IEnumerable<CellData> FindCellDatasNearby(Vector2 pos, int numNeighbors = 1)
+    {
+        return FindCellDatasNearby(pos.X, pos.Y, numNeighbors);
     }
 }

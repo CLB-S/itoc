@@ -125,7 +125,7 @@ public partial class WorldTest : Node2D
                 if (!DrawingRect.HasPoint(mousePos)) return;
 
                 var worldPos = mousePos / _scalingFactor;
-                var nearestCell = _worldGenerator.FindCellDatasNear(worldPos);
+                var nearestCell = _worldGenerator.FindCellDatasNearby(worldPos);
                 Log(nearestCell.FirstOrDefault()?.ToString());
             }
         }

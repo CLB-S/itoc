@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace WorldGenerator;
@@ -29,6 +30,21 @@ public partial class WorldGenerator
         return _heightPattern.Evaluate(x, y);
     }
 
+    protected virtual double GetHeight(double x, double y)
+    {
+        return _heightMapInterpolator.GetHeight(x, y);
+
+        // var points = FindCellDatasNearby(x, y, 3).ToArray(); // TODO: Buggy.
+        // var p0 = SamplePoints[points[0].Index];
+        // var p1 = SamplePoints[points[1].Index];
+        // var p2 = SamplePoints[points[2].Index];
+
+        // return PhongTessellation.Interpolate(p0, p1, p2,
+        //     points[0].Height, points[1].Height, points[2].Height,
+        //     points[0].Normal, points[1].Normal, points[2].Normal,
+        //     new Vector2(x, y), 0);
+    }
+
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
     {
         if (State != GenerationState.Completed)
@@ -36,7 +52,7 @@ public partial class WorldGenerator
 
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        return HeightMapUtils.ConstructChunkHeightMap(rect, _heightMapInterpolator.GetHeight, 2, NoiseOverlay);
+        return HeightMapUtils.ConstructChunkHeightMap(rect, GetHeight, 2, NoiseOverlay);
     }
 
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
@@ -45,7 +61,7 @@ public partial class WorldGenerator
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, _heightMapInterpolator.GetHeight,
+        return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, GetHeight,
             parallel, upscaleLevel);
     }
 
