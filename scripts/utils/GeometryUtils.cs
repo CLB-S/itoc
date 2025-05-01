@@ -2,6 +2,18 @@ using Godot;
 
 public static class GeometryUtils
 {
+    public static double CalculateTriangleArea(Vector2 p0, Vector2 p1, Vector2 p2)
+    {
+        return Mathf.Abs((p0.X * (p1.Y - p2.Y) + p1.X * (p2.Y - p0.Y) + p2.X * (p0.Y - p1.Y)) / 2.0);
+    }
+
+    public static double CalculateTriangleArea(Vector3 p0, Vector3 p1, Vector3 p2)
+    {
+        Vector3 u = p1 - p0;
+        Vector3 v = p2 - p0;
+        return u.Cross(v).Length() / 2.0;
+    }
+
     public static double CalculatePolygonArea(Vector2[] vertices)
     {
         if (vertices == null || vertices.Length < 3)
@@ -41,5 +53,16 @@ public static class GeometryUtils
 
         // Check if point is in triangle
         return (u >= 0) && (v >= 0) && (u + v < 1);
+    }
+
+    public static Vector3 CalculateTriangleNormal(Vector3 p0, Vector3 p1, Vector3 p2, bool faceUp = true)
+    {
+        Vector3 u = p1 - p0;
+        Vector3 v = p2 - p0;
+        var norm = u.Cross(v).Normalized();
+        if (faceUp && norm.Y < 0)
+            norm = -norm;
+
+        return norm;
     }
 }
