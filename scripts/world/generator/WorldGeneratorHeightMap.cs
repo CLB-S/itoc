@@ -39,10 +39,9 @@ public partial class WorldGenerator
         var p1 = SamplePoints[i1];
         var p2 = SamplePoints[i2];
 
-        return PhongTessellation.Interpolate(p0, p1, p2,
+        return LinearInterpolator.Interpolate(p0, p1, p2,
             CellDatas[i0].Height, CellDatas[i1].Height, CellDatas[i2].Height,
-            CellDatas[i0].Normal, CellDatas[i1].Normal, CellDatas[i2].Normal,
-            new Vector2(x, y), 0);
+            new Vector2(x, y));
     }
 
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)

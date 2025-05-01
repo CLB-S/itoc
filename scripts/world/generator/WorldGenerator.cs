@@ -72,9 +72,9 @@ public enum GenerationState
     FindingRiverMouths,
     PreparingStreamGraph,
     SolvingPowerEquation, // If not converged, goto `PreparingStreamGraph`.
-    CalculatingNormals,
+    // CalculatingNormals,
     AdjustingTemperature,
-    InitInterpolator,
+    // InitInterpolator,
     Custom,
     Completed,
     Failed
@@ -140,9 +140,9 @@ public partial class WorldGenerator
             new GenerationStep(GenerationState.SolvingPowerEquation, SolvePowerEquation,
                 () => !_powerEquationConverged, GenerationState.PreparingStreamGraph));
 
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingNormals, CalculateNormals));
+        // _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingNormals, CalculateNormals));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature, AdjustTemperatureAccordingToHeight));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
+        // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 
     public void AddGenerationStepAfter(GenerationStep step, GenerationState afterState)

@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public static class PhongTessellation
+public static class PhongTessellationInterpolator
 {
     public static double Interpolate(Vector2 p0, Vector2 p1, Vector2 p2,
         double h0, double h1, double h2,
