@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text.Json;
-using System.Threading.Tasks;
-using DelaunatorSharp;
-using Godot;
 using PatternSystem;
-using YamlDotNet.Serialization;
 
 namespace WorldGenerator;
 
@@ -33,7 +25,7 @@ public class DebugWorldGenerator : WorldGenerator
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, ApplyHeight));
 
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
+        // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 
     private void SetHeightForSamplePoints()

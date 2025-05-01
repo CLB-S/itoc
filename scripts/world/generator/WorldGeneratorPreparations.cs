@@ -77,17 +77,7 @@ public partial class WorldGenerator
             .Multiply(Settings.PrecipitationNoiseIntensity)
             .Build();
 
-        _heightPattern = new PatternTreeBuilder("height_pattern", "Height Pattern")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                Seed = (int)$"height{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.Perlin,
-                // Frequency = Settings.NoiseFrequency / sizeY,
-                FractalOctaves = 4,
-            })
-            .Subtract(0.5) // Remove later after adding oceans.
-            .Multiply(30)
-            .Build();
+        _heightPattern = PatternLibrary.Instance.GetPattern("mountain");
 
     }
 

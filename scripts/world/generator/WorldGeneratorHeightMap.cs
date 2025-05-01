@@ -27,7 +27,7 @@ public partial class WorldGenerator
 
     protected virtual double NoiseOverlay(double x, double y)
     {
-        return 0; // _heightPattern.Evaluate(x, y);
+        return _heightPattern.Evaluate(x, y);
     }
 
     protected virtual double GetHeight(double x, double y)

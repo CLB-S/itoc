@@ -5,7 +5,7 @@ public class WorldSettings
     #region General Settings
 
     public ulong Seed = 234;
-    public Rect2I Bounds = new(-25000, -25000, 50000, 50000);
+    public Rect2I Bounds = new(-50000, -50000, 100000, 100000);
     public Vector2 WorldCenter => Bounds.Position + Bounds.Size / 2;
     public int PoisosonDiskSamplingIterations = 8;
     public double NormalizedMinimumCellDistance { get; set; } = 0.6;
@@ -20,8 +20,8 @@ public class WorldSettings
 
     public double NoiseFrequency
     {
-        get => NormalizedNoiseFrequency / 4000.0;
-        set => NormalizedNoiseFrequency = value * 4000.0;
+        get => NormalizedNoiseFrequency / 10000.0;
+        set => NormalizedNoiseFrequency = value * 10000.0;
     }
 
     public double UpliftNoiseFrequency { get; set; } = 0.7;
@@ -40,7 +40,7 @@ public class WorldSettings
     public double ContinentRatio = 0.8;
     public double PlateMergeRatio = 0.0;
     public double MaxTectonicMovement = 10.0;
-    public double MaxUplift = 2000.0;
+    public double MaxUplift = 1000.0;
     public double UpliftPropagationDecrement = 0.8;
     public double UpliftPropagationSharpness = 0.0;
 
@@ -52,7 +52,7 @@ public class WorldSettings
     public double ErosionTimeStep = 0.2;
     public double ErosionConvergenceThreshold = 20.0;
     public int MaxErosionIterations = 20;
-    public double MaxErosionSlopeAngle = 40.0;
+    public double MaxErosionSlopeAngle = 30.0;
 
     #endregion
 
