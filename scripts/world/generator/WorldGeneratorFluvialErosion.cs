@@ -198,9 +198,8 @@ public partial class WorldGenerator
                 var passHeight = Mathf.Max(cell.Height, neighbor.Height);
 
                 // Update the pass height if this one is lower
-                if (lakeOutflowGraph[sourceLakeId].ContainsKey(targetLakeId))
+                if (lakeOutflowGraph[sourceLakeId].TryGetValue(targetLakeId, out (int sourceNode, int targetNode, double passHeight) existingPass))
                 {
-                    var existingPass = lakeOutflowGraph[sourceLakeId][targetLakeId];
                     if (passHeight < existingPass.passHeight)
                         lakeOutflowGraph[sourceLakeId][targetLakeId] = (cell.Index, neighbor.Index, passHeight);
                 }
@@ -359,11 +358,8 @@ public partial class WorldGenerator
             // Process all cells that flow to this cell
             if (_children.TryGetValue(current.Index, out var children))
                 foreach (var childIndex in children)
-                    if (!visited.Contains(childIndex))
-                    {
-                        visited.Add(childIndex);
+                    if (visited.Add(childIndex)) // Add returns true if the item was not already in the set
                         queue.Enqueue(_cellDatas[childIndex]);
-                    }
         }
 
         // Process nodes from downstream to upstream (river mouths to sources)

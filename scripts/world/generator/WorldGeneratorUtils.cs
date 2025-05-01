@@ -103,8 +103,8 @@ public partial class WorldGenerator
         {
             var neighborIndex = _delaunator.Triangles[i];
 
-            if (_edgePointsMap.ContainsKey(neighborIndex))
-                neighborIndex = _edgePointsMap[neighborIndex];
+            if (_edgePointsMap.TryGetValue(neighborIndex, out int value))
+                neighborIndex = value;
 
             yield return neighborIndex;
         }
