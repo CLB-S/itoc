@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DelaunatorSharp;
 using Godot;
 
 namespace WorldGenerator;
@@ -426,29 +427,59 @@ public partial class WorldGenerator
     {
         ReportProgress("Calculating normals");
 
-        foreach (var index in _cellDatas.Keys)
-            // Compute normal for this node if it has a receiver
-            if (_receivers.TryGetValue(index, out var receiverIndex))
-            {
-                var cell = _cellDatas[index];
-                var cellPos = _points[index];
-                var receiver = _cellDatas[receiverIndex];
-                var receiverPos = _points[receiverIndex];
-                var distance = UniformDistance(cellPos, receiverPos);
+        foreach (var (index, cellData) in _cellDatas)
+        {
+            var normal = Vector3.Zero;
 
-                if (cell.Height > receiver.Height)
-                    cell.Normal = new Vector3(
-                        receiverPos.X - cellPos.X,
-                        distance * distance / (cell.Height - receiver.Height),
-                        receiverPos.Y - cellPos.Y
-                    ).Normalized();
-                else if (cell.Height < receiver.Height)
-                    cell.Normal = new Vector3(
-                        cellPos.X - receiverPos.X,
-                        distance * distance / (receiver.Height - cell.Height),
-                        cellPos.Y - receiverPos.Y
-                    ).Normalized();
+            foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
+            {
+                var triangleIndex = Delaunator.TriangleOfEdge(i);
+                var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
+
+                for (var j = 0; j < 3; j++)
+                {
+                    if (_edgePointsMap.TryGetValue(points[j], out var value))
+                        points[j] = value;
+                }
+
+                var p0XY = SamplePoints[points[0]];
+                var p0 = new Vector3(p0XY.X, _cellDatas[points[0]].Height, p0XY.Y);
+                var p1XY = SamplePoints[points[1]];
+                var p1 = new Vector3(p1XY.X, _cellDatas[points[1]].Height, p1XY.Y);
+                var p2XY = SamplePoints[points[2]];
+                var p2 = new Vector3(p2XY.X, _cellDatas[points[2]].Height, p2XY.Y);
+                var normalTriangle = GeometryUtils.CalculateTriangleNormal(p0, p1, p2);
+                var area = GeometryUtils.CalculateTriangleArea(p0, p1, p2);
+                normal += normalTriangle * area;
             }
+
+            cellData.Normal = normal.Normalized();
+        }
+
+        /*
+        // Compute normal for this node if it has a receiver
+        if (_receivers.TryGetValue(index, out var receiverIndex))
+        {
+            var cell = _cellDatas[index];
+            var cellPos = _points[index];
+            var receiver = _cellDatas[receiverIndex];
+            var receiverPos = _points[receiverIndex];
+            var distance = UniformDistance(cellPos, receiverPos);
+
+            if (cell.Height > receiver.Height)
+                cell.Normal = new Vector3(
+                    receiverPos.X - cellPos.X,
+                    distance * distance / (cell.Height - receiver.Height),
+                    receiverPos.Y - cellPos.Y
+                ).Normalized();
+            else if (cell.Height < receiver.Height)
+                cell.Normal = new Vector3(
+                    cellPos.X - receiverPos.X,
+                    distance * distance / (receiver.Height - cell.Height),
+                    cellPos.Y - receiverPos.Y
+                ).Normalized();
+        }
+        */
     }
 
     protected void AdjustTemperatureAccordingToHeight()
