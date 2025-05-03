@@ -19,7 +19,6 @@ public class CellData
     public bool RoundPlateJunction = false;
     public double Precipitation = 0;
     public double Temperature = 0;
-    public int TriangleIndex;
 
     public override string ToString()
     {

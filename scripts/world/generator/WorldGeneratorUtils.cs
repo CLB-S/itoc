@@ -99,7 +99,7 @@ public partial class WorldGenerator
 
     public IEnumerable<int> GetNeighborCellIndices(int index)
     {
-        foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[index].TriangleIndex)))
+        foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_triangleIndicesMap[index])))
         {
             var neighborIndex = _delaunator.Triangles[i];
 
@@ -169,7 +169,7 @@ public partial class WorldGenerator
         foreach (var nearestNeighbor in nearestNeighbors)
         {
             var nearestId = nearestNeighbor.Item2;
-            foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_cellDatas[nearestId].TriangleIndex)))
+            foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_triangleIndicesMap[nearestId])))
             {
                 var triangleIndex = Delaunator.TriangleOfEdge(i);
                 var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();

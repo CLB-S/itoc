@@ -12,6 +12,7 @@ public partial class WorldGenerator
     private RandomNumberGenerator _rng;
     private List<Vector2> _points;
     private Dictionary<int, int> _edgePointsMap;
+    private Dictionary<int, int> _triangleIndicesMap;
     private Delaunator _delaunator;
     protected Dictionary<int, CellData> _cellDatas;
     protected KDTree<double, int> _cellDatasKdTree;
@@ -125,9 +126,10 @@ public partial class WorldGenerator
             };
         }
 
+        _triangleIndicesMap = new Dictionary<int, int>(_delaunator.Triangles.Length);
         for (var i = 0; i < _delaunator.Triangles.Length; i++)
-            if (_cellDatas.TryGetValue(_delaunator.Triangles[i], out var cellData))
-                cellData.TriangleIndex = i;
+            if (_cellDatas.ContainsKey(_delaunator.Triangles[i]))
+                _triangleIndicesMap[_delaunator.Triangles[i]] = i;
 
         var pointsData = _cellDatas.Keys.Select(i =>
         {
