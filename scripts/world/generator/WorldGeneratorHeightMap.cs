@@ -185,7 +185,7 @@ public partial class WorldGenerator
         var (p0, p1, p2, h0, h1, h2) = GetSubdividedTriangleContainingPoint(point, i0, i1, i2);
 
         // Use linear interpolation on the subdivided triangle
-        return LinearInterpolator.Interpolate(p0, p1, p2, h0, h1, h2, point);
+        return LinearInterpolator.Interpolate(p0, p1, p2, h0, h1, h2, point) + NoiseOverlay(x, y);
     }
 
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
@@ -195,7 +195,7 @@ public partial class WorldGenerator
 
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        return HeightMapUtils.ConstructChunkHeightMap(rect, GetHeight, 2, NoiseOverlay);
+        return HeightMapUtils.ConstructChunkHeightMap(rect, GetHeight, 2);
     }
 
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 public static class HeightMapUtils
 {
     public static double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, Func<double, double, double> getHeight,
-        bool parallel = false, int upscaleLevel = 3, Func<double, double, double> noiseFunc = null)
+        bool parallel = false, int upscaleLevel = 3)
     {
         if (upscaleLevel < 0)
             throw new ArgumentException("Upscale level must be non-negative.");
@@ -18,14 +18,14 @@ public static class HeightMapUtils
         lowResY = Math.Max(lowResY, 1);
 
         // Create low resolution height map
-        var lowResMap = ConstructHeightMapOriginal(lowResX, lowResY, rect, getHeight, parallel, noiseFunc);
+        var lowResMap = ConstructHeightMapOriginal(lowResX, lowResY, rect, getHeight, parallel);
 
         // Upscale to full resolution using bilinear interpolation
         return UpscaleHeightMap(lowResMap, resolutionX, resolutionY);
     }
 
     private static double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, Func<double, double, double> getHeight,
-        bool parallel = false, Func<double, double, double> noiseFunc = null)
+        bool parallel = false)
     {
         var heightMap = new double[resolutionX, resolutionY];
         var stepX = resolutionX > 1 ? (double)(rect.Size.X - 1) / (resolutionX - 1) : 0;
@@ -39,8 +39,6 @@ public static class HeightMapUtils
                 {
                     var y = resolutionY > 1 ? rect.Position.Y + 0.5 + j * stepY : rect.Position.Y + rect.Size.Y / 2;
                     heightMap[i, j] = getHeight(x, y);
-                    if (noiseFunc != null)
-                        heightMap[i, j] += noiseFunc(x, y);
                 }
             });
         else
@@ -51,8 +49,6 @@ public static class HeightMapUtils
                 {
                     var y = resolutionY > 1 ? rect.Position.Y + j * stepY : rect.Position.Y + rect.Size.Y / 2;
                     heightMap[i, j] = getHeight(x, y);
-                    if (noiseFunc != null)
-                        heightMap[i, j] += noiseFunc(x, y);
                 }
             }
 
@@ -141,14 +137,13 @@ public static class HeightMapUtils
         return highResMap;
     }
 
-    public static double[,] ConstructChunkHeightMap(Rect2I chunkRect, Func<double, double, double> getHeight, int upscaleLevel = 3,
-        Func<double, double, double> noiseFunc = null)
+    public static double[,] ConstructChunkHeightMap(Rect2I chunkRect, Func<double, double, double> getHeight, int upscaleLevel = 3)
     {
         // Center
         var heightMap = new double[chunkRect.Size.X, chunkRect.Size.Y];
         var centerRect = new Rect2I(chunkRect.Position + Vector2I.One, chunkRect.Size - 2 * Vector2I.One);
         var centerHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, chunkRect.Size.Y - 2, centerRect, getHeight,
-            upscaleLevel: upscaleLevel, noiseFunc: noiseFunc);
+            upscaleLevel: upscaleLevel);
 
         for (var x = 1; x < chunkRect.Size.X - 1; x++)
             for (var y = 1; y < chunkRect.Size.Y - 1; y++)
@@ -156,11 +151,9 @@ public static class HeightMapUtils
 
         // Four edges
         var topRect = new Rect2I(chunkRect.Position + new Vector2I(1, chunkRect.Size.Y - 1), chunkRect.Size.X - 2, 1);
-        var topHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, topRect, getHeight, upscaleLevel: upscaleLevel,
-            noiseFunc: noiseFunc);
+        var topHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, topRect, getHeight, upscaleLevel: upscaleLevel);
         var bottomRect = new Rect2I(chunkRect.Position + new Vector2I(1, 0), chunkRect.Size.X - 2, 1);
-        var bottomHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, bottomRect, getHeight, upscaleLevel: upscaleLevel,
-            noiseFunc: noiseFunc);
+        var bottomHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, bottomRect, getHeight, upscaleLevel: upscaleLevel);
         for (var x = 1; x < chunkRect.Size.X - 1; x++)
         {
             heightMap[x, chunkRect.Size.Y - 1] = topHeightMap[x - 1, 0];
@@ -168,11 +161,9 @@ public static class HeightMapUtils
         }
 
         var leftRect = new Rect2I(chunkRect.Position + new Vector2I(0, 1), 1, chunkRect.Size.Y - 2);
-        var leftHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, leftRect, getHeight, upscaleLevel: upscaleLevel,
-            noiseFunc: noiseFunc);
+        var leftHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, leftRect, getHeight, upscaleLevel: upscaleLevel);
         var rightRect = new Rect2I(chunkRect.Position + new Vector2I(chunkRect.Size.X - 1, 1), 1, chunkRect.Size.Y - 2);
-        var rightHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, rightRect, getHeight, upscaleLevel: upscaleLevel,
-            noiseFunc: noiseFunc);
+        var rightHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, rightRect, getHeight, upscaleLevel: upscaleLevel);
         for (var y = 1; y < chunkRect.Size.Y - 1; y++)
         {
             heightMap[0, y] = leftHeightMap[0, y - 1];
@@ -180,19 +171,10 @@ public static class HeightMapUtils
         }
 
         // Four corners
-        heightMap[0, 0] = getHeight(chunkRect.Position.X + 0.5, chunkRect.Position.Y + 0.5) +
-                          (noiseFunc != null ? noiseFunc(chunkRect.Position.X + 0.5, chunkRect.Position.Y + 0.5) : 0);
-        heightMap[chunkRect.Size.X - 1, 0] = getHeight(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5) +
-                                             (noiseFunc != null
-                                                 ? noiseFunc(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5)
-                                                 : 0);
-        heightMap[0, chunkRect.Size.Y - 1] = getHeight(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5) +
-                                             (noiseFunc != null
-                                                 ? noiseFunc(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5)
-                                                 : 0);
-        heightMap[chunkRect.Size.X - 1, chunkRect.Size.Y - 1] =
-            getHeight(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5) +
-            (noiseFunc != null ? noiseFunc(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5) : 0);
+        heightMap[0, 0] = getHeight(chunkRect.Position.X + 0.5, chunkRect.Position.Y + 0.5);
+        heightMap[chunkRect.Size.X - 1, 0] = getHeight(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5);
+        heightMap[0, chunkRect.Size.Y - 1] = getHeight(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5);
+        heightMap[chunkRect.Size.X - 1, chunkRect.Size.Y - 1] = getHeight(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5);
 
         return heightMap;
     }
