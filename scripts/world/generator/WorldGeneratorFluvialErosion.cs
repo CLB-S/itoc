@@ -50,13 +50,11 @@ public partial class WorldGenerator
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
                     cellP.IsRiverMouth = true;
-                    cellP.Receiver = cellQ;
                     _riverMouths.Add(cellP.Index);
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
                 {
                     cellQ.IsRiverMouth = true;
-                    cellQ.Receiver = cellP;
                     _riverMouths.Add(cellQ.Index);
                 }
             }

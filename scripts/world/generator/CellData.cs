@@ -15,7 +15,6 @@ public class CellData
     public Vector3 Normal = Vector3.Up;
     public double Area = 0;
     public bool IsRiverMouth = false;
-    public CellData Receiver;
     public bool RoundPlateJunction = false;
     public double Precipitation = 0;
     public double Temperature = 0;
