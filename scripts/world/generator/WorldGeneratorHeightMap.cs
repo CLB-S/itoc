@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -7,6 +8,141 @@ namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
+    #region Loop subdivision 
+    private readonly ConcurrentDictionary<(int, int), Vector2> _edgeMidpoints = new();
+    private readonly ConcurrentDictionary<(int, int), double> _edgeMidpointHeights = new();
+    private readonly ConcurrentDictionary<int, double> _adjustedVertexHeights = new();
+
+    private double GetAdjustedVertexHeight(int vertexIndex)
+    {
+        if (_adjustedVertexHeights.TryGetValue(vertexIndex, out double adjustedHeight))
+            return adjustedHeight;
+
+        // Get neighbors of this vertex to calculate the adjusted height
+        var neighbors = GetNeighborCellIndices(vertexIndex).ToList();
+        int n = neighbors.Count;
+
+        if (n <= 2)
+        {
+            // For vertices with very few neighbors, keep original height
+            _adjustedVertexHeights[vertexIndex] = CellDatas[vertexIndex].Height;
+            return CellDatas[vertexIndex].Height;
+        }
+
+        // Loop subdivision weight formula: (1-n*beta) * original + beta * sum(neighbors)
+        // where beta = 1/n * (5/8 - (3/8 + 1/4 * cos(2*PI/n))^2)
+        double beta;
+        if (n == 3)
+            beta = 3.0 / 16.0;
+        else
+            beta = 3.0 / (8.0 * n);
+
+        // Calculate the sum of neighbor heights
+        double neighborSum = 0;
+        foreach (var neighbor in neighbors)
+        {
+            neighborSum += CellDatas[neighbor].Height;
+        }
+
+        // Calculate the adjusted height using Loop formula
+        double originalHeight = CellDatas[vertexIndex].Height;
+        double newHeight = (1 - n * beta) * originalHeight + beta * neighborSum;
+
+        _adjustedVertexHeights[vertexIndex] = newHeight;
+        return newHeight;
+    }
+
+    private (Vector2, double) GetOrCreateEdgeMidpoint(int i, int j)
+    {
+        // Ensure i < j for consistent dictionary keys
+        if (i > j)
+            (i, j) = (j, i);
+
+        var key = (i, j);
+
+        if (_edgeMidpoints.TryGetValue(key, out Vector2 midpoint))
+        {
+            return (midpoint, _edgeMidpointHeights[key]);
+        }
+        else
+        {
+            // Calculate the midpoint position
+            midpoint = (SamplePoints[i] + SamplePoints[j]) * 0.5f;
+            _edgeMidpoints[key] = midpoint;
+
+            // Calculate the midpoint height using Loop subdivision rules
+            // For edge midpoints, we use 1/2 of each endpoint
+            var height = (CellDatas[i].Height + CellDatas[j].Height) * 0.5;
+            _edgeMidpointHeights[key] = height;
+
+            return (midpoint, height);
+        }
+    }
+
+    public (Vector2[], double[]) SubdivideTriangle(int i0, int i1, int i2)
+    {
+        // Get original triangle vertices and heights
+        var p0 = SamplePoints[i0];
+        var p1 = SamplePoints[i1];
+        var p2 = SamplePoints[i2];
+
+        var h0 = GetAdjustedVertexHeight(i0);
+        var h1 = GetAdjustedVertexHeight(i1);
+        var h2 = GetAdjustedVertexHeight(i2);
+
+        // Get or create edge midpoints
+        var (e01, h01) = GetOrCreateEdgeMidpoint(i0, i1);
+        var (e12, h12) = GetOrCreateEdgeMidpoint(i1, i2);
+        var (e20, h20) = GetOrCreateEdgeMidpoint(i2, i0);
+
+        // Return all points and heights of the subdivided triangle
+        // Original vertices + edge midpoints
+        return (
+            [p0, p1, p2, e01, e12, e20],
+            [h0, h1, h2, h01, h12, h20]
+        );
+    }
+
+    public (Vector2, Vector2, Vector2, double, double, double) GetSubdividedTriangleContainingPoint(Vector2 point, int i0, int i1, int i2)
+    {
+        var (points, heights) = SubdivideTriangle(i0, i1, i2);
+
+        // Original vertices
+        var p0 = points[0];
+        var p1 = points[1];
+        var p2 = points[2];
+
+        // Edge midpoints
+        var e01 = points[3];
+        var e12 = points[4];
+        var e20 = points[5];
+
+        // Heights
+        var h0 = heights[0];
+        var h1 = heights[1];
+        var h2 = heights[2];
+        var h01 = heights[3];
+        var h12 = heights[4];
+        var h20 = heights[5];
+
+        // Check which of the four subdivided triangles contains the point
+        if (GeometryUtils.IsPointInTriangle(point, p0, e01, e20))
+            return (p0, e01, e20, h0, h01, h20);
+
+        if (GeometryUtils.IsPointInTriangle(point, e01, p1, e12))
+            return (e01, p1, e12, h01, h1, h12);
+
+        if (GeometryUtils.IsPointInTriangle(point, e20, e12, p2))
+            return (e20, e12, p2, h20, h12, h2);
+
+        if (GeometryUtils.IsPointInTriangle(point, e01, e12, e20))
+            return (e01, e12, e20, h01, h12, h20);
+
+        // Fallback - should not happen if the point is in the original triangle
+        throw new InvalidOperationException("Point is not in any subdivided triangle.");
+    }
+    #endregion
+
     protected void InitInterpolator()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
@@ -32,9 +168,9 @@ public partial class WorldGenerator
 
     protected virtual double GetHeight(double x, double y)
     {
-        // return _heightMapInterpolator.GetHeight(x, y);
-
         var (i0, i1, i2) = GetTriangleContainingPoint(x, y);
+
+        /*
         var p0 = SamplePoints[i0];
         var p1 = SamplePoints[i1];
         var p2 = SamplePoints[i2];
@@ -42,6 +178,14 @@ public partial class WorldGenerator
         return LinearInterpolator.Interpolate(p0, p1, p2,
             CellDatas[i0].Height, CellDatas[i1].Height, CellDatas[i2].Height,
             new Vector2(x, y));
+        */
+
+        // Use Loop subdivision to find a more precise triangle
+        var point = new Vector2((float)x, (float)y);
+        var (p0, p1, p2, h0, h1, h2) = GetSubdividedTriangleContainingPoint(point, i0, i1, i2);
+
+        // Use linear interpolation on the subdivided triangle
+        return LinearInterpolator.Interpolate(p0, p1, p2, h0, h1, h2, point);
     }
 
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
