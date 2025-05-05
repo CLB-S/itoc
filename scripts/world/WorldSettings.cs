@@ -30,7 +30,7 @@ public class WorldSettings
     public double TemperatureNoiseFrequency { get; set; } = 1.0;
     public double TemperatureNoiseIntensity { get; set; } = 10.0;
 
-    public double PrecipitationNoiseFrequency { get; set; } = 1;
+    public double PrecipitationNoiseFrequency { get; set; } = 0.8;
     public double PrecipitationNoiseIntensity { get; set; } = 0.6;
 
     #endregion
@@ -68,7 +68,7 @@ public class WorldSettings
 
     public double EquatorialTemperature = 35.0;
     public double PolarTemperature = -50;
-    public double MaxPrecipitation = 1.703;
+    public double MaxPrecipitation = 1.3555;
     public double TemperatureGradientWithAltitude = 2 / 100.0; // Higher then reality.
 
     #endregion

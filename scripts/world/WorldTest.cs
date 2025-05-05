@@ -346,9 +346,9 @@ public partial class WorldTest : Node2D
                                 _worldGenerator.Settings.MinimumCellDistance * 5) continue;
 
                             var drainage = _worldGenerator.Drainages[cell.Index];
-                            if (drainage < 1000000) continue;
+                            if (drainage < 6000000) continue;
 
-                            var width = Mathf.Log(1 + (drainage - 900000) * 0.0005f) * 0.5f;
+                            var width = Mathf.Log(1 + (drainage - 6000000) * 0.0005f) * 0.5f;
 
                             // Calculate color based on water flow
                             // Deeper blue for higher drainage areas

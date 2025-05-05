@@ -19,7 +19,7 @@ public static class ClimateUtils
     /// <summary>
     /// P(φ) = P_max [exp{-(φ/a)^2} + b * exp{-((|φ|-60°)/c)^2}]
     /// </summary>
-    public static double GetPrecipitation(double latitudeDegrees, double maxPrecipitation, double a = 0.7, double b = 0.4, double c = 0.45)
+    public static double GetPrecipitation(double latitudeDegrees, double maxPrecipitation, double a = 0.95, double b = 0.45, double c = 0.45)
     {
         var latitude = Mathf.DegToRad(latitudeDegrees);
         var pt = Mathf.Exp(-(latitude / a) * (latitude / a));

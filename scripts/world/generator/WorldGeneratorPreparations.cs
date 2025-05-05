@@ -70,12 +70,15 @@ public partial class WorldGenerator
             .WithFastNoiseLite(new FastNoiseLiteSettings
             {
                 Seed = (int)$"precipitation{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.Perlin,
-                FractalOctaves = 2,
+                NoiseType = NoiseType.SimplexSmooth,
+                FractalOctaves = 3,
                 Frequency = Settings.NoiseFrequency * Settings.PrecipitationNoiseFrequency,
             })
             .ScaleXBy(2)
-            .Multiply(Settings.PrecipitationNoiseIntensity)
+            .Multiply(1.3)
+            .Subtract(0.3)
+            .Min(Settings.PrecipitationNoiseIntensity)
+            .Max(-1)
             .Build();
 
         _heightPattern = PatternLibrary.Instance.GetPattern("mountain");
