@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using PatternSystem;
 
 namespace WorldGenerator;
 
@@ -40,9 +41,7 @@ public partial class WorldGenerator
         // Calculate the sum of neighbor heights
         double neighborSum = 0;
         foreach (var neighbor in neighbors)
-        {
             neighborSum += CellDatas[neighbor].Height;
-        }
 
         // Calculate the adjusted height using Loop formula
         double originalHeight = CellDatas[vertexIndex].Height;
@@ -61,9 +60,7 @@ public partial class WorldGenerator
         var key = (i, j);
 
         if (_edgeMidpoints.TryGetValue(key, out Vector2 midpoint))
-        {
             return (midpoint, _edgeMidpointHeights[key]);
-        }
         else
         {
             // Calculate the midpoint position
@@ -139,7 +136,8 @@ public partial class WorldGenerator
             return (e01, e12, e20, h01, h12, h20);
 
         // Fallback - should not happen if the point is in the original triangle
-        throw new InvalidOperationException("Point is not in any subdivided triangle.");
+        GD.PrintErr("Point is not in any subdivided triangle.");
+        return (p0, p1, p2, h0, h1, h2);
     }
     #endregion
 
@@ -163,12 +161,22 @@ public partial class WorldGenerator
 
     protected virtual double NoiseOverlay(double x, double y)
     {
-        return _heightPattern.Evaluate(x, y);
+        return 0; //_heightPattern.Evaluate(x, y);
+    }
+
+    private static Vector2 Warp(Vector2 point, PatternTreeNode pattern)
+    {
+        var warpedPoint = new Vector2(point.X, point.Y);
+        warpedPoint.X += pattern.Evaluate(warpedPoint.X, warpedPoint.Y);
+        warpedPoint.Y += pattern.Evaluate(warpedPoint.Y, warpedPoint.X);
+        return warpedPoint;
     }
 
     protected virtual double GetHeight(double x, double y)
     {
-        var (i0, i1, i2) = GetTriangleContainingPoint(x, y);
+        var point = new Vector2(x, y);
+        point = Warp(point, _domainWarpPattern);
+        var (i0, i1, i2) = GetTriangleContainingPoint(point);
 
         /*
         var p0 = SamplePoints[i0];
@@ -181,7 +189,6 @@ public partial class WorldGenerator
         */
 
         // Use Loop subdivision to find a more precise triangle
-        var point = new Vector2((float)x, (float)y);
         var (p0, p1, p2, h0, h1, h2) = GetSubdividedTriangleContainingPoint(point, i0, i1, i2);
 
         // Use linear interpolation on the subdivided triangle

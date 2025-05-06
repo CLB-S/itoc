@@ -81,7 +81,19 @@ public partial class WorldGenerator
             .Max(-1)
             .Build();
 
-        _heightPattern = PatternLibrary.Instance.GetPattern("mountain");
+        _domainWarpPattern = new PatternTreeBuilder("domain_warp_pattern", "Domain Warp Pattern")
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                Seed = (int)$"domain_warp{Settings.Seed}".Hash(),
+                NoiseType = NoiseType.Perlin,
+                // FractalType = FractalType.None,
+                FractalOctaves = 2,
+                Frequency = Settings.DomainWarpFrequency,
+            })
+            .Multiply(Settings.DomainWarpIntensity)
+            .Build();
+
+        _heightPattern = PatternLibrary.Instance.GetPattern("plain");
 
     }
 

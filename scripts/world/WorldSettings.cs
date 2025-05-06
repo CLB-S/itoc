@@ -33,6 +33,9 @@ public class WorldSettings
     public double PrecipitationNoiseFrequency { get; set; } = 0.8;
     public double PrecipitationNoiseIntensity { get; set; } = 0.6;
 
+    public double DomainWarpFrequency { get; set; } = 0.02;
+    public double DomainWarpIntensity { get; set; } = 20;
+
     #endregion
 
     #region Tectonic Settings
