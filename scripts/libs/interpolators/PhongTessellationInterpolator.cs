@@ -10,9 +10,9 @@ public static class PhongTessellationInterpolator
     {
         // Get barycentric coordinates using the utility method
         Vector3 barycentric = GeometryUtils.GetBarycentricCoordinates(target, p0, p1, p2);
-        double w = barycentric.X;
+        double u = barycentric.X;
         double v = barycentric.Y;
-        double u = barycentric.Z;
+        double w = barycentric.Z;
 
         // Handle degenerate triangles (unlikely in valid input)
         if (double.IsNaN(u) || double.IsNaN(v) || double.IsNaN(w))
