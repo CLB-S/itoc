@@ -157,7 +157,7 @@ public partial class WorldGenerator
         return FindCellDatasNearby(pos.X, pos.Y, numNeighbors);
     }
 
-    public (int, int, int) GetTriangleContainingPoint(Vector2 point)
+    public (int, int, int) GetTriangleContainingPoint(Vector2 point, out Vector3 barycentricPos)
     {
         var mappedX = 2 * Mathf.Pi * point.X / Settings.Bounds.Size.X;
         var p = new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
@@ -173,7 +173,7 @@ public partial class WorldGenerator
             {
                 var triangleIndex = Delaunator.TriangleOfEdge(i);
                 var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
-                if (GeometryUtils.IsPointInTriangle(point, SamplePoints[points[0]], SamplePoints[points[1]], SamplePoints[points[2]]))
+                if (GeometryUtils.IsPointInTriangle(point, SamplePoints[points[0]], SamplePoints[points[1]], SamplePoints[points[2]], out barycentricPos))
                     return (points[0], points[1], points[2]);
             }
         }
@@ -181,8 +181,18 @@ public partial class WorldGenerator
         throw new InvalidOperationException("No triangle found containing the point.");
     }
 
+    public (int, int, int) GetTriangleContainingPoint(Vector2 point)
+    {
+        return GetTriangleContainingPoint(point, out _);
+    }
+
+    public (int, int, int) GetTriangleContainingPoint(double x, double y, out Vector3 barycentricPos)
+    {
+        return GetTriangleContainingPoint(new Vector2(x, y), out barycentricPos);
+    }
+
     public (int, int, int) GetTriangleContainingPoint(double x, double y)
     {
-        return GetTriangleContainingPoint(new Vector2(x, y));
+        return GetTriangleContainingPoint(new Vector2(x, y), out _);
     }
 }

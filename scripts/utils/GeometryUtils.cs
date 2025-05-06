@@ -32,7 +32,7 @@ public static class GeometryUtils
         return Mathf.Abs(area) / 2f;
     }
 
-    public static bool IsPointInTriangle(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2)
+    public static Vector3 GetBarycentricCoordinates(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2)
     {
         // Compute vectors
         Vector2 v0 = p2 - p0;
@@ -50,9 +50,20 @@ public static class GeometryUtils
         double invDenom = 1.0 / (dot00 * dot11 - dot01 * dot01);
         double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
         double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+        double w = 1.0 - u - v;
 
-        // Check if point is in triangle
-        return (u >= 0) && (v >= 0) && (u + v < 1);
+        return new Vector3(u, v, w);
+    }
+
+    public static bool IsPointInTriangle(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2, out Vector3 barycentricPos)
+    {
+        barycentricPos = GetBarycentricCoordinates(point, p0, p1, p2);
+        return barycentricPos.X >= 0 && barycentricPos.Y >= 0 && barycentricPos.X + barycentricPos.Y <= 1;
+    }
+
+    public static bool IsPointInTriangle(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2)
+    {
+        return IsPointInTriangle(point, p0, p1, p2, out _);
     }
 
     public static Vector3 CalculateTriangleNormal(Vector3 p0, Vector3 p1, Vector3 p2, bool faceUp = true)
