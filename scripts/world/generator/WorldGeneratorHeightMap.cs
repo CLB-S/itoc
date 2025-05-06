@@ -141,7 +141,7 @@ public partial class WorldGenerator
     }
     #endregion
 
-    protected void InitInterpolator()
+    protected void InitIdwInterpolator()
     {
         var posList = new List<Vector2>(_cellDatas.Count);
         var dataList = new List<double>(_cellDatas.Count);
@@ -152,11 +152,6 @@ public partial class WorldGenerator
         }
 
         _heightMapInterpolator = new IdwInterpolator(posList, dataList);
-    }
-
-    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
-    {
-        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
     protected virtual double NoiseOverlay(double x, double y)
@@ -172,27 +167,34 @@ public partial class WorldGenerator
         return warpedPoint;
     }
 
-    protected virtual double GetHeight(double x, double y)
+    public double GetRawHeight(double x, double y, bool loopDivision = true, bool domainWarping = false, bool noiseOverlay = false)
     {
         var point = new Vector2(x, y);
-        point = Warp(point, _domainWarpPattern);
+        if (domainWarping)
+            point = Warp(point, _domainWarpPattern);
+
         var (i0, i1, i2) = GetTriangleContainingPoint(point);
 
-        /*
-        var p0 = SamplePoints[i0];
-        var p1 = SamplePoints[i1];
-        var p2 = SamplePoints[i2];
+        double height;
+        if (loopDivision)
+        {
+            var (p0, p1, p2, h0, h1, h2) = GetSubdividedTriangleContainingPoint(point, i0, i1, i2);
+            height = LinearInterpolator.Interpolate(p0, p1, p2, h0, h1, h2, point);
+        }
+        else
+        {
+            var p0 = SamplePoints[i0];
+            var p1 = SamplePoints[i1];
+            var p2 = SamplePoints[i2];
 
-        return LinearInterpolator.Interpolate(p0, p1, p2,
-            CellDatas[i0].Height, CellDatas[i1].Height, CellDatas[i2].Height,
-            new Vector2(x, y));
-        */
+            height = LinearInterpolator.Interpolate(p0, p1, p2,
+                CellDatas[i0].Height, CellDatas[i1].Height, CellDatas[i2].Height,
+                new Vector2(x, y));
+        }
 
-        // Use Loop subdivision to find a more precise triangle
-        var (p0, p1, p2, h0, h1, h2) = GetSubdividedTriangleContainingPoint(point, i0, i1, i2);
-
-        // Use linear interpolation on the subdivided triangle
-        return LinearInterpolator.Interpolate(p0, p1, p2, h0, h1, h2, point) + NoiseOverlay(x, y);
+        if (noiseOverlay)
+            height += NoiseOverlay(x, y);
+        return height;
     }
 
     public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
@@ -202,7 +204,7 @@ public partial class WorldGenerator
 
         // Consider overlapping edges
         var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
-        return HeightMapUtils.ConstructChunkHeightMap(rect, GetHeight, 2);
+        return HeightMapUtils.ConstructChunkHeightMap(rect, (x, y) => GetRawHeight(x, y, true, true, true), 2);
     }
 
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
@@ -211,8 +213,13 @@ public partial class WorldGenerator
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, GetHeight,
+        return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, (x, y) => GetRawHeight(x, y),
             parallel, upscaleLevel);
+    }
+
+    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
+    {
+        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
     }
 
     public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)
