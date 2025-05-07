@@ -72,6 +72,7 @@ public class PatternTreeBuilder
         _name = name;
     }
 
+    #region Initialization
     public PatternTreeBuilder WithNode(PatternTreeNode node)
     {
         _currentNode = node;
@@ -113,7 +114,9 @@ public class PatternTreeBuilder
         _currentNode = new MathExpressionNode(nodes, mathExpression);
         return this;
     }
+    #endregion
 
+    #region Operations
     public PatternTreeBuilder ApplyOperation(Func<PatternTreeNode, SingleChildOperationNode> nodeConstructor)
     {
         _currentNode = nodeConstructor(_currentNode);
@@ -129,33 +132,6 @@ public class PatternTreeBuilder
     public PatternTreeBuilder ApplyOperation(Func<PatternTreeNode, PositionTransformNode> nodeConstructor)
     {
         _currentNode = nodeConstructor(_currentNode);
-        return this;
-    }
-
-    public PatternTreeBuilder ScaleXBy(double scale)
-    {
-        _currentNode = new PositionTransformNode(_currentNode, x: new PositionXNode().Multiply(1 / scale));
-        return this;
-    }
-
-    public PatternTreeBuilder ScaleYBy(double scale)
-    {
-        _currentNode = new PositionTransformNode(_currentNode, y: new PositionYNode().Multiply(1 / scale));
-        return this;
-    }
-
-    public PatternTreeBuilder ScaleZBy(double scale)
-    {
-        _currentNode = new PositionTransformNode(_currentNode, z: new PositionZNode().Multiply(1 / scale));
-        return this;
-    }
-
-    public PatternTreeBuilder ScaleBy(double scaleX, double scaleY, double scaleZ)
-    {
-        _currentNode = new PositionTransformNode(_currentNode,
-            x: new PositionXNode().Multiply(1 / scaleX),
-            y: new PositionYNode().Multiply(1 / scaleY),
-            z: new PositionZNode().Multiply(1 / scaleZ));
         return this;
     }
 
@@ -192,7 +168,38 @@ public class PatternTreeBuilder
         _currentNode = new MathExpressionNode(allNodes, mathExpression);
         return this;
     }
+    #endregion
 
+    #region Scaling
+    public PatternTreeBuilder ScaleXBy(double scale)
+    {
+        _currentNode = new PositionTransformNode(_currentNode, x: new PositionXNode().Multiply(1 / scale));
+        return this;
+    }
+
+    public PatternTreeBuilder ScaleYBy(double scale)
+    {
+        _currentNode = new PositionTransformNode(_currentNode, y: new PositionYNode().Multiply(1 / scale));
+        return this;
+    }
+
+    public PatternTreeBuilder ScaleZBy(double scale)
+    {
+        _currentNode = new PositionTransformNode(_currentNode, z: new PositionZNode().Multiply(1 / scale));
+        return this;
+    }
+
+    public PatternTreeBuilder ScaleBy(double scaleX, double scaleY, double scaleZ)
+    {
+        _currentNode = new PositionTransformNode(_currentNode,
+            x: new PositionXNode().Multiply(1 / scaleX),
+            y: new PositionYNode().Multiply(1 / scaleY),
+            z: new PositionZNode().Multiply(1 / scaleZ));
+        return this;
+    }
+    #endregion
+
+    #region Math Operations
     public PatternTreeBuilder Add(double value)
     {
         _currentNode = _currentNode.Add(value);
@@ -288,7 +295,10 @@ public class PatternTreeBuilder
         _currentNode = _currentNode.Max(node);
         return this;
     }
+    #endregion
 
+
+    #region Build
     public PatternTreeNode BuildNode()
     {
         return _currentNode;
@@ -306,4 +316,5 @@ public class PatternTreeBuilder
 
         return new PatternTree(_id, _name, _currentNode);
     }
+    #endregion
 }

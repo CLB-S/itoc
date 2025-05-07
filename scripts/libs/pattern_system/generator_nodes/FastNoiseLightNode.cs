@@ -8,6 +8,12 @@ public class FastNoiseLiteNode : PatternTreeNode
     private FastNoiseLiteSettings _settings;
     public FastNoiseLiteSettings Settings => _settings;
 
+    public override void SetSeed(int seed)
+    {
+        _settings.Seed = seed;
+        _noiseGenerator.SetSeed(seed);
+    }
+
     public FastNoiseLiteNode(FastNoiseLite fastNoiseLite)
     {
         _noiseGenerator = fastNoiseLite;

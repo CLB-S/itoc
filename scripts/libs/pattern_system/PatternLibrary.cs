@@ -18,9 +18,21 @@ public class PatternLibrary
         LoadPatterns();
     }
 
+    public PatternLibrary(int seed)
+    {
+        RegisterBuiltInPatterns();
+        LoadPatterns();
+        foreach (var pattern in _patterns.Values)
+            pattern.SetSeed(seed);
+    }
+
     public PatternTree GetPattern(string patternId)
     {
-        return _patterns.TryGetValue(patternId, out var pattern) ? pattern : null;
+        if (_patterns.TryGetValue(patternId, out var pattern))
+            return pattern;
+
+        GD.PrintErr($"Pattern with ID {patternId} not found.");
+        return null;
     }
 
     public void RegisterPattern(PatternTree pattern)
@@ -41,7 +53,6 @@ public class PatternLibrary
         RegisterPattern(new PatternTreeBuilder("mountain", "Mountain With Ridges")
             .WithFastNoiseLite(new FastNoiseLiteSettings
             {
-                Seed = 233,
                 NoiseType = NoiseType.Simplex,
                 Frequency = 0.002,
                 FractalType = FractalType.Ridged,
@@ -49,7 +60,6 @@ public class PatternLibrary
             })
             .Multiply(new FastNoiseLiteNode(new FastNoiseLiteSettings
             {
-                Seed = 2332,
                 NoiseType = NoiseType.SimplexSmooth,
                 FractalType = FractalType.None,
                 Frequency = 0.0015,
@@ -65,8 +75,22 @@ public class PatternLibrary
                 DomainWarpFrequency = 0.002,
             }))
             .Multiply(30)
-            .Add(50)
             .Build());
+
+        RegisterPattern(new PatternTreeBuilder("hill", "Hill")
+             .WithFastNoiseLite(new FastNoiseLiteSettings
+             {
+                 NoiseType = NoiseType.Simplex,
+                 Frequency = 0.004,
+                 FractalOctaves = 4,
+                 DomainWarpEnabled = true,
+                 DomainWarpAmplitude = 150,
+                 DomainWarpFractalType = DomainWarpFractalType.None,
+                 DomainWarpFrequency = 0.002,
+             })
+             .Multiply(20)
+             .Build());
+
 
         RegisterPattern(new PatternTreeBuilder("plain", "Plain")
             .WithFastNoiseLite(new FastNoiseLiteSettings
@@ -77,8 +101,7 @@ public class PatternLibrary
             })
             .Multiply(Mathf.Pi / 2)
             .ApplyOperation(SingleOperationType.Sin)
-            .Multiply(6)
-            .Add(30)
+            .Multiply(10)
             .Build());
 
     }

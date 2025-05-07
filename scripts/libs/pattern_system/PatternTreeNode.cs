@@ -7,14 +7,14 @@ public abstract class PatternTreeNode
     public abstract double Evaluate(double x, double y);
     public abstract double Evaluate(double x, double y, double z);
 
-    public double Evaluate(Vector2 position)
-    {
-        return Evaluate(position.X, position.Y);
-    }
+    public double Evaluate(Vector2 position) => Evaluate(position.X, position.Y);
+    public double Evaluate(Vector3 position) => Evaluate(position.X, position.Y, position.Z);
 
-    public double Evaluate(Vector3 position)
+    public virtual void SetSeed(int seed)
     {
-        return Evaluate(position.X, position.Y, position.Z);
+        if (this is IOperator operatorNode)
+            foreach (var child in operatorNode.Children)
+                child.SetSeed(seed++);
     }
 
     public double EvaluateSeamlessX(double x, double y, Rect2 bounds)
