@@ -19,6 +19,7 @@ public partial class WorldTest : Node2D
         PlateTypes,
         Temperature,
         Precipitation,
+        Biome,
     }
 
     // [Export] public ulong Seed { get; set; } = 0;
@@ -266,6 +267,10 @@ public partial class WorldTest : Node2D
                     var temperatureColor = _temperatureGradient.Sample((float)((temperature - minTemp) / (2 * -minTemp)));
                     color = temperatureColor.Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
+                    break;
+                case ColorPreset.Biome:
+                    var biomeColor = cellData.Biome?.Color ?? Colors.White;
+                    DrawMesh(mesh, null, modulate: biomeColor);
                     break;
             }
         }

@@ -47,6 +47,7 @@ public enum GenerationState
     SolvingPowerEquation, // If not converged, goto `PreparingStreamGraph`.
     // CalculatingNormals,
     AdjustingTemperature,
+    SettingBiome,
     // InitInterpolator,
     Custom,
     Completed,
@@ -116,6 +117,7 @@ public partial class WorldGenerator
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingNormals, CalculateNormals));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature, AdjustTemperatureAccordingToHeight));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.SettingBiome, SetBiomes));
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 

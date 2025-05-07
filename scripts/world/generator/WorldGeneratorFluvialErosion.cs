@@ -475,15 +475,4 @@ public partial class WorldGenerator
         }
         */
     }
-
-    protected void AdjustTemperatureAccordingToHeight()
-    {
-        ReportProgress("Adjusting temperature");
-
-        Parallel.ForEach(_cellDatas.Values, cell =>
-        {
-            if (cell.Height > 0)
-                cell.Temperature -= cell.Height * Settings.TemperatureGradientWithAltitude;
-        });
-    }
 }
