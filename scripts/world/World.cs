@@ -78,13 +78,13 @@ public partial class World : Node
         }
     }
 
+    #region Get and Set methods
     public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
         var chunkPos = WorldToChunkPosition(worldPos);
         Chunks.TryGetValue(chunkPos, out var chunk);
         return chunk;
     }
-
 
     public Chunk GetChunk(Vector3I chunkPos)
     {
@@ -116,7 +116,34 @@ public partial class World : Node
         chunk.SetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z), block);
     }
 
-    // TODO: Generate 3x3x3 chunks around the player if these chunks are not generated and coressponding ChunkColumns are generated. 
+    private Vector3 GetPlayerPosition()
+    {
+        return CameraHelper.Instance.GetCameraPosition();
+    }
+    #endregion
+
+
+    #region Utility methods
+    public static Vector3I WorldToChunkPosition(Vector3 worldPos)
+    {
+        return new Vector3I(
+            Mathf.FloorToInt(worldPos.X / ChunkSize),
+            Mathf.FloorToInt(worldPos.Y / ChunkSize),
+            Mathf.FloorToInt(worldPos.Z / ChunkSize)
+        );
+    }
+
+    public static Vector3 WorldToLocalPosition(Vector3 worldPos)
+    {
+        return new Vector3(
+            Mathf.PosMod(worldPos.X, ChunkSize),
+            Mathf.PosMod(worldPos.Y, ChunkSize),
+            Mathf.PosMod(worldPos.Z, ChunkSize)
+        );
+    }
+    #endregion
+
+    #region Chunk generation
     private void UpdateChunkLoading()
     {
         var playerChunkXZ = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
@@ -134,14 +161,14 @@ public partial class World : Node
         foreach (var existingPos in Chunks.Keys)
             if (!renderArea.Contains(new Vector2I(existingPos.X, existingPos.Z)))
                 if (Chunks.TryRemove(existingPos, out var chunk))
-                    chunk.Unload();
+                    chunk.UnloadDeferred();
 
         foreach (var existingPos in ChunkColumns.Keys)
             if (!renderArea.Contains(existingPos))
                 if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
                     chunkColumn = null;
 
-        // To generate ChunkColumns
+        // ChunkColumns to generate 
         var toGenerate = new List<Vector2I>();
         foreach (var pos in renderArea)
             if (!ChunkColumns.ContainsKey(pos))
@@ -224,40 +251,121 @@ public partial class World : Node
         var position = result.ChunkData.GetPosition();
         var positionXZ = new Vector2I(position.X, position.Z);
         var playerPosition = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
-        if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out var value)
+        if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out var chunkColumn)
                                           && playerPosition.DistanceTo(positionXZ) <=
                                           Core.Instance.Settings.RenderDistance)
         {
             var chunk = new Chunk(result);
             Chunks[position] = chunk;
-            value.Chunks[position] = chunk;
-            chunk.Load();
+            chunkColumn.Chunks[position] = chunk;
             CallDeferred(Node.MethodName.AddChild, chunk);
+            UpdateMesherMasks(chunk);
+            chunk.LoadDeferred();
         }
     }
 
-    public static Vector3I WorldToChunkPosition(Vector3 worldPos)
+    private void UpdateMesherMasks(Chunk chunk)
     {
-        return new Vector3I(
-            Mathf.FloorToInt(worldPos.X / ChunkSize),
-            Mathf.FloorToInt(worldPos.Y / ChunkSize),
-            Mathf.FloorToInt(worldPos.Z / ChunkSize)
-        );
+        var chunkPos = chunk.ChunkPosition;
+
+        if (Chunks.TryGetValue(new Vector3I(chunkPos.X + 1, chunkPos.Y, chunkPos.Z), out var positiveXNeighbor))
+        {
+            for (int y = 0; y < ChunkSize; y++)
+            {
+                for (int z = 0; z < ChunkSize; z++)
+                {
+                    var block = chunk.GetBlock(ChunkMesher.CS - 1, y, z);
+                    positiveXNeighbor.ChunkData.SetMesherMask(0, y + 1, z + 1, block);
+
+                    var neighborBlock = positiveXNeighbor.GetBlock(0, y, z);
+                    chunk.ChunkData.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, neighborBlock);
+                }
+            }
+            positiveXNeighbor.UpdateMeshIfNeededDeferred();
+        }
+
+        if (Chunks.TryGetValue(new Vector3I(chunkPos.X - 1, chunkPos.Y, chunkPos.Z), out var negativeXNeighbor))
+        {
+            for (int y = 0; y < ChunkSize; y++)
+            {
+                for (int z = 0; z < ChunkSize; z++)
+                {
+                    var block = chunk.GetBlock(0, y, z);
+                    negativeXNeighbor.ChunkData.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
+
+                    var neighborBlock = negativeXNeighbor.GetBlock(ChunkMesher.CS - 1, y, z);
+                    chunk.ChunkData.SetMesherMask(0, y + 1, z + 1, neighborBlock);
+                }
+            }
+            negativeXNeighbor.UpdateMeshIfNeededDeferred();
+        }
+
+        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y + 1, chunkPos.Z), out var positiveYNeighbor))
+        {
+            for (int x = 0; x < ChunkSize; x++)
+            {
+                for (int z = 0; z < ChunkSize; z++)
+                {
+                    var block = chunk.GetBlock(x, ChunkMesher.CS - 1, z);
+                    positiveYNeighbor.ChunkData.SetMesherMask(x + 1, 0, z + 1, block);
+
+                    var neighborBlock = positiveYNeighbor.GetBlock(x, 0, z);
+                    chunk.ChunkData.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, neighborBlock);
+                }
+            }
+            positiveYNeighbor.UpdateMeshIfNeededDeferred();
+        }
+
+        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y - 1, chunkPos.Z), out var negativeYNeighbor))
+        {
+            for (int x = 0; x < ChunkSize; x++)
+            {
+                for (int z = 0; z < ChunkSize; z++)
+                {
+                    var block = chunk.GetBlock(x, 0, z);
+                    negativeYNeighbor.ChunkData.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
+
+                    var neighborBlock = negativeYNeighbor.GetBlock(x, ChunkMesher.CS - 1, z);
+                    chunk.ChunkData.SetMesherMask(x + 1, 0, z + 1, neighborBlock);
+                }
+            }
+            negativeYNeighbor.UpdateMeshIfNeededDeferred();
+        }
+
+        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z + 1), out var positiveZNeighbor))
+        {
+            for (int x = 0; x < ChunkSize; x++)
+            {
+                for (int y = 0; y < ChunkSize; y++)
+                {
+                    var block = chunk.GetBlock(x, y, ChunkMesher.CS - 1);
+                    positiveZNeighbor.ChunkData.SetMesherMask(x + 1, y + 1, 0, block);
+
+                    var neighborBlock = positiveZNeighbor.GetBlock(x, y, 0);
+                    chunk.ChunkData.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, neighborBlock);
+                }
+            }
+            positiveZNeighbor.UpdateMeshIfNeededDeferred();
+        }
+
+        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z - 1), out var negativeZNeighbor))
+        {
+            for (int x = 0; x < ChunkSize; x++)
+            {
+                for (int y = 0; y < ChunkSize; y++)
+                {
+                    var block = chunk.GetBlock(x, y, 0);
+                    negativeZNeighbor.ChunkData.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
+
+                    var neighborBlock = negativeZNeighbor.GetBlock(x, y, ChunkMesher.CS - 1);
+                    chunk.ChunkData.SetMesherMask(x + 1, y + 1, 0, neighborBlock);
+                }
+            }
+            negativeZNeighbor.UpdateMeshIfNeededDeferred();
+        }
     }
 
-    public static Vector3 WorldToLocalPosition(Vector3 worldPos)
-    {
-        return new Vector3(
-            Mathf.PosMod(worldPos.X, ChunkSize),
-            Mathf.PosMod(worldPos.Y, ChunkSize),
-            Mathf.PosMod(worldPos.Z, ChunkSize)
-        );
-    }
-
-    private Vector3 GetPlayerPosition()
-    {
-        return CameraHelper.Instance.GetCameraPosition();
-    }
+    #endregion
 
     public void SpawnDebugCube(Vector3I pos)
     {

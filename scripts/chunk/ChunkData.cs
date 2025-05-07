@@ -41,13 +41,13 @@ public class ChunkData
 
     public Block GetBlock(int axis, int a, int b, int c)
     {
-        var index = ChunkMesher.GetAxisIndex(axis, a, b, c);
+        var index = ChunkMesher.GetBlockAxisIndex(axis, a, b, c);
         return GetBlock(index);
     }
 
     public Block GetBlock(int x, int y, int z)
     {
-        var index = ChunkMesher.GetIndex(x, y, z);
+        var index = ChunkMesher.GetBlockIndex(x, y, z);
         return GetBlock(index);
     }
 
@@ -74,10 +74,14 @@ public class ChunkData
 
     public void SetBlock(int x, int y, int z, Block block)
     {
-        var index = ChunkMesher.GetIndex(x, y, z);
+        var index = ChunkMesher.GetBlockIndex(x, y, z);
         _paletteStorage.Set(index, block);
 
-        // Masks
+        SetMesherMask(x + 1, y + 1, z + 1, block);
+    }
+
+    public void SetMesherMask(int x, int y, int z, Block block)
+    {
         if (block == null || !block.IsOpaque)
             ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
         else
@@ -85,8 +89,7 @@ public class ChunkData
 
         if (block != null && !block.IsOpaque)
         {
-            if (TransparentMasks == null)
-                TransparentMasks = new ulong[ChunkMesher.CS_P2];
+            TransparentMasks ??= new ulong[ChunkMesher.CS_P2];
 
             ChunkMesher.AddOpaqueVoxel(TransparentMasks, x, y, z);
         }

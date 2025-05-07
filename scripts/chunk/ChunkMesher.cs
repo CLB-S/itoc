@@ -14,13 +14,13 @@ public static class ChunkMesher
     public const int CS_P2 = CS_P * CS_P;
     public const int CS_P3 = CS_P * CS_P * CS_P;
 
-    public static int GetAxisIndex(int axis, int a, int b, int c)
+    public static int GetAxisIndex(int axis, int a, int b, int c, int size = CS_P)
     {
         return axis switch
         {
-            0 => b + a * CS_P + c * CS_P2,
-            1 => b + c * CS_P + a * CS_P2,
-            _ => c + a * CS_P + b * CS_P2
+            0 => b + a * size + c * size * size,
+            1 => b + c * size + a * size * size,
+            _ => c + a * size + b * size * size
         };
     }
 
@@ -34,6 +34,20 @@ public static class ChunkMesher
         return vec.Z + vec.X * CS_P + vec.Y * CS_P2;
     }
 
+    public static int GetBlockAxisIndex(int axis, int a, int b, int c)
+    {
+        return GetAxisIndex(axis, a, b, c, CS);
+    }
+
+    public static int GetBlockIndex(int x, int y, int z)
+    {
+        return z + x * CS + y * CS_2;
+    }
+
+    public static int GetBlockIndex(Vector3I vec)
+    {
+        return vec.Z + vec.X * CS + vec.Y * CS_2;
+    }
 
     private static ulong GetQuad(ulong x, ulong y, ulong z, ulong w, ulong h, ulong type)
     {
@@ -114,11 +128,11 @@ public static class ChunkMesher
                     while (bitsHere != 0)
                     {
                         var bitPos = BitOperations.TrailingZeroCount(bitsHere);
-                        var block = chunkData.GetBlock(axis, forward + 1, bitPos + 1, layer + 1);
+                        var block = chunkData.GetBlock(axis, forward, bitPos, layer);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[bitPos];
 
                         if ((bitsNext & (1UL << bitPos)) != 0 &&
-                            block == chunkData.GetBlock(axis, forward + 2, bitPos + 1, layer + 1))
+                            block == chunkData.GetBlock(axis, forward + 1, bitPos, layer))
                         {
                             forwardMergedRef++;
                             bitsHere &= ~(1UL << bitPos);
@@ -129,7 +143,7 @@ public static class ChunkMesher
                         {
                             if ((bitsHere & (1UL << right)) == 0 ||
                                 forwardMergedRef != meshData.ForwardMerged[right] ||
-                                block != chunkData.GetBlock(axis, forward + 1, right + 1, layer + 1))
+                                block != chunkData.GetBlock(axis, forward, right, layer))
                                 break;
 
                             meshData.ForwardMerged[right] = 0;
@@ -200,13 +214,13 @@ public static class ChunkMesher
                         var bitPos = BitOperations.TrailingZeroCount(bitsHere);
                         bitsHere &= ~(1UL << bitPos);
 
-                        var block = chunkData.GetBlock(axis, right + 1, forward + 1, bitPos);
+                        var block = chunkData.GetBlock(axis, right, forward, bitPos - 1);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[rightCS + (bitPos - 1)];
                         ref var rightMergedRef = ref meshData.RightMerged[bitPos - 1];
 
                         if (rightMergedRef == 0 &&
                             (bitsForward & (1UL << bitPos)) != 0 &&
-                            block == chunkData.GetBlock(axis, right + 1, forward + 2, bitPos))
+                            block == chunkData.GetBlock(axis, right, forward + 1, bitPos - 1))
                         {
                             forwardMergedRef++;
                             continue;
@@ -214,7 +228,7 @@ public static class ChunkMesher
 
                         if ((bitsRight & (1UL << bitPos)) != 0 &&
                             forwardMergedRef == meshData.ForwardMerged[rightCS + CS + (bitPos - 1)] &&
-                            block == chunkData.GetBlock(axis, right + 2, forward + 1, bitPos))
+                            block == chunkData.GetBlock(axis, right + 1, forward, bitPos - 1))
                         {
                             forwardMergedRef = 0;
                             rightMergedRef++;
@@ -262,7 +276,7 @@ public static class ChunkMesher
     {
         if (meshData.Quads.Count == 0) return null;
 
-        var surfaceArrayDict = new System.Collections.Generic.Dictionary<(Block, Direction), SurfaceArrayData>();
+        var surfaceArrayDict = new Dictionary<(Block, Direction), SurfaceArrayData>();
 
         for (var face = 0; face < 6; face++)
             for (var i = meshData.FaceVertexBegin[face];
@@ -282,7 +296,7 @@ public static class ChunkMesher
     }
 
     private static void ParseQuad(Direction dir, Block block, ulong quad,
-        System.Collections.Generic.Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
+        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
         var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
         if (!surfaceArrayDict.ContainsKey(blockDirPair))
@@ -365,53 +379,53 @@ public static class ChunkMesher
         switch (dir)
         {
             case Direction.PositiveY: // Y+
-                return new Vector3[]
-                {
+                return
+                [
                     new(x, y, z),
                     new(x + w, y, z),
                     new(x + w, y, z + h),
                     new(x, y, z + h)
-                };
+                ];
             case Direction.NegativeY: // Y-
-                return new Vector3[]
-                {
+                return
+                [
                     new(x - w, y, z),
                     new(x - w, y, z + h),
                     new(x, y, z + h),
                     new(x, y, z)
-                };
+                ];
             case Direction.PositiveX: // X+
-                return new Vector3[]
-                {
+                return
+                [
                     new(x, y - w, z + h),
                     new(x, y, z + h),
                     new(x, y, z),
                     new(x, y - w, z)
-                };
+                ];
             case Direction.NegativeX: // X-
-                return new Vector3[]
-                {
+                return
+                [
                     new(x, y, z),
                     new(x, y + w, z),
                     new(x, y + w, z + h),
                     new(x, y, z + h)
-                };
+                ];
             case Direction.PositiveZ: // Z+
-                return new Vector3[]
-                {
+                return
+                [
                     new(x - w, y, z),
                     new(x - w, y + h, z),
                     new(x, y + h, z),
                     new(x, y, z)
-                };
+                ];
             case Direction.NegativeZ: // Z-
-                return new Vector3[]
-                {
+                return
+                [
                     new(x + w, y, z),
                     new(x + w, y + h, z),
                     new(x, y + h, z),
                     new(x, y, z)
-                };
+                ];
             default:
                 throw new ArgumentOutOfRangeException(nameof(dir), dir, null);
         }

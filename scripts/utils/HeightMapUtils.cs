@@ -139,44 +139,7 @@ public static class HeightMapUtils
 
     public static double[,] ConstructChunkHeightMap(Rect2I chunkRect, Func<double, double, double> getHeight, int upscaleLevel = 3)
     {
-        // Center
-        var heightMap = new double[chunkRect.Size.X, chunkRect.Size.Y];
-        var centerRect = new Rect2I(chunkRect.Position + Vector2I.One, chunkRect.Size - 2 * Vector2I.One);
-        var centerHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, chunkRect.Size.Y - 2, centerRect, getHeight,
-            upscaleLevel: upscaleLevel);
-
-        for (var x = 1; x < chunkRect.Size.X - 1; x++)
-            for (var y = 1; y < chunkRect.Size.Y - 1; y++)
-                heightMap[x, y] = centerHeightMap[x - 1, y - 1];
-
-        // Four edges
-        var topRect = new Rect2I(chunkRect.Position + new Vector2I(1, chunkRect.Size.Y - 1), chunkRect.Size.X - 2, 1);
-        var topHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, topRect, getHeight, upscaleLevel: upscaleLevel);
-        var bottomRect = new Rect2I(chunkRect.Position + new Vector2I(1, 0), chunkRect.Size.X - 2, 1);
-        var bottomHeightMap = ConstructHeightMap(chunkRect.Size.X - 2, 1, bottomRect, getHeight, upscaleLevel: upscaleLevel);
-        for (var x = 1; x < chunkRect.Size.X - 1; x++)
-        {
-            heightMap[x, chunkRect.Size.Y - 1] = topHeightMap[x - 1, 0];
-            heightMap[x, 0] = bottomHeightMap[x - 1, 0];
-        }
-
-        var leftRect = new Rect2I(chunkRect.Position + new Vector2I(0, 1), 1, chunkRect.Size.Y - 2);
-        var leftHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, leftRect, getHeight, upscaleLevel: upscaleLevel);
-        var rightRect = new Rect2I(chunkRect.Position + new Vector2I(chunkRect.Size.X - 1, 1), 1, chunkRect.Size.Y - 2);
-        var rightHeightMap = ConstructHeightMap(1, chunkRect.Size.Y - 2, rightRect, getHeight, upscaleLevel: upscaleLevel);
-        for (var y = 1; y < chunkRect.Size.Y - 1; y++)
-        {
-            heightMap[0, y] = leftHeightMap[0, y - 1];
-            heightMap[chunkRect.Size.X - 1, y] = rightHeightMap[0, y - 1];
-        }
-
-        // Four corners
-        heightMap[0, 0] = getHeight(chunkRect.Position.X + 0.5, chunkRect.Position.Y + 0.5);
-        heightMap[chunkRect.Size.X - 1, 0] = getHeight(chunkRect.End.X - 0.5, chunkRect.Position.Y + 0.5);
-        heightMap[0, chunkRect.Size.Y - 1] = getHeight(chunkRect.Position.X + 0.5, chunkRect.End.Y - 0.5);
-        heightMap[chunkRect.Size.X - 1, chunkRect.Size.Y - 1] = getHeight(chunkRect.End.X - 0.5, chunkRect.End.Y - 0.5);
-
-        return heightMap;
+        return ConstructHeightMap(chunkRect.Size.X, chunkRect.Size.Y, chunkRect, getHeight, upscaleLevel: upscaleLevel);
     }
 
     private static double Lerp(double a, double b, double t)

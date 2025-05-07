@@ -202,8 +202,7 @@ public partial class WorldGenerator
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        // Consider overlapping edges
-        var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS_P, ChunkMesher.CS_P);
+        var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);
         return HeightMapUtils.ConstructChunkHeightMap(rect, (x, y) => GetRawHeight(x, y, true, true, true), 2);
     }
 
