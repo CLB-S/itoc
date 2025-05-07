@@ -42,9 +42,7 @@ public partial class WorldGenerator
         {
             var height = GetRawHeight(x, y, true, true);
 
-            var normX = Mathf.PosMod(x, ChunkMesher.CS) / ChunkMesher.CS;
-            var normY = Mathf.PosMod(y, ChunkMesher.CS) / ChunkMesher.CS;
-            var biomeWeights = chunkColumn.GetBiomeWeights(normX, normY);
+            var biomeWeights = chunkColumn.GetBiomeWeights(x, y);
             foreach ((var biome, var weight) in biomeWeights)
                 // TODO: Use the biome's pattern ?
                 height += weight * PatternLibrary.GetPattern(biome.Id).Evaluate(x, y, Settings.Seed);

@@ -54,9 +54,14 @@ public class ChunkColumn
     /// <summary>
     /// Get the interpolated biome weights at the given normalized position within the chunk
     /// </summary>
+    /// <param name="x">world position x</param>
+    /// <param name="z">world position z</param>
     /// <returns>Dictionary mapping biomes to their interpolation weights</returns>
-    public Dictionary<Biome, double> GetBiomeWeights(double normalizedX, double normalizedZ)
+    public Dictionary<Biome, double> GetBiomeWeights(double x, double z)
     {
+        var normalizedX = Mathf.PosMod(x, ChunkMesher.CS) / ChunkMesher.CS;
+        var normalizedZ = Mathf.PosMod(z, ChunkMesher.CS) / ChunkMesher.CS;
+
         var biomeWeights = new Dictionary<Biome, double>();
         normalizedX = (BIOME_MAP_SIZE - 1) * normalizedX;
         normalizedZ = (BIOME_MAP_SIZE - 1) * normalizedZ;
@@ -100,10 +105,12 @@ public class ChunkColumn
     /// <summary>
     /// Get the dominant biome at the specified position within the chunk
     /// </summary>
+    /// <param name="x">world position x</param>
+    /// <param name="z">world position z</param>
     /// <returns>The dominant biome at the position</returns>
-    public Biome GetDominantBiome(int x, int y)
+    public Biome GetDominantBiome(double x, double z)
     {
-        var weights = GetBiomeWeights(x, y);
+        var weights = GetBiomeWeights(x, z);
         return weights.OrderByDescending(pair => pair.Value).First().Key;
     }
 }
