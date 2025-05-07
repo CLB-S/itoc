@@ -9,6 +9,7 @@ public class Palette<T> where T : IEquatable<T>
     private readonly T _defaultValue;
     private readonly int _initialBits;
     public event Action<int> OnBitsIncreased;
+    public event Action<bool> OnSingleEntryStateChanged;
 
     public Palette(T defaultValue, int initialBits = 4)
     {
@@ -16,6 +17,7 @@ public class Palette<T> where T : IEquatable<T>
         _entries.Add(defaultValue);
         _initialBits = initialBits;
         UpdateBits(initialBits);
+        IsSingleEntry = true;
     }
 
     public int GetId(T value)
@@ -34,6 +36,12 @@ public class Palette<T> where T : IEquatable<T>
 
         int newId = _entries.Count;
         _entries.Add(value);
+
+        // Update single entry state
+        bool wasSingleEntry = IsSingleEntry;
+        IsSingleEntry = _entries.Count <= 1;
+        if (wasSingleEntry != IsSingleEntry)
+            OnSingleEntryStateChanged?.Invoke(IsSingleEntry);
 
         int requiredBits = CalculateRequiredBits();
         if (requiredBits > BitsPerEntry)
@@ -65,4 +73,5 @@ public class Palette<T> where T : IEquatable<T>
     public int BitsPerEntry { get; private set; }
     public ulong Mask { get; private set; }
     public int Count => _entries.Count;
+    public bool IsSingleEntry { get; private set; }
 }
