@@ -1,9 +1,10 @@
+using System.Collections.Generic;
 using System.Text;
 using Godot;
 
 public partial class GuiInfo : RichTextLabel
 {
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
         if (!Visible) return;
 
@@ -24,6 +25,8 @@ public partial class GuiInfo : RichTextLabel
         var camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
         var camFacingDirName = camFacingDir.Name();
         var chunkPos = World.WorldToChunkPosition(camPos);
+        // var chunk = World.Instance.Chunks[chunkPos];
+        var chunkColumn = World.Instance.ChunkColumns[new Vector2I(chunkPos.X, chunkPos.Z)];
 
         // Time
         var worldTime = World.Instance.Time;
@@ -49,6 +52,7 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine($"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}");
         debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkPos.X}, {chunkPos.Y}, {chunkPos.Z}");
         debugTextBuilder.AppendLine($"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
+        debugTextBuilder.AppendLine($"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn.GetBiomeWeights(camPos.X, camPos.Z))}");
         debugTextBuilder.AppendLine(
             $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
         debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {World.Instance.Chunks.Count}");
@@ -66,6 +70,15 @@ public partial class GuiInfo : RichTextLabel
     {
         if (@event.IsActionPressed("info"))
             Visible = !Visible;
+    }
+
+    private string BiomeWeightsToString(Dictionary<Biome, double> biomeWeights)
+    {
+        var sb = new StringBuilder();
+        foreach (var (biome, weight) in biomeWeights)
+            sb.Append($"{biome.Id}: {weight:0.00}, ");
+
+        return sb.ToString().TrimEnd(',', ' ');
     }
 
     private string BytesToString(double size)
