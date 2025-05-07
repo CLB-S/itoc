@@ -23,19 +23,17 @@ public partial class WorldGenerator
         var biomePaletteStorage = new PaletteStorage<Biome>(biomePalette);
 
         for (var x = 0; x < ChunkColumn.BIOME_MAP_SIZE; x++)
-        {
             for (var z = 0; z < ChunkColumn.BIOME_MAP_SIZE; z++)
             {
-
-                var point = chunkColumnPos * ChunkMesher.CS + new Vector2(x, z) * ChunkMesher.CS / (ChunkColumn.BIOME_MAP_SIZE - 1);
+                var point = chunkColumnPos * ChunkMesher.CS +
+                            new Vector2(x, z) * ChunkMesher.CS / (ChunkColumn.BIOME_MAP_SIZE - 1);
                 point = Warp(point, _domainWarpPattern);
 
                 var cell = GetCellDatasNearby(point).First();
                 biomePaletteStorage.Set(ChunkColumn.GetBiomeIndex(x, z), cell.Biome);
             }
-        }
 
-        var chunkColumn = new ChunkColumn(chunkColumnPos, biomePalette, biomePaletteStorage);
+        var chunkColumn = new ChunkColumn(chunkColumnPos, biomePaletteStorage);
 
         // Height map
         var getHeight = new Func<double, double, double>((x, y) =>
@@ -43,7 +41,7 @@ public partial class WorldGenerator
             var height = GetRawHeight(x, y, true, true);
 
             var biomeWeights = chunkColumn.GetBiomeWeights(x, y);
-            foreach ((var biome, var weight) in biomeWeights)
+            foreach (var (biome, weight) in biomeWeights)
                 // TODO: Use the biome's pattern ?
                 height += weight * PatternLibrary.GetPattern(biome.Id).Evaluate(x, y, Settings.Seed);
 

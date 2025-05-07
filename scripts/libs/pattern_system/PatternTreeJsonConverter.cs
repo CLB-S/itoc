@@ -8,7 +8,7 @@ using Godot;
 namespace PatternSystem;
 
 /// <summary>
-/// Handles serialization and deserialization of PatternTreeNode objects to/from JSON.
+///     Handles serialization and deserialization of PatternTreeNode objects to/from JSON.
 /// </summary>
 public class PatternTreeJsonConverter
 {
@@ -20,7 +20,7 @@ public class PatternTreeJsonConverter
     };
 
     /// <summary>
-    /// Serializes a PatternTreeNode to a JSON string.
+    ///     Serializes a PatternTreeNode to a JSON string.
     /// </summary>
     public static string Serialize(PatternTreeNode node)
     {
@@ -28,7 +28,7 @@ public class PatternTreeJsonConverter
     }
 
     /// <summary>
-    /// Deserializes a JSON string into a PatternTreeNode.
+    ///     Deserializes a JSON string into a PatternTreeNode.
     /// </summary>
     public static PatternTreeNode Deserialize(string json)
     {
@@ -37,7 +37,7 @@ public class PatternTreeJsonConverter
 }
 
 /// <summary>
-/// Custom JsonConverter for PatternTreeNode objects.
+///     Custom JsonConverter for PatternTreeNode objects.
 /// </summary>
 public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
 {
@@ -68,7 +68,7 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
             if (reader.TokenType != JsonTokenType.PropertyName)
                 throw new JsonException("Expected property name");
 
-            string propertyName = reader.GetString();
+            var propertyName = reader.GetString();
 
             reader.Read(); // Move to property value
 
@@ -96,10 +96,11 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                         if (reader.TokenType != JsonTokenType.PropertyName)
                             continue;
 
-                        string propName = reader.GetString();
+                        var propName = reader.GetString();
                         reader.Read();
                         properties[propName] = JsonDocument.ParseValue(ref reader).RootElement;
                     }
+
                     break;
                 case ChildrenPropertyName:
                     if (reader.TokenType != JsonTokenType.StartArray)
@@ -107,9 +108,7 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
 
                     // Parse children array
                     while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
-                    {
                         children.Add(Read(ref reader, typeof(PatternTreeNode), options));
-                    }
                     break;
                 default:
                     reader.Skip();
@@ -150,9 +149,9 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
             writer.WriteString(TypePropertyName, value?.GetType().Name);
 
             if (!(value is PositionXNode ||
-                 value is PositionYNode ||
-                 value is PositionZNode ||
-                 value is PositionTransformNode))
+                  value is PositionYNode ||
+                  value is PositionZNode ||
+                  value is PositionTransformNode))
             {
                 // Write node-specific properties
                 writer.WritePropertyName(PropertiesPropertyName);
@@ -166,10 +165,7 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
             {
                 writer.WritePropertyName(ChildrenPropertyName);
                 writer.WriteStartArray();
-                foreach (var child in operatorNode.Children)
-                {
-                    Write(writer, child, options);
-                }
+                foreach (var child in operatorNode.Children) Write(writer, child, options);
                 writer.WriteEndArray();
             }
         }
@@ -259,6 +255,7 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                     writer.WriteNumber("Z", settings.Offset.Z);
                     writer.WriteEndObject();
                 }
+
                 break;
 
             case MultiChildOperationNode multiNode:
@@ -279,7 +276,8 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
         }
     }
 
-    private PatternTreeNode CreateNodeFromJson(string nodeType, Dictionary<string, JsonElement> properties, List<PatternTreeNode> children)
+    private PatternTreeNode CreateNodeFromJson(string nodeType, Dictionary<string, JsonElement> properties,
+        List<PatternTreeNode> children)
     {
         switch (nodeType)
         {
@@ -287,7 +285,7 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                 return null;
 
             case nameof(ConstantNode):
-                double value = properties["Value"].GetDouble();
+                var value = properties["Value"].GetDouble();
                 return new ConstantNode(value);
 
             case nameof(PositionXNode):
@@ -313,11 +311,11 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
 
                 // Override with values from JSON if they exist
                 foreach (var prop in properties)
-                {
                     switch (prop.Key)
                     {
                         case "CellularDistanceFunction":
-                            settings.CellularDistanceFunction = Enum.Parse<CellularDistanceFunction>(prop.Value.GetString());
+                            settings.CellularDistanceFunction =
+                                Enum.Parse<CellularDistanceFunction>(prop.Value.GetString());
                             break;
                         case "CellularJitter":
                             settings.CellularJitter = prop.Value.GetDouble();
@@ -384,16 +382,15 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                             );
                             break;
                     }
-                }
 
                 return new FastNoiseLiteNode(settings);
 
             case nameof(MultiChildOperationNode):
-                MultiOperationType multiOpType = Enum.Parse<MultiOperationType>(properties["OperationType"].GetString());
+                var multiOpType = Enum.Parse<MultiOperationType>(properties["OperationType"].GetString());
                 return new MultiChildOperationNode(children, multiOpType);
 
             case nameof(DualChildOperationNode):
-                DualOperationType dualOpType = Enum.Parse<DualOperationType>(properties["OperationType"].GetString());
+                var dualOpType = Enum.Parse<DualOperationType>(properties["OperationType"].GetString());
                 return new DualChildOperationNode(
                     children.Count > 0 ? children[0] : null,
                     children.Count > 1 ? children[1] : null,
@@ -401,14 +398,14 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                 );
 
             case nameof(SingleChildOperationNode):
-                SingleOperationType singleOpType = Enum.Parse<SingleOperationType>(properties["OperationType"].GetString());
+                var singleOpType = Enum.Parse<SingleOperationType>(properties["OperationType"].GetString());
                 return new SingleChildOperationNode(
                     children.Count > 0 ? children[0] : null,
                     singleOpType
                 );
 
             case nameof(MathExpressionNode):
-                string mathExpression = properties["MathExpression"].GetString();
+                var mathExpression = properties["MathExpression"].GetString();
                 return children.Count > 0
                     ? new MathExpressionNode(children, mathExpression)
                     : new MathExpressionNode(mathExpression);

@@ -1,5 +1,3 @@
-using Godot;
-
 namespace ChunkGenerator;
 
 public class ChunkGenerationResult

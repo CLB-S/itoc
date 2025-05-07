@@ -12,9 +12,10 @@ public class ChunkColumn
     public Vector2I Position;
 
     /// <summary>
-    /// [ChunkMesher.CS, ChunkMesher.CS], 62x62
+    ///     [ChunkMesher.CS, ChunkMesher.CS], 62x62
     /// </summary>
     public double[,] HeightMap;
+
     public double HeightMapHigh;
     public double HeightMapLow;
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
@@ -26,7 +27,7 @@ public class ChunkColumn
     {
     }
 
-    public ChunkColumn(Vector2I position, Palette<Biome> biomePalette, PaletteStorage<Biome> biomePaletteStorage)
+    public ChunkColumn(Vector2I position, PaletteStorage<Biome> biomePaletteStorage)
     {
         Position = position;
 
@@ -42,7 +43,7 @@ public class ChunkColumn
 
     public static int GetBiomeIndex(int x, int z)
     {
-        int index = z + x * BIOME_MAP_SIZE;
+        var index = z + x * BIOME_MAP_SIZE;
         return index;
     }
 
@@ -52,7 +53,7 @@ public class ChunkColumn
     }
 
     /// <summary>
-    /// Get the interpolated biome weights at the given normalized position within the chunk
+    ///     Get the interpolated biome weights at the given normalized position within the chunk
     /// </summary>
     /// <param name="x">world position x</param>
     /// <param name="z">world position z</param>
@@ -65,10 +66,10 @@ public class ChunkColumn
         var biomeWeights = new Dictionary<Biome, double>();
         normalizedX = (BIOME_MAP_SIZE - 1) * normalizedX;
         normalizedZ = (BIOME_MAP_SIZE - 1) * normalizedZ;
-        int x0 = Mathf.FloorToInt(normalizedX);
-        int z0 = Mathf.FloorToInt(normalizedZ);
-        int x1 = x0 + 1;
-        int z1 = z0 + 1;
+        var x0 = Mathf.FloorToInt(normalizedX);
+        var z0 = Mathf.FloorToInt(normalizedZ);
+        var x1 = x0 + 1;
+        var z1 = z0 + 1;
 
         // Get the biomes at the four corners
         var topLeftBiome = GetBiomeFromPalette(x0, z0);
@@ -77,10 +78,14 @@ public class ChunkColumn
         var bottomRightBiome = GetBiomeFromPalette(x1, z1);
 
         // Calculate weights for each corner
-        var weightTopLeft = Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z0, 2)), 0);
-        var weightTopRight = Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z0, 2)), 0);
-        var weightBottomLeft = Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z1, 2)), 0);
-        var weightBottomRight = Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z1, 2)), 0);
+        var weightTopLeft =
+            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z0, 2)), 0);
+        var weightTopRight =
+            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z0, 2)), 0);
+        var weightBottomLeft =
+            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z1, 2)), 0);
+        var weightBottomRight =
+            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z1, 2)), 0);
         var totalWeight = weightTopLeft + weightTopRight + weightBottomLeft + weightBottomRight;
 
         // Add weights to the dictionary
@@ -103,7 +108,7 @@ public class ChunkColumn
     }
 
     /// <summary>
-    /// Get the dominant biome at the specified position within the chunk
+    ///     Get the dominant biome at the specified position within the chunk
     /// </summary>
     /// <param name="x">world position x</param>
     /// <param name="z">world position z</param>

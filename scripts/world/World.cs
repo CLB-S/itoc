@@ -78,6 +78,7 @@ public partial class World : Node
     }
 
     #region Get and Set methods
+
     public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
         var chunkPos = WorldToChunkPosition(worldPos);
@@ -119,10 +120,12 @@ public partial class World : Node
     {
         return CameraHelper.Instance.GetCameraPosition();
     }
+
     #endregion
 
 
     #region Utility methods
+
     public static Vector3I WorldToChunkPosition(Vector3 worldPos)
     {
         return new Vector3I(
@@ -140,9 +143,11 @@ public partial class World : Node
             Mathf.PosMod(worldPos.Z, ChunkMesher.CS)
         );
     }
+
     #endregion
 
     #region Chunk generation
+
     private void UpdateChunkLoading()
     {
         var playerChunkXZ = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
@@ -269,9 +274,8 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X + 1, chunkPos.Y, chunkPos.Z), out var positiveXNeighbor))
         {
-            for (int y = 0; y < ChunkMesher.CS; y++)
-            {
-                for (int z = 0; z < ChunkMesher.CS; z++)
+            for (var y = 0; y < ChunkMesher.CS; y++)
+                for (var z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(ChunkMesher.CS - 1, y, z);
                     positiveXNeighbor.ChunkData.SetMesherMask(0, y + 1, z + 1, block);
@@ -279,15 +283,14 @@ public partial class World : Node
                     var neighborBlock = positiveXNeighbor.GetBlock(0, y, z);
                     chunk.ChunkData.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, neighborBlock);
                 }
-            }
+
             positiveXNeighbor.UpdateMeshIfNeededDeferred();
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X - 1, chunkPos.Y, chunkPos.Z), out var negativeXNeighbor))
         {
-            for (int y = 0; y < ChunkMesher.CS; y++)
-            {
-                for (int z = 0; z < ChunkMesher.CS; z++)
+            for (var y = 0; y < ChunkMesher.CS; y++)
+                for (var z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(0, y, z);
                     negativeXNeighbor.ChunkData.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
@@ -295,15 +298,14 @@ public partial class World : Node
                     var neighborBlock = negativeXNeighbor.GetBlock(ChunkMesher.CS - 1, y, z);
                     chunk.ChunkData.SetMesherMask(0, y + 1, z + 1, neighborBlock);
                 }
-            }
+
             negativeXNeighbor.UpdateMeshIfNeededDeferred();
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y + 1, chunkPos.Z), out var positiveYNeighbor))
         {
-            for (int x = 0; x < ChunkMesher.CS; x++)
-            {
-                for (int z = 0; z < ChunkMesher.CS; z++)
+            for (var x = 0; x < ChunkMesher.CS; x++)
+                for (var z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(x, ChunkMesher.CS - 1, z);
                     positiveYNeighbor.ChunkData.SetMesherMask(x + 1, 0, z + 1, block);
@@ -311,15 +313,14 @@ public partial class World : Node
                     var neighborBlock = positiveYNeighbor.GetBlock(x, 0, z);
                     chunk.ChunkData.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, neighborBlock);
                 }
-            }
+
             positiveYNeighbor.UpdateMeshIfNeededDeferred();
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y - 1, chunkPos.Z), out var negativeYNeighbor))
         {
-            for (int x = 0; x < ChunkMesher.CS; x++)
-            {
-                for (int z = 0; z < ChunkMesher.CS; z++)
+            for (var x = 0; x < ChunkMesher.CS; x++)
+                for (var z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(x, 0, z);
                     negativeYNeighbor.ChunkData.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
@@ -327,15 +328,14 @@ public partial class World : Node
                     var neighborBlock = negativeYNeighbor.GetBlock(x, ChunkMesher.CS - 1, z);
                     chunk.ChunkData.SetMesherMask(x + 1, 0, z + 1, neighborBlock);
                 }
-            }
+
             negativeYNeighbor.UpdateMeshIfNeededDeferred();
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z + 1), out var positiveZNeighbor))
         {
-            for (int x = 0; x < ChunkMesher.CS; x++)
-            {
-                for (int y = 0; y < ChunkMesher.CS; y++)
+            for (var x = 0; x < ChunkMesher.CS; x++)
+                for (var y = 0; y < ChunkMesher.CS; y++)
                 {
                     var block = chunk.GetBlock(x, y, ChunkMesher.CS - 1);
                     positiveZNeighbor.ChunkData.SetMesherMask(x + 1, y + 1, 0, block);
@@ -343,15 +343,14 @@ public partial class World : Node
                     var neighborBlock = positiveZNeighbor.GetBlock(x, y, 0);
                     chunk.ChunkData.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, neighborBlock);
                 }
-            }
+
             positiveZNeighbor.UpdateMeshIfNeededDeferred();
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z - 1), out var negativeZNeighbor))
         {
-            for (int x = 0; x < ChunkMesher.CS; x++)
-            {
-                for (int y = 0; y < ChunkMesher.CS; y++)
+            for (var x = 0; x < ChunkMesher.CS; x++)
+                for (var y = 0; y < ChunkMesher.CS; y++)
                 {
                     var block = chunk.GetBlock(x, y, 0);
                     negativeZNeighbor.ChunkData.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
@@ -359,7 +358,7 @@ public partial class World : Node
                     var neighborBlock = negativeZNeighbor.GetBlock(x, y, ChunkMesher.CS - 1);
                     chunk.ChunkData.SetMesherMask(x + 1, y + 1, 0, neighborBlock);
                 }
-            }
+
             negativeZNeighbor.UpdateMeshIfNeededDeferred();
         }
     }

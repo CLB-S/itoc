@@ -16,13 +16,17 @@ public class MathExpressionNode : PatternTreeNode, IOperator
 
 
     /// <summary>
-    /// Creates a new instance of the MathNode class with given math expression.
-    /// See <see href="https://github.com/AntonovAnton/math.evaluation?tab=readme-ov-file#scientific-math-context-using-scientificmathcontext-class">AntonovAnton/math.evaluation</see>
-    /// for supported math operations.
+    ///     Creates a new instance of the MathNode class with given math expression.
+    ///     See
+    ///     <see
+    ///         href="https://github.com/AntonovAnton/math.evaluation?tab=readme-ov-file#scientific-math-context-using-scientificmathcontext-class">
+    ///         AntonovAnton/math.evaluation
+    ///     </see>
+    ///     for supported math operations.
     /// </summary>
     /// <param name="mathExpression">
-    /// <c>x</c> or <c>x1</c> for the child. 
-    /// <c>Px</c>, <c>Py</c>, <c>Pz</c> for the coordinates.
+    ///     <c>x</c> or <c>x1</c> for the child.
+    ///     <c>Px</c>, <c>Py</c>, <c>Pz</c> for the coordinates.
     /// </param>
     public MathExpressionNode(string mathExpression)
     {
@@ -31,13 +35,17 @@ public class MathExpressionNode : PatternTreeNode, IOperator
     }
 
     /// <summary>
-    /// Creates a new instance of the MathNode class with given child and math expression.
-    /// See <see href="https://github.com/AntonovAnton/math.evaluation?tab=readme-ov-file#scientific-math-context-using-scientificmathcontext-class">AntonovAnton/math.evaluation</see>
-    /// for supported math operations.
+    ///     Creates a new instance of the MathNode class with given child and math expression.
+    ///     See
+    ///     <see
+    ///         href="https://github.com/AntonovAnton/math.evaluation?tab=readme-ov-file#scientific-math-context-using-scientificmathcontext-class">
+    ///         AntonovAnton/math.evaluation
+    ///     </see>
+    ///     for supported math operations.
     /// </summary>
     /// <param name="mathExpression">
-    /// <c>x</c> or <c>x1</c> for the child.
-    /// <c>Px</c>, <c>Py</c>, <c>Pz</c> for the coordinates.
+    ///     <c>x</c> or <c>x1</c> for the child.
+    ///     <c>Px</c>, <c>Py</c>, <c>Pz</c> for the coordinates.
     /// </param>
     public MathExpressionNode(PatternTreeNode child, string mathExpression)
     {
@@ -46,14 +54,18 @@ public class MathExpressionNode : PatternTreeNode, IOperator
     }
 
     /// <summary>
-    /// Creates a new instance of the MathNode class with given children and math expression.
-    /// See <see href="https://github.com/AntonovAnton/math.evaluation?tab=readme-ov-file#scientific-math-context-using-scientificmathcontext-class">AntonovAnton/math.evaluation</see>
-    /// for supported math operations.
+    ///     Creates a new instance of the MathNode class with given children and math expression.
+    ///     See
+    ///     <see
+    ///         href="https://github.com/AntonovAnton/math.evaluation?tab=readme-ov-file#scientific-math-context-using-scientificmathcontext-class">
+    ///         AntonovAnton/math.evaluation
+    ///     </see>
+    ///     for supported math operations.
     /// </summary>
     /// <param name="mathExpression">
-    /// x<c>n</c> for <c>n</c>-th child. 
-    /// Eg. <c>x</c> or <c>x1</c> for first child, <c>x2</c> for second child. 
-    /// <c>Px</c>, <c>Py</c>, <c>Pz</c> for the coordinates.
+    ///     x<c>n</c> for <c>n</c>-th child.
+    ///     Eg. <c>x</c> or <c>x1</c> for first child, <c>x2</c> for second child.
+    ///     <c>Px</c>, <c>Py</c>, <c>Pz</c> for the coordinates.
     /// </param>
     public MathExpressionNode(IEnumerable<PatternTreeNode> children, string mathExpression)
     {
@@ -66,7 +78,7 @@ public class MathExpressionNode : PatternTreeNode, IOperator
         var valuesArray = values.ToArray();
 
         paramDict["x"] = valuesArray[0];
-        for (int i = 0; i < valuesArray.Length; i++)
+        for (var i = 0; i < valuesArray.Length; i++)
             paramDict[$"x{i}"] = valuesArray[i];
 
         return MathExpression.Evaluate(paramDict, _mathContext);

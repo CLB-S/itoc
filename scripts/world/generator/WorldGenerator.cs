@@ -45,9 +45,11 @@ public enum GenerationState
     FindingRiverMouths,
     PreparingStreamGraph,
     SolvingPowerEquation, // If not converged, goto `PreparingStreamGraph`.
+
     // CalculatingNormals,
     AdjustingTemperature,
     SettingBiome,
+
     // InitInterpolator,
     Custom,
     Completed,
@@ -116,7 +118,8 @@ public partial class WorldGenerator
                 () => !_powerEquationConverged, GenerationState.PreparingStreamGraph));
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingNormals, CalculateNormals));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature, AdjustTemperatureAccordingToHeight));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature,
+            AdjustTemperatureAccordingToHeight));
         _generationPipeline.AddLast(new GenerationStep(GenerationState.SettingBiome, SetBiomes));
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
@@ -219,10 +222,8 @@ public partial class WorldGenerator
                         repeatNode = repeatNode.Next;
 
                     if (repeatNode != null)
-                    {
                         // ReportProgress($"Repeating from {step.RepeatToState.Value} state");
                         currentNode = repeatNode;
-                    }
                 }
                 else
                 {

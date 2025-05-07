@@ -102,6 +102,6 @@ public class ChunkData
     public int GetBytes()
     {
         return _paletteStorage.GetStorageSize() * sizeof(ulong) +
-                +OpaqueMask.Length * sizeof(ulong);
+               +OpaqueMask.Length * sizeof(ulong);
     }
 }

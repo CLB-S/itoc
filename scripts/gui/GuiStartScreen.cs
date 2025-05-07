@@ -1,4 +1,5 @@
 using Godot;
+using WorldGenerator;
 
 public partial class GuiStartScreen : Node
 {
@@ -12,7 +13,7 @@ public partial class GuiStartScreen : Node
 
     public void OnDebugWorldButtonPressed()
     {
-        Core.Instance.GenerateWorldAndStartGame(new WorldGenerator.DebugWorldGenerator(Core.Instance.WorldSettings));
+        Core.Instance.GenerateWorldAndStartGame(new DebugWorldGenerator(Core.Instance.WorldSettings));
         LoadingScreen.Visible = true;
     }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Godot;
 
 namespace PatternSystem;
 
@@ -43,7 +42,7 @@ public class DualChildOperationNode : PatternTreeNode, IOperator
             DualOperationType.Power => Math.Pow(primaryValue, secondaryValue),
             DualOperationType.Min => Math.Min(primaryValue, secondaryValue),
             DualOperationType.Max => Math.Max(primaryValue, secondaryValue),
-            _ => primaryValue + secondaryValue,
+            _ => primaryValue + secondaryValue
         };
     }
 

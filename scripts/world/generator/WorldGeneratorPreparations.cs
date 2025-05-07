@@ -53,7 +53,7 @@ public partial class WorldGenerator
                 Seed = (int)$"uplift{Settings.Seed}".Hash(),
                 NoiseType = NoiseType.Perlin,
                 FractalType = FractalType.None,
-                Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency,
+                Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency
             })
             .Build();
 
@@ -63,7 +63,7 @@ public partial class WorldGenerator
                 Seed = (int)$"temperature{Settings.Seed}".Hash(),
                 NoiseType = NoiseType.Perlin,
                 FractalOctaves = 3,
-                Frequency = Settings.NoiseFrequency * Settings.TemperatureNoiseFrequency,
+                Frequency = Settings.NoiseFrequency * Settings.TemperatureNoiseFrequency
             })
             .ScaleXBy(3)
             .Multiply(Settings.TemperatureNoiseIntensity)
@@ -75,7 +75,7 @@ public partial class WorldGenerator
                 Seed = (int)$"precipitation{Settings.Seed}".Hash(),
                 NoiseType = NoiseType.SimplexSmooth,
                 FractalOctaves = 3,
-                Frequency = Settings.NoiseFrequency * Settings.PrecipitationNoiseFrequency,
+                Frequency = Settings.NoiseFrequency * Settings.PrecipitationNoiseFrequency
             })
             .ScaleXBy(2)
             .Multiply(1.3)
@@ -91,13 +91,12 @@ public partial class WorldGenerator
                 NoiseType = NoiseType.Perlin,
                 // FractalType = FractalType.None,
                 FractalOctaves = 2,
-                Frequency = Settings.DomainWarpFrequency,
+                Frequency = Settings.DomainWarpFrequency
             })
             .Multiply(Settings.DomainWarpIntensity)
             .Build();
 
         _heightPattern = PatternLibrary.Instance.GetPattern("plain");
-
     }
 
     protected void GenerateSamplePoints()
@@ -138,9 +137,10 @@ public partial class WorldGenerator
                 Cell = _cells[i],
                 Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points),
                 Precipitation = ClimateUtils.GetPrecipitation(latitude, Settings.MaxPrecipitation) *
-                            (1 + precipitationNoiseValue),
-                Temperature = ClimateUtils.GetTemperature(latitude, Settings.EquatorialTemperature, Settings.PolarTemperature) +
-                            temperatureNoiseValue,
+                                (1 + precipitationNoiseValue),
+                Temperature =
+                    ClimateUtils.GetTemperature(latitude, Settings.EquatorialTemperature, Settings.PolarTemperature) +
+                    temperatureNoiseValue
             };
         }
 
@@ -152,9 +152,12 @@ public partial class WorldGenerator
         var pointsData = _cellDatas.Keys.Select(i =>
         {
             var mappedX = 2 * Mathf.Pi * _points[i].X / Settings.Bounds.Size.X;
-            return new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+            return new[]
+            {
+                Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
                 Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                _points[i].Y };
+                _points[i].Y
+            };
         }).ToArray();
 
         static double l2Norm(double[] x, double[] y)

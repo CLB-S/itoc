@@ -1,6 +1,4 @@
-using System;
 using Godot;
-using PatternSystem;
 
 public class WindSettings
 {
@@ -17,9 +15,10 @@ public class WindSettings
 public static class ClimateUtils
 {
     /// <summary>
-    /// P(φ) = P_max [exp{-(φ/a)^2} + b * exp{-((|φ|-60°)/c)^2}]
+    ///     P(φ) = P_max [exp{-(φ/a)^2} + b * exp{-((|φ|-60°)/c)^2}]
     /// </summary>
-    public static double GetPrecipitation(double latitudeDegrees, double maxPrecipitation, double a = 0.95, double b = 0.45, double c = 0.45)
+    public static double GetPrecipitation(double latitudeDegrees, double maxPrecipitation, double a = 0.95,
+        double b = 0.45, double c = 0.45)
     {
         var latitude = Mathf.DegToRad(latitudeDegrees);
         var pt = Mathf.Exp(-(latitude / a) * (latitude / a));
@@ -33,7 +32,9 @@ public static class ClimateUtils
         var latitude = Mathf.DegToRad(latitudeDegrees);
         var dt = (equatorialTemperature - polarTemperature * 2 / Mathf.Pi) / 2;
         var t = equatorialTemperature - dt;
-        return t + dt * (Mathf.Abs(2 * latitude) < Mathf.Pi / 2 ? Mathf.Cos(2 * latitude) : Mathf.Pi / 2 - Mathf.Abs(2 * latitude));
+        return t + dt * (Mathf.Abs(2 * latitude) < Mathf.Pi / 2
+            ? Mathf.Cos(2 * latitude)
+            : Mathf.Pi / 2 - Mathf.Abs(2 * latitude));
     }
 
     public static Vector2 GetSurfaceWind(double latitude, double longitude,
@@ -85,7 +86,9 @@ public static class ClimateUtils
         }
 
         // Add longitudinal variation using Perlin noise
-        double longitudeEffect = Mathf.Sin(Mathf.DegToRad(longitude) * 2) * settings.LongitudeVariationMagnitude; //Mathf.PerlinNoise(longitude / 10f, Time.time) * 2f - 1f;
+        var longitudeEffect =
+            Mathf.Sin(Mathf.DegToRad(longitude) * 2) *
+            settings.LongitudeVariationMagnitude; //Mathf.PerlinNoise(longitude / 10f, Time.time) * 2f - 1f;
         baseAngle += longitudeEffect;
 
         // Apply random noise
@@ -93,8 +96,8 @@ public static class ClimateUtils
         // double noiseMagnitude = 1f + rng.RandfRange(-settings.MaxNoiseMagnitude, settings.MaxNoiseMagnitude);
 
         // Calculate final wind vector
-        double finalAngle = baseAngle;
-        double finalMagnitude = baseMagnitude;
+        var finalAngle = baseAngle;
+        var finalMagnitude = baseMagnitude;
 
         var finalRad = Mathf.DegToRad(finalAngle);
 

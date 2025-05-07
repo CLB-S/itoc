@@ -15,7 +15,9 @@ public partial class Chunk : StaticBody3D
 
     private Mesh _mesh;
     private CollisionShape3D _collisionShape3D;
+
     private Shape3D _collisionShape;
+
     // private ImmediateMesh _debugMesh;
     private MeshInstance3D _collisionDebugMeshInstance;
     private MeshInstance3D _meshInstance;

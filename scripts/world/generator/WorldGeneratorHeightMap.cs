@@ -9,19 +9,20 @@ namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
-    #region Loop subdivision 
+    #region Loop subdivision
+
     private readonly ConcurrentDictionary<(int, int), Vector2> _edgeMidpoints = new();
     private readonly ConcurrentDictionary<(int, int), double> _edgeMidpointHeights = new();
     private readonly ConcurrentDictionary<int, double> _adjustedVertexHeights = new();
 
     private double GetAdjustedVertexHeight(int vertexIndex)
     {
-        if (_adjustedVertexHeights.TryGetValue(vertexIndex, out double adjustedHeight))
+        if (_adjustedVertexHeights.TryGetValue(vertexIndex, out var adjustedHeight))
             return adjustedHeight;
 
         // Get neighbors of this vertex to calculate the adjusted height
         var neighbors = GetNeighborCellIndices(vertexIndex).ToList();
-        int n = neighbors.Count;
+        var n = neighbors.Count;
 
         if (n <= 2)
         {
@@ -44,8 +45,8 @@ public partial class WorldGenerator
             neighborSum += CellDatas[neighbor].Height;
 
         // Calculate the adjusted height using Loop formula
-        double originalHeight = CellDatas[vertexIndex].Height;
-        double newHeight = (1 - n * beta) * originalHeight + beta * neighborSum;
+        var originalHeight = CellDatas[vertexIndex].Height;
+        var newHeight = (1 - n * beta) * originalHeight + beta * neighborSum;
 
         _adjustedVertexHeights[vertexIndex] = newHeight;
         return newHeight;
@@ -59,21 +60,21 @@ public partial class WorldGenerator
 
         var key = (i, j);
 
-        if (_edgeMidpoints.TryGetValue(key, out Vector2 midpoint))
-            return (midpoint, _edgeMidpointHeights[key]);
-        else
+        if (_edgeMidpoints.TryGetValue(key, out var midpoint))
         {
-            // Calculate the midpoint position
-            midpoint = (SamplePoints[i] + SamplePoints[j]) * 0.5f;
-            _edgeMidpoints[key] = midpoint;
-
-            // Calculate the midpoint height using Loop subdivision rules
-            // For edge midpoints, we use 1/2 of each endpoint
-            var height = (CellDatas[i].Height + CellDatas[j].Height) * 0.5;
-            _edgeMidpointHeights[key] = height;
-
-            return (midpoint, height);
+            return (midpoint, _edgeMidpointHeights[key]);
         }
+
+        // Calculate the midpoint position
+        midpoint = (SamplePoints[i] + SamplePoints[j]) * 0.5f;
+        _edgeMidpoints[key] = midpoint;
+
+        // Calculate the midpoint height using Loop subdivision rules
+        // For edge midpoints, we use 1/2 of each endpoint
+        var height = (CellDatas[i].Height + CellDatas[j].Height) * 0.5;
+        _edgeMidpointHeights[key] = height;
+
+        return (midpoint, height);
     }
 
     public (Vector2[], double[]) SubdivideTriangle(int i0, int i1, int i2)
@@ -100,7 +101,8 @@ public partial class WorldGenerator
         );
     }
 
-    public (Vector2, Vector2, Vector2, double, double, double) GetSubdividedTriangleContainingPoint(Vector2 point, int i0, int i1, int i2)
+    public (Vector2, Vector2, Vector2, double, double, double) GetSubdividedTriangleContainingPoint(Vector2 point,
+        int i0, int i1, int i2)
     {
         var (points, heights) = SubdivideTriangle(i0, i1, i2);
 
@@ -139,6 +141,7 @@ public partial class WorldGenerator
         GD.PrintErr("Point is not in any subdivided triangle.");
         return (p0, p1, p2, h0, h1, h2);
     }
+
     #endregion
 
     protected void InitIdwInterpolator()
@@ -167,7 +170,8 @@ public partial class WorldGenerator
         return warpedPoint;
     }
 
-    public double GetRawHeight(double x, double y, bool loopDivision = true, bool domainWarping = false, bool noiseOverlay = false)
+    public double GetRawHeight(double x, double y, bool loopDivision = true, bool domainWarping = false,
+        bool noiseOverlay = false)
     {
         var point = new Vector2(x, y);
         if (domainWarping)

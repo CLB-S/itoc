@@ -30,7 +30,7 @@ public class BiomeLibrary
 
     public Biome GetBiome(string id)
     {
-        if (_biomes.TryGetValue(id, out Biome biome))
+        if (_biomes.TryGetValue(id, out var biome))
             return biome;
 
         GD.PrintErr($"Biome with id {id} not found!");
@@ -39,7 +39,8 @@ public class BiomeLibrary
 
     public Biome GetBiomeForConditions(double temperature, double precipitation, double height)
     {
-        var matchingBiomes = _biomes.Values.Where(b => b.MatchesConditions(temperature, precipitation, height)).ToList();
+        var matchingBiomes =
+            _biomes.Values.Where(b => b.MatchesConditions(temperature, precipitation, height)).ToList();
 
         if (matchingBiomes.Count == 0)
             return FindClosestBiome(temperature, precipitation, height);
@@ -49,17 +50,19 @@ public class BiomeLibrary
 
     private Biome FindClosestBiome(double temperature, double precipitation, double height)
     {
-        double minDistance = double.MaxValue;
+        var minDistance = double.MaxValue;
         Biome closestBiome = null;
 
         foreach (var biome in _biomes.Values)
         {
-            double tempDistance = Math.Min(Math.Abs(temperature - biome.MinTemperature), Math.Abs(temperature - biome.MaxTemperature));
-            double precipDistance = Math.Min(Math.Abs(precipitation - biome.MinPrecipitation), Math.Abs(precipitation - biome.MaxPrecipitation));
-            double heightDistance = Math.Min(Math.Abs(height - biome.MinHeight), Math.Abs(height - biome.MaxHeight));
+            var tempDistance = Math.Min(Math.Abs(temperature - biome.MinTemperature),
+                Math.Abs(temperature - biome.MaxTemperature));
+            var precipDistance = Math.Min(Math.Abs(precipitation - biome.MinPrecipitation),
+                Math.Abs(precipitation - biome.MaxPrecipitation));
+            var heightDistance = Math.Min(Math.Abs(height - biome.MinHeight), Math.Abs(height - biome.MaxHeight));
 
             // TODO: Adjust weights based on biome characteristics
-            double distance = tempDistance * 2.0 + precipDistance * 1.5 + heightDistance * 1.0;
+            var distance = tempDistance * 2.0 + precipDistance * 1.5 + heightDistance * 1.0;
 
             if (distance < minDistance)
             {

@@ -1,20 +1,19 @@
 using System;
 using Godot;
-using PatternSystem;
 
 public class Biome : IEquatable<Biome>
 {
-    public string Id { get; private set; }
-    public double MinTemperature { get; private set; }
-    public double MaxTemperature { get; private set; }
-    public double MinPrecipitation { get; private set; }
-    public double MaxPrecipitation { get; private set; }
-    public double MinHeight { get; private set; }
-    public double MaxHeight { get; private set; }
+    public string Id { get; }
+    public double MinTemperature { get; }
+    public double MaxTemperature { get; }
+    public double MinPrecipitation { get; }
+    public double MaxPrecipitation { get; }
+    public double MinHeight { get; }
+    public double MaxHeight { get; }
     public Color Color { get; private set; }
 
     public Biome(string id, double minTemp, double maxTemp, double minPrecip, double maxPrecip,
-                double minHeight, double maxHeight, Color color)
+        double minHeight, double maxHeight, Color color)
     {
         Id = id;
         MinTemperature = minTemp;

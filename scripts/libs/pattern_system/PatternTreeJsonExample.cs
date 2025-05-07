@@ -1,18 +1,17 @@
-using Godot;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Godot;
 
 namespace PatternSystem;
 
 /// <summary>
-/// Example class demonstrating how to use the PatternTreeJsonConverter and PatternTreeJsonUtility classes.
+///     Example class demonstrating how to use the PatternTreeJsonConverter and PatternTreeJsonUtility classes.
 /// </summary>
 public class PatternTreeJsonExample
 {
     /// <summary>
-    /// Creates a sample pattern tree for demonstration purposes.
+    ///     Creates a sample pattern tree for demonstration purposes.
     /// </summary>
     public static PatternTreeNode CreateSamplePatternTree()
     {
@@ -31,7 +30,7 @@ public class PatternTreeJsonExample
         var constantNode = new ConstantNode(0.5);
 
         // Create a dual operation to combine them
-        var dualNode = new DualChildOperationNode(noiseNode, constantNode, DualOperationType.Add);
+        var dualNode = new DualChildOperationNode(noiseNode, constantNode);
 
         // Apply a single operation to the result
         var singleNode = new SingleChildOperationNode(dualNode, SingleOperationType.Clamp);
@@ -41,24 +40,24 @@ public class PatternTreeJsonExample
     }
 
     /// <summary>
-    /// Demonstrates how to save a pattern tree to a JSON string and load it back.
+    ///     Demonstrates how to save a pattern tree to a JSON string and load it back.
     /// </summary>
     public void DemonstrateJsonSerialization()
     {
-        PatternTreeNode tree = CreateSamplePatternTree();
+        var tree = CreateSamplePatternTree();
 
         // Serialize to JSON string
-        string json = PatternTreeJsonConverter.Serialize(tree);
+        var json = PatternTreeJsonConverter.Serialize(tree);
         GD.Print("Serialized JSON:");
         GD.Print(json);
 
         // Deserialize back to pattern tree
-        PatternTreeNode loadedTree = PatternTreeJsonConverter.Deserialize(json);
+        var loadedTree = PatternTreeJsonConverter.Deserialize(json);
 
         // Demonstrate that the loaded tree gives the same results as the original
         double x = 10.5, y = 20.3;
-        double originalValue = tree.Evaluate(x, y);
-        double loadedValue = loadedTree.Evaluate(x, y);
+        var originalValue = tree.Evaluate(x, y);
+        var loadedValue = loadedTree.Evaluate(x, y);
 
         GD.Print($"Original tree evaluation: {originalValue}");
         GD.Print($"Loaded tree evaluation: {loadedValue}");
@@ -66,24 +65,24 @@ public class PatternTreeJsonExample
     }
 
     /// <summary>
-    /// Demonstrates how to save a pattern tree to a file and load it back.
+    ///     Demonstrates how to save a pattern tree to a file and load it back.
     /// </summary>
     public void DemonstrateFileSerialization(string directory = "user://")
     {
-        PatternTreeNode tree = CreateSamplePatternTree();
-        string filePath = Path.Combine(directory, "sample_pattern_tree.json");
+        var tree = CreateSamplePatternTree();
+        var filePath = Path.Combine(directory, "sample_pattern_tree.json");
 
         // Save to file
         PatternTreeJsonUtility.SaveToFile(tree, filePath);
         GD.Print($"Pattern tree saved to: {filePath}");
 
         // Load from file
-        PatternTreeNode loadedTree = PatternTreeJsonUtility.LoadFromFile(filePath);
+        var loadedTree = PatternTreeJsonUtility.LoadFromFile(filePath);
 
         // Demonstrate that the loaded tree gives the same results as the original
         double x = 10.5, y = 20.3;
-        double originalValue = tree.Evaluate(x, y);
-        double loadedValue = loadedTree.Evaluate(x, y);
+        var originalValue = tree.Evaluate(x, y);
+        var loadedValue = loadedTree.Evaluate(x, y);
 
         GD.Print($"Original tree evaluation: {originalValue}");
         GD.Print($"Loaded tree evaluation: {loadedValue}");
@@ -91,24 +90,24 @@ public class PatternTreeJsonExample
     }
 
     /// <summary>
-    /// Demonstrates how to save a pattern tree to a Godot resource file and load it back.
+    ///     Demonstrates how to save a pattern tree to a Godot resource file and load it back.
     /// </summary>
     public void DemonstrateGodotResourceSerialization(string directory = "user://")
     {
-        PatternTreeNode tree = CreateSamplePatternTree();
-        string filePath = Path.Combine(directory, "sample_pattern_tree.tres");
+        var tree = CreateSamplePatternTree();
+        var filePath = Path.Combine(directory, "sample_pattern_tree.tres");
 
         // Save to Godot resource
         PatternTreeJsonUtility.SaveToGodotResource(tree, filePath);
         GD.Print($"Pattern tree saved to Godot resource: {filePath}");
 
         // Load from Godot resource
-        PatternTreeNode loadedTree = PatternTreeJsonUtility.LoadFromGodotResource(filePath);
+        var loadedTree = PatternTreeJsonUtility.LoadFromGodotResource(filePath);
 
         // Demonstrate that the loaded tree gives the same results as the original
         double x = 10.5, y = 20.3, z = 5.2;
-        double originalValue = tree.Evaluate(x, y, z);
-        double loadedValue = loadedTree.Evaluate(x, y, z);
+        var originalValue = tree.Evaluate(x, y, z);
+        var loadedValue = loadedTree.Evaluate(x, y, z);
 
         GD.Print($"Original tree evaluation (3D): {originalValue}");
         GD.Print($"Loaded tree evaluation (3D): {loadedValue}");
@@ -116,7 +115,7 @@ public class PatternTreeJsonExample
     }
 
     /// <summary>
-    /// Demonstrates serializing a more complex pattern tree with multiple levels.
+    ///     Demonstrates serializing a more complex pattern tree with multiple levels.
     /// </summary>
     public void DemonstrateComplexPatternTree()
     {
@@ -148,20 +147,19 @@ public class PatternTreeJsonExample
                 mathNode,
                 new ConstantNode(0.2),
                 new ConstantNode(0.3)
-            ],
-            MultiOperationType.Add
+            ]
         );
 
         // Serialize to JSON
-        string json = PatternTreeJsonConverter.Serialize(multiNode);
+        var json = PatternTreeJsonConverter.Serialize(multiNode);
         GD.Print("Complex tree JSON:");
         GD.Print(json);
 
         // Deserialize and test
-        PatternTreeNode loadedTree = PatternTreeJsonConverter.Deserialize(json);
+        var loadedTree = PatternTreeJsonConverter.Deserialize(json);
         double x = 15.7, y = 22.3, z = 8.9;
-        double originalValue = multiNode.Evaluate(x, y, z);
-        double loadedValue = loadedTree.Evaluate(x, y, z);
+        var originalValue = multiNode.Evaluate(x, y, z);
+        var loadedValue = loadedTree.Evaluate(x, y, z);
 
         GD.Print($"Complex original evaluation: {originalValue}");
         GD.Print($"Complex loaded evaluation: {loadedValue}");
@@ -169,7 +167,7 @@ public class PatternTreeJsonExample
     }
 
     /// <summary>
-    /// Demonstrates how the improved JSON converter handles enum names and non-default values.
+    ///     Demonstrates how the improved JSON converter handles enum names and non-default values.
     /// </summary>
     public void DemonstrateImprovedJsonFormat()
     {
@@ -185,13 +183,13 @@ public class PatternTreeJsonExample
         var noiseNode = new FastNoiseLiteNode(noiseSettings);
 
         // Serialize to JSON
-        string json = PatternTreeJsonConverter.Serialize(noiseNode);
+        var json = PatternTreeJsonConverter.Serialize(noiseNode);
         GD.Print("Improved JSON format (enum names and non-default values only):");
         GD.Print(json);
 
         // Create a pattern tree with different operation types
         var constantNode = new ConstantNode(0.5);
-        var addNode = new DualChildOperationNode(noiseNode, constantNode, DualOperationType.Add);
+        var addNode = new DualChildOperationNode(noiseNode, constantNode);
         var multiNode = new MultiChildOperationNode(
             [noiseNode, constantNode, new ConstantNode(0.25)],
             MultiOperationType.Average
@@ -199,21 +197,21 @@ public class PatternTreeJsonExample
         var singleNode = new SingleChildOperationNode(multiNode, SingleOperationType.Clamp);
 
         // Serialize complex tree
-        string complexJson = PatternTreeJsonConverter.Serialize(singleNode);
+        var complexJson = PatternTreeJsonConverter.Serialize(singleNode);
         GD.Print("\nComplex tree with operation enum names:");
         GD.Print(complexJson);
 
         // Demonstrate compact JSON with default values
         var defaultSettings = new FastNoiseLiteSettings();
         var defaultNode = new FastNoiseLiteNode(defaultSettings);
-        string defaultJson = PatternTreeJsonConverter.Serialize(defaultNode);
+        var defaultJson = PatternTreeJsonConverter.Serialize(defaultNode);
         GD.Print("\nNode with default settings (minimal JSON):");
         GD.Print(defaultJson);
     }
 
     /// <summary>
-    /// Demonstrates serializing a pattern tree to a file and loading it back.
-    /// Also validates that the deserialization correctly parses enum names.
+    ///     Demonstrates serializing a pattern tree to a file and loading it back.
+    ///     Also validates that the deserialization correctly parses enum names.
     /// </summary>
     public void DemonstrateEnumSerializationAndParsing()
     {
@@ -234,12 +232,12 @@ public class PatternTreeJsonExample
         );
 
         // Serialize to JSON
-        string json = PatternTreeJsonConverter.Serialize(multiNode);
+        var json = PatternTreeJsonConverter.Serialize(multiNode);
         GD.Print("Tree with various enum operation types:");
         GD.Print(json);
 
         // Deserialize back
-        PatternTreeNode loadedTree = PatternTreeJsonConverter.Deserialize(json);
+        var loadedTree = PatternTreeJsonConverter.Deserialize(json);
 
         // Validate enum values were preserved
         if (loadedTree is MultiChildOperationNode loadedMultiNode)
@@ -252,42 +250,40 @@ public class PatternTreeJsonExample
                 GD.Print($"Deserialized DualOperationType: {loadedDualNode.OperationType}");
 
                 if (loadedDualNode.Children.FirstOrDefault() is SingleChildOperationNode loadedSingleNode)
-                {
                     GD.Print($"Deserialized SingleOperationType: {loadedSingleNode.OperationType}");
-                }
             }
         }
     }
 
     /// <summary>
-    /// Demonstrates how to create, serialize, and deserialize a PatternTree object.
+    ///     Demonstrates how to create, serialize, and deserialize a PatternTree object.
     /// </summary>
     public void DemonstratePatternTreeSerialization()
     {
         // Create a sample pattern tree
-        PatternTreeNode sampleTree = CreateSamplePatternTree();
+        var sampleTree = CreateSamplePatternTree();
 
         // Wrap it in a PatternTree with ID and name
         var patternTree = new PatternTree("terrain_height", "Terrain Height Pattern", sampleTree);
 
         // Serialize to JSON
-        string json = PatternTreeJsonConverter.Serialize(patternTree);
+        var json = PatternTreeJsonConverter.Serialize(patternTree);
         GD.Print("PatternTree JSON:");
         GD.Print(json);
 
         // Deserialize back
-        PatternTreeNode loadedNode = PatternTreeJsonConverter.Deserialize(json);
+        var loadedNode = PatternTreeJsonConverter.Deserialize(json);
 
         if (loadedNode is PatternTree loadedPatternTree)
         {
-            GD.Print($"\nDeserialized PatternTree properties:");
+            GD.Print("\nDeserialized PatternTree properties:");
             GD.Print($"ID: {loadedPatternTree.Id}");
             GD.Print($"Name: {loadedPatternTree.Name}");
 
             // Demonstrate that the tree correctly evaluates
             double x = 12.3, y = 45.6, z = 7.8;
-            double originalValue = patternTree.Evaluate(x, y, z);
-            double loadedValue = loadedPatternTree.Evaluate(x, y, z);
+            var originalValue = patternTree.Evaluate(x, y, z);
+            var loadedValue = loadedPatternTree.Evaluate(x, y, z);
 
             GD.Print($"Original evaluation: {originalValue}");
             GD.Print($"Loaded evaluation: {loadedValue}");
@@ -300,25 +296,22 @@ public class PatternTreeJsonExample
     }
 
     /// <summary>
-    /// Demonstrates how to save multiple PatternTree objects to a directory and load them back.
+    ///     Demonstrates how to save multiple PatternTree objects to a directory and load them back.
     /// </summary>
     public void DemonstratePatternTreeDirectoryOperations(string directory = "user://patterns")
     {
         // Create directory if it doesn't exist
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
         // Create and save several pattern trees
         var patternTrees = new PatternTree[]
         {
-            new PatternTree(
+            new(
                 "terrain_height",
                 "Terrain Height Pattern",
                 CreateSamplePatternTree()
             ),
-            new PatternTree(
+            new(
                 "temperature",
                 "Temperature Pattern",
                 new MathExpressionNode(
@@ -331,7 +324,7 @@ public class PatternTreeJsonExample
                     "x * 0.5 + 0.5" // Normalize to 0-1 range
                 )
             ),
-            new PatternTree(
+            new(
                 "moisture",
                 "Moisture Pattern",
                 new DualChildOperationNode(
@@ -341,8 +334,7 @@ public class PatternTreeJsonExample
                         Frequency = 0.02,
                         Seed = 456
                     }),
-                    new ConstantNode(0.2),
-                    DualOperationType.Add
+                    new ConstantNode(0.2)
                 )
             )
         };
@@ -350,13 +342,13 @@ public class PatternTreeJsonExample
         // Save all pattern trees
         foreach (var pattern in patternTrees)
         {
-            string filePath = PatternTreeJsonUtility.SavePatternTree(pattern, directory);
+            var filePath = PatternTreeJsonUtility.SavePatternTree(pattern, directory);
             GD.Print($"Saved pattern '{pattern.Name}' to {filePath}");
         }
 
         // Load all pattern trees back
         GD.Print("\nLoading all pattern trees from directory:");
-        PatternTree[] loadedPatterns = PatternTreeJsonUtility.LoadAllPatternTrees(directory);
+        var loadedPatterns = PatternTreeJsonUtility.LoadAllPatternTrees(directory);
 
         // Display the loaded patterns
         foreach (var pattern in loadedPatterns.Where(p => p != null))
@@ -364,7 +356,7 @@ public class PatternTreeJsonExample
             GD.Print($"Loaded pattern: ID={pattern.Id}, Name='{pattern.Name}'");
 
             // Sample value
-            double value = pattern.Evaluate(10.0, 10.0, 10.0);
+            var value = pattern.Evaluate(10.0, 10.0, 10.0);
             GD.Print($"  Sample value at (10,10,10): {value}");
         }
     }

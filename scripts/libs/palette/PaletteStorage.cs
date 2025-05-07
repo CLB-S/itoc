@@ -28,19 +28,19 @@ public class PaletteStorage<T> where T : IEquatable<T>
         // If we're in single entry mode, always return the first palette entry
         if (_isSingleEntryMode) return _palette.GetValue(0);
 
-        int longIndex = index / _entriesPerLong;
+        var longIndex = index / _entriesPerLong;
         if (longIndex >= _data.Count) return _palette.GetValue(-1);
 
-        int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
-        ulong mask = _palette.Mask << bitOffset;
-        ulong value = (_data[longIndex] & mask) >> bitOffset;
+        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
+        var mask = _palette.Mask << bitOffset;
+        var value = (_data[longIndex] & mask) >> bitOffset;
 
         return _palette.GetValue((int)value);
     }
 
     public void Set(int index, T value)
     {
-        int paletteId = _palette.GetId(value);
+        var paletteId = _palette.GetId(value);
         Set(index, (ulong)paletteId);
     }
 
@@ -51,20 +51,18 @@ public class PaletteStorage<T> where T : IEquatable<T>
         if (_isSingleEntryMode)
         {
             if (paletteId != 0)
-            {
                 // This would exit single entry mode, handled by UpdateSingleEntryMode callback
                 _palette.GetId(_palette.GetValue((int)paletteId));
-            }
             return;
         }
 
         EnsureCapacity(index);
 
-        int longIndex = index / _entriesPerLong;
-        int bitOffset = (index % _entriesPerLong) * _palette.BitsPerEntry;
+        var longIndex = index / _entriesPerLong;
+        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
 
         // Clear the current value
-        ulong clearMask = ~(_palette.Mask << bitOffset);
+        var clearMask = ~(_palette.Mask << bitOffset);
         _data[longIndex] &= clearMask;
 
         // Set the new value
@@ -76,7 +74,7 @@ public class PaletteStorage<T> where T : IEquatable<T>
         // No need to ensure capacity in single entry mode
         if (_isSingleEntryMode) return;
 
-        int requiredLongs = (index / _entriesPerLong) + 1;
+        var requiredLongs = index / _entriesPerLong + 1;
         while (_data.Count < requiredLongs)
             _data.Add(0UL);
     }
@@ -90,13 +88,13 @@ public class PaletteStorage<T> where T : IEquatable<T>
         _data = new List<ulong>();
         UpdateEntriesPerLong();
 
-        int entriesToMigrate = oldData.Count * _entriesPerLong;
-        for (int i = 0; i < entriesToMigrate; i++)
+        var entriesToMigrate = oldData.Count * _entriesPerLong;
+        for (var i = 0; i < entriesToMigrate; i++)
         {
             // Reconstruct the value using old packing
-            int oldLongIndex = i / (64 / (newBits - 1));
-            int oldBitOffset = (i % (64 / (newBits - 1))) * (newBits - 1);
-            ulong oldValue = (oldData[oldLongIndex] >> oldBitOffset) & ((1UL << (newBits - 1)) - 1);
+            var oldLongIndex = i / (64 / (newBits - 1));
+            var oldBitOffset = i % (64 / (newBits - 1)) * (newBits - 1);
+            var oldValue = (oldData[oldLongIndex] >> oldBitOffset) & ((1UL << (newBits - 1)) - 1);
 
             // Store with new packing
             Set(i, oldValue);
@@ -114,15 +112,17 @@ public class PaletteStorage<T> where T : IEquatable<T>
             // Transitioning to single entry mode, we can clear the data
             _data.Clear();
         }
-        else
-        {
-            // Transitioning from single entry mode to normal mode
-            // All entries were implicitly 0, no need to initialize anything
-        }
+        // Transitioning from single entry mode to normal mode
+        // All entries were implicitly 0, no need to initialize anything
     }
 
-    private void UpdateEntriesPerLong() =>
+    private void UpdateEntriesPerLong()
+    {
         _entriesPerLong = 64 / _palette.BitsPerEntry;
+    }
 
-    public int GetStorageSize() => _isSingleEntryMode ? 0 : _data.Count;
+    public int GetStorageSize()
+    {
+        return _isSingleEntryMode ? 0 : _data.Count;
+    }
 }

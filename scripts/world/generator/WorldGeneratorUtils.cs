@@ -9,7 +9,7 @@ namespace WorldGenerator;
 public partial class WorldGenerator
 {
     /// <summary>
-    /// Creates duplicate points around the edges of a region to ensure continuity in a wrapped world.
+    ///     Creates duplicate points around the edges of a region to ensure continuity in a wrapped world.
     /// </summary>
     /// <param name="points">The original list of points</param>
     /// <param name="rect">The rectangular bounds of the region</param>
@@ -77,7 +77,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Transforms a position to ensure it lies within the world's bounds.
+    ///     Transforms a position to ensure it lies within the world's bounds.
     /// </summary>
     /// <param name="position">The position to normalize</param>
     /// <returns>The position wrapped within the world bounds</returns>
@@ -91,7 +91,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Calculates the shortest distance between two points in a wrapped world.
+    ///     Calculates the shortest distance between two points in a wrapped world.
     /// </summary>
     /// <returns>The distance between the two points, accounting for world wrapping</returns>
     public double UniformDistance(Vector2 pos1, Vector2 pos2)
@@ -109,7 +109,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Gets the indices of cells that are neighbors to the specified cell.
+    ///     Gets the indices of cells that are neighbors to the specified cell.
     /// </summary>
     /// <param name="cell">The cell to find neighbors for</param>
     /// <returns>An enumerable of neighbor cell indices</returns>
@@ -119,7 +119,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Gets the indices of cells that are neighbors to the cell with the specified index.
+    ///     Gets the indices of cells that are neighbors to the cell with the specified index.
     /// </summary>
     /// <param name="index">The index of the cell to find neighbors for</param>
     /// <returns>An enumerable of neighbor cell indices</returns>
@@ -129,7 +129,7 @@ public partial class WorldGenerator
         {
             var neighborIndex = _delaunator.Triangles[i];
 
-            if (_edgePointsMap.TryGetValue(neighborIndex, out int value))
+            if (_edgePointsMap.TryGetValue(neighborIndex, out var value))
                 neighborIndex = value;
 
             yield return neighborIndex;
@@ -137,7 +137,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Gets the cells that are neighbors to the specified cell.
+    ///     Gets the cells that are neighbors to the specified cell.
     /// </summary>
     /// <param name="cell">The cell to find neighbors for</param>
     /// <returns>An enumerable of neighbor cells</returns>
@@ -148,7 +148,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Gets the cells that are neighbors to the cell with the specified index.
+    ///     Gets the cells that are neighbors to the cell with the specified index.
     /// </summary>
     /// <param name="index">The index of the cell to find neighbors for</param>
     /// <returns>An enumerable of neighbor cells</returns>
@@ -159,31 +159,31 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Converts a position to a latitude value in degrees.
+    ///     Converts a position to a latitude value in degrees.
     /// </summary>
     /// <param name="position">The position to convert</param>
     /// <returns>The latitude in degrees, ranging from -90 to 90</returns>
     public double GetLatitude(Vector2 position)
     {
         var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
-            Vector2.One / 2;
+                            Vector2.One / 2;
         return -Mathf.Lerp(-90, 90, normalizedPos.Y);
     }
 
     /// <summary>
-    /// Converts a position to a longitude value in degrees.
+    ///     Converts a position to a longitude value in degrees.
     /// </summary>
     /// <param name="position">The position to convert</param>
     /// <returns>The longitude in degrees, ranging from -180 to 180</returns>
     public double GetLongitude(Vector2 position)
     {
         var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
-            Vector2.One / 2;
+                            Vector2.One / 2;
         return Mathf.Lerp(-180, 180, normalizedPos.X);
     }
 
     /// <summary>
-    /// Finds cell data near a specified position.
+    ///     Finds cell data near a specified position.
     /// </summary>
     /// <param name="x">The x-coordinate</param>
     /// <param name="y">The y-coordinate</param>
@@ -195,9 +195,12 @@ public partial class WorldGenerator
             throw new InvalidOperationException("Cell datas are not initialized yet.");
 
         var mappedX = 2 * Mathf.Pi * x / Settings.Bounds.Size.X;
-        var mappedPosition = new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                y };
+        var mappedPosition = new[]
+        {
+            Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+            Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+            y
+        };
 
         var results = _cellDatasKdTree.NearestNeighbors(mappedPosition, numNeighbors);
 
@@ -206,7 +209,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Gets cell data near a specified position.
+    ///     Gets cell data near a specified position.
     /// </summary>
     /// <param name="pos">The position to search near</param>
     /// <param name="numNeighbors">The number of nearby cells to find</param>
@@ -217,7 +220,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Finds the triangle that contains a specified point and calculates its barycentric coordinates.
+    ///     Finds the triangle that contains a specified point and calculates its barycentric coordinates.
     /// </summary>
     /// <param name="point">The point to locate</param>
     /// <param name="barycentricPos">The barycentric coordinates of the point within the triangle</param>
@@ -225,9 +228,12 @@ public partial class WorldGenerator
     public (int, int, int) GetTriangleContainingPoint(Vector2 point, out Vector3 barycentricPos)
     {
         var mappedX = 2 * Mathf.Pi * point.X / Settings.Bounds.Size.X;
-        var p = new[] { Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                point.Y };
+        var p = new[]
+        {
+            Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+            Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+            point.Y
+        };
 
         var nearestNeighbors = _cellDatasKdTree.NearestNeighbors(p, 2);
 
@@ -238,7 +244,8 @@ public partial class WorldGenerator
             {
                 var triangleIndex = Delaunator.TriangleOfEdge(i);
                 var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
-                if (GeometryUtils.IsPointInTriangle(point, SamplePoints[points[0]], SamplePoints[points[1]], SamplePoints[points[2]], out barycentricPos))
+                if (GeometryUtils.IsPointInTriangle(point, SamplePoints[points[0]], SamplePoints[points[1]],
+                        SamplePoints[points[2]], out barycentricPos))
                     return (points[0], points[1], points[2]);
             }
         }
@@ -247,7 +254,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Finds the triangle that contains a specified point.
+    ///     Finds the triangle that contains a specified point.
     /// </summary>
     /// <param name="point">The point to locate</param>
     /// <returns>A tuple of the three vertex indices that form the triangle</returns>
@@ -257,7 +264,7 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Finds the triangle that contains a specified point and calculates its barycentric coordinates.
+    ///     Finds the triangle that contains a specified point and calculates its barycentric coordinates.
     /// </summary>
     /// <param name="x">The x-coordinate of the point</param>
     /// <param name="y">The y-coordinate of the point</param>
@@ -269,11 +276,12 @@ public partial class WorldGenerator
     }
 
     /// <summary>
-    /// Finds the triangle that contains a specified point.
+    ///     Finds the triangle that contains a specified point.
     /// </summary>
     /// <param name="x">The x-coordinate of the point</param>
-    /// <param name="y">The y-coordinate of the point</returns>
-    /// <returns>A tuple of the three vertex indices that form the triangle</returns>
+    /// <param name="y">
+    ///     The y-coordinate of the point</returns>
+    ///     <returns>A tuple of the three vertex indices that form the triangle</returns>
     public (int, int, int) GetTriangleContainingPoint(double x, double y)
     {
         return GetTriangleContainingPoint(new Vector2(x, y), out _);

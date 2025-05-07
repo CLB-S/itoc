@@ -11,7 +11,8 @@ public class PositionTransformNode : PatternTreeNode, IOperator
 
     public IEnumerable<PatternTreeNode> Children => [_targetChild, _xChild, _yChild, _zChild];
 
-    public PositionTransformNode(PatternTreeNode targetNode, PatternTreeNode x = null, PatternTreeNode y = null, PatternTreeNode z = null)
+    public PositionTransformNode(PatternTreeNode targetNode, PatternTreeNode x = null, PatternTreeNode y = null,
+        PatternTreeNode z = null)
     {
         _targetChild = targetNode;
         _xChild = x;

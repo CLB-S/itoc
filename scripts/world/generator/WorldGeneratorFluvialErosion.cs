@@ -20,9 +20,9 @@ public partial class WorldGenerator
     private readonly HashSet<int> _riverMouths = new();
     private readonly ConcurrentDictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
 
-    protected bool _powerEquationConverged { get; private set; } = false;
+    protected bool _powerEquationConverged { get; private set; }
 
-    public double MaxHeight { get; protected set; } = 0;
+    public double MaxHeight { get; protected set; }
     public IReadOnlyList<CellData> StreamGraph => _streamGraph;
     public IReadOnlySet<int> Lakes => _lakes;
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
@@ -196,7 +196,7 @@ public partial class WorldGenerator
                 var passHeight = Mathf.Max(cell.Height, neighbor.Height);
 
                 // Update the pass height if this one is lower
-                if (lakeOutflowGraph[sourceLakeId].TryGetValue(targetLakeId, out (int sourceNode, int targetNode, double passHeight) existingPass))
+                if (lakeOutflowGraph[sourceLakeId].TryGetValue(targetLakeId, out var existingPass))
                 {
                     if (passHeight < existingPass.passHeight)
                         lakeOutflowGraph[sourceLakeId][targetLakeId] = (cell.Index, neighbor.Index, passHeight);
@@ -314,7 +314,6 @@ public partial class WorldGenerator
 
         // Process each node in post-order to compute drainage area and slopes
         foreach (var index in postOrderList)
-        {
             // Accumulate drainage area from children
             if (_children.TryGetValue(index, out var children))
                 foreach (var childIndex in children)
@@ -322,7 +321,6 @@ public partial class WorldGenerator
                     _drainageAreas[index] += _drainageAreas[childIndex];
                     _drainages[index] += _drainages[childIndex];
                 }
-        }
     }
 
     protected void SolvePowerEquation()
@@ -409,9 +407,9 @@ public partial class WorldGenerator
                                   ++_iterationCount >= Settings.MaxErosionIterations;
 
         ReportProgress($"""
-            [{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved.
-            Max height change: {maxChange:f4}. Total change: {totalChange:f2}
-            """);
+                        [{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved.
+                        Max height change: {maxChange:f4}. Total change: {totalChange:f2}
+                        """);
 
         if (_powerEquationConverged)
             ReportProgress($"Stream power equation converged. Max height {MaxHeight:f2}.");
@@ -431,10 +429,8 @@ public partial class WorldGenerator
                 var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
 
                 for (var j = 0; j < 3; j++)
-                {
                     if (_edgePointsMap.TryGetValue(points[j], out var value))
                         points[j] = value;
-                }
 
                 var p0XY = SamplePoints[points[0]];
                 var p0 = new Vector3(p0XY.X, _cellDatas[points[0]].Height, p0XY.Y);

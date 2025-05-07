@@ -6,8 +6,8 @@ namespace WorldGenerator;
 // TODO: World without sample points.
 public class DebugWorldGenerator : WorldGenerator
 {
-    private PatternTreeNode _debugHeightPattern;
-    private PatternTreeNode _debugHeightPattern1;
+    private readonly PatternTreeNode _debugHeightPattern;
+    private readonly PatternTreeNode _debugHeightPattern1;
 
     public DebugWorldGenerator(WorldSettings settings) : base(settings)
     {
@@ -17,12 +17,12 @@ public class DebugWorldGenerator : WorldGenerator
 
     protected override double NoiseOverlay(double x, double y)
     {
-        double weight = Mathf.Clamp(x, 0, 200) / 200.0;
+        var weight = Mathf.Clamp(x, 0, 200) / 200.0;
         return MergePatterns(x, y, _debugHeightPattern, _debugHeightPattern1, weight);
     }
 
     /// <summary>
-    /// Merges two patterns based on a weight parameter.
+    ///     Merges two patterns based on a weight parameter.
     /// </summary>
     /// <param name="x">X coordinate</param>
     /// <param name="y">Y coordinate</param>
@@ -64,5 +64,4 @@ public class DebugWorldGenerator : WorldGenerator
             cell.Height = _debugHeightPattern.Evaluate(pos.X, pos.Y);
         }
     }
-
 }

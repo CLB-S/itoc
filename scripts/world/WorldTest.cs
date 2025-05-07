@@ -14,12 +14,13 @@ public partial class WorldTest : Node2D
     {
         Plates,
         Uplift,
+
         // UpliftPattern,
         Height,
         PlateTypes,
         Temperature,
         Precipitation,
-        Biome,
+        Biome
     }
 
     // [Export] public ulong Seed { get; set; } = 0;
@@ -46,11 +47,11 @@ public partial class WorldTest : Node2D
     public ImageTexture HeightMapTexture;
 
     public ColorPreset DrawingCorlorPreset = ColorPreset.Height;
-    public bool DrawTectonicMovement = false;
-    public bool DrawCellOutlines = false;
+    public bool DrawTectonicMovement;
+    public bool DrawCellOutlines;
     public bool DrawRivers = true;
-    public bool DrawInterpolatedHeightMap = false;
-    public bool DrawWinds = false;
+    public bool DrawInterpolatedHeightMap;
+    public bool DrawWinds;
 
     private WorldGenerator _worldGenerator => Core.Instance.WorldGenerator;
     private int _heightMapResolution = 1000;
@@ -119,7 +120,6 @@ public partial class WorldTest : Node2D
     public override void _Input(InputEvent @event)
     {
         if (@event is InputEventMouseButton mouseButtonEvent)
-        {
             if (mouseButtonEvent.IsPressed() && _worldGenerator.State == GenerationState.Completed)
             {
                 var mousePos = GetGlobalMousePosition();
@@ -129,7 +129,6 @@ public partial class WorldTest : Node2D
                 var nearestCell = _worldGenerator.GetCellDatasNearby(worldPos);
                 Log(nearestCell.FirstOrDefault()?.ToString());
             }
-        }
     }
 
     private void Log(string message)
@@ -191,7 +190,6 @@ public partial class WorldTest : Node2D
 
         if (_worldGenerator.CellDatas != null)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
-            {
                 if (cellData.Cell.Points.Length >= 3)
                 {
                     var indices = new List<int>();
@@ -216,7 +214,6 @@ public partial class WorldTest : Node2D
 
                     _polygons.Add((arrMesh, cellData));
                 }
-            }
     }
 
     public override void _Draw()
@@ -256,7 +253,9 @@ public partial class WorldTest : Node2D
                     break;
                 case ColorPreset.Precipitation:
                     var precipitation = cellData.Precipitation / _worldGenerator.Settings.MaxPrecipitation;
-                    color = _precipitationGradient.Sample((float)(precipitation / _worldGenerator.Settings.MaxPrecipitation)).Lerp(plateColor, 0.5);
+                    color = _precipitationGradient
+                        .Sample((float)(precipitation / _worldGenerator.Settings.MaxPrecipitation))
+                        .Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
                 case ColorPreset.Temperature:
@@ -264,7 +263,8 @@ public partial class WorldTest : Node2D
                     var minTemp = _worldGenerator.Settings.PolarTemperature * 1.2;
                     // var maxTemp = _worldGenerator.Settings.EquatorialTemperature;
                     // minTemp < 0 < maxTemp < -minTemp
-                    var temperatureColor = _temperatureGradient.Sample((float)((temperature - minTemp) / (2 * -minTemp)));
+                    var temperatureColor =
+                        _temperatureGradient.Sample((float)((temperature - minTemp) / (2 * -minTemp)));
                     color = temperatureColor.Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;

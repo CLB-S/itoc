@@ -62,7 +62,6 @@ public partial class WorldGenerator
 
                     SetInitialUplift(cellP, uplift);
                     SetInitialUplift(cellQ, uplift);
-
                 }
                 else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Oceans)
                 {
@@ -108,7 +107,6 @@ public partial class WorldGenerator
                         // cellP.Uplift += altitude;
                     }
                 }
-
             }
         }
     }
@@ -133,7 +131,9 @@ public partial class WorldGenerator
             var currentCell = _cellDatas[currentIndex];
             var parentHeight = currentCell.Uplift;
 
-            var propagatedHeight = parentHeight * Mathf.Pow(Settings.UpliftPropagationDecrement, Settings.NormalizedMinimumCellDistance);
+            var propagatedHeight = parentHeight *
+                                   Mathf.Pow(Settings.UpliftPropagationDecrement,
+                                       Settings.NormalizedMinimumCellDistance);
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 

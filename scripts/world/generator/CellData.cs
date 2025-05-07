@@ -22,7 +22,8 @@ public class CellData
 
     public override string ToString()
     {
-        return $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Normal=({Normal.X:f2}, {Normal.Y:f2}, {Normal.Z:f2}), " +
-               $"Area={Area:f2}, Precipitation={Precipitation:f2}, Temperature={Temperature:f2}, Biome={Biome?.Id ?? "None"}";
+        return
+            $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Normal=({Normal.X:f2}, {Normal.Y:f2}, {Normal.Z:f2}), " +
+            $"Area={Area:f2}, Precipitation={Precipitation:f2}, Temperature={Temperature:f2}, Biome={Biome?.Id ?? "None"}";
     }
 }

@@ -1,5 +1,5 @@
-using Godot;
 using System.Threading.Tasks;
+using Godot;
 
 namespace WorldGenerator;
 
@@ -57,9 +57,7 @@ public partial class WorldGenerator
 
         // After parallel processing, add continental cells to the stream graph
         foreach (var (i, cellData) in _cellDatas)
-        {
             if (cellData.PlateType == PlateType.Continent)
                 _streamGraph.Add(cellData);
-        }
     }
 }

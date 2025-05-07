@@ -22,8 +22,7 @@ public class Palette<T> where T : IEquatable<T>
 
     public int GetId(T value)
     {
-        for (int i = 0; i < _entries.Count; i++)
-        {
+        for (var i = 0; i < _entries.Count; i++)
             if (_entries[i] == null)
             {
                 if (value == null) return i;
@@ -32,18 +31,17 @@ public class Palette<T> where T : IEquatable<T>
             {
                 return i;
             }
-        }
 
-        int newId = _entries.Count;
+        var newId = _entries.Count;
         _entries.Add(value);
 
         // Update single entry state
-        bool wasSingleEntry = IsSingleEntry;
+        var wasSingleEntry = IsSingleEntry;
         IsSingleEntry = _entries.Count <= 1;
         if (wasSingleEntry != IsSingleEntry)
             OnSingleEntryStateChanged?.Invoke(IsSingleEntry);
 
-        int requiredBits = CalculateRequiredBits();
+        var requiredBits = CalculateRequiredBits();
         if (requiredBits > BitsPerEntry)
         {
             UpdateBits(requiredBits);
@@ -53,8 +51,10 @@ public class Palette<T> where T : IEquatable<T>
         return newId;
     }
 
-    public T GetValue(int id) =>
-        id >= 0 && id < _entries.Count ? _entries[id] : _defaultValue;
+    public T GetValue(int id)
+    {
+        return id >= 0 && id < _entries.Count ? _entries[id] : _defaultValue;
+    }
 
     private int CalculateRequiredBits()
     {

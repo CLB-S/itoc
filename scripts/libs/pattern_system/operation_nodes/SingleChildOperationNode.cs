@@ -26,7 +26,7 @@ public enum SingleOperationType
     SquareRoot,
     Cube,
     CubeRoot,
-    Log10,
+    Log10
 }
 
 public class SingleChildOperationNode : PatternTreeNode, IOperator
@@ -68,7 +68,7 @@ public class SingleChildOperationNode : PatternTreeNode, IOperator
             SingleOperationType.SquareRoot => Math.Sqrt(value),
             SingleOperationType.Cube => value * value * value,
             SingleOperationType.CubeRoot => Math.Pow(value, 1.0 / 3.0),
-            _ => value,
+            _ => value
         };
     }
 

@@ -1,10 +1,11 @@
-using Godot;
 using System;
 using System.Threading.Tasks;
+using Godot;
 
 public static class HeightMapUtils
 {
-    public static double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect, Func<double, double, double> getHeight,
+    public static double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect,
+        Func<double, double, double> getHeight,
         bool parallel = false, int upscaleLevel = 3)
     {
         if (upscaleLevel < 0)
@@ -24,7 +25,8 @@ public static class HeightMapUtils
         return UpscaleHeightMap(lowResMap, resolutionX, resolutionY);
     }
 
-    private static double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect, Func<double, double, double> getHeight,
+    private static double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect,
+        Func<double, double, double> getHeight,
         bool parallel = false)
     {
         var heightMap = new double[resolutionX, resolutionY];
@@ -67,8 +69,8 @@ public static class HeightMapUtils
         {
             var val = lowResMap[0, 0];
             for (var x = 0; x < targetX; x++)
-                for (var y = 0; y < targetY; y++)
-                    highResMap[x, y] = val;
+            for (var y = 0; y < targetY; y++)
+                highResMap[x, y] = val;
             return highResMap;
         }
 
@@ -137,7 +139,8 @@ public static class HeightMapUtils
         return highResMap;
     }
 
-    public static double[,] ConstructChunkHeightMap(Rect2I chunkRect, Func<double, double, double> getHeight, int upscaleLevel = 3)
+    public static double[,] ConstructChunkHeightMap(Rect2I chunkRect, Func<double, double, double> getHeight,
+        int upscaleLevel = 3)
     {
         return ConstructHeightMap(chunkRect.Size.X, chunkRect.Size.Y, chunkRect, getHeight, upscaleLevel: upscaleLevel);
     }

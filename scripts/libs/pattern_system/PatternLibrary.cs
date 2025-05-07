@@ -8,7 +8,7 @@ namespace PatternSystem;
 public class PatternLibrary
 {
     private static PatternLibrary _instance;
-    private Dictionary<string, PatternTree> _patterns = new();
+    private readonly Dictionary<string, PatternTree> _patterns = new();
 
     public static PatternLibrary Instance => _instance ??= new PatternLibrary();
 
@@ -56,13 +56,13 @@ public class PatternLibrary
                 NoiseType = NoiseType.Simplex,
                 Frequency = 0.002,
                 FractalType = FractalType.Ridged,
-                FractalOctaves = 1,
+                FractalOctaves = 1
             })
             .Multiply(new FastNoiseLiteNode(new FastNoiseLiteSettings
             {
                 NoiseType = NoiseType.SimplexSmooth,
                 FractalType = FractalType.None,
-                Frequency = 0.0015,
+                Frequency = 0.0015
             }).Max(-0.6).Add(0.8))
             .Add(new FastNoiseLiteNode(new FastNoiseLiteSettings
             {
@@ -72,24 +72,24 @@ public class PatternLibrary
                 DomainWarpEnabled = true,
                 DomainWarpAmplitude = 150,
                 DomainWarpFractalType = DomainWarpFractalType.None,
-                DomainWarpFrequency = 0.002,
+                DomainWarpFrequency = 0.002
             }))
             .Multiply(30)
             .Build());
 
         RegisterPattern(new PatternTreeBuilder("hill", "Hill")
-             .WithFastNoiseLite(new FastNoiseLiteSettings
-             {
-                 NoiseType = NoiseType.Simplex,
-                 Frequency = 0.004,
-                 FractalOctaves = 4,
-                 DomainWarpEnabled = true,
-                 DomainWarpAmplitude = 150,
-                 DomainWarpFractalType = DomainWarpFractalType.None,
-                 DomainWarpFrequency = 0.002,
-             })
-             .Multiply(20)
-             .Build());
+            .WithFastNoiseLite(new FastNoiseLiteSettings
+            {
+                NoiseType = NoiseType.Simplex,
+                Frequency = 0.004,
+                FractalOctaves = 4,
+                DomainWarpEnabled = true,
+                DomainWarpAmplitude = 150,
+                DomainWarpFractalType = DomainWarpFractalType.None,
+                DomainWarpFrequency = 0.002
+            })
+            .Multiply(20)
+            .Build());
 
 
         RegisterPattern(new PatternTreeBuilder("plain", "Plain")
@@ -103,6 +103,5 @@ public class PatternLibrary
             .ApplyOperation(SingleOperationType.Sin)
             .Multiply(10)
             .Build());
-
     }
 }

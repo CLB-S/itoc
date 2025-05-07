@@ -9,7 +9,7 @@ public enum MultiOperationType
     Multiply,
     Min,
     Max,
-    Average,
+    Average
 }
 
 public class MultiChildOperationNode : PatternTreeNode, IOperator
@@ -34,7 +34,7 @@ public class MultiChildOperationNode : PatternTreeNode, IOperator
             MultiOperationType.Min => values.Min(),
             MultiOperationType.Max => values.Max(),
             MultiOperationType.Average => values.Average(),
-            _ => values.Sum(),
+            _ => values.Sum()
         };
     }
 
