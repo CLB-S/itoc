@@ -13,7 +13,6 @@ public class ChunkData
     public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
 
     public ulong[] TransparentMasks;
-    private readonly Palette<Block> _palette;
     private readonly PaletteStorage<Block> _paletteStorage;
 
     private ChunkData()
@@ -26,8 +25,8 @@ public class ChunkData
         Y = y;
         Z = z;
 
-        _palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
-        _paletteStorage = new PaletteStorage<Block>(_palette);
+        var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
+        _paletteStorage = new PaletteStorage<Block>(palette);
     }
 
     public ChunkData(Vector3I pos) : this(pos.X, pos.Y, pos.Z)

@@ -197,15 +197,6 @@ public partial class WorldGenerator
         return height;
     }
 
-    public double[,] CalculateChunkHeightMap(Vector2I chunkPos)
-    {
-        if (State != GenerationState.Completed)
-            throw new InvalidOperationException("World generation is not completed yet.");
-
-        var rect = new Rect2I(chunkPos * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);
-        return HeightMapUtils.ConstructChunkHeightMap(rect, (x, y) => GetRawHeight(x, y, true, true, true), 2);
-    }
-
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
         int upscaleLevel = 2)
     {

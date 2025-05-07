@@ -24,10 +24,13 @@ public partial class WorldGenerator
     public IReadOnlyDictionary<int, CellData> CellDatas => _cellDatas;
     public IReadOnlyCollection<Edge> CellEdges => _voronoiEdges;
 
+    public PatternLibrary PatternLibrary { get; private set; }
+
     protected void InitializeResources()
     {
         ReportProgress("Initializing resources");
         _rng = new RandomNumberGenerator { Seed = Settings.Seed };
+        PatternLibrary = new PatternLibrary((int)Settings.Seed);
 
         _platePattern = new PatternTreeBuilder("plate_pattern", "Plate Pattern")
             .WithFastNoiseLite(new FastNoiseLiteSettings
