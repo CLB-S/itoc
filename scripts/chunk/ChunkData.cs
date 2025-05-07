@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Godot;
+using Palette;
 
 public class ChunkData
 {
@@ -13,9 +13,8 @@ public class ChunkData
     public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
 
     public ulong[] TransparentMasks;
-    private readonly Palette<Block> _palette = new(null);
-    private readonly List<ulong> _data = new();
-    private readonly int _entriesPerLong;
+    private readonly Palette<Block> _palette;
+    private readonly PaletteStorage<Block> _paletteStorage;
 
     private ChunkData()
     {
@@ -26,12 +25,9 @@ public class ChunkData
         X = x;
         Y = y;
         Z = z;
-        _entriesPerLong = 64 / _palette.BitsPerEntry;
 
-        // Initialize with all air blocks
-        var totalEntries = ChunkMesher.CS_P3;
-        var longCount = (totalEntries + _entriesPerLong - 1) / _entriesPerLong;
-        _data = new List<ulong>(new ulong[longCount]);
+        _palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
+        _paletteStorage = new PaletteStorage<Block>(_palette);
     }
 
     public ChunkData(Vector3I pos) : this(pos.X, pos.Y, pos.Z)
@@ -62,15 +58,8 @@ public class ChunkData
 
     public Block GetBlock(int index)
     {
-        var longIndex = index / _entriesPerLong;
-        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
-
-        if (longIndex >= _data.Count) return null;
-
-        var value = (_data[longIndex] >> bitOffset) & _palette.Mask;
-        return _palette.GetValue((int)value);
+        return _paletteStorage.Get(index);
     }
-
 
     public void SetBlock(int x, int y, int z, string blockId)
     {
@@ -86,23 +75,9 @@ public class ChunkData
     public void SetBlock(int x, int y, int z, Block block)
     {
         var index = ChunkMesher.GetIndex(x, y, z);
-        var longIndex = index / _entriesPerLong;
-        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
+        _paletteStorage.Set(index, block);
 
-        var paletteId = _palette.GetId(block);
-
-        // Check if we need to resize the data array
-        if (longIndex >= _data.Count)
-        {
-            var needed = longIndex - _data.Count + 1;
-            _data.AddRange(new ulong[needed]);
-        }
-
-        // Clear existing bits
-        _data[longIndex] &= ~(_palette.Mask << bitOffset);
-        // Set new bits
-        _data[longIndex] |= ((ulong)paletteId & _palette.Mask) << bitOffset;
-
+        // Masks
         if (block == null || !block.IsOpaque)
             ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
         else
@@ -124,7 +99,7 @@ public class ChunkData
 
     public int GetBytes()
     {
-        return (_data.Count * sizeof(ulong)
-                + OpaqueMask.Length * sizeof(ulong)) / 8;
+        return _paletteStorage.GetStorageSize() * sizeof(ulong) +
+                +OpaqueMask.Length * sizeof(ulong);
     }
 }
