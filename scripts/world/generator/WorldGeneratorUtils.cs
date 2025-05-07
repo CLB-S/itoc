@@ -189,7 +189,7 @@ public partial class WorldGenerator
     /// <param name="y">The y-coordinate</param>
     /// <param name="numNeighbors">The number of nearby cells to find</param>
     /// <returns>An enumerable of the nearest cell data</returns>
-    public IEnumerable<CellData> FindCellDatasNearby(double x, double y, int numNeighbors = 1)
+    public IEnumerable<CellData> GetCellDatasNearby(double x, double y, int numNeighbors = 1)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("Cell datas are not initialized yet.");
@@ -213,7 +213,7 @@ public partial class WorldGenerator
     /// <returns>An enumerable of the nearest cell data</returns>
     public IEnumerable<CellData> GetCellDatasNearby(Vector2 pos, int numNeighbors = 1)
     {
-        return FindCellDatasNearby(pos.X, pos.Y, numNeighbors);
+        return GetCellDatasNearby(pos.X, pos.Y, numNeighbors);
     }
 
     /// <summary>
