@@ -6,7 +6,6 @@ using Godot;
 
 public partial class World : Node
 {
-    public const int ChunkSize = ChunkMesher.CS;
     public WorldGenerator.WorldGenerator Generator { get; private set; }
     public WorldSettings Settings => Generator.Settings;
 
@@ -60,7 +59,7 @@ public partial class World : Node
         Time += delta;
         PlayerPos = GetPlayerPosition();
 
-        if ((PlayerPos - _lastPlayerPosition).Length() > ChunkSize / 2)
+        if ((PlayerPos - _lastPlayerPosition).Length() > ChunkMesher.CS / 2)
         {
             PlayerChunk = WorldToChunkPosition(PlayerPos);
             UpdateChunkLoading();
@@ -127,18 +126,18 @@ public partial class World : Node
     public static Vector3I WorldToChunkPosition(Vector3 worldPos)
     {
         return new Vector3I(
-            Mathf.FloorToInt(worldPos.X / ChunkSize),
-            Mathf.FloorToInt(worldPos.Y / ChunkSize),
-            Mathf.FloorToInt(worldPos.Z / ChunkSize)
+            Mathf.FloorToInt(worldPos.X / ChunkMesher.CS),
+            Mathf.FloorToInt(worldPos.Y / ChunkMesher.CS),
+            Mathf.FloorToInt(worldPos.Z / ChunkMesher.CS)
         );
     }
 
     public static Vector3 WorldToLocalPosition(Vector3 worldPos)
     {
         return new Vector3(
-            Mathf.PosMod(worldPos.X, ChunkSize),
-            Mathf.PosMod(worldPos.Y, ChunkSize),
-            Mathf.PosMod(worldPos.Z, ChunkSize)
+            Mathf.PosMod(worldPos.X, ChunkMesher.CS),
+            Mathf.PosMod(worldPos.Y, ChunkMesher.CS),
+            Mathf.PosMod(worldPos.Z, ChunkMesher.CS)
         );
     }
     #endregion
@@ -224,8 +223,8 @@ public partial class World : Node
         {
             ChunkColumns[result.Position] = result;
 
-            var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkSize);
-            var low = Mathf.FloorToInt((result.HeightMapLow - 2) / ChunkSize) - 1;
+            var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkMesher.CS);
+            var low = Mathf.FloorToInt((result.HeightMapLow - 2) / ChunkMesher.CS) - 1;
 
             for (var y = low; y <= high; y++)
             {
@@ -270,9 +269,9 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X + 1, chunkPos.Y, chunkPos.Z), out var positiveXNeighbor))
         {
-            for (int y = 0; y < ChunkSize; y++)
+            for (int y = 0; y < ChunkMesher.CS; y++)
             {
-                for (int z = 0; z < ChunkSize; z++)
+                for (int z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(ChunkMesher.CS - 1, y, z);
                     positiveXNeighbor.ChunkData.SetMesherMask(0, y + 1, z + 1, block);
@@ -286,9 +285,9 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X - 1, chunkPos.Y, chunkPos.Z), out var negativeXNeighbor))
         {
-            for (int y = 0; y < ChunkSize; y++)
+            for (int y = 0; y < ChunkMesher.CS; y++)
             {
-                for (int z = 0; z < ChunkSize; z++)
+                for (int z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(0, y, z);
                     negativeXNeighbor.ChunkData.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
@@ -302,9 +301,9 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y + 1, chunkPos.Z), out var positiveYNeighbor))
         {
-            for (int x = 0; x < ChunkSize; x++)
+            for (int x = 0; x < ChunkMesher.CS; x++)
             {
-                for (int z = 0; z < ChunkSize; z++)
+                for (int z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(x, ChunkMesher.CS - 1, z);
                     positiveYNeighbor.ChunkData.SetMesherMask(x + 1, 0, z + 1, block);
@@ -318,9 +317,9 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y - 1, chunkPos.Z), out var negativeYNeighbor))
         {
-            for (int x = 0; x < ChunkSize; x++)
+            for (int x = 0; x < ChunkMesher.CS; x++)
             {
-                for (int z = 0; z < ChunkSize; z++)
+                for (int z = 0; z < ChunkMesher.CS; z++)
                 {
                     var block = chunk.GetBlock(x, 0, z);
                     negativeYNeighbor.ChunkData.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
@@ -334,9 +333,9 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z + 1), out var positiveZNeighbor))
         {
-            for (int x = 0; x < ChunkSize; x++)
+            for (int x = 0; x < ChunkMesher.CS; x++)
             {
-                for (int y = 0; y < ChunkSize; y++)
+                for (int y = 0; y < ChunkMesher.CS; y++)
                 {
                     var block = chunk.GetBlock(x, y, ChunkMesher.CS - 1);
                     positiveZNeighbor.ChunkData.SetMesherMask(x + 1, y + 1, 0, block);
@@ -350,9 +349,9 @@ public partial class World : Node
 
         if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z - 1), out var negativeZNeighbor))
         {
-            for (int x = 0; x < ChunkSize; x++)
+            for (int x = 0; x < ChunkMesher.CS; x++)
             {
-                for (int y = 0; y < ChunkSize; y++)
+                for (int y = 0; y < ChunkMesher.CS; y++)
                 {
                     var block = chunk.GetBlock(x, y, 0);
                     negativeZNeighbor.ChunkData.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);

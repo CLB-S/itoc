@@ -31,7 +31,7 @@ public partial class Chunk : StaticBody3D
         ChunkData = result.ChunkData;
         ChunkColumn = result.ChunkColumn;
         ChunkPosition = ChunkData.GetPosition();
-        Position = ChunkPosition * World.ChunkSize;
+        Position = ChunkPosition * ChunkMesher.CS;
         Name = $"Chunk_{ChunkPosition.X}_{ChunkPosition.Y}_{ChunkPosition.Z}";
 
         State = ChunkState.DataReady;
