@@ -8,18 +8,19 @@ public partial class GuiController : Control
     {
         ProcessMode = ProcessModeEnum.Always;
         Visible = true;
-        GetTree().Paused = ShouldPauseGame();
+        if (ShouldPauseGame())
+            Core.Instance.PauseGame();
         UpdateMouseState();
     }
 
     public virtual void OnExit()
     {
         Visible = false;
-        GetTree().Paused = false;
+        Core.Instance.ResumeGame();
         UpdateMouseState();
     }
 
-    protected bool ShouldPauseGame()
+    protected static bool ShouldPauseGame()
     {
         foreach (var state in PausingStates)
             if (GuiManager.Instance.CurrentState == state)

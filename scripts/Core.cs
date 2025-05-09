@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Godot;
+using ITOC.Multithreading;
 
 public enum GameState
 {
@@ -16,6 +17,7 @@ public partial class Core : Node
     public Node CurrentScene { get; set; }
     public GameState State { get; set; } = GameState.StartScreen;
     public WorldGenerator.WorldGenerator WorldGenerator { get; private set; }
+    public TaskManager TaskManager { get; private set; }
 
     public static Core Instance { get; private set; }
 
@@ -34,6 +36,9 @@ public partial class Core : Node
         GetWindow().MoveToCenter();
 
         WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
+        TaskManager = TaskManager.Instance;
+        TaskManager.Initialize();
+
     }
 
     public void GenerateWorldAndStartGame(WorldGenerator.WorldGenerator worldGenerator = null)
@@ -74,6 +79,23 @@ public partial class Core : Node
         GetTree().CurrentScene = CurrentScene;
     }
 
+    public void PauseGame()
+    {
+        State = GameState.Paused;
+        GetTree().Paused = true;
+        TaskManager.Pause();
+    }
+
+    public void ResumeGame()
+    {
+        if (GetTree().Paused)
+        {
+            State = GameState.InGame;
+            GetTree().Paused = false;
+            TaskManager.Resume();
+        }
+    }
+
     public override void _Notification(int what)
     {
         if (what == NotificationWMCloseRequest)
@@ -84,6 +106,10 @@ public partial class Core : Node
     {
         // Save settings on quit
         Settings.Save();
+
+        TaskManager.Shutdown();
+        TaskManager.Dispose();
+
         GD.Print("Quitting game.");
         GetTree().Quit();
     }
