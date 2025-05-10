@@ -14,10 +14,10 @@ public class ActionTask : GameTask
     /// <summary>
     /// Initializes a new instance of the <see cref="ActionTask"/> class.
     /// </summary>
-    /// <param name="name">The name of the task.</param>
     /// <param name="action">The action to execute.</param>
+    /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
-    public ActionTask(string name, Action action, TaskPriority priority = TaskPriority.Normal)
+    public ActionTask(Action action, string name = null, TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
     {
         _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -26,10 +26,10 @@ public class ActionTask : GameTask
     /// <summary>
     /// Initializes a new instance of the <see cref="ActionTask"/> class.
     /// </summary>
-    /// <param name="name">The name of the task.</param>
     /// <param name="action">The cancellable action to execute.</param>
+    /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
-    public ActionTask(string name, Action<CancellationToken> action, TaskPriority priority = TaskPriority.Normal)
+    public ActionTask(Action<CancellationToken> action, string name = null, TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
     {
         _cancellableAction = action ?? throw new ArgumentNullException(nameof(action));

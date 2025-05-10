@@ -31,7 +31,7 @@ public class CompositeTask : GameTask
     /// </summary>
     /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
-    public CompositeTask(string name, TaskPriority priority = TaskPriority.Normal)
+    public CompositeTask(string name = null, TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
     {
     }

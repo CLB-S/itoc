@@ -21,7 +21,7 @@ public class BatchTask : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
     /// <param name="tasks">The tasks to execute in sequence.</param>
-    public BatchTask(string name, TaskPriority priority = TaskPriority.Normal, params GameTask[] tasks)
+    public BatchTask(string name = null, TaskPriority priority = TaskPriority.Normal, params GameTask[] tasks)
         : base(name, priority)
     {
         _tasks = tasks ?? throw new ArgumentNullException(nameof(tasks));

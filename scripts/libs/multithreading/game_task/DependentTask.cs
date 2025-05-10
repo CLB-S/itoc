@@ -27,11 +27,11 @@ public class DependentTask : GameTask
     /// <summary>
     /// Initializes a new instance of the <see cref="DependentTask"/> class.
     /// </summary>
-    /// <param name="name">The name of the task.</param>
     /// <param name="action">The action to execute.</param>
+    /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
     /// <param name="dependencies">The tasks that must complete before this task can execute.</param>
-    public DependentTask(string name, Action action, TaskPriority priority = TaskPriority.Normal, params GameTask[] dependencies)
+    public DependentTask(Action action, string name = null, TaskPriority priority = TaskPriority.Normal, params GameTask[] dependencies)
         : base(name, priority)
     {
         _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -41,11 +41,11 @@ public class DependentTask : GameTask
     /// <summary>
     /// Initializes a new instance of the <see cref="DependentTask"/> class.
     /// </summary>
-    /// <param name="name">The name of the task.</param>
     /// <param name="action">The cancellable action to execute.</param>
+    /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
     /// <param name="dependencies">The tasks that must complete before this task can execute.</param>
-    public DependentTask(string name, Action<CancellationToken> action, TaskPriority priority = TaskPriority.Normal, params GameTask[] dependencies)
+    public DependentTask(Action<CancellationToken> action, string name = null, TaskPriority priority = TaskPriority.Normal, params GameTask[] dependencies)
         : base(name, priority)
     {
         _cancellableAction = action ?? throw new ArgumentNullException(nameof(action));
