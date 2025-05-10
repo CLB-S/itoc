@@ -62,6 +62,9 @@ public class TaskManager : IDisposable
     // Diagnostics
     private readonly Stopwatch _uptime = new();
 
+    // Task dependency tracking
+    private readonly ConcurrentDictionary<Guid, List<DependentTask>> _dependentTasks = new();
+
     #endregion
 
     #region Properties
@@ -204,6 +207,10 @@ public class TaskManager : IDisposable
 
         if (task.State == TaskState.Created)
         {
+            // Handle dependent tasks differently
+            if (task is DependentTask dependentTask)
+                return EnqueueDependentTask(dependentTask);
+
             task.State = TaskState.Queued;
             _taskQueues[task.Priority].Enqueue(task);
             Interlocked.Increment(ref _totalTasksCreated);
@@ -218,6 +225,60 @@ public class TaskManager : IDisposable
             GD.PrintErr($"Cannot enqueue task '{task.Name}' with state {task.State}");
         }
 
+        return task;
+    }
+
+    /// <summary>
+    /// Enqueues a task with dependencies. The task will only be executed when all dependencies have completed.
+    /// </summary>
+    /// <param name="task">The dependent task to enqueue.</param>
+    /// <returns>Returns the enqueued task for chaining or tracking.</returns>
+    private GameTask EnqueueDependentTask(DependentTask task)
+    {
+        if (task == null) throw new ArgumentNullException(nameof(task));
+
+        // Check if all dependencies are already completed
+        if (task.AreDependenciesFulfilled)
+        {
+            // All dependencies are fulfilled, enqueue as normal
+            task.State = TaskState.Queued;
+            _taskQueues[task.Priority].Enqueue(task);
+            Interlocked.Increment(ref _totalTasksCreated);
+            _newTaskEvent.Set();
+            GD.Print($"Dependent task '{task.Name}' enqueued with {task.Dependencies.Count} already completed dependencies.");
+            return task;
+        }
+
+        // Store the task in waiting state (still considered as "Queued")
+        task.State = TaskState.Queued;
+        Interlocked.Increment(ref _totalTasksCreated);
+
+        // For each dependency, register this task as dependent
+        foreach (var dependency in task.Dependencies)
+        {
+            if (dependency.State != TaskState.Completed)
+            {
+                // Ensure the dependency is at least queued
+                if (dependency.State == TaskState.Created)
+                    EnqueueTask(dependency);
+
+                // Register this dependent task for the dependency
+                _dependentTasks.AddOrUpdate(
+                    dependency.Id,
+                    [task],
+                    (_, list) =>
+                    {
+                        lock (list)
+                        {
+                            if (!list.Contains(task))
+                                list.Add(task);
+                            return list;
+                        }
+                    });
+            }
+        }
+
+        GD.Print($"Dependent task '{task.Name}' registered with {task.Dependencies.Count} dependencies.");
         return task;
     }
 
@@ -268,11 +329,38 @@ public class TaskManager : IDisposable
     internal void NotifyTaskCompletion(GameTask task, bool successful)
     {
         if (successful)
+        {
             Interlocked.Increment(ref _totalTasksCompleted);
+
+            // Check if there are any dependent tasks waiting on this task
+            CheckAndEnqueueDependentTasks(task);
+        }
         else if (task.IsCancelled)
             Interlocked.Increment(ref _totalTasksCancelled);
         else
             Interlocked.Increment(ref _totalTasksFailed);
+    }
+
+    /// <summary>
+    /// Checks if any dependent tasks are waiting for the completed task and enqueues them if all their dependencies are fulfilled.
+    /// </summary>
+    /// <param name="completedTask">The task that just completed.</param>
+    private void CheckAndEnqueueDependentTasks(GameTask completedTask)
+    {
+        if (!_dependentTasks.TryRemove(completedTask.Id, out var dependentTaskList))
+            return;
+
+        foreach (var dependentTask in dependentTaskList)
+        {
+            // Check if all dependencies are now fulfilled
+            if (dependentTask.AreDependenciesFulfilled)
+            {
+                // All dependencies are fulfilled, enqueue the task
+                _taskQueues[dependentTask.Priority].Enqueue(dependentTask);
+                _newTaskEvent.Set();
+                GD.Print($"Dependent task '{dependentTask.Name}' is now ready for execution as all dependencies have completed.");
+            }
+        }
     }
 
     /// <summary>
