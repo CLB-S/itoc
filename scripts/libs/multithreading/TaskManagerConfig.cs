@@ -105,7 +105,7 @@ public class TaskManagerConfig
     {
         return new TaskManagerConfig
         {
-            MaxWorkerThreads = Math.Max(1, System.Environment.ProcessorCount / 2),
+            MaxWorkerThreads = Math.Max(1, Environment.ProcessorCount / 2),
             AutoStart = true,
             VerboseLogging = false,
             IdleThreadTimeoutMs = 10000, // Suspend threads after 10 seconds of inactivity
@@ -123,7 +123,7 @@ public class TaskManagerConfig
     {
         return new TaskManagerConfig
         {
-            MaxWorkerThreads = Math.Max(1, System.Environment.ProcessorCount),
+            MaxWorkerThreads = Math.Max(1, Environment.ProcessorCount),
             AutoStart = true,
             VerboseLogging = false,
             IdleThreadTimeoutMs = 0, // Never suspend threads

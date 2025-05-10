@@ -18,6 +18,7 @@ internal class WorkerThread : IDisposable
     private readonly Thread _thread;
     private readonly CancellationTokenSource _cts;
     private readonly Stopwatch _idleTimer = new();
+    private readonly bool _verboseLogging;
 
     private volatile bool _isDisposed;
     private volatile bool _isProcessingTask;
@@ -62,10 +63,12 @@ internal class WorkerThread : IDisposable
     /// </summary>
     /// <param name="taskManager">The task manager that owns this worker thread.</param>
     /// <param name="id">The ID of this worker thread.</param>
-    public WorkerThread(TaskManager taskManager, int id)
+    /// <param name="verboseLogging">Whether to enable verbose logging for this worker thread.</param>
+    public WorkerThread(TaskManager taskManager, int id, bool verboseLogging = false)
     {
         _taskManager = taskManager ?? throw new ArgumentNullException(nameof(taskManager));
         _id = id;
+        _verboseLogging = verboseLogging;
         _cts = new CancellationTokenSource();
         _thread = new Thread(WorkerLoop)
         {
@@ -92,7 +95,8 @@ internal class WorkerThread : IDisposable
         {
             _isActive = true;
             _thread.Start();
-            GD.Print($"Worker thread {_id} started.");
+            if (_verboseLogging)
+                GD.Print($"Worker thread {_id} started.");
         }
     }
 
@@ -193,7 +197,8 @@ internal class WorkerThread : IDisposable
             _isActive = false;
             _isProcessingTask = false;
             _idleTimer.Stop();
-            GD.Print($"Worker thread {_id} stopped.");
+            if (_verboseLogging)
+                GD.Print($"Worker thread {_id} stopped.");
         }
     }
 
