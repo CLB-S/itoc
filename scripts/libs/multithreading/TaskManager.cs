@@ -257,9 +257,9 @@ public class TaskManager : IDisposable
     /// </summary>
     /// <param name="task">The dependent task to enqueue.</param>
     /// <returns>Returns the enqueued task for chaining or tracking.</returns>
-    private GameTask EnqueueDependentTask(DependentTask task)
+    private DependentTask EnqueueDependentTask(DependentTask task)
     {
-        if (task == null) throw new ArgumentNullException(nameof(task));
+        ArgumentNullException.ThrowIfNull(task);
 
         // Check if all dependencies are already completed
         if (task.AreDependenciesFulfilled)
