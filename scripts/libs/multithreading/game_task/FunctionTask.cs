@@ -22,9 +22,7 @@ public class FunctionTask<T> : GameTask
         get
         {
             if (State != TaskState.Completed)
-            {
                 throw new InvalidOperationException("Cannot get result of a task that hasn't completed successfully.");
-            }
             return _result;
         }
     }
@@ -72,6 +70,6 @@ public class FunctionTask<T> : GameTask
         }
 
         // Invoke the callback if provided
-        _callback?.Invoke(_result);
+        _callback?.Invoke(Result);
     }
 }
