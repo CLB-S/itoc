@@ -37,8 +37,7 @@ public partial class Core : Node
 
         WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
         TaskManager = TaskManager.Instance;
-        TaskManager.Initialize();
-
+        TaskManager.Initialize(TaskManagerConfig.Production());
     }
 
     public void GenerateWorldAndStartGame(WorldGenerator.WorldGenerator worldGenerator = null)

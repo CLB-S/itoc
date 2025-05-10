@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ChunkGenerator;
 using Godot;
 
 public partial class Chunk : StaticBody3D
@@ -16,7 +15,7 @@ public partial class Chunk : StaticBody3D
     private Mesh _mesh;
     private CollisionShape3D _collisionShape3D;
 
-    private Shape3D _collisionShape;
+    // private Shape3D _collisionShape;
 
     // private ImmediateMesh _debugMesh;
     private MeshInstance3D _collisionDebugMeshInstance;
@@ -28,10 +27,10 @@ public partial class Chunk : StaticBody3D
 
     public ChunkState State { get; private set; } = ChunkState.Unloaded;
 
-    public Chunk(ChunkGenerationResult result)
+    public Chunk(ChunkData result)
     {
-        ChunkData = result.ChunkData;
-        ChunkColumn = result.ChunkColumn;
+        ChunkData = result;
+        ChunkColumn = result.GetChunkColumn();
         ChunkPosition = ChunkData.GetPosition();
         Position = ChunkPosition * ChunkMesher.CS;
         Name = $"Chunk_{ChunkPosition.X}_{ChunkPosition.Y}_{ChunkPosition.Z}";
@@ -70,14 +69,14 @@ public partial class Chunk : StaticBody3D
 
         State = ChunkState.Render;
 
-        if (_collisionShape != null)
-        {
-            _collisionShape3D.Shape = _collisionShape;
-            State = ChunkState.Physics;
+        // if (_collisionShape != null)
+        // {
+        //     _collisionShape3D.Shape = _collisionShape;
+        //     State = ChunkState.Physics;
 
-            if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
-                _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
-        }
+        //     if (Core.Instance.Settings.DrawDebugChunkCollisionShape)
+        //         _collisionDebugMeshInstance.Mesh = _collisionShape3D.Shape.GetDebugMesh();
+        // }
 
         // if (World.Instance.DebugDrawChunkBounds) DrawDebugBounds();
     }

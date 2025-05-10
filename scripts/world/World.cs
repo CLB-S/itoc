@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using ChunkGenerator;
 using Godot;
+using ITOC.Chunks;
+using ITOC.Multithreading;
 
 public partial class World : Node
 {
@@ -21,7 +22,7 @@ public partial class World : Node
     public ShaderMaterial DebugMaterial;
 
     private PackedScene _debugCube;
-    private ChunkFactory _chunkFactory;
+    // private ChunkFactory _chunkFactory;
     private bool _ready; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
@@ -45,14 +46,14 @@ public partial class World : Node
         DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
         _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
 
-        _chunkFactory = new ChunkFactory();
-        _chunkFactory.Start();
+        // _chunkFactory = new ChunkFactory();
+        // _chunkFactory.Start();
 
         _ready = true;
     }
 
     // TODO: Chunk generation logic should be revised. 
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
         if (!_ready) return;
 
@@ -71,8 +72,15 @@ public partial class World : Node
         {
             var pos = _chunkColumnsGenerationQueue.Dequeue();
 
-            var columnRequest = new ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
-            _chunkFactory.Enqueue(columnRequest);
+            // var columnRequest = new ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
+            // _chunkFactory.Enqueue(columnRequest);
+            var columnTask = new FunctionTask<ChunkColumn>(
+                () => Generator.GenerateChunkColumn(pos),
+                ChunkColumnGenerationCallback
+            );
+            // var columnTask = new ChunkColumnGenerationTask(Generator, pos, ChunkColumnGenerationCallback);
+            Core.Instance.TaskManager.EnqueueTask(columnTask);
+
             processed++;
         }
     }
@@ -90,6 +98,12 @@ public partial class World : Node
     {
         Chunks.TryGetValue(chunkPos, out var chunk);
         return chunk;
+    }
+
+    public ChunkColumn GetChunkColumn(Vector2I columnPos)
+    {
+        ChunkColumns.TryGetValue(columnPos, out var chunkColumn);
+        return chunkColumn;
     }
 
     public Block GetBlock(Vector3 worldPos)
@@ -208,14 +222,8 @@ public partial class World : Node
                     if (ChunkColumns.TryGetValue(columnPos, out var chunkColumn))
                     {
                         var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                        var request = new ChunkGenerationRequest(
-                            Generator,
-                            chunkPos,
-                            chunkColumn,
-                            ChunkGenerationCallback,
-                            createCollisionShape
-                        );
-                        _chunkFactory.Enqueue(request);
+                        var chunkTask = new ChunkGenerationTask(Generator, chunkPos, chunkColumn, ChunkGenerationCallback);
+                        Core.Instance.TaskManager.EnqueueTask(chunkTask);
                     }
                 }
     }
@@ -237,14 +245,17 @@ public partial class World : Node
                 if (Chunks.ContainsKey(chunkPos)) continue;
 
                 var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                var request = new ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback,
-                    createCollisionShape);
-                _chunkFactory.Enqueue(request);
+                // var request = new ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback,
+                //     createCollisionShape);
+                // _chunkFactory.Enqueue(request);
+
+                var chunkTask = new ChunkGenerationTask(Generator, chunkPos, result, ChunkGenerationCallback);
+                Core.Instance.TaskManager.EnqueueTask(chunkTask);
             }
         }
     }
 
-    private void ChunkGenerationCallback(ChunkGenerationResult result)
+    private void ChunkGenerationCallback(ChunkData result)
     {
         if (result == null) return;
 
@@ -252,7 +263,7 @@ public partial class World : Node
         // var currentCenter = WorldToChunkPosition(currentPlayerPos);
         // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Core.Instance.Settings.LoadDistance) return;
 
-        var position = result.ChunkData.GetPosition();
+        var position = result.GetPosition();
         var positionXZ = new Vector2I(position.X, position.Z);
         var playerPosition = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
         if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out var chunkColumn)
@@ -370,20 +381,5 @@ public partial class World : Node
         var cube = _debugCube.Instantiate() as Node3D;
         cube.Position = pos + Vector3.One * 0.5;
         CallDeferred(Node.MethodName.AddChild, cube);
-    }
-
-    public override void _ExitTree()
-    {
-        _chunkFactory?.Stop();
-        _chunkFactory?.Dispose();
-    }
-
-    public override void _Notification(int what)
-    {
-        if (what == NotificationWMCloseRequest)
-        {
-            _chunkFactory?.Stop();
-            _chunkFactory?.Dispose();
-        }
     }
 }
