@@ -15,6 +15,9 @@ public class ChunkData
     public ulong[] TransparentMasks;
     private readonly PaletteStorage<Block> _paletteStorage;
 
+    // Lock object for thread synchronization
+    private readonly object _lockObject = new object();
+
     private ChunkData()
     {
     }
@@ -38,6 +41,16 @@ public class ChunkData
         return new Vector3I(X, Y, Z);
     }
 
+    public Vector2I GetChunkColumnPosition()
+    {
+        return new Vector2I(X, Z);
+    }
+
+    public ChunkColumn GetChunkColumn()
+    {
+        return World.Instance.GetChunkColumn(GetChunkColumnPosition());
+    }
+
     public Block GetBlock(int axis, int a, int b, int c)
     {
         var index = ChunkMesher.GetBlockAxisIndex(axis, a, b, c);
@@ -57,7 +70,8 @@ public class ChunkData
 
     public Block GetBlock(int index)
     {
-        return _paletteStorage.Get(index);
+        lock (_lockObject)
+            return _paletteStorage.Get(index);
     }
 
     public void SetBlock(int x, int y, int z, string blockId)
@@ -73,24 +87,30 @@ public class ChunkData
 
     public void SetBlock(int x, int y, int z, Block block)
     {
-        var index = ChunkMesher.GetBlockIndex(x, y, z);
-        _paletteStorage.Set(index, block);
+        lock (_lockObject)
+        {
+            var index = ChunkMesher.GetBlockIndex(x, y, z);
+            _paletteStorage.Set(index, block);
 
-        SetMesherMask(x + 1, y + 1, z + 1, block);
+            SetMesherMask(x + 1, y + 1, z + 1, block);
+        }
     }
 
     public void SetMesherMask(int x, int y, int z, Block block)
     {
-        if (block == null || !block.IsOpaque)
-            ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
-        else
-            ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
-
-        if (block != null && !block.IsOpaque)
+        lock (_lockObject)
         {
-            TransparentMasks ??= new ulong[ChunkMesher.CS_P2];
+            if (block == null || !block.IsOpaque)
+                ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
+            else
+                ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
 
-            ChunkMesher.AddOpaqueVoxel(TransparentMasks, x, y, z);
+            if (block != null && !block.IsOpaque)
+            {
+                TransparentMasks ??= new ulong[ChunkMesher.CS_P2];
+
+                ChunkMesher.AddOpaqueVoxel(TransparentMasks, x, y, z);
+            }
         }
     }
 
@@ -101,7 +121,8 @@ public class ChunkData
 
     public int GetBytes()
     {
-        return _paletteStorage.GetStorageSize() * sizeof(ulong) +
-               +OpaqueMask.Length * sizeof(ulong);
+        lock (_lockObject)
+            return _paletteStorage.GetStorageSize() * sizeof(ulong) +
+                   OpaqueMask.Length * sizeof(ulong);
     }
 }
