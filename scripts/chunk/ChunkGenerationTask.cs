@@ -17,7 +17,7 @@ public class ChunkGenerationTask : GameTask
         WorldGenerator.WorldGenerator worldGenerator,
         Vector3I position,
         ChunkColumn chunkColumn,
-        Action<ChunkData> callback,
+        Action<ChunkData> callback = null,
         string name = null,
         TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
