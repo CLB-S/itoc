@@ -11,6 +11,7 @@ public class FunctionTask<T> : GameTask
 {
     private readonly Func<T> _function;
     private readonly Func<CancellationToken, T> _cancellableFunction;
+    private readonly Action<T> _callback;
     private T _result;
 
     /// <summary>
@@ -34,10 +35,11 @@ public class FunctionTask<T> : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="function">The function to execute.</param>
     /// <param name="priority">The priority of the task.</param>
-    public FunctionTask(string name, Func<T> function, TaskPriority priority = TaskPriority.Normal)
+    public FunctionTask(Func<T> function, Action<T> callback, string name = null, TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
     {
         _function = function ?? throw new ArgumentNullException(nameof(function));
+        _callback = callback;
     }
 
     /// <summary>
@@ -46,10 +48,11 @@ public class FunctionTask<T> : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="function">The cancellable function to execute.</param>
     /// <param name="priority">The priority of the task.</param>
-    public FunctionTask(string name, Func<CancellationToken, T> function, TaskPriority priority = TaskPriority.Normal)
+    public FunctionTask(Func<CancellationToken, T> function, Action<T> callback, string name = null, TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
     {
         _cancellableFunction = function ?? throw new ArgumentNullException(nameof(function));
+        _callback = callback;
     }
 
     /// <summary>
@@ -67,5 +70,8 @@ public class FunctionTask<T> : GameTask
             cancellationToken.ThrowIfCancellationRequested();
             _result = _function();
         }
+
+        // Invoke the callback if provided
+        _callback?.Invoke(_result);
     }
 }
