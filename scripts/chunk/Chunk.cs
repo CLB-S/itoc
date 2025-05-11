@@ -152,7 +152,7 @@ public partial class Chunk : StaticBody3D
     public void SetBlock(int x, int y, int z, Block block)
     {
         ChunkData.SetBlock(x, y, z, block);
-        UpdateMesh();
+        UpdateMeshIfNeededDeferred();
 
         if (x == 0)
         {
@@ -160,7 +160,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.X -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
-            neighbourChunk.UpdateMeshIfNeeded();
+            neighbourChunk.UpdateMeshIfNeededDeferred();
         }
 
         if (x == ChunkMesher.CS - 1)
@@ -169,7 +169,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.X += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetMesherMask(0, y + 1, z + 1, block);
-            neighbourChunk.UpdateMeshIfNeeded();
+            neighbourChunk.UpdateMeshIfNeededDeferred();
         }
 
         if (y == 0)
@@ -178,7 +178,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Y -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
-            neighbourChunk.UpdateMeshIfNeeded();
+            neighbourChunk.UpdateMeshIfNeededDeferred();
         }
 
         if (y == ChunkMesher.CS - 1)
@@ -187,7 +187,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Y += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetMesherMask(x + 1, 0, z + 1, block);
-            neighbourChunk.UpdateMeshIfNeeded();
+            neighbourChunk.UpdateMeshIfNeededDeferred();
         }
 
         if (z == 0)
@@ -196,7 +196,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Z -= 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
-            neighbourChunk.UpdateMeshIfNeeded();
+            neighbourChunk.UpdateMeshIfNeededDeferred();
         }
 
         if (z == ChunkMesher.CS - 1)
@@ -205,7 +205,7 @@ public partial class Chunk : StaticBody3D
             neighbourChunkPos.Z += 1;
             var neighbourChunk = World.Instance.GetChunk(neighbourChunkPos);
             neighbourChunk.ChunkData.SetMesherMask(x + 1, y + 1, 0, block);
-            neighbourChunk.UpdateMeshIfNeeded();
+            neighbourChunk.UpdateMeshIfNeededDeferred();
         }
     }
 
