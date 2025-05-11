@@ -7,7 +7,7 @@ namespace WorldGenerator;
 
 public partial class WorldGenerator
 {
-    public double[,] CalculateChunkHeightMap(Vector2I chunkColumnPos, Func<double, double, double> getHeight)
+    public virtual double[,] CalculateChunkHeightMap(Vector2I chunkColumnPos, Func<double, double, double> getHeight)
     {
         if (State != GenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");

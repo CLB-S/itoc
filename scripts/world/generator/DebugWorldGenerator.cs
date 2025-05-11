@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using PatternSystem;
 
@@ -54,6 +55,10 @@ public class DebugWorldGenerator : WorldGenerator
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, ApplyHeight));
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
+
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature,
+            AdjustTemperatureAccordingToHeight));
+        _generationPipeline.AddLast(new GenerationStep(GenerationState.SettingBiome, SetBiomes));
     }
 
     private void SetHeightForSamplePoints()
@@ -63,5 +68,14 @@ public class DebugWorldGenerator : WorldGenerator
             var pos = SamplePoints[i];
             cell.Height = _debugHeightPattern.Evaluate(pos.X, pos.Y);
         }
+    }
+
+    public override double[,] CalculateChunkHeightMap(Vector2I chunkColumnPos, Func<double, double, double> getHeight)
+    {
+        if (State != GenerationState.Completed)
+            throw new InvalidOperationException("World generation is not completed yet.");
+
+        var rect = new Rect2I(chunkColumnPos * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);
+        return HeightMapUtils.ConstructChunkHeightMap(rect, (x, y) => 10, 2);
     }
 }
