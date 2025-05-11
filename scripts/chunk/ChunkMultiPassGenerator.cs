@@ -106,7 +106,7 @@ public class ChunkMultiPassGenerator
 
             var index = 0;
             for (var i = 0; i < pass; i++)
-                index += PassExtends[i] * 2;
+                index += PassExtends[i] > 0 ? 2 : 0;
 
             markers[index]++;
 
@@ -126,7 +126,7 @@ public class ChunkMultiPassGenerator
 
             var index = -1;
             for (var i = 0; i <= pass; i++)
-                index += PassExtends[i] * 2;
+                index += PassExtends[i] > 0 ? 2 : 0;
 
             markers[index]++;
 

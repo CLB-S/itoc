@@ -9,7 +9,7 @@ namespace ITOC.Chunks;
 public class ChunkColumnGenerationSecondaryPass : IPass
 {
     public int Pass => 1;
-    public int Extend => 1;
+    public int Extend => 2;
     public World World { get; private set; }
 
     public event EventHandler<PassEventArgs> PassCompleted;
@@ -27,9 +27,9 @@ public class ChunkColumnGenerationSecondaryPass : IPass
             () =>
             {
                 // GD.Print($"Executing secondary pass at {chunkColumnPos}");
-                for (int i = -1; i <= 1; i++)
+                for (int i = -Extend; i <= Extend; i++)
                 {
-                    for (int j = -1; j <= 1; j++)
+                    for (int j = -Extend; j <= Extend; j++)
                     {
                         var neighborColumnPos = new Vector2I(chunkColumnPos.X + i, chunkColumnPos.Y + j);
                         var column = World.ChunkColumns[neighborColumnPos];
