@@ -38,6 +38,11 @@ public class FunctionTask<T> : GameTask
     {
         _function = function ?? throw new ArgumentNullException(nameof(function));
         _callback = callback;
+        Completed += (s, e) =>
+        {
+            if ((s as GameTask).State == TaskState.Completed)
+                _callback?.Invoke(Result);
+        };
     }
 
     /// <summary>
@@ -51,6 +56,11 @@ public class FunctionTask<T> : GameTask
     {
         _cancellableFunction = function ?? throw new ArgumentNullException(nameof(function));
         _callback = callback;
+        Completed += (s, e) =>
+        {
+            if ((s as GameTask).State == TaskState.Completed)
+                _callback?.Invoke(Result);
+        };
     }
 
     /// <summary>
@@ -68,8 +78,5 @@ public class FunctionTask<T> : GameTask
             cancellationToken.ThrowIfCancellationRequested();
             _result = _function();
         }
-
-        // Invoke the callback if provided
-        _callback?.Invoke(Result);
     }
 }
