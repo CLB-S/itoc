@@ -23,6 +23,9 @@ public partial class World : Node
 
     private PackedScene _debugCube;
     // private ChunkFactory _chunkFactory;
+    private ChunkMultiPassGenerator _chunkGenerator;
+    private IPass _chunkGenerationPass0;
+    private IPass _chunkGenerationPass1;
     private bool _ready; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
@@ -49,10 +52,24 @@ public partial class World : Node
         // _chunkFactory = new ChunkFactory();
         // _chunkFactory.Start();
 
+        _chunkGenerationPass0 = new ChunkColumnGenerationInitialPass(this);
+        _chunkGenerationPass1 = new ChunkColumnGenerationSecondaryPass(this);
+        _chunkGenerator = new ChunkMultiPassGenerator(true, _chunkGenerationPass0, _chunkGenerationPass1);
+
+        _chunkGenerator.ChunkColumnCompleted += (sender, args) =>
+        {
+            GD.Print($"Chunk column completed: {args}");
+            if (ChunkColumns.TryGetValue(args, out var chunkColumn))
+                foreach (var chunk in chunkColumn.Chunks.Values)
+                {
+                    CallDeferred(Node.MethodName.AddChild, chunk);
+                    chunk.LoadDeferred();
+                }
+        };
+
         _ready = true;
     }
 
-    // TODO: Chunk generation logic should be revised. 
     public override void _PhysicsProcess(double delta)
     {
         if (!_ready) return;
@@ -72,20 +89,19 @@ public partial class World : Node
         {
             var pos = _chunkColumnsGenerationQueue.Dequeue();
 
-            // var columnRequest = new ChunkColumnGenerationRequest(Generator, pos, ChunkColumnGenerationCallback);
-            // _chunkFactory.Enqueue(columnRequest);
-            var columnTask = new FunctionTask<ChunkColumn>(
-                () => Generator.GenerateChunkColumn(pos),
-                ChunkColumnGenerationCallback
-            );
-            // var columnTask = new ChunkColumnGenerationTask(Generator, pos, ChunkColumnGenerationCallback);
-            Core.Instance.TaskManager.EnqueueTask(columnTask);
+            // var columnTask = new FunctionTask<ChunkColumn>(
+            //     () => Generator.GenerateChunkColumn(pos),
+            //     ChunkColumnGenerationCallback
+            // );
+            // Core.Instance.TaskManager.EnqueueTask(columnTask);
+            _chunkGenerationPass0.ExecuteAt(pos);
 
             processed++;
         }
     }
 
     #region Get and Set methods
+    // TODO: Revise.
 
     public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
@@ -175,16 +191,16 @@ public partial class World : Node
                 if (pos.DistanceTo(playerChunkXZ) <= Core.Instance.Settings.RenderDistance) renderArea.Add(pos);
             }
 
-        // Unload
-        foreach (var existingPos in Chunks.Keys)
-            if (!renderArea.Contains(new Vector2I(existingPos.X, existingPos.Z)))
-                if (Chunks.TryRemove(existingPos, out var chunk))
-                    chunk.UnloadDeferred();
+        // TODO: Unload
+        // foreach (var existingPos in Chunks.Keys)
+        //     if (!renderArea.Contains(new Vector2I(existingPos.X, existingPos.Z)))
+        //         if (Chunks.TryRemove(existingPos, out var chunk))
+        //             chunk.UnloadDeferred();
 
-        foreach (var existingPos in ChunkColumns.Keys)
-            if (!renderArea.Contains(existingPos))
-                if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
-                    chunkColumn = null;
+        // foreach (var existingPos in ChunkColumns.Keys)
+        //     if (!renderArea.Contains(existingPos))
+        //         if (ChunkColumns.TryRemove(existingPos, out var chunkColumn))
+        //             chunkColumn = null;
 
         // ChunkColumns to generate 
         var toGenerate = new List<Vector2I>();
@@ -201,9 +217,10 @@ public partial class World : Node
             _chunkColumnsGenerationQueue.Enqueue(pos);
 
         // Generate 3x3x3 chunks around the player for existing ChunkColumns
-        GeneratePlayerSurroundingChunks();
+        // GeneratePlayerSurroundingChunks();
     }
 
+    // TODO
     private void GeneratePlayerSurroundingChunks()
     {
         // Generate 3x3x3 area around player
@@ -228,33 +245,6 @@ public partial class World : Node
                 }
     }
 
-    private void ChunkColumnGenerationCallback(ChunkColumn result)
-    {
-        if (result == null) return;
-
-        if (!ChunkColumns.ContainsKey(result.Position))
-        {
-            ChunkColumns[result.Position] = result;
-
-            var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkMesher.CS);
-            var low = Mathf.FloorToInt((result.HeightMapLow - 2) / ChunkMesher.CS) - 1;
-
-            for (var y = low; y <= high; y++)
-            {
-                var chunkPos = new Vector3I(result.Position.X, y, result.Position.Y);
-                if (Chunks.ContainsKey(chunkPos)) continue;
-
-                var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                // var request = new ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback,
-                //     createCollisionShape);
-                // _chunkFactory.Enqueue(request);
-
-                var chunkTask = new ChunkGenerationTask(Generator, chunkPos, result, ChunkGenerationCallback);
-                Core.Instance.TaskManager.EnqueueTask(chunkTask);
-            }
-        }
-    }
-
     private void ChunkGenerationCallback(ChunkData result)
     {
         if (result == null) return;
@@ -274,12 +264,12 @@ public partial class World : Node
             Chunks[position] = chunk;
             chunkColumn.Chunks[position] = chunk;
             CallDeferred(Node.MethodName.AddChild, chunk);
-            UpdateMesherMasks(chunk);
+            UpdateNeighborMesherMasks(chunk);
             chunk.LoadDeferred();
         }
     }
 
-    private void UpdateMesherMasks(Chunk chunk)
+    public void UpdateNeighborMesherMasks(Chunk chunk)
     {
         var chunkPos = chunk.ChunkPosition;
 
