@@ -17,39 +17,32 @@ public partial class WorldGenerator
 
     private double GetAdjustedVertexHeight(int vertexIndex)
     {
-        if (_adjustedVertexHeights.TryGetValue(vertexIndex, out var adjustedHeight))
-            return adjustedHeight;
-
-        // Get neighbors of this vertex to calculate the adjusted height
-        var neighbors = GetNeighborCellIndices(vertexIndex).ToList();
-        var n = neighbors.Count;
-
-        if (n <= 2)
+        return _adjustedVertexHeights.GetOrAdd(vertexIndex, index =>
         {
-            // For vertices with very few neighbors, keep original height
-            _adjustedVertexHeights[vertexIndex] = CellDatas[vertexIndex].Height;
-            return CellDatas[vertexIndex].Height;
-        }
+            // Get neighbors of this vertex to calculate the adjusted height
+            var neighbors = GetNeighborCellIndices(index).ToList();
+            var n = neighbors.Count;
 
-        // Loop subdivision weight formula: (1-n*beta) * original + beta * sum(neighbors)
-        // where beta = 1/n * (5/8 - (3/8 + 1/4 * cos(2*PI/n))^2)
-        double beta;
-        if (n == 3)
-            beta = 3.0 / 16.0;
-        else
-            beta = 3.0 / (8.0 * n);
+            if (n <= 2)
+                return CellDatas[index].Height;
 
-        // Calculate the sum of neighbor heights
-        double neighborSum = 0;
-        foreach (var neighbor in neighbors)
-            neighborSum += CellDatas[neighbor].Height;
+            // Loop subdivision weight formula: (1-n*beta) * original + beta * sum(neighbors)
+            // where beta = 1/n * (5/8 - (3/8 + 1/4 * cos(2*PI/n))^2)
+            double beta;
+            if (n == 3)
+                beta = 3.0 / 16.0;
+            else
+                beta = 3.0 / (8.0 * n);
 
-        // Calculate the adjusted height using Loop formula
-        var originalHeight = CellDatas[vertexIndex].Height;
-        var newHeight = (1 - n * beta) * originalHeight + beta * neighborSum;
+            // Calculate the sum of neighbor heights
+            double neighborSum = 0;
+            foreach (var neighbor in neighbors)
+                neighborSum += CellDatas[neighbor].Height;
 
-        _adjustedVertexHeights[vertexIndex] = newHeight;
-        return newHeight;
+            // Calculate the adjusted height using Loop formula
+            var originalHeight = CellDatas[index].Height;
+            return (1 - n * beta) * originalHeight + beta * neighborSum;
+        });
     }
 
     private (Vector2, double) GetOrCreateEdgeMidpoint(int i, int j)
@@ -60,19 +53,18 @@ public partial class WorldGenerator
 
         var key = (i, j);
 
-        if (_edgeMidpoints.TryGetValue(key, out var midpoint))
-        {
-            return (midpoint, _edgeMidpointHeights[key]);
-        }
+        // Attempt to get existing midpoint
+        if (_edgeMidpoints.TryGetValue(key, out var midpoint) &&
+            _edgeMidpointHeights.TryGetValue(key, out var height))
+            return (midpoint, height);
 
-        // Calculate the midpoint position
-        midpoint = (SamplePoints[i] + SamplePoints[j]) * 0.5f;
-        _edgeMidpoints[key] = midpoint;
+        // Calculate the midpoint position and height using Loop subdivision rules
+        var newMidpoint = (SamplePoints[i] + SamplePoints[j]) * 0.5f;
+        var newHeight = (CellDatas[i].Height + CellDatas[j].Height) * 0.5;
 
-        // Calculate the midpoint height using Loop subdivision rules
-        // For edge midpoints, we use 1/2 of each endpoint
-        var height = (CellDatas[i].Height + CellDatas[j].Height) * 0.5;
-        _edgeMidpointHeights[key] = height;
+        // Use GetOrAdd to ensure thread-safety for both dictionaries
+        midpoint = _edgeMidpoints.GetOrAdd(key, newMidpoint);
+        height = _edgeMidpointHeights.GetOrAdd(key, newHeight);
 
         return (midpoint, height);
     }
