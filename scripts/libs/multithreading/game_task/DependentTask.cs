@@ -58,8 +58,7 @@ public class DependentTask : GameTask
     /// <param name="task">The task that must complete before this task can execute.</param>
     public void AddDependency(GameTask task)
     {
-        if (task == null)
-            throw new ArgumentNullException(nameof(task));
+        ArgumentNullException.ThrowIfNull(task);
 
         if (State != TaskState.Created)
             throw new InvalidOperationException("Cannot add dependencies after the task has been queued.");

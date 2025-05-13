@@ -46,8 +46,7 @@ public class CompositeTask : GameTask
         if (_isBuilt)
             throw new InvalidOperationException("Cannot modify task structure after build has been called.");
 
-        if (task == null)
-            throw new ArgumentNullException(nameof(task));
+        ArgumentNullException.ThrowIfNull(task);
 
         if (task == this)
             throw new ArgumentException("A task cannot contain itself.", nameof(task));
@@ -74,11 +73,8 @@ public class CompositeTask : GameTask
         if (_isBuilt)
             throw new InvalidOperationException("Cannot modify task structure after build has been called.");
 
-        if (prerequisiteTask == null)
-            throw new ArgumentNullException(nameof(prerequisiteTask));
-
-        if (dependentTask == null)
-            throw new ArgumentNullException(nameof(dependentTask));
+        ArgumentNullException.ThrowIfNull(prerequisiteTask);
+        ArgumentNullException.ThrowIfNull(dependentTask);
 
         if (prerequisiteTask == dependentTask)
             throw new ArgumentException("A task cannot depend on itself.");
