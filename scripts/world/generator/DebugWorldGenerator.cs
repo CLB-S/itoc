@@ -2,7 +2,7 @@ using System;
 using Godot;
 using PatternSystem;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 // TODO: World without sample points.
 public class DebugWorldGenerator : WorldGenerator
@@ -48,17 +48,17 @@ public class DebugWorldGenerator : WorldGenerator
 
     protected override void InitializePipeline()
     {
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, InitializeResources));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingSamplePoints, GenerateSamplePoints));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingCellDatas, InitializeCellDatas));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.Initializing, InitializeResources));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.GeneratingSamplePoints, GenerateSamplePoints));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.InitializingCellDatas, InitializeCellDatas));
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, ApplyHeight));
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
 
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature,
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.AdjustingTemperature,
             AdjustTemperatureAccordingToHeight));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.SettingBiome, SetBiomes));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.SettingBiome, SetBiomes));
     }
 
     private void SetHeightForSamplePoints()
@@ -72,7 +72,7 @@ public class DebugWorldGenerator : WorldGenerator
 
     public override double[,] CalculateChunkHeightMap(Vector2I chunkColumnPos, Func<double, double, double> getHeight)
     {
-        if (State != GenerationState.Completed)
+        if (State != WorldGenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
         var rect = new Rect2I(chunkColumnPos * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);

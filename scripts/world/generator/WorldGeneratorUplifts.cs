@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public partial class WorldGenerator
 {

@@ -4,17 +4,17 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using PatternSystem;
 
-namespace WorldGenerator;
+namespace ITOC;
 
-public class GenerationStep
+public class WorldGenerationStep
 {
-    public GenerationState State { get; }
+    public WorldGenerationState State { get; }
     public Action Action { get; }
     public bool Optional { get; }
     public Func<bool> ShouldRepeat { get; }
-    public GenerationState? RepeatToState { get; }
+    public WorldGenerationState? RepeatToState { get; }
 
-    public GenerationStep(GenerationState state, Action action, bool optional = false)
+    public WorldGenerationStep(WorldGenerationState state, Action action, bool optional = false)
     {
         State = state;
         Action = action;
@@ -22,7 +22,7 @@ public class GenerationStep
         ShouldRepeat = () => false;
     }
 
-    public GenerationStep(GenerationState state, Action action, Func<bool> shouldRepeat, GenerationState repeatToState,
+    public WorldGenerationStep(WorldGenerationState state, Action action, Func<bool> shouldRepeat, WorldGenerationState repeatToState,
         bool optional = false)
     {
         State = state;
@@ -33,7 +33,7 @@ public class GenerationStep
     }
 }
 
-public enum GenerationState
+public enum WorldGenerationState
 {
     NotStarted,
     Initializing,
@@ -61,7 +61,7 @@ public partial class WorldGenerator
     public class GenerationProgressEventArgs : EventArgs
     {
         public string Message { get; set; }
-        public GenerationState CurrentState { get; set; }
+        public WorldGenerationState CurrentState { get; set; }
     }
 
     public event EventHandler<GenerationProgressEventArgs> ProgressUpdatedEvent;
@@ -69,9 +69,9 @@ public partial class WorldGenerator
     public event EventHandler GenerationCompletedEvent;
     public event EventHandler<Exception> GenerationFailedEvent;
 
-    public GenerationState State { get; private set; } = GenerationState.NotStarted;
+    public WorldGenerationState State { get; private set; } = WorldGenerationState.NotStarted;
 
-    protected readonly LinkedList<GenerationStep> _generationPipeline = new();
+    protected readonly LinkedList<WorldGenerationStep> _generationPipeline = new();
     private readonly Stopwatch _stopwatch = new();
     private readonly object _stateLock = new();
     private IdwInterpolator _heightMapInterpolator;
@@ -101,32 +101,32 @@ public partial class WorldGenerator
 
     protected virtual void InitializePipeline()
     {
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.Initializing, InitializeResources));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.GeneratingSamplePoints, GenerateSamplePoints));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingCellDatas, InitializeCellDatas));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.InitializingTectonics,
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.Initializing, InitializeResources));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.GeneratingSamplePoints, GenerateSamplePoints));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.InitializingCellDatas, InitializeCellDatas));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.InitializingTectonics,
             InitializeTectonicProperties));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingInitialUplifts,
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.CalculatingInitialUplifts,
             CalculateInitialUplifts));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.PropagatingUplifts, PropagateUplifts));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.PropagatingUplifts, PropagateUplifts));
 
         // Add the stream generation cycle
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.FindingRiverMouths, FindRiverMouths));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.PreparingStreamGraph, PrepareStreamGraph));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.FindingRiverMouths, FindRiverMouths));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.PreparingStreamGraph, PrepareStreamGraph));
         _generationPipeline.AddLast(
-            new GenerationStep(GenerationState.SolvingPowerEquation, SolvePowerEquation,
-                () => !_powerEquationConverged, GenerationState.PreparingStreamGraph));
+            new WorldGenerationStep(WorldGenerationState.SolvingPowerEquation, SolvePowerEquation,
+                () => !_powerEquationConverged, WorldGenerationState.PreparingStreamGraph));
 
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.CalculatingNormals, CalculateNormals));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.AdjustingTemperature,
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.AdjustingTemperature,
             AdjustTemperatureAccordingToHeight));
-        _generationPipeline.AddLast(new GenerationStep(GenerationState.SettingBiome, SetBiomes));
+        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.SettingBiome, SetBiomes));
         // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
     }
 
-    public void AddGenerationStepAfter(GenerationStep step, GenerationState afterState)
+    public void AddGenerationStepAfter(WorldGenerationStep step, WorldGenerationState afterState)
     {
-        if (State != GenerationState.NotStarted && State != GenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
             throw new InvalidOperationException("Cannot add steps after generation has started.");
 
         var node = _generationPipeline.First;
@@ -144,12 +144,12 @@ public partial class WorldGenerator
         throw new ArgumentException($"No step found with state {afterState}");
     }
 
-    public void AddGenerationStepBefore(GenerationStep step, GenerationState beforeState)
+    public void AddGenerationStepBefore(WorldGenerationStep step, WorldGenerationState beforeState)
     {
-        if (State != GenerationState.NotStarted && State != GenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
             throw new InvalidOperationException("Cannot add steps after generation has started.");
 
-        if (beforeState == GenerationState.Completed)
+        if (beforeState == WorldGenerationState.Completed)
         {
             _generationPipeline.AddLast(step);
             return;
@@ -170,9 +170,9 @@ public partial class WorldGenerator
         throw new ArgumentException($"No step found with state {beforeState}");
     }
 
-    public void RemoveGenerationStep(GenerationState state)
+    public void RemoveGenerationStep(WorldGenerationState state)
     {
-        if (State != GenerationState.NotStarted && State != GenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
             throw new InvalidOperationException("Cannot remove steps after generation has started.");
 
         var node = _generationPipeline.First;
@@ -194,10 +194,10 @@ public partial class WorldGenerator
         {
             lock (_stateLock)
             {
-                if (State == GenerationState.Completed)
+                if (State == WorldGenerationState.Completed)
                     ReportProgress("Warning: World generation has already been completed. Regenerating...");
 
-                State = GenerationState.Initializing;
+                State = WorldGenerationState.Initializing;
                 _powerEquationConverged = false;
                 _iterationCount = 0;
             }
@@ -239,7 +239,7 @@ public partial class WorldGenerator
         }
     }
 
-    private void UpdateState(GenerationState newState)
+    private void UpdateState(WorldGenerationState newState)
     {
         lock (_stateLock)
         {
@@ -259,14 +259,14 @@ public partial class WorldGenerator
     private void CompleteGeneration()
     {
         _stopwatch.Stop();
-        UpdateState(GenerationState.Completed);
+        UpdateState(WorldGenerationState.Completed);
         ReportProgress("Generation completed");
         GenerationCompletedEvent?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleError(Exception ex)
     {
-        UpdateState(GenerationState.Failed);
+        UpdateState(WorldGenerationState.Failed);
         GenerationFailedEvent?.Invoke(this, ex);
     }
 }

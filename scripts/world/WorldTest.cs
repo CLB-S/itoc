@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
+using ITOC;
 using Array = Godot.Collections.Array;
-
-namespace WorldGenerator;
 
 public partial class WorldTest : Node2D
 {
@@ -120,7 +119,7 @@ public partial class WorldTest : Node2D
     public override void _Input(InputEvent @event)
     {
         if (@event is InputEventMouseButton mouseButtonEvent)
-            if (mouseButtonEvent.IsPressed() && _worldGenerator.State == GenerationState.Completed)
+            if (mouseButtonEvent.IsPressed() && _worldGenerator.State == WorldGenerationState.Completed)
             {
                 var mousePos = GetGlobalMousePosition();
                 if (!DrawingRect.HasPoint(mousePos)) return;
@@ -299,7 +298,7 @@ public partial class WorldTest : Node2D
         // }
 
         // Testing `GetTriangleContainingPoint` and `GetNeighborCellIndices`
-        // if (_worldGenerator.State == GenerationState.Completed)
+        // if (_worldGenerator.State == WorldGenerationState.Completed)
         // {
         //     var nearestNeighbor = _worldGenerator.GetCellDatasNearby(new Vector2(0, 0), 1).ToArray();
         //     var nearestId = nearestNeighbor[0].Index;
@@ -330,7 +329,7 @@ public partial class WorldTest : Node2D
             }
 
         // Draw stream graph
-        if (DrawRivers && _worldGenerator.State == GenerationState.Completed)
+        if (DrawRivers && _worldGenerator.State == WorldGenerationState.Completed)
         {
             // Access the stream graph data from the world generator
             var streamGraph = _worldGenerator.StreamGraph;
@@ -391,7 +390,7 @@ public partial class WorldTest : Node2D
         }
 
         // Draw wind vectors
-        if (DrawWinds && _worldGenerator.State == GenerationState.Completed)
+        if (DrawWinds && _worldGenerator.State == WorldGenerationState.Completed)
         {
             var windSettings = new WindSettings();
             using var rng = new RandomNumberGenerator();
@@ -463,7 +462,7 @@ public partial class WorldTest : Node2D
 
     public void OnGenerateHeightMapButtonPressed()
     {
-        if (_worldGenerator.State == GenerationState.Completed)
+        if (_worldGenerator.State == WorldGenerationState.Completed)
             GenerateFullHeightMap();
     }
 
@@ -488,7 +487,7 @@ public partial class WorldTest : Node2D
 
     public void OnStartGameButtonPressed()
     {
-        if (_worldGenerator.State == GenerationState.Completed)
+        if (_worldGenerator.State == WorldGenerationState.Completed)
         {
             StartGameButton.Disabled = true;
             Core.Instance.GotoWorldScene();

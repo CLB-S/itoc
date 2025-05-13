@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Godot;
+using ITOC;
 using ITOC.Multithreading;
 
 public enum GameState
@@ -16,8 +17,9 @@ public partial class Core : Node
 
     public Node CurrentScene { get; set; }
     public GameState State { get; set; } = GameState.StartScreen;
-    public WorldGenerator.WorldGenerator WorldGenerator { get; private set; }
+    public WorldGenerator WorldGenerator { get; private set; }
     public TaskManager TaskManager { get; private set; }
+    public World CurrentWorld { get; private set; }
 
     public static Core Instance { get; private set; }
 
@@ -35,12 +37,12 @@ public partial class Core : Node
         Settings.ApplyGraphicsSettings();
         GetWindow().MoveToCenter();
 
-        WorldGenerator = new WorldGenerator.WorldGenerator(WorldSettings);
+        WorldGenerator = new WorldGenerator(WorldSettings);
         TaskManager = TaskManager.Instance;
         TaskManager.Initialize(TaskManagerConfig.Production());
     }
 
-    public void GenerateWorldAndStartGame(WorldGenerator.WorldGenerator worldGenerator = null)
+    public void GenerateWorldAndStartGame(WorldGenerator worldGenerator = null)
     {
         if (worldGenerator != null)
             WorldGenerator = worldGenerator;

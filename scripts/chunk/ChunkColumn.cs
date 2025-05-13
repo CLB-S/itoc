@@ -18,7 +18,7 @@ public class ChunkColumn
 
     public double HeightMapHigh;
     public double HeightMapLow;
-    public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
+    public readonly ConcurrentDictionary<Vector3I, ChunkNode> Chunks = new();
 
     // Biome map storage using Palette system
     private readonly PaletteStorage<Biome> _biomePaletteStorage;

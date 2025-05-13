@@ -83,7 +83,7 @@ public class ChunkColumnGenerationInitialPass : IPass
                                           && playerPosition.DistanceTo(positionXZ) <=
                                           Core.Instance.Settings.RenderDistance)
         {
-            var chunk = new Chunk(result);
+            var chunk = new ChunkNode(result);
             World.Chunks[position] = chunk;
             chunkColumn.Chunks[position] = chunk;
             // CallDeferred(Node.MethodName.AddChild, chunk);

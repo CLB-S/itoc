@@ -1,7 +1,7 @@
 using DelaunatorSharp;
 using Godot;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public class CellData
 {

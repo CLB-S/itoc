@@ -3,13 +3,13 @@ using System.Linq;
 using Godot;
 using Palette;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public partial class WorldGenerator
 {
     public virtual double[,] CalculateChunkHeightMap(Vector2I chunkColumnPos, Func<double, double, double> getHeight)
     {
-        if (State != GenerationState.Completed)
+        if (State != WorldGenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
         var rect = new Rect2I(chunkColumnPos * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);

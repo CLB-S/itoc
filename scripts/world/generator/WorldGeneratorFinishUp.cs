@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public partial class WorldGenerator
 {

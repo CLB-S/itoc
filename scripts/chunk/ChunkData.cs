@@ -3,9 +3,7 @@ using Palette;
 
 public class ChunkData
 {
-    public readonly int X;
-    public readonly int Y;
-    public readonly int Z;
+    public readonly Vector3I Position;
 
     /// <summary>
     ///     Mask for opaque blocks.
@@ -24,9 +22,7 @@ public class ChunkData
 
     public ChunkData(int x, int y, int z)
     {
-        X = x;
-        Y = y;
-        Z = z;
+        Position = new Vector3I(x, y, z);
 
         var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
         _paletteStorage = new PaletteStorage<Block>(palette);
@@ -38,17 +34,17 @@ public class ChunkData
 
     public Vector3I GetPosition()
     {
-        return new Vector3I(X, Y, Z);
+        return Position;
     }
 
     public Vector2I GetChunkColumnPosition()
     {
-        return new Vector2I(X, Z);
+        return new Vector2I(Position.X, Position.Z);
     }
 
     public ChunkColumn GetChunkColumn()
     {
-        return World.Instance.GetChunkColumn(GetChunkColumnPosition());
+        return Core.Instance.CurrentWorld.GetChunkColumn(GetChunkColumnPosition());
     }
 
     public Block GetBlock(int axis, int a, int b, int c)

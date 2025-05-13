@@ -5,7 +5,7 @@ using System.Linq;
 using Godot;
 using PatternSystem;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public partial class WorldGenerator
 {
@@ -196,7 +196,7 @@ public partial class WorldGenerator
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
         int upscaleLevel = 2)
     {
-        if (State != GenerationState.Completed)
+        if (State != WorldGenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
         return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, (x, y) => GetRawHeight(x, y),

@@ -4,7 +4,7 @@ using System.Linq;
 using DelaunatorSharp;
 using Godot;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public partial class WorldGenerator
 {
@@ -191,7 +191,7 @@ public partial class WorldGenerator
     /// <returns>An enumerable of the nearest cell data</returns>
     public IEnumerable<CellData> GetCellDatasNearby(double x, double y, int numNeighbors = 1)
     {
-        if (State != GenerationState.Completed)
+        if (State != WorldGenerationState.Completed)
             throw new InvalidOperationException("Cell datas are not initialized yet.");
 
         var mappedX = 2 * Mathf.Pi * x / Settings.Bounds.Size.X;

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using DelaunatorSharp;
 using Godot;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 // By make some steps parallel, total time is reduced about 10%.
 public partial class WorldGenerator

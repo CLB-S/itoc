@@ -1,5 +1,5 @@
 using Godot;
-using WorldGenerator;
+using ITOC;
 
 public partial class GuiStartScreen : Node
 {

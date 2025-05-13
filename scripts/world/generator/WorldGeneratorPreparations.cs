@@ -5,7 +5,7 @@ using Godot;
 using PatternSystem;
 using Supercluster.KDTree;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public partial class WorldGenerator
 {

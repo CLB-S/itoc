@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Godot;
 
-namespace WorldGenerator;
+namespace ITOC;
 
 public enum PlateType
 {
