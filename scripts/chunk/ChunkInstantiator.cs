@@ -4,7 +4,7 @@ using Godot;
 using ITOC;
 using ITOC.Libs.NodePool;
 
-public partial class ChunkRenderer : Node3D
+public partial class ChunkInstantiator : Node3D
 {
     public ConcurrentDictionary<Vector3I, ChunkMesh> ChunkMeshes { get; private set; } = new();
 

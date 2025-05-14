@@ -15,7 +15,7 @@ public partial class WorldNode : Node
     private PlayerController _player;
     private bool _playerSpawned; // TODO: Spawn player. Implement `GetHeight(Vector2 pos)`
 
-    private ChunkRenderer _chunkRenderer;
+    private ChunkInstantiator _chunkInstantiator;
 
 
     public override void _Ready()
@@ -26,12 +26,12 @@ public partial class WorldNode : Node
 
         _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
 
-        _chunkRenderer = new ChunkRenderer();
-        AddChild(_chunkRenderer);
+        _chunkInstantiator = new ChunkInstantiator();
+        AddChild(_chunkInstantiator);
 
-        World.OnPlayerMovedHalfAChunk += (s, pos) => _chunkRenderer.UpdatePlayerPosition(pos);
-        World.OnChunkGenerated += (s, chunk) => _chunkRenderer.AddChunk(chunk);
-        World.OnChunkMeshUpdated += (s, chunk) => _chunkRenderer.QueueChunkForUpdate(chunk);
+        World.OnPlayerMovedHalfAChunk += (s, pos) => _chunkInstantiator.UpdatePlayerPosition(pos);
+        World.OnChunkGenerated += (s, chunk) => _chunkInstantiator.AddChunk(chunk);
+        World.OnChunkMeshUpdated += (s, chunk) => _chunkInstantiator.QueueChunkForUpdate(chunk);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -41,7 +41,7 @@ public partial class WorldNode : Node
 
     public override void _Process(double delta)
     {
-        _chunkRenderer.UpdateRendering();
+        _chunkInstantiator.UpdateRendering();
     }
 
     public void SpawnDebugCube(Vector3I pos)
