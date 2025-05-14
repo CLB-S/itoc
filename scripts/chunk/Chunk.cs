@@ -1,7 +1,7 @@
 using Godot;
 using Palette;
 
-public class ChunkData
+public class Chunk
 {
     public readonly Vector3I Position;
 
@@ -16,11 +16,11 @@ public class ChunkData
     // Lock object for thread synchronization
     private readonly object _lockObject = new object();
 
-    private ChunkData()
+    private Chunk()
     {
     }
 
-    public ChunkData(int x, int y, int z)
+    public Chunk(int x, int y, int z)
     {
         Position = new Vector3I(x, y, z);
 
@@ -28,7 +28,7 @@ public class ChunkData
         _paletteStorage = new PaletteStorage<Block>(palette);
     }
 
-    public ChunkData(Vector3I pos) : this(pos.X, pos.Y, pos.Z)
+    public Chunk(Vector3I pos) : this(pos.X, pos.Y, pos.Z)
     {
     }
 
