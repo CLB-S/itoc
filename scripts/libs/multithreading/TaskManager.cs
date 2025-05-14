@@ -361,6 +361,9 @@ public class TaskManager : IDisposable
         {
             Interlocked.Increment(ref _totalTasksCompleted);
 
+            if (_config.VerboseLogging)
+                GD.Print($"Task '{task.Name}' completed successfully in {((TimeSpan)task.ExecutionTime).TotalMilliseconds} ms.");
+
             // Check if there are any dependent tasks waiting on this task
             CheckAndEnqueueDependentTasks(task);
         }
