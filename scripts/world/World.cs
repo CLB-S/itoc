@@ -66,7 +66,6 @@ public class World
             OnChunkGenerated?.Invoke(this, chunk);
             chunk.OnBlockUpdated += OnChunkBlockUpdated;
             chunk.OnMeshUpdated += (s, e) => OnChunkMeshUpdated?.Invoke(this, chunk);
-            GD.Print("Chunk ready: " + chunk.Position);
         }
     }
 
