@@ -41,7 +41,7 @@ public partial class WorldNode : Node
 
     public override void _Process(double delta)
     {
-        _chunkInstantiator.UpdateRendering();
+        _chunkInstantiator.UpdateInstances();
     }
 
     public void SpawnDebugCube(Vector3I pos)
