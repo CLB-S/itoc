@@ -15,6 +15,7 @@ public class ChunkMesh
     public ChunkMeshState State { get; set; } = ChunkMeshState.Created;
     public Mesh Mesh { get; set; }
     public MeshInstance3D MeshInstance { get; set; }
+    public StaticBody3D CollisionBody { get; set; }
 
     public int LodLevel { get; private set; }
     public Vector3I Index { get; private set; }
