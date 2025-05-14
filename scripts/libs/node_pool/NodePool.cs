@@ -13,6 +13,7 @@ public class NodePool<T>
     where T : Node
 {
     private readonly PackedScene _scene;
+    private readonly Func<T> _nodeFactory;
     private readonly Node _parent;
     private readonly Queue<T> _inactiveNodes = new();
     private readonly HashSet<T> _activeNodes = new();
@@ -94,7 +95,7 @@ public class NodePool<T>
         Action<T> resetAction = null,
         Action<T> initializeAction = null)
     {
-        ArgumentNullException.ThrowIfNull(nodeFactory);
+        _nodeFactory = nodeFactory ?? throw new ArgumentNullException(nameof(nodeFactory));
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
         _initialSize = Math.Max(0, initialSize);
         _maxSize = maxSize > 0 ? maxSize : 0;
@@ -117,7 +118,7 @@ public class NodePool<T>
     /// <param name="count">Number of instances to create</param>
     public void PrewarmPool(int count)
     {
-        if (_scene == null) return;
+        if (_scene == null && _nodeFactory == null) return;
 
         for (int i = 0; i < count; i++)
         {
@@ -239,9 +240,10 @@ public class NodePool<T>
 
     private T CreateNewInstance()
     {
-        if (_scene == null) throw new InvalidOperationException("Cannot create instance: no scene provided.");
+        if (_scene == null && _nodeFactory == null)
+            throw new InvalidOperationException("Cannot create instance: no scene or factory provided.");
 
-        var instance = _scene.Instantiate<T>();
+        var instance = _scene != null ? _scene.Instantiate<T>() : _nodeFactory();
         PrepareNodeForPool(instance);
         return instance;
     }
