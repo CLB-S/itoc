@@ -17,7 +17,6 @@ public partial class WorldNode : Node
 
     private ChunkRenderer _chunkRenderer;
 
-    private ConcurrentDictionary<Vector3I, Chunk> _chunksToUpdateMesh = new();
 
     public override void _Ready()
     {
@@ -32,7 +31,7 @@ public partial class WorldNode : Node
 
         World.OnPlayerMovedHalfAChunk += (s, pos) => _chunkRenderer.UpdatePlayerPosition(pos);
         World.OnChunkGenerated += (s, chunk) => _chunkRenderer.AddChunk(chunk);
-        World.OnChunkMeshUpdated += (s, chunk) => _chunksToUpdateMesh.TryAdd(chunk.Position, chunk);
+        World.OnChunkMeshUpdated += (s, chunk) => _chunkRenderer.QueueChunkForUpdate(chunk);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -42,12 +41,7 @@ public partial class WorldNode : Node
 
     public override void _Process(double delta)
     {
-        // Update chunk meshes and remove them from the dictionary
-        foreach (var chunk in _chunksToUpdateMesh)
-            _chunkRenderer.UpdateChunk(chunk.Value);
-        _chunksToUpdateMesh.Clear();
-
-        _chunkRenderer.RenderAll();
+        _chunkRenderer.UpdateRendering();
     }
 
     public void SpawnDebugCube(Vector3I pos)
