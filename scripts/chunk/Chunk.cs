@@ -1,16 +1,45 @@
+using System;
 using Godot;
 using Palette;
+
+namespace ITOC;
+
+public class OnBlockUpdatedEventArgs : EventArgs
+{
+    public Vector3I UpdatePosition { get; private set; }
+    public Block UpdateSourceBlock { get; private set; }
+    public Block UpdateTargetBlock { get; private set; }
+
+    public OnBlockUpdatedEventArgs(Vector3I updatePosition, Block updateSourceBlock, Block updateTargetBlock)
+    {
+        UpdatePosition = updatePosition;
+        UpdateSourceBlock = updateSourceBlock;
+        UpdateTargetBlock = updateTargetBlock;
+    }
+}
+
+public enum ChunkState
+{
+    Created,
+    Ready
+}
 
 public class Chunk
 {
     public readonly Vector3I Position;
+    public ChunkState State { get; set; }
+    public Vector3 WorldPosition => Position * ChunkMesher.CS;
+    public Vector3 CenterPosition => Position * ChunkMesher.CS + Vector3I.One * (ChunkMesher.CS / 2);
+
+    public event EventHandler<OnBlockUpdatedEventArgs> OnBlockUpdated;
+    public event EventHandler OnMeshUpdated;
 
     /// <summary>
     ///     Mask for opaque blocks.
     /// </summary>
-    public ulong[] OpaqueMask = new ulong[ChunkMesher.CS_P2];
+    private readonly ulong[] _opaqueMask = new ulong[ChunkMesher.CS_P2];
 
-    public ulong[] TransparentMasks;
+    private ulong[] _transparentMasks;
     private readonly PaletteStorage<Block> _paletteStorage;
 
     // Lock object for thread synchronization
@@ -26,17 +55,15 @@ public class Chunk
 
         var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
         _paletteStorage = new PaletteStorage<Block>(palette);
+
+        State = ChunkState.Created;
     }
 
     public Chunk(Vector3I pos) : this(pos.X, pos.Y, pos.Z)
     {
     }
 
-    public Vector3I GetPosition()
-    {
-        return Position;
-    }
-
+    #region Get
     public Vector2I GetChunkColumnPosition()
     {
         return new Vector2I(Position.X, Position.Z);
@@ -70,6 +97,31 @@ public class Chunk
             return _paletteStorage.Get(index);
     }
 
+    public Mesh GetMesh()
+    {
+        if (State != ChunkState.Ready)
+            throw new InvalidOperationException("Chunk is not ready.");
+
+        var meshData = new ChunkMesher.MeshData(_opaqueMask, _transparentMasks);
+        ChunkMesher.MeshChunk(this, meshData);
+        return ChunkMesher.GenerateMesh(meshData);
+    }
+
+    public int GetBytes()
+    {
+        lock (_lockObject)
+            return _paletteStorage.GetStorageSize() * sizeof(ulong) +
+                   _opaqueMask.Length * sizeof(ulong);
+    }
+
+    public double GetDistanceTo(Vector3 pos)
+    {
+        return CenterPosition.DistanceTo(pos);
+    }
+
+    #endregion
+
+    #region Set
     public void SetBlock(int x, int y, int z, string blockId)
     {
         var block = BlockManager.Instance.GetBlock(blockId);
@@ -86,9 +138,16 @@ public class Chunk
         lock (_lockObject)
         {
             var index = ChunkMesher.GetBlockIndex(x, y, z);
-            _paletteStorage.Set(index, block);
+            var oldBlock = _paletteStorage.Get(index);
+            if (oldBlock == block)
+                return;
 
+            _paletteStorage.Set(index, block);
             SetMesherMask(x + 1, y + 1, z + 1, block);
+
+            if (State == ChunkState.Ready)
+                OnBlockUpdated?.Invoke(this,
+                    new OnBlockUpdatedEventArgs(new Vector3I(x, y, z), oldBlock, block));
         }
     }
 
@@ -97,16 +156,18 @@ public class Chunk
         lock (_lockObject)
         {
             if (block == null || !block.IsOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(OpaqueMask, x, y, z);
+                ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
             else
-                ChunkMesher.AddOpaqueVoxel(OpaqueMask, x, y, z);
+                ChunkMesher.AddOpaqueVoxel(_opaqueMask, x, y, z);
 
             if (block != null && !block.IsOpaque)
             {
-                TransparentMasks ??= new ulong[ChunkMesher.CS_P2];
-
-                ChunkMesher.AddOpaqueVoxel(TransparentMasks, x, y, z);
+                _transparentMasks ??= new ulong[ChunkMesher.CS_P2];
+                ChunkMesher.AddOpaqueVoxel(_transparentMasks, x, y, z);
             }
+
+            if (State == ChunkState.Ready)
+                OnMeshUpdated?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -115,10 +176,5 @@ public class Chunk
         SetBlock(pos.X, pos.Y, pos.Z, block);
     }
 
-    public int GetBytes()
-    {
-        lock (_lockObject)
-            return _paletteStorage.GetStorageSize() * sizeof(ulong) +
-                   OpaqueMask.Length * sizeof(ulong);
-    }
+    #endregion
 }

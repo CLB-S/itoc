@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Godot;
 
-namespace ITOC.Chunks;
+namespace ITOC.ChunkGeneration;
 
 public class ChunkMultiPassGenerator
 {
@@ -16,7 +16,7 @@ public class ChunkMultiPassGenerator
     /// </summary>
     public event EventHandler<PassEventArgs> PassAccessible;
     public event EventHandler<PassEventArgs> PassFullyCompleted;
-    public event EventHandler<Vector2I> ChunkColumnCompleted;
+    public event EventHandler<Vector2I> AllPassesCompleted;
 
     private readonly IPass[] _passes;
     private readonly Dictionary<Vector2I, int[]> _multiPassMarkers = new();
@@ -54,15 +54,12 @@ public class ChunkMultiPassGenerator
                 }
                 else
                 {
-                    lock (_lock)
-                    {
-                        for (var i = -extend; i <= extend; i++)
-                            for (var j = -extend; j <= extend; j++)
-                            {
-                                var chunkPos = args.ChunkColumnPos + new Vector2I(i, j);
-                                IncreaseMultiPassCompletionMarker(chunkPos, args.Pass);
-                            }
-                    }
+                    for (var i = -extend; i <= extend; i++)
+                        for (var j = -extend; j <= extend; j++)
+                        {
+                            var chunkPos = args.ChunkColumnPos + new Vector2I(i, j);
+                            IncreaseMultiPassCompletionMarker(chunkPos, args.Pass);
+                        }
                 }
             };
         }
@@ -74,7 +71,7 @@ public class ChunkMultiPassGenerator
                 lock (_lock)
                     _multiPassMarkers.Remove(args.ChunkColumnPos, out _);
 
-                ChunkColumnCompleted?.Invoke(this, args.ChunkColumnPos);
+                AllPassesCompleted?.Invoke(this, args.ChunkColumnPos);
                 return;
             }
 

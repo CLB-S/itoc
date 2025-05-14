@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using ITOC.Multithreading;
 
-namespace ITOC.Chunks;
+namespace ITOC.ChunkGeneration;
 
 public class ChunkColumnGenerationInitialPass : IPass
 {
@@ -20,12 +20,12 @@ public class ChunkColumnGenerationInitialPass : IPass
         World = world ?? throw new ArgumentNullException(nameof(world));
     }
 
-
     public void ExecuteAt(Vector2I chunkColumnPos)
     {
         var columnTask = new FunctionTask<ChunkColumn>(
             () => World.Generator.GenerateChunkColumn(chunkColumnPos),
-            ChunkColumnGenerationCallback
+            ChunkColumnGenerationCallback,
+            "ChunkColumnGenerationTask-" + chunkColumnPos
         );
 
         // var columnTask = new ChunkColumnGenerationTask(Generator, pos, ChunkColumnGenerationCallback);
@@ -49,18 +49,15 @@ public class ChunkColumnGenerationInitialPass : IPass
                 var chunkPos = new Vector3I(result.Position.X, y, result.Position.Y);
                 if (World.Chunks.ContainsKey(chunkPos)) continue;
 
-                // var createCollisionShape = chunkPos.DistanceTo(World.PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                // var request = new ChunkGenerationRequest(Generator, chunkPos, result, ChunkGenerationCallback,
-                //     createCollisionShape);
-                // _chunkFactory.Enqueue(request);
-
-                var chunkTask = new ChunkGenerationTask(World.Generator, chunkPos, result, ChunkGenerationCallback);
+                var chunkTask = new ChunkGenerationTask(World.Generator, chunkPos, result,
+                    ChunkGenerationCallback, "ChunkGenerationTask-" + chunkPos);
                 tasks.Add(chunkTask);
                 Core.Instance.TaskManager.EnqueueTask(chunkTask);
             }
 
             var dependentTask = new DependentTask(
                 () => PassCompleted?.Invoke(this, new PassEventArgs(Pass, result.Position))
+                , "ChunkColumnGenerationInitialPass-" + result.Position
                 , dependencies: tasks.ToArray()
             );
 
@@ -68,26 +65,19 @@ public class ChunkColumnGenerationInitialPass : IPass
         }
     }
 
-    public void ChunkGenerationCallback(ChunkData result)
+    private void ChunkGenerationCallback(Chunk result)
     {
         if (result == null) return;
 
-        // var currentPlayerPos = GetPlayerPosition();
-        // var currentCenter = WorldToChunkPosition(currentPlayerPos);
-        // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Core.Instance.Settings.LoadDistance) return;
-
-        var position = result.GetPosition();
+        var position = result.Position;
         var positionXZ = new Vector2I(position.X, position.Z);
-        var playerPosition = new Vector2I(World.PlayerChunk.X, World.PlayerChunk.Z);
-        if (!World.Chunks.ContainsKey(position) && World.ChunkColumns.TryGetValue(positionXZ, out var chunkColumn)
-                                          && playerPosition.DistanceTo(positionXZ) <=
-                                          Core.Instance.Settings.RenderDistance)
+        // var playerPosition = new Vector2I(World.PlayerChunk.X, World.PlayerChunk.Z);
+        if (!World.Chunks.ContainsKey(position) && World.ChunkColumns.TryGetValue(positionXZ, out var chunkColumn))
         {
-            var chunk = new ChunkNode(result);
-            World.Chunks[position] = chunk;
-            chunkColumn.Chunks[position] = chunk;
+            World.Chunks[position] = result;
+            chunkColumn.Chunks[position] = result;
             // CallDeferred(Node.MethodName.AddChild, chunk);
-            World.UpdateNeighborMesherMasks(chunk);
+            // World.UpdateNeighborMesherMasks(chunk);
             // chunk.LoadDeferred();
         }
     }

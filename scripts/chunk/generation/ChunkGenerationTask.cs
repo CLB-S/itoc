@@ -3,21 +3,21 @@ using System.Threading;
 using Godot;
 using ITOC.Multithreading;
 
-namespace ITOC.Chunks;
+namespace ITOC.ChunkGeneration;
 
 public class ChunkGenerationTask : GameTask
 {
     public readonly WorldGenerator WorldGenerator;
     public Vector3I ChunkPosition { get; }
     public ChunkColumn ChunkColumn { get; }
-    public Action<ChunkData> Callback { get; }
-    private readonly ChunkData _chunkData;
+    public Action<Chunk> Callback { get; }
+    private readonly Chunk _chunk;
 
     public ChunkGenerationTask(
         WorldGenerator worldGenerator,
         Vector3I position,
         ChunkColumn chunkColumn,
-        Action<ChunkData> callback = null,
+        Action<Chunk> callback = null,
         string name = null,
         TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
@@ -26,13 +26,13 @@ public class ChunkGenerationTask : GameTask
         ChunkPosition = position;
         ChunkColumn = chunkColumn;
         Callback = callback;
-        _chunkData = new ChunkData(ChunkPosition);
+        _chunk = new Chunk(ChunkPosition);
     }
 
     protected override void ExecuteCore(CancellationToken cancellationToken)
     {
         SetBlocksByHeightMap();
-        Callback?.Invoke(_chunkData);
+        Callback?.Invoke(_chunk);
     }
 
     private void SetBlocksByHeightMap()
@@ -52,11 +52,11 @@ public class ChunkGenerationTask : GameTask
                     if (actualY <= height)
                     {
                         var blockType = DetermineBlockType(actualY, height, 0, 4);
-                        _chunkData.SetBlock(x, y, z, blockType);
+                        _chunk.SetBlock(x, y, z, blockType);
                     }
                     else if (actualY <= 0)
                     {
-                        _chunkData.SetBlock(x, y, z, "water");
+                        _chunk.SetBlock(x, y, z, "water");
                     }
                 }
             }

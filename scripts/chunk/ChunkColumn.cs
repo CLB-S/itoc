@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using ITOC;
 using Palette;
 
 public class ChunkColumn
@@ -18,7 +19,7 @@ public class ChunkColumn
 
     public double HeightMapHigh;
     public double HeightMapLow;
-    public readonly ConcurrentDictionary<Vector3I, ChunkNode> Chunks = new();
+    public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
 
     // Biome map storage using Palette system
     private readonly PaletteStorage<Biome> _biomePaletteStorage;

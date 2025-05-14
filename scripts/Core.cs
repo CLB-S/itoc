@@ -19,7 +19,7 @@ public partial class Core : Node
     public GameState State { get; set; } = GameState.StartScreen;
     public WorldGenerator WorldGenerator { get; private set; }
     public TaskManager TaskManager { get; private set; }
-    public World CurrentWorld { get; private set; }
+    public World CurrentWorld { get; set; }
 
     public static Core Instance { get; private set; }
 
@@ -39,7 +39,8 @@ public partial class Core : Node
 
         WorldGenerator = new WorldGenerator(WorldSettings);
         TaskManager = TaskManager.Instance;
-        TaskManager.Initialize(TaskManagerConfig.Production());
+        TaskManager.Initialize(TaskManagerConfig.Development());
+        // TaskManager.Initialize(TaskManagerConfig.Development());
     }
 
     public void GenerateWorldAndStartGame(WorldGenerator worldGenerator = null)

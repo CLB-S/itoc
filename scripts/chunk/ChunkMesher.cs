@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Godot;
+using ITOC;
 using Array = Godot.Collections.Array;
 using Vector2 = Godot.Vector2;
 using Vector3 = Godot.Vector3;
+
+namespace ITOC;
 
 public static class ChunkMesher
 {
@@ -55,7 +58,7 @@ public static class ChunkMesher
     }
 
 
-    public static void MeshChunk(ChunkData chunkData, MeshData meshData)
+    public static void MeshChunk(Chunk chunk, MeshData meshData)
     {
         meshData.Quads.Clear();
         meshData.QuadBlocks.Clear();
@@ -128,11 +131,11 @@ public static class ChunkMesher
                     while (bitsHere != 0)
                     {
                         var bitPos = BitOperations.TrailingZeroCount(bitsHere);
-                        var block = chunkData.GetBlock(axis, forward, bitPos, layer);
+                        var block = chunk.GetBlock(axis, forward, bitPos, layer);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[bitPos];
 
                         if ((bitsNext & (1UL << bitPos)) != 0 &&
-                            block == chunkData.GetBlock(axis, forward + 1, bitPos, layer))
+                            block == chunk.GetBlock(axis, forward + 1, bitPos, layer))
                         {
                             forwardMergedRef++;
                             bitsHere &= ~(1UL << bitPos);
@@ -143,7 +146,7 @@ public static class ChunkMesher
                         {
                             if ((bitsHere & (1UL << right)) == 0 ||
                                 forwardMergedRef != meshData.ForwardMerged[right] ||
-                                block != chunkData.GetBlock(axis, forward, right, layer))
+                                block != chunk.GetBlock(axis, forward, right, layer))
                                 break;
 
                             meshData.ForwardMerged[right] = 0;
@@ -214,13 +217,13 @@ public static class ChunkMesher
                         var bitPos = BitOperations.TrailingZeroCount(bitsHere);
                         bitsHere &= ~(1UL << bitPos);
 
-                        var block = chunkData.GetBlock(axis, right, forward, bitPos - 1);
+                        var block = chunk.GetBlock(axis, right, forward, bitPos - 1);
                         ref var forwardMergedRef = ref meshData.ForwardMerged[rightCS + (bitPos - 1)];
                         ref var rightMergedRef = ref meshData.RightMerged[bitPos - 1];
 
                         if (rightMergedRef == 0 &&
                             (bitsForward & (1UL << bitPos)) != 0 &&
-                            block == chunkData.GetBlock(axis, right, forward + 1, bitPos - 1))
+                            block == chunk.GetBlock(axis, right, forward + 1, bitPos - 1))
                         {
                             forwardMergedRef++;
                             continue;
@@ -228,7 +231,7 @@ public static class ChunkMesher
 
                         if ((bitsRight & (1UL << bitPos)) != 0 &&
                             forwardMergedRef == meshData.ForwardMerged[rightCS + CS + (bitPos - 1)] &&
-                            block == chunkData.GetBlock(axis, right + 1, forward, bitPos - 1))
+                            block == chunk.GetBlock(axis, right + 1, forward, bitPos - 1))
                         {
                             forwardMergedRef = 0;
                             rightMergedRef++;
