@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace ITOC;
@@ -6,6 +7,7 @@ public enum ChunkMeshState
 {
     Created,
     Ready,
+    ToRender,
     Rendered,
     NeedUpdate,
 }
@@ -20,6 +22,7 @@ public class ChunkMesh
     public int Lod { get; private set; }
     public Vector3I Index { get; private set; }
     public Vector3 Position => Index * ChunkMesher.CS * (1 << Lod);
+    public Vector3 CenterPosition => Position + Vector3I.One * (ChunkMesher.CS * (1 << Lod) / 2);
 
     public ChunkMesh(Vector3I index, Mesh mesh, int lod = 0)
     {

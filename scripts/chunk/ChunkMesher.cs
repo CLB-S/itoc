@@ -60,7 +60,7 @@ public static class ChunkMesher
     /// <summary>
     /// Calculate MeshData according to the chunk data.
     /// </summary>
-    public static void MeshChunk(IChunkData chunk, MeshData meshData)
+    public static void MeshChunk(Chunk chunk, MeshData meshData)
     {
         meshData.Quads.Clear();
         meshData.QuadBlocks.Clear();
@@ -303,6 +303,8 @@ public static class ChunkMesher
     private static void ParseQuad(Direction dir, Block block, ulong quad, int lod,
         Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
+        if (block == null) return; // TODO: Shouldn't be null 
+
         var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
         if (!surfaceArrayDict.ContainsKey(blockDirPair))
             surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
@@ -346,7 +348,9 @@ public static class ChunkMesher
 
         var offset = 0.0014f;
 
-        // 标准UV映射
+        h >>= lod;
+        w >>= lod;
+
         if (dir == Direction.PositiveZ ||
             dir == Direction.NegativeZ ||
             dir == Direction.NegativeY)

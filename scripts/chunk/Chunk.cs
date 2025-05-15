@@ -24,12 +24,14 @@ public enum ChunkState
     Ready
 }
 
-public class Chunk : IChunkData
+public class Chunk
 {
-    public Vector3I Index { get; private set; }
+    public Vector3I Index { get; protected set; }
     public ChunkState State { get; set; }
     public Vector3 WorldPosition => Index * ChunkMesher.CS;
     public Vector3 CenterPosition => Index * ChunkMesher.CS + Vector3I.One * (ChunkMesher.CS / 2);
+
+    public int Lod { get; protected set; } = 0;
 
     public event EventHandler<OnBlockUpdatedEventArgs> OnBlockUpdated;
     public event EventHandler OnMeshUpdated;
@@ -37,17 +39,13 @@ public class Chunk : IChunkData
     /// <summary>
     ///     Mask for opaque blocks.
     /// </summary>
-    private readonly ulong[] _opaqueMask = new ulong[ChunkMesher.CS_P2];
+    protected readonly ulong[] _opaqueMask = new ulong[ChunkMesher.CS_P2];
 
-    private ulong[] _transparentMasks;
-    private readonly PaletteStorage<Block> _paletteStorage; // Storage for all blocks 
+    protected ulong[] _transparentMasks;
+    protected readonly PaletteStorage<Block> _paletteStorage; // Storage for all blocks 
 
     // Lock object for thread synchronization
-    private readonly object _lockObject = new object();
-
-    private Chunk()
-    {
-    }
+    protected readonly object _lockObject = new object();
 
     public Chunk(int x, int y, int z)
     {
@@ -63,13 +61,18 @@ public class Chunk : IChunkData
     {
     }
 
+    protected void InvokeMeshUpdatedEvent()
+    {
+        OnMeshUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
     #region Get
-    public Vector2I GetChunkColumnPosition()
+    public virtual Vector2I GetChunkColumnPosition()
     {
         return new Vector2I(Index.X, Index.Z);
     }
 
-    public ChunkColumn GetChunkColumn()
+    public virtual ChunkColumn GetChunkColumn()
     {
         return Core.Instance.CurrentWorld.GetChunkColumn(GetChunkColumnPosition());
     }
@@ -91,13 +94,13 @@ public class Chunk : IChunkData
         return GetBlock(pos.X, pos.Y, pos.Z);
     }
 
-    public Block GetBlock(int index)
+    public virtual Block GetBlock(int index)
     {
         lock (_lockObject)
             return _paletteStorage.Get(index);
     }
 
-    public ChunkMesher.MeshData GetRawMeshData()
+    public virtual ChunkMesher.MeshData GetRawMeshData()
     {
         if (State != ChunkState.Ready)
             throw new InvalidOperationException("Chunk is not ready.");
@@ -105,18 +108,19 @@ public class Chunk : IChunkData
         return new ChunkMesher.MeshData(_opaqueMask, _transparentMasks);
     }
 
-    public Mesh GetMesh()
+    public virtual Mesh GetMesh()
     {
         var meshData = GetRawMeshData();
         ChunkMesher.MeshChunk(this, meshData);
         return ChunkMesher.GenerateMesh(meshData);
     }
 
-    public int GetBytes()
+    public virtual int GetBytes()
     {
         lock (_lockObject)
             return _paletteStorage.GetStorageSize() * sizeof(ulong) +
-                   _opaqueMask.Length * sizeof(ulong);
+                   _opaqueMask.Length * sizeof(ulong)
+                     + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
     }
 
     public double GetDistanceTo(Vector3 pos)
@@ -138,7 +142,7 @@ public class Chunk : IChunkData
         SetBlock(pos.X, pos.Y, pos.Z, blockId);
     }
 
-    public void SetBlock(int x, int y, int z, Block block)
+    public virtual void SetBlock(int x, int y, int z, Block block)
     {
         lock (_lockObject)
         {
@@ -156,7 +160,12 @@ public class Chunk : IChunkData
         }
     }
 
-    public void SetMesherMask(int x, int y, int z, Block block)
+    public void SetBlock(Vector3I pos, Block block)
+    {
+        SetBlock(pos.X, pos.Y, pos.Z, block);
+    }
+
+    public virtual void SetMesherMask(int x, int y, int z, Block block)
     {
         lock (_lockObject)
         {
@@ -174,11 +183,6 @@ public class Chunk : IChunkData
             if (State == ChunkState.Ready)
                 OnMeshUpdated?.Invoke(this, EventArgs.Empty);
         }
-    }
-
-    public void SetBlock(Vector3I pos, Block block)
-    {
-        SetBlock(pos.X, pos.Y, pos.Z, block);
     }
 
     #endregion

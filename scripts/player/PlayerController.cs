@@ -62,7 +62,7 @@ public partial class PlayerController : CharacterBody3D
 
     public override void _Ready()
     {
-        Input.MouseMode = Input.MouseModeEnum.Captured;
+        // Input.MouseMode = Input.MouseModeEnum.Captured;
 
         _head = GetNode<Node3D>("Head");
         _camera = GetNode<Camera3D>("Head/Camera3D");

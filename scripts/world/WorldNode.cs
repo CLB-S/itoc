@@ -26,22 +26,13 @@ public partial class WorldNode : Node
 
         _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
 
-        _chunkInstantiator = new ChunkInstantiator();
+        _chunkInstantiator = new ChunkInstantiator(World);
         AddChild(_chunkInstantiator);
-
-        World.OnPlayerMovedHalfAChunk += (s, pos) => _chunkInstantiator.UpdatePlayerPosition(pos);
-        World.OnChunkGenerated += (s, chunk) => _chunkInstantiator.AddChunk(chunk);
-        World.OnChunkMeshUpdated += (s, chunk) => _chunkInstantiator.QueueChunkForUpdate(chunk);
     }
 
     public override void _PhysicsProcess(double delta)
     {
         World.PhysicsProcess(delta);
-    }
-
-    public override void _Process(double delta)
-    {
-        _chunkInstantiator.UpdateInstances();
     }
 
     public void SpawnDebugCube(Vector3I pos)

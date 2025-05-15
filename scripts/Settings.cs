@@ -8,6 +8,8 @@ public class Settings
     // Graphics
     public int RenderDistance { get; set; } = 16;
     public int PhysicsDistance { get; set; } = 8;
+    public int MaxLodLevel { get; set; } = 3;
+    public double LodPixelThreshold { get; set; } = 2.0;
     public bool VSync { get; set; } = true;
     public DisplayServer.WindowMode WindowMode { get; set; } = DisplayServer.WindowMode.Windowed;
     public int WindowWidth { get; set; } = 1920;

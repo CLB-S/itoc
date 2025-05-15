@@ -25,11 +25,13 @@ public class World
     public event EventHandler<Chunk> OnChunkMeshUpdated;
     public event EventHandler<Chunk> OnChunkGenerated;
     public event EventHandler<Vector3> OnPlayerMovedHalfAChunk;
+    public event EventHandler<Vector3> OnPlayerMoved;
 
     private IPass _chunkGenerationPass0;
     private IPass _chunkGenerationPass1;
     private bool _ready; //TODO: State
     private Vector3 _lastPlayerPosition = Vector3.Inf;
+    private Vector3 _lastPlayerPosition1 = Vector3.Inf;
     private readonly Queue<Vector2I> _chunkColumnsGenerationQueue = new();
 
     public Vector3 PlayerPos { get; private set; } = Vector3.Zero;
@@ -75,6 +77,12 @@ public class World
 
         Time += delta;
         PlayerPos = GetPlayerPosition();
+
+        if ((PlayerPos - _lastPlayerPosition1).Length() > 1)
+        {
+            OnPlayerMoved?.Invoke(this, PlayerPos);
+            _lastPlayerPosition1 = PlayerPos;
+        }
 
         if ((PlayerPos - _lastPlayerPosition).Length() > ChunkMesher.CS / 2)
         {

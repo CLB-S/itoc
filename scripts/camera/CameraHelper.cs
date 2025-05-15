@@ -18,7 +18,6 @@ public partial class CameraHelper : Node
         return _camera != null && _camera.IsInsideTree();
     }
 
-
     public override void _Ready()
     {
         Instance = this;
@@ -42,7 +41,6 @@ public partial class CameraHelper : Node
         return _camera;
     }
 
-
     public Vector3 GetCameraPosition()
     {
         return CameraPosition;
@@ -56,5 +54,50 @@ public partial class CameraHelper : Node
     public Direction GetCameraFacingDirection()
     {
         return CameraFacingDirection;
+    }
+
+    /// <summary>
+    /// Calculates the distance at which a 1 meter line would occupy the specified number of pixels on screen.
+    /// </summary>
+    /// <param name="pixelCount">Target number of pixels the object should occupy</param>
+    /// <param name="lineLength">Length of the object in world units (default is 1.0)</param>
+    /// <returns>The distance threshold in world units</returns>
+    public double CalculateDistanceThresholdForPixels(double pixelCount, double lineLength = 1.0)
+    {
+        if (!CheckCamera())
+            return 0f;
+
+        // Get viewport size and camera FOV
+        Vector2 viewportSize = GetViewportSize();
+        var fovY = _camera.Fov * Mathf.Pi / 180.0; // Convert to radians
+
+        // Calculate distance based on the number of pixels a 1m object should occupy
+        var viewHeight = 2.0 * Mathf.Tan(fovY / 2.0);
+        var pixelSize = viewHeight / viewportSize.Y;
+
+        // Distance = object size / (pixel count * pixel size)
+        return lineLength / (pixelCount * pixelSize);
+    }
+
+    /// <summary>
+    /// Converts a world position to screen coordinates
+    /// </summary>
+    /// <param name="worldPosition">Position in 3D world space</param>
+    /// <returns>Screen coordinates (in pixels)</returns>
+    public Vector2 WorldToScreen(Vector3 worldPosition)
+    {
+        if (!CheckCamera())
+            return Vector2.Zero;
+
+        return _camera.UnprojectPosition(worldPosition);
+    }
+
+    /// <summary>
+    /// Gets the current viewport size
+    /// </summary>
+    /// <returns>Viewport dimensions in pixels</returns>
+    public Vector2 GetViewportSize()
+    {
+        return GetViewport().GetVisibleRect().Size;
     }
 }
