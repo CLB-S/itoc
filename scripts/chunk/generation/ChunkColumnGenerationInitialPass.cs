@@ -36,9 +36,9 @@ public class ChunkColumnGenerationInitialPass : IPass
     {
         if (result == null) return;
 
-        if (!World.ChunkColumns.ContainsKey(result.Position))
+        if (!World.ChunkColumns.ContainsKey(result.Index))
         {
-            World.ChunkColumns[result.Position] = result;
+            World.ChunkColumns[result.Index] = result;
 
             var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkMesher.CS);
             var low = Mathf.FloorToInt((result.HeightMapLow - 2) / ChunkMesher.CS) - 1;
@@ -46,18 +46,18 @@ public class ChunkColumnGenerationInitialPass : IPass
             List<GameTask> tasks = new();
             for (var y = low; y <= high; y++)
             {
-                var chunkPos = new Vector3I(result.Position.X, y, result.Position.Y);
-                if (World.Chunks.ContainsKey(chunkPos)) continue;
+                var chunkIndex = new Vector3I(result.Index.X, y, result.Index.Y);
+                if (World.Chunks.ContainsKey(chunkIndex)) continue;
 
-                var chunkTask = new ChunkGenerationTask(World.Generator, chunkPos, result,
-                    ChunkGenerationCallback, "ChunkGenerationTask-" + chunkPos);
+                var chunkTask = new ChunkGenerationTask(World.Generator, chunkIndex, result,
+                    ChunkGenerationCallback, "ChunkGenerationTask-" + chunkIndex);
                 tasks.Add(chunkTask);
                 Core.Instance.TaskManager.EnqueueTask(chunkTask);
             }
 
             var dependentTask = new DependentTask(
-                () => PassCompleted?.Invoke(this, new PassEventArgs(Pass, result.Position))
-                , "ChunkColumnGenerationInitialPass-" + result.Position
+                () => PassCompleted?.Invoke(this, new PassEventArgs(Pass, result.Index))
+                , "ChunkColumnGenerationInitialPass-" + result.Index
                 , dependencies: tasks.ToArray()
             );
 
@@ -69,13 +69,13 @@ public class ChunkColumnGenerationInitialPass : IPass
     {
         if (result == null) return;
 
-        var position = result.Position;
-        var positionXZ = new Vector2I(position.X, position.Z);
+        var index = result.Index;
+        var indexXZ = new Vector2I(index.X, index.Z);
         // var playerPosition = new Vector2I(World.PlayerChunk.X, World.PlayerChunk.Z);
-        if (!World.Chunks.ContainsKey(position) && World.ChunkColumns.TryGetValue(positionXZ, out var chunkColumn))
+        if (!World.Chunks.ContainsKey(index) && World.ChunkColumns.TryGetValue(indexXZ, out var chunkColumn))
         {
-            World.Chunks[position] = result;
-            chunkColumn.Chunks[position] = result;
+            World.Chunks[index] = result;
+            chunkColumn.Chunks[index] = result;
             // CallDeferred(Node.MethodName.AddChild, chunk);
             // World.UpdateNeighborMesherMasks(chunk);
             // chunk.LoadDeferred();

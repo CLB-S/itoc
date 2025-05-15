@@ -8,14 +8,14 @@ namespace ITOC.ChunkGeneration;
 public class ChunkGenerationTask : GameTask
 {
     public readonly WorldGenerator WorldGenerator;
-    public Vector3I ChunkPosition { get; }
+    public Vector3I ChunkIndex { get; }
     public ChunkColumn ChunkColumn { get; }
     public Action<Chunk> Callback { get; }
     private readonly Chunk _chunk;
 
     public ChunkGenerationTask(
         WorldGenerator worldGenerator,
-        Vector3I position,
+        Vector3I index,
         ChunkColumn chunkColumn,
         Action<Chunk> callback = null,
         string name = null,
@@ -23,10 +23,10 @@ public class ChunkGenerationTask : GameTask
         : base(name, priority)
     {
         WorldGenerator = worldGenerator;
-        ChunkPosition = position;
+        ChunkIndex = index;
         ChunkColumn = chunkColumn;
         Callback = callback;
-        _chunk = new Chunk(ChunkPosition);
+        _chunk = new Chunk(ChunkIndex);
     }
 
     protected override void ExecuteCore(CancellationToken cancellationToken)
@@ -48,7 +48,7 @@ public class ChunkGenerationTask : GameTask
                 // var baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
                 for (var y = 0; y < ChunkMesher.CS; y++)
                 {
-                    var actualY = ChunkPosition.Y * ChunkMesher.CS + y;
+                    var actualY = ChunkIndex.Y * ChunkMesher.CS + y;
                     if (actualY <= height)
                     {
                         var blockType = DetermineBlockType(actualY, height, 0, 4);

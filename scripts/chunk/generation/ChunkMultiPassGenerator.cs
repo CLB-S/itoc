@@ -57,8 +57,8 @@ public class ChunkMultiPassGenerator
                     for (var i = -extend; i <= extend; i++)
                         for (var j = -extend; j <= extend; j++)
                         {
-                            var chunkPos = args.ChunkColumnPos + new Vector2I(i, j);
-                            IncreaseMultiPassCompletionMarker(chunkPos, args.Pass);
+                            var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
+                            IncreaseMultiPassCompletionMarker(chunkIndex, args.Pass);
                         }
                 }
             };
@@ -82,8 +82,8 @@ public class ChunkMultiPassGenerator
                 for (var i = -extend; i <= extend; i++)
                     for (var j = -extend; j <= extend; j++)
                     {
-                        var chunkPos = args.ChunkColumnPos + new Vector2I(i, j);
-                        IncreaseMultiPassAccessibleMarker(chunkPos, args.Pass + 1);
+                        var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
+                        IncreaseMultiPassAccessibleMarker(chunkIndex, args.Pass + 1);
                     }
             }
         };
@@ -139,7 +139,7 @@ public interface IPass
     int Pass { get; }
     int Extend { get; }
 
-    void ExecuteAt(Vector2I chunkColumnPos);
+    void ExecuteAt(Vector2I chunkColumnIndex);
 
     /// <summary>
     /// Event triggered when the pass is completed.
@@ -152,9 +152,9 @@ public class PassEventArgs : EventArgs
     public int Pass { get; }
     public Vector2I ChunkColumnPos { get; }
 
-    public PassEventArgs(int pass, Vector2I chunkPos)
+    public PassEventArgs(int pass, Vector2I chunkIndex)
     {
         Pass = pass;
-        ChunkColumnPos = chunkPos;
+        ChunkColumnPos = chunkIndex;
     }
 }

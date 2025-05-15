@@ -24,12 +24,12 @@ public enum ChunkState
     Ready
 }
 
-public class Chunk
+public class Chunk : IChunkData
 {
-    public readonly Vector3I Position;
+    public Vector3I Index { get; private set; }
     public ChunkState State { get; set; }
-    public Vector3 WorldPosition => Position * ChunkMesher.CS;
-    public Vector3 CenterPosition => Position * ChunkMesher.CS + Vector3I.One * (ChunkMesher.CS / 2);
+    public Vector3 WorldPosition => Index * ChunkMesher.CS;
+    public Vector3 CenterPosition => Index * ChunkMesher.CS + Vector3I.One * (ChunkMesher.CS / 2);
 
     public event EventHandler<OnBlockUpdatedEventArgs> OnBlockUpdated;
     public event EventHandler OnMeshUpdated;
@@ -40,7 +40,7 @@ public class Chunk
     private readonly ulong[] _opaqueMask = new ulong[ChunkMesher.CS_P2];
 
     private ulong[] _transparentMasks;
-    private readonly PaletteStorage<Block> _paletteStorage;
+    private readonly PaletteStorage<Block> _paletteStorage; // Storage for all blocks 
 
     // Lock object for thread synchronization
     private readonly object _lockObject = new object();
@@ -51,7 +51,7 @@ public class Chunk
 
     public Chunk(int x, int y, int z)
     {
-        Position = new Vector3I(x, y, z);
+        Index = new Vector3I(x, y, z);
 
         var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
         _paletteStorage = new PaletteStorage<Block>(palette);
@@ -59,14 +59,14 @@ public class Chunk
         State = ChunkState.Created;
     }
 
-    public Chunk(Vector3I pos) : this(pos.X, pos.Y, pos.Z)
+    public Chunk(Vector3I index) : this(index.X, index.Y, index.Z)
     {
     }
 
     #region Get
     public Vector2I GetChunkColumnPosition()
     {
-        return new Vector2I(Position.X, Position.Z);
+        return new Vector2I(Index.X, Index.Z);
     }
 
     public ChunkColumn GetChunkColumn()
@@ -97,12 +97,17 @@ public class Chunk
             return _paletteStorage.Get(index);
     }
 
-    public Mesh GetMesh()
+    public ChunkMesher.MeshData GetRawMeshData()
     {
         if (State != ChunkState.Ready)
             throw new InvalidOperationException("Chunk is not ready.");
 
-        var meshData = new ChunkMesher.MeshData(_opaqueMask, _transparentMasks);
+        return new ChunkMesher.MeshData(_opaqueMask, _transparentMasks);
+    }
+
+    public Mesh GetMesh()
+    {
+        var meshData = GetRawMeshData();
         ChunkMesher.MeshChunk(this, meshData);
         return ChunkMesher.GenerateMesh(meshData);
     }

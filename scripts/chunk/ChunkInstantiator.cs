@@ -129,18 +129,18 @@ public partial class ChunkInstantiator : Node3D
     public void AddChunk(Chunk chunk)
     {
         // var startTime = DateTime.Now;
-        ChunkMeshes.TryAdd(chunk.Position, new ChunkMesh(chunk.Position, chunk.GetMesh()));
+        ChunkMeshes.TryAdd(chunk.Index, new ChunkMesh(chunk.Index, chunk.GetMesh()));
         // GD.Print($"ChunkMesh at {chunk.Position} created in {(DateTime.Now - startTime).TotalMilliseconds} ms.");
     }
 
     public void QueueChunkForUpdate(Chunk chunk)
     {
-        _chunksToUpdateMesh.TryAdd(chunk.Position, chunk);
+        _chunksToUpdateMesh.TryAdd(chunk.Index, chunk);
     }
 
     public void UpdateChunk(Chunk chunk)
     {
-        ChunkMeshes.AddOrUpdate(chunk.Position, new ChunkMesh(chunk.Position, chunk.GetMesh()),
+        ChunkMeshes.AddOrUpdate(chunk.Index, new ChunkMesh(chunk.Index, chunk.GetMesh()),
             (key, oldValue) =>
             {
                 oldValue.Mesh = chunk.GetMesh();
@@ -153,9 +153,9 @@ public partial class ChunkInstantiator : Node3D
             });
     }
 
-    public void RemoveChunk(Vector3I position)
+    public void RemoveChunk(Vector3I index)
     {
-        if (ChunkMeshes.TryRemove(position, out var chunkMesh))
+        if (ChunkMeshes.TryRemove(index, out var chunkMesh))
         {
             if (chunkMesh.MeshInstance != null)
                 _meshPool.Release(chunkMesh.MeshInstance);

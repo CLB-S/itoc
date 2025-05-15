@@ -10,7 +10,7 @@ public class ChunkColumn
     // Size of the biome map grid
     public const int BIOME_MAP_SIZE = 5;
 
-    public Vector2I Position;
+    public Vector2I Index;
 
     /// <summary>
     ///     [ChunkMesher.CS, ChunkMesher.CS], 62x62
@@ -28,9 +28,9 @@ public class ChunkColumn
     {
     }
 
-    public ChunkColumn(Vector2I position, PaletteStorage<Biome> biomePaletteStorage)
+    public ChunkColumn(Vector2I index, PaletteStorage<Biome> biomePaletteStorage)
     {
-        Position = position;
+        Index = index;
 
         _biomePaletteStorage = biomePaletteStorage;
     }

@@ -57,8 +57,10 @@ public static class ChunkMesher
         return (type << 32) | (h << 24) | (w << 18) | (z << 12) | (y << 6) | x;
     }
 
-
-    public static void MeshChunk(Chunk chunk, MeshData meshData)
+    /// <summary>
+    /// Calculate MeshData according to the chunk data.
+    /// </summary>
+    public static void MeshChunk(IChunkData chunk, MeshData meshData)
     {
         meshData.Quads.Clear();
         meshData.QuadBlocks.Clear();
@@ -285,7 +287,7 @@ public static class ChunkMesher
             for (var i = meshData.FaceVertexBegin[face];
                  i < meshData.FaceVertexBegin[face] + meshData.FaceVertexLength[face];
                  i++)
-                ParseQuad((Direction)face, meshData.QuadBlocks[i], meshData.Quads[i], surfaceArrayDict);
+                ParseQuad((Direction)face, meshData.QuadBlocks[i], meshData.Quads[i], meshData.Lod, surfaceArrayDict);
 
         var _arrayMesh = new ArrayMesh();
         foreach (var ((block, dir), surfaceArrayData) in surfaceArrayDict)
@@ -298,7 +300,7 @@ public static class ChunkMesher
         return _arrayMesh;
     }
 
-    private static void ParseQuad(Direction dir, Block block, ulong quad,
+    private static void ParseQuad(Direction dir, Block block, ulong quad, int lod,
         Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
         var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
@@ -306,11 +308,11 @@ public static class ChunkMesher
             surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
         var surfaceArrayData = surfaceArrayDict[blockDirPair];
 
-        var x = (byte)(quad & 0x3F); // 6 bits
-        var y = (byte)((quad >> 6) & 0x3F); // 6 bits
-        var z = (byte)((quad >> 12) & 0x3F); // 6 bits
-        var w = (byte)((quad >> 18) & 0x3F); // 6 bits (width)
-        var h = (byte)((quad >> 24) & 0x3F); // 6 bits (height)
+        var x = (quad & 0x3F) << lod;         // 6 bits
+        var y = ((quad >> 6) & 0x3F) << lod;  // 6 bits
+        var z = ((quad >> 12) & 0x3F) << lod; // 6 bits
+        var w = ((quad >> 18) & 0x3F) << lod; // 6 bits (width)
+        var h = ((quad >> 24) & 0x3F) << lod; // 6 bits (height)
         // ushort blockType = (ushort)((quad >> 32) & 0x7);
 
         // GD.Print($"{dir.Name()}: {x},{y},{z} ({w},{h})");
@@ -319,7 +321,7 @@ public static class ChunkMesher
 
         var baseIndex = surfaceArrayData.Vertices.Count;
         Vector3[] corners;
-        if (block.BlockId == "water")
+        if (block.BlockId == "water" && lod == 0)
         {
             if (dir == Direction.PositiveY)
                 corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
@@ -457,6 +459,7 @@ public static class ChunkMesher
 
     public class MeshData
     {
+        public int Lod = 0;
         public ulong[] FaceMasks = new ulong[CS_2 * 6];
         public int[] FaceVertexBegin = new int[6];
         public int[] FaceVertexLength = new int[6];

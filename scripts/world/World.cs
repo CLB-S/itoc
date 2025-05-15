@@ -87,14 +87,14 @@ public class World
         var processed = 0;
         while (_chunkColumnsGenerationQueue.Count > 0 && processed < Core.Instance.Settings.MaxChunkGenerationsPerFrame)
         {
-            var pos = _chunkColumnsGenerationQueue.Dequeue();
+            var index = _chunkColumnsGenerationQueue.Dequeue();
 
             // var columnTask = new FunctionTask<ChunkColumn>(
             //     () => Generator.GenerateChunkColumn(pos),
             //     ChunkColumnGenerationCallback
             // );
             // Core.Instance.TaskManager.EnqueueTask(columnTask);
-            _chunkGenerationPass0.ExecuteAt(pos);
+            _chunkGenerationPass0.ExecuteAt(index);
 
             processed++;
         }
@@ -105,14 +105,14 @@ public class World
 
     public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
-        var chunkPos = WorldToChunkPosition(worldPos);
-        Chunks.TryGetValue(chunkPos, out var chunk);
+        var chunkIndex = WorldToChunkPosition(worldPos);
+        Chunks.TryGetValue(chunkIndex, out var chunk);
         return chunk;
     }
 
-    public Chunk GetChunk(Vector3I chunkPos)
+    public Chunk GetChunk(Vector3I chunkIndex)
     {
-        Chunks.TryGetValue(chunkPos, out var chunk);
+        Chunks.TryGetValue(chunkIndex, out var chunk);
         return chunk;
     }
 
@@ -192,8 +192,8 @@ public class World
         for (var x = -Core.Instance.Settings.RenderDistance; x <= Core.Instance.Settings.RenderDistance; x++)
             for (var z = -Core.Instance.Settings.RenderDistance; z <= Core.Instance.Settings.RenderDistance; z++)
             {
-                var pos = playerChunkXZ + new Vector2I(x, z);
-                if (pos.DistanceTo(playerChunkXZ) <= Core.Instance.Settings.RenderDistance) renderArea.Add(pos);
+                var index = playerChunkXZ + new Vector2I(x, z);
+                if (index.DistanceTo(playerChunkXZ) <= Core.Instance.Settings.RenderDistance) renderArea.Add(index);
             }
 
         // TODO: Unload
@@ -209,17 +209,17 @@ public class World
 
         // ChunkColumns to generate 
         var toGenerate = new List<Vector2I>();
-        foreach (var pos in renderArea)
-            if (!ChunkColumns.ContainsKey(pos))
-                toGenerate.Add(pos);
+        foreach (var index in renderArea)
+            if (!ChunkColumns.ContainsKey(index))
+                toGenerate.Add(index);
 
         // Sort by distance.
         toGenerate.Sort((a, b) => a.DistanceTo(playerChunkXZ).CompareTo(b.DistanceTo(playerChunkXZ)));
 
         // Reset the generation queue and queued set to ensure proper sorting by new player position
         _chunkColumnsGenerationQueue.Clear();
-        foreach (var pos in toGenerate)
-            _chunkColumnsGenerationQueue.Enqueue(pos);
+        foreach (var index in toGenerate)
+            _chunkColumnsGenerationQueue.Enqueue(index);
 
         // Generate 3x3x3 chunks around the player for existing ChunkColumns
         // GeneratePlayerSurroundingChunks();
@@ -233,18 +233,18 @@ public class World
             for (var y = -1; y <= 1; y++)
                 for (var z = -1; z <= 1; z++)
                 {
-                    var chunkPos = PlayerChunk + new Vector3I(x, y, z);
-                    var columnPos = new Vector2I(chunkPos.X, chunkPos.Z);
+                    var chunkIndex = PlayerChunk + new Vector3I(x, y, z);
+                    var columnPos = new Vector2I(chunkIndex.X, chunkIndex.Z);
 
                     // Skip if chunk already exists
-                    if (Chunks.ContainsKey(chunkPos))
+                    if (Chunks.ContainsKey(chunkIndex))
                         continue;
 
                     // Only generate chunks for columns that already exist
                     if (ChunkColumns.TryGetValue(columnPos, out var chunkColumn))
                     {
-                        var createCollisionShape = chunkPos.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
-                        var chunkTask = new ChunkGenerationTask(Generator, chunkPos, chunkColumn, ChunkGenerationCallback);
+                        var createCollisionShape = chunkIndex.DistanceTo(PlayerChunk) <= Core.Instance.Settings.PhysicsDistance;
+                        var chunkTask = new ChunkGenerationTask(Generator, chunkIndex, chunkColumn, ChunkGenerationCallback);
                         Core.Instance.TaskManager.EnqueueTask(chunkTask);
                     }
                 }
@@ -258,11 +258,11 @@ public class World
         // var currentCenter = WorldToChunkPosition(currentPlayerPos);
         // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > Core.Instance.Settings.LoadDistance) return;
 
-        var position = result.Position;
-        var positionXZ = new Vector2I(position.X, position.Z);
+        var index = result.Index;
+        var indexXZ = new Vector2I(index.X, index.Z);
         var playerPosition = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
-        if (!Chunks.ContainsKey(position) && ChunkColumns.TryGetValue(positionXZ, out var chunkColumn)
-                                          && playerPosition.DistanceTo(positionXZ) <=
+        if (!Chunks.ContainsKey(index) && ChunkColumns.TryGetValue(indexXZ, out var chunkColumn)
+                                          && playerPosition.DistanceTo(indexXZ) <=
                                           Core.Instance.Settings.RenderDistance)
         {
             // TODO: Rendering
@@ -282,62 +282,62 @@ public class World
         var y = e.UpdatePosition.Y;
         var z = e.UpdatePosition.Z;
         var block = e.UpdateTargetBlock;
-        var sourceChunkPosition = (sender as Chunk).Position;
+        var sourceChunkIndex = (sender as Chunk).Index;
 
         if (x == 0)
         {
-            var neighbourChunkPos = sourceChunkPosition;
-            neighbourChunkPos.X -= 1;
-            if (Chunks.TryGetValue(neighbourChunkPos, out var neighbourChunk))
+            var neighbourChunkIndex = sourceChunkIndex;
+            neighbourChunkIndex.X -= 1;
+            if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
                 neighbourChunk.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
         }
 
         if (x == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = sourceChunkPosition;
-            neighbourChunkPos.X += 1;
-            if (Chunks.TryGetValue(neighbourChunkPos, out var neighbourChunk))
+            var neighbourChunkIndex = sourceChunkIndex;
+            neighbourChunkIndex.X += 1;
+            if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
                 neighbourChunk.SetMesherMask(0, y + 1, z + 1, block);
         }
 
         if (y == 0)
         {
-            var neighbourChunkPos = sourceChunkPosition;
-            neighbourChunkPos.Y -= 1;
-            if (Chunks.TryGetValue(neighbourChunkPos, out var neighbourChunk))
+            var neighbourChunkIndex = sourceChunkIndex;
+            neighbourChunkIndex.Y -= 1;
+            if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
                 neighbourChunk.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
         }
 
         if (y == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = sourceChunkPosition;
-            neighbourChunkPos.Y += 1;
-            if (Chunks.TryGetValue(neighbourChunkPos, out var neighbourChunk))
+            var neighbourChunkIndex = sourceChunkIndex;
+            neighbourChunkIndex.Y += 1;
+            if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
                 neighbourChunk.SetMesherMask(x + 1, 0, z + 1, block);
         }
 
         if (z == 0)
         {
-            var neighbourChunkPos = sourceChunkPosition;
-            neighbourChunkPos.Z -= 1;
-            if (Chunks.TryGetValue(neighbourChunkPos, out var neighbourChunk))
+            var neighbourChunkIndex = sourceChunkIndex;
+            neighbourChunkIndex.Z -= 1;
+            if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
                 neighbourChunk.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
         }
 
         if (z == ChunkMesher.CS - 1)
         {
-            var neighbourChunkPos = sourceChunkPosition;
-            neighbourChunkPos.Z += 1;
-            if (Chunks.TryGetValue(neighbourChunkPos, out var neighbourChunk))
+            var neighbourChunkIndex = sourceChunkIndex;
+            neighbourChunkIndex.Z += 1;
+            if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
                 neighbourChunk.SetMesherMask(x + 1, y + 1, 0, block);
         }
     }
 
     public void UpdateNeighborMesherMasks(Chunk chunk)
     {
-        var chunkPos = chunk.Position;
+        var chunkIndex = chunk.Index;
 
-        if (Chunks.TryGetValue(new Vector3I(chunkPos.X + 1, chunkPos.Y, chunkPos.Z), out var positiveXNeighbor))
+        if (Chunks.TryGetValue(new Vector3I(chunkIndex.X + 1, chunkIndex.Y, chunkIndex.Z), out var positiveXNeighbor))
         {
             for (var y = 0; y < ChunkMesher.CS; y++)
                 for (var z = 0; z < ChunkMesher.CS; z++)
@@ -350,7 +350,7 @@ public class World
                 }
         }
 
-        if (Chunks.TryGetValue(new Vector3I(chunkPos.X - 1, chunkPos.Y, chunkPos.Z), out var negativeXNeighbor))
+        if (Chunks.TryGetValue(new Vector3I(chunkIndex.X - 1, chunkIndex.Y, chunkIndex.Z), out var negativeXNeighbor))
         {
             for (var y = 0; y < ChunkMesher.CS; y++)
                 for (var z = 0; z < ChunkMesher.CS; z++)
@@ -363,7 +363,7 @@ public class World
                 }
         }
 
-        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y + 1, chunkPos.Z), out var positiveYNeighbor))
+        if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y + 1, chunkIndex.Z), out var positiveYNeighbor))
         {
             for (var x = 0; x < ChunkMesher.CS; x++)
                 for (var z = 0; z < ChunkMesher.CS; z++)
@@ -376,7 +376,7 @@ public class World
                 }
         }
 
-        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y - 1, chunkPos.Z), out var negativeYNeighbor))
+        if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y - 1, chunkIndex.Z), out var negativeYNeighbor))
         {
             for (var x = 0; x < ChunkMesher.CS; x++)
                 for (var z = 0; z < ChunkMesher.CS; z++)
@@ -389,7 +389,7 @@ public class World
                 }
         }
 
-        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z + 1), out var positiveZNeighbor))
+        if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y, chunkIndex.Z + 1), out var positiveZNeighbor))
         {
             for (var x = 0; x < ChunkMesher.CS; x++)
                 for (var y = 0; y < ChunkMesher.CS; y++)
@@ -402,7 +402,7 @@ public class World
                 }
         }
 
-        if (Chunks.TryGetValue(new Vector3I(chunkPos.X, chunkPos.Y, chunkPos.Z - 1), out var negativeZNeighbor))
+        if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y, chunkIndex.Z - 1), out var negativeZNeighbor))
         {
             for (var x = 0; x < ChunkMesher.CS; x++)
                 for (var y = 0; y < ChunkMesher.CS; y++)

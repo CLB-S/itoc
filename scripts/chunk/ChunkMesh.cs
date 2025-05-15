@@ -17,15 +17,15 @@ public class ChunkMesh
     public MeshInstance3D MeshInstance { get; set; }
     public StaticBody3D CollisionBody { get; set; }
 
-    public int LodLevel { get; private set; }
+    public int Lod { get; private set; }
     public Vector3I Index { get; private set; }
-    public Vector3 Position => Index * ChunkMesher.CS * (1 << LodLevel);
+    public Vector3 Position => Index * ChunkMesher.CS * (1 << Lod);
 
-    public ChunkMesh(Vector3I index, Mesh mesh, int lodLevel = 0)
+    public ChunkMesh(Vector3I index, Mesh mesh, int lod = 0)
     {
         Index = index;
         Mesh = mesh;
-        LodLevel = lodLevel;
+        Lod = lod;
 
         if (Mesh != null)
             State = ChunkMeshState.Ready;

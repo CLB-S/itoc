@@ -25,8 +25,8 @@ public partial class GuiInfo : RichTextLabel
         var camFacing = CameraHelper.Instance.GetCameraFacing();
         var camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
         var camFacingDirName = camFacingDir.Name();
-        var chunkPos = World.WorldToChunkPosition(camPos);
-        var chunkColumn = Core.Instance.CurrentWorld.ChunkColumns.GetValueOrDefault(new Vector2I(chunkPos.X, chunkPos.Z), null);
+        var chunkIndex = World.WorldToChunkPosition(camPos);
+        var chunkColumn = Core.Instance.CurrentWorld.ChunkColumns.GetValueOrDefault(new Vector2I(chunkIndex.X, chunkIndex.Z), null);
 
         // Time
         var worldTime = Core.Instance.CurrentWorld.Time;
@@ -50,7 +50,7 @@ public partial class GuiInfo : RichTextLabel
             $"[color=yellow]Static Mem:[/color] {BytesToString(staticMem)}/{BytesToString(staticMemMax)}");
         // debugTextBuilder.AppendLine($"[color=yellow]Chunk Mem:[/color] {BytesToString(chunkMem)}");
         debugTextBuilder.AppendLine($"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}");
-        debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkPos.X}, {chunkPos.Y}, {chunkPos.Z}");
+        debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkIndex.X}, {chunkIndex.Y}, {chunkIndex.Z}");
         debugTextBuilder.AppendLine(
             $"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
         debugTextBuilder.AppendLine(
