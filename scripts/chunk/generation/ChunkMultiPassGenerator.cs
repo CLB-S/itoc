@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Godot;
 
@@ -19,8 +20,7 @@ public class ChunkMultiPassGenerator
     public event EventHandler<Vector2I> AllPassesCompleted;
 
     private readonly IPass[] _passes;
-    private readonly Dictionary<Vector2I, int[]> _multiPassMarkers = new();
-    private readonly object _lock = new object();
+    private readonly ConcurrentDictionary<Vector2I, int[]> _multiPassMarkers = new();
 
     public ChunkMultiPassGenerator(bool runNextPassAuto = true, params IPass[] passes)
     {
@@ -68,16 +68,15 @@ public class ChunkMultiPassGenerator
         {
             if (args.Pass == PassCount - 1)
             {
-                lock (_lock)
-                    _multiPassMarkers.Remove(args.ChunkColumnPos, out _);
-
+                _multiPassMarkers.TryRemove(args.ChunkColumnPos, out _);
                 AllPassesCompleted?.Invoke(this, args.ChunkColumnPos);
                 return;
             }
 
             var extend = PassExtends[args.Pass + 1];
-
-            lock (_lock)
+            if (extend == 0)
+                PassAccessible?.Invoke(this, new PassEventArgs(args.Pass + 1, args.ChunkColumnPos));
+            else
             {
                 for (var i = -extend; i <= extend; i++)
                     for (var j = -extend; j <= extend; j++)
@@ -95,42 +94,34 @@ public class ChunkMultiPassGenerator
 
     private void IncreaseMultiPassAccessibleMarker(Vector2I chunkColumnPos, int pass)
     {
-        lock (_lock)
-        {
-            if (!_multiPassMarkers.ContainsKey(chunkColumnPos))
-                _multiPassMarkers[chunkColumnPos] = new int[MarkersLayerCount];
-            var markers = _multiPassMarkers[chunkColumnPos];
+        var markers = _multiPassMarkers.GetOrAdd(chunkColumnPos, _ => new int[MarkersLayerCount]);
 
-            var index = 0;
-            for (var i = 0; i < pass; i++)
-                index += PassExtends[i] > 0 ? 2 : 0;
+        var index = 0;
+        for (var i = 0; i < pass; i++)
+            index += PassExtends[i] > 0 ? 2 : 0;
 
-            markers[index]++;
+        // Use interlocked operations for thread-safe increments
+        var currentValue = System.Threading.Interlocked.Increment(ref markers[index]);
 
-            var extend = 1 + 2 * PassExtends[pass];
-            if (markers[index] == extend * extend)
-                PassAccessible?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
-        }
+        var extend = 1 + 2 * PassExtends[pass];
+        if (currentValue == extend * extend)
+            PassAccessible?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
     }
 
     private void IncreaseMultiPassCompletionMarker(Vector2I chunkColumnPos, int pass)
     {
-        lock (_lock)
-        {
-            if (!_multiPassMarkers.ContainsKey(chunkColumnPos))
-                _multiPassMarkers[chunkColumnPos] = new int[MarkersLayerCount];
-            var markers = _multiPassMarkers[chunkColumnPos];
+        var markers = _multiPassMarkers.GetOrAdd(chunkColumnPos, _ => new int[MarkersLayerCount]);
 
-            var index = -1;
-            for (var i = 0; i <= pass; i++)
-                index += PassExtends[i] > 0 ? 2 : 0;
+        var index = -1;
+        for (var i = 0; i <= pass; i++)
+            index += PassExtends[i] > 0 ? 2 : 0;
 
-            markers[index]++;
+        // Use interlocked operations for thread-safe increments
+        var currentValue = System.Threading.Interlocked.Increment(ref markers[index]);
 
-            var extend = 1 + 2 * PassExtends[pass];
-            if (markers[index] == extend * extend)
-                PassFullyCompleted?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
-        }
+        var extend = 1 + 2 * PassExtends[pass];
+        if (currentValue == extend * extend)
+            PassFullyCompleted?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
     }
 }
 
