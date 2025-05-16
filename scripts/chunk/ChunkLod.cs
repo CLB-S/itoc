@@ -47,18 +47,13 @@ public class ChunkLod : Chunk
 
     #region Set
 
-    public override void SetMesherMask(int x, int y, int z, Block block)
+    protected override void SetMesherMaskInternal(int x, int y, int z, Block block)
     {
-        lock (_lockObject)
-        {
-            if (block == null)
-                ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
-            else
-                ChunkMesher.AddOpaqueVoxel(_opaqueMask, x, y, z);
-
-            if (State == ChunkState.Ready)
-                InvokeMeshUpdatedEvent();
-        }
+        // This method assumes the write lock is already held
+        if (block == null)
+            ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
+        else
+            ChunkMesher.AddOpaqueVoxel(_opaqueMask, x, y, z);
     }
 
     #endregion

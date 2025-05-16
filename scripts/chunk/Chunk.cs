@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Collections.Generic;
 using Godot;
 using Palette;
 
@@ -24,7 +26,7 @@ public enum ChunkState
     Ready
 }
 
-public class Chunk
+public class Chunk : IDisposable
 {
     public Vector3I Index { get; protected set; }
     public ChunkState State { get; set; }
@@ -43,9 +45,7 @@ public class Chunk
 
     protected ulong[] _transparentMasks;
     protected readonly PaletteStorage<Block> _paletteStorage; // Storage for all blocks 
-
-    // Lock object for thread synchronization
-    protected readonly object _lockObject = new object();
+    protected readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
     public Chunk(int x, int y, int z)
     {
@@ -59,11 +59,6 @@ public class Chunk
 
     public Chunk(Vector3I index) : this(index.X, index.Y, index.Z)
     {
-    }
-
-    protected void InvokeMeshUpdatedEvent()
-    {
-        OnMeshUpdated?.Invoke(this, EventArgs.Empty);
     }
 
     #region Get
@@ -96,8 +91,7 @@ public class Chunk
 
     public virtual Block GetBlock(int index)
     {
-        lock (_lockObject)
-            return _paletteStorage.Get(index);
+        return _paletteStorage.Get(index);
     }
 
     public virtual ChunkMesher.MeshData GetRawMeshData()
@@ -105,7 +99,26 @@ public class Chunk
         if (State != ChunkState.Ready)
             throw new InvalidOperationException("Chunk is not ready.");
 
-        return new ChunkMesher.MeshData(_opaqueMask, _transparentMasks);
+        _lock.EnterReadLock();
+        try
+        {
+            // Create a copy of the mesh data to avoid thread safety issues
+            ulong[] opaqueMaskCopy = new ulong[_opaqueMask.Length];
+            Array.Copy(_opaqueMask, opaqueMaskCopy, _opaqueMask.Length);
+
+            ulong[] transparentMasksCopy = null;
+            if (_transparentMasks != null)
+            {
+                transparentMasksCopy = new ulong[_transparentMasks.Length];
+                Array.Copy(_transparentMasks, transparentMasksCopy, _transparentMasks.Length);
+            }
+
+            return new ChunkMesher.MeshData(opaqueMaskCopy, transparentMasksCopy);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
     }
 
     public virtual Mesh GetMesh()
@@ -117,10 +130,9 @@ public class Chunk
 
     public virtual int GetBytes()
     {
-        lock (_lockObject)
-            return _paletteStorage.GetStorageSize() * sizeof(ulong) +
-                   _opaqueMask.Length * sizeof(ulong)
-                     + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
+        return _paletteStorage.GetStorageSize() * sizeof(ulong) +
+               _opaqueMask.Length * sizeof(ulong)
+                 + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
     }
 
     public double GetDistanceTo(Vector3 pos)
@@ -144,20 +156,19 @@ public class Chunk
 
     public virtual void SetBlock(int x, int y, int z, Block block)
     {
-        lock (_lockObject)
-        {
-            var index = ChunkMesher.GetBlockIndex(x, y, z);
-            var oldBlock = _paletteStorage.Get(index);
-            if (oldBlock == block)
-                return;
+        var index = ChunkMesher.GetBlockIndex(x, y, z);
 
-            _paletteStorage.Set(index, block);
-            SetMesherMask(x + 1, y + 1, z + 1, block);
+        var oldBlock = _paletteStorage.Get(index);
+        if (oldBlock == block)
+            return;
 
-            if (State == ChunkState.Ready)
-                OnBlockUpdated?.Invoke(this,
-                    new OnBlockUpdatedEventArgs(new Vector3I(x, y, z), oldBlock, block));
-        }
+        _paletteStorage.Set(index, block);
+
+        SetMesherMask(x + 1, y + 1, z + 1, block);
+
+        if (State == ChunkState.Ready)
+            OnBlockUpdated?.Invoke(this,
+                new OnBlockUpdatedEventArgs(new Vector3I(x, y, z), oldBlock, block));
     }
 
     public void SetBlock(Vector3I pos, Block block)
@@ -165,25 +176,82 @@ public class Chunk
         SetBlock(pos.X, pos.Y, pos.Z, block);
     }
 
-    public virtual void SetMesherMask(int x, int y, int z, Block block)
+    public void SetMesherMask(int x, int y, int z, Block block)
     {
-        lock (_lockObject)
+        _lock.EnterWriteLock();
+        try
         {
-            if (block == null || !block.IsOpaque)
-                ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
-            else
-                ChunkMesher.AddOpaqueVoxel(_opaqueMask, x, y, z);
+            SetMesherMaskInternal(x, y, z, block);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
 
-            if (block != null && !block.IsOpaque)
-            {
-                _transparentMasks ??= new ulong[ChunkMesher.CS_P2];
-                ChunkMesher.AddOpaqueVoxel(_transparentMasks, x, y, z);
-            }
+        if (State == ChunkState.Ready)
+            OnMeshUpdated?.Invoke(this, EventArgs.Empty);
+    }
 
-            if (State == ChunkState.Ready)
-                OnMeshUpdated?.Invoke(this, EventArgs.Empty);
+    protected virtual void SetMesherMaskInternal(int x, int y, int z, Block block)
+    {
+        // This method assumes the write lock is already held
+        if (block == null || !block.IsOpaque)
+            ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
+        else
+            ChunkMesher.AddOpaqueVoxel(_opaqueMask, x, y, z);
+
+        if (block != null && !block.IsOpaque)
+        {
+            _transparentMasks ??= new ulong[ChunkMesher.CS_P2];
+            ChunkMesher.AddOpaqueVoxel(_transparentMasks, x, y, z);
         }
     }
 
+    #endregion
+
+    #region Helpers
+    private bool IsPositionInChunk(Vector3I pos)
+    {
+        return pos.X >= 0 && pos.X < ChunkMesher.CS &&
+               pos.Y >= 0 && pos.Y < ChunkMesher.CS &&
+               pos.Z >= 0 && pos.Z < ChunkMesher.CS;
+    }
+
+    private Vector3I ClampPositionToChunk(Vector3I pos)
+    {
+        return new Vector3I(
+            Mathf.Clamp(pos.X, 0, ChunkMesher.CS - 1),
+            Mathf.Clamp(pos.Y, 0, ChunkMesher.CS - 1),
+            Mathf.Clamp(pos.Z, 0, ChunkMesher.CS - 1)
+        );
+    }
+    #endregion
+
+    #region IDisposable
+    private bool _disposed = false;
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            _lock.Dispose();
+        }
+
+        _disposed = true;
+    }
+
+    ~Chunk()
+    {
+        Dispose(false);
+    }
     #endregion
 }
