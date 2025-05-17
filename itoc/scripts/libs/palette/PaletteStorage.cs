@@ -22,6 +22,107 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
         _isSingleEntryMode = _palette.IsSingleEntry;
     }
 
+    public PaletteStorage(Palette<T> palette, T[] values) : this(palette)
+    {
+        if (values == null || values.Length == 0)
+            return;
+
+        InitializeFromArray(values);
+    }
+
+    private void InitializeFromArray(T[] values)
+    {
+        // Analyze the array to determine if it's single-value
+        bool isSingleValue = true;
+        T firstValue = values[0];
+
+        for (int i = 1; i < values.Length && isSingleValue; i++)
+        {
+            if (!EqualityComparer<T>.Default.Equals(firstValue, values[i]))
+            {
+                isSingleValue = false;
+                break;
+            }
+        }
+
+        // Fast path for single-value arrays
+        if (isSingleValue)
+        {
+            var paletteId = _palette.GetId(firstValue);
+            if (paletteId != 0)
+            {
+                _palette.ForceNormalMode();
+
+                _lock.EnterWriteLock();
+                try
+                {
+                    // Fill with the same value
+                    EnsureCapacity(values.Length - 1);
+
+                    if (paletteId == 0) return; // Nothing to do for default value
+
+                    // Set all bits to the same value efficiently
+                    ulong filledLong = 0UL;
+                    for (int i = 0; i < _entriesPerLong; i++)
+                        filledLong |= ((ulong)paletteId & _palette.Mask) << (i * _palette.BitsPerEntry);
+
+                    for (int i = 0; i < _data.Count; i++)
+                        _data[i] = filledLong;
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
+            }
+            return;
+        }
+
+        // Get all unique values and assign palette IDs in one pass
+        var uniqueValues = new Dictionary<T, int>(EqualityComparer<T>.Default);
+        var hasNonDefaultValues = false;
+
+        // First pass - identify unique values
+        foreach (var value in values)
+        {
+            if (!uniqueValues.ContainsKey(value))
+            {
+                var id = _palette.GetId(value);
+                uniqueValues[value] = id;
+                if (id != 0) hasNonDefaultValues = true;
+            }
+        }
+
+        // If we only have default values, nothing more to do
+        if (!hasNonDefaultValues && _isSingleEntryMode)
+            return;
+
+        if (_isSingleEntryMode && hasNonDefaultValues)
+            _palette.ForceNormalMode();
+
+        _lock.EnterWriteLock();
+        try
+        {
+            // Ensure we have enough capacity for all values
+            EnsureCapacity(values.Length - 1);
+
+            // Second pass - write values directly to storage
+            for (int i = 0; i < values.Length; i++)
+            {
+                var paletteId = (ulong)uniqueValues[values[i]];
+                if (paletteId == 0) continue; // Skip default values
+
+                var longIndex = i / _entriesPerLong;
+                var bitOffset = (i % _entriesPerLong) * _palette.BitsPerEntry;
+
+                _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
+            }
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
     public T Get(int index)
     {
         if (index < 0) return _palette.DefaultValue;
