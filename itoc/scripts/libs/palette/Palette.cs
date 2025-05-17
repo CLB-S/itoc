@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace ITOC.Libs.Palette;
 
@@ -8,7 +7,6 @@ public sealed class Palette<T> : IDisposable where T : IEquatable<T>
 {
     private readonly List<T> _entries = new();
     private readonly int _initialBits;
-    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.NoRecursion);
 
     public event Action<int, int> OnBitsIncreased;
     public event Action<bool> OnSingleEntryStateChanged;
@@ -29,72 +27,40 @@ public sealed class Palette<T> : IDisposable where T : IEquatable<T>
 
     public int GetId(T value)
     {
-        _lock.EnterUpgradeableReadLock();
-        try
+        for (var i = 0; i < _entries.Count; i++)
+            if (EqualityComparer<T>.Default.Equals(_entries[i], value))
+                return i;
+
+        var newId = _entries.Count;
+        _entries.Add(value);
+
+        var wasSingleEntry = IsSingleEntry;
+        IsSingleEntry = false;
+        if (wasSingleEntry)
+            OnSingleEntryStateChanged?.Invoke(false);
+
+        var requiredBits = CalculateRequiredBits();
+        if (requiredBits > BitsPerEntry)
         {
-            for (var i = 0; i < _entries.Count; i++)
-                if (EqualityComparer<T>.Default.Equals(_entries[i], value))
-                    return i;
-
-            _lock.EnterWriteLock();
-            try
-            {
-                var newId = _entries.Count;
-                _entries.Add(value);
-
-                var wasSingleEntry = IsSingleEntry;
-                IsSingleEntry = false;
-                if (wasSingleEntry)
-                    OnSingleEntryStateChanged?.Invoke(false);
-
-                var requiredBits = CalculateRequiredBits();
-                if (requiredBits > BitsPerEntry)
-                {
-                    var oldBits = BitsPerEntry;
-                    UpdateBits(requiredBits);
-                    OnBitsIncreased?.Invoke(oldBits, requiredBits);
-                }
-
-                return newId;
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
+            var oldBits = BitsPerEntry;
+            UpdateBits(requiredBits);
+            OnBitsIncreased?.Invoke(oldBits, requiredBits);
         }
-        finally
-        {
-            _lock.ExitUpgradeableReadLock();
-        }
+
+        return newId;
     }
 
     public T GetValue(int id)
     {
-        _lock.EnterReadLock();
-        try
-        {
-            return id >= 0 && id < _entries.Count ? _entries[id] : DefaultValue;
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
+        return id >= 0 && id < _entries.Count ? _entries[id] : DefaultValue;
     }
 
     public void ForceNormalMode()
     {
         if (!IsSingleEntry) return;
 
-        _lock.EnterWriteLock();
-        try
-        {
-            IsSingleEntry = false;
-            OnSingleEntryStateChanged?.Invoke(false);
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+        IsSingleEntry = false;
+        OnSingleEntryStateChanged?.Invoke(false);
     }
 
     private int CalculateRequiredBits()
@@ -115,7 +81,6 @@ public sealed class Palette<T> : IDisposable where T : IEquatable<T>
 
     public void Dispose()
     {
-        _lock.Dispose();
         GC.SuppressFinalize(this);
     }
 

@@ -47,17 +47,37 @@ public class Chunk : IDisposable
     protected readonly PaletteStorage<Block> _paletteStorage; // Storage for all blocks 
     protected readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
-    public Chunk(int x, int y, int z)
+    public Chunk(int x, int y, int z, Block[] blocks = null)
     {
-        Index = new Vector3I(x, y, z);
+        if (blocks != null)
+        {
+            if (blocks.Length != ChunkMesher.CS_3)
+                throw new ArgumentException($"Blocks array must be of size {ChunkMesher.CS_3}");
 
-        var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
-        _paletteStorage = new PaletteStorage<Block>(palette);
+            var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
+            _paletteStorage = new PaletteStorage<Block>(palette, blocks);
+
+            for (var i = 0; i < blocks.Length; i++)
+            {
+                var block = blocks[i];
+                (var ix, var iy, var iz) = ChunkMesher.GetBlockIndex(i);
+
+                if (block != null)
+                    SetMesherMaskInternal(ix + 1, iy + 1, iz + 1, block);
+            }
+        }
+        else
+        {
+            var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
+            _paletteStorage = new PaletteStorage<Block>(palette);
+        }
+
+        Index = new Vector3I(x, y, z);
 
         State = ChunkState.Created;
     }
 
-    public Chunk(Vector3I index) : this(index.X, index.Y, index.Z)
+    public Chunk(Vector3I index, Block[] blocks = null) : this(index.X, index.Y, index.Z, blocks)
     {
     }
 
@@ -91,7 +111,15 @@ public class Chunk : IDisposable
 
     public virtual Block GetBlock(int index)
     {
-        return _paletteStorage.Get(index);
+        _lock.EnterReadLock();
+        try
+        {
+            return _paletteStorage.Get(index);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
     }
 
     public virtual ChunkMesher.MeshData GetRawMeshData()
@@ -158,11 +186,29 @@ public class Chunk : IDisposable
     {
         var index = ChunkMesher.GetBlockIndex(x, y, z);
 
-        var oldBlock = _paletteStorage.Get(index);
-        if (oldBlock == block)
-            return;
+        Block oldBlock;
 
-        _paletteStorage.Set(index, block);
+        _lock.EnterUpgradeableReadLock();
+        try
+        {
+            oldBlock = _paletteStorage.Get(index);
+            if (oldBlock == block)
+                return;
+
+            _lock.EnterWriteLock();
+            try
+            {
+                _paletteStorage.Set(index, block);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+        }
+        finally
+        {
+            _lock.ExitUpgradeableReadLock();
+        }
 
         SetMesherMask(x + 1, y + 1, z + 1, block);
 
@@ -213,25 +259,51 @@ public class Chunk : IDisposable
         var positionsToUpdate = new List<(int X, int Y, int Z, Block Block)>();
         var blockUpdates = new List<OnBlockUpdatedEventArgs>();
 
-        foreach (var (pos, block) in blocks)
+        _lock.EnterUpgradeableReadLock();
+        try
         {
-            if (!IsPositionInChunk(pos))
-                continue;
+            foreach (var (pos, block) in blocks)
+            {
+                if (!IsPositionInChunk(pos))
+                    continue;
 
-            var index = ChunkMesher.GetBlockIndex(pos.X, pos.Y, pos.Z);
-            var oldBlock = _paletteStorage.Get(index);
-            if (oldBlock == block)
-                continue;
+                var index = ChunkMesher.GetBlockIndex(pos.X, pos.Y, pos.Z);
+                var oldBlock = _paletteStorage.Get(index);
+                if (oldBlock == block)
+                    continue;
 
-            entriesForPalette.Add((index, block));
-            positionsToUpdate.Add((pos.X + 1, pos.Y + 1, pos.Z + 1, block));
+                entriesForPalette.Add((index, block));
+                positionsToUpdate.Add((pos.X + 1, pos.Y + 1, pos.Z + 1, block));
 
-            if (State == ChunkState.Ready)
-                blockUpdates.Add(new OnBlockUpdatedEventArgs(pos, oldBlock, block));
+                if (State == ChunkState.Ready)
+                    blockUpdates.Add(new OnBlockUpdatedEventArgs(pos, oldBlock, block));
+            }
+
+            if (entriesForPalette.Count > 0)
+            {
+                _lock.EnterWriteLock();
+                try
+                {
+                    // Batch update the palette storage
+                    foreach (var (index, block) in entriesForPalette)
+                    {
+                        _paletteStorage.Set(index, block);
+                    }
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
+            }
+            else
+            {
+                return; // No changes to make
+            }
         }
-
-        // Batch update the palette storage
-        _paletteStorage.SetRange(entriesForPalette.ToArray());
+        finally
+        {
+            _lock.ExitUpgradeableReadLock();
+        }
 
         // Update mesher masks
         _lock.EnterWriteLock();

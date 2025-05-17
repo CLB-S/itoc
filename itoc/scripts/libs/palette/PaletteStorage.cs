@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace ITOC.Libs.Palette;
 
@@ -11,7 +10,6 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
     private List<ulong> _data = new();
     private int _entriesPerLong;
     private bool _isSingleEntryMode;
-    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.NoRecursion);
 
     public PaletteStorage(Palette<T> palette)
     {
@@ -53,26 +51,18 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
             {
                 _palette.ForceNormalMode();
 
-                _lock.EnterWriteLock();
-                try
-                {
-                    // Fill with the same value
-                    EnsureCapacity(values.Length - 1);
+                // Fill with the same value
+                EnsureCapacity(values.Length - 1);
 
-                    if (paletteId == 0) return; // Nothing to do for default value
+                if (paletteId == 0) return; // Nothing to do for default value
 
-                    // Set all bits to the same value efficiently
-                    ulong filledLong = 0UL;
-                    for (int i = 0; i < _entriesPerLong; i++)
-                        filledLong |= ((ulong)paletteId & _palette.Mask) << (i * _palette.BitsPerEntry);
+                // Set all bits to the same value efficiently
+                ulong filledLong = 0UL;
+                for (int i = 0; i < _entriesPerLong; i++)
+                    filledLong |= ((ulong)paletteId & _palette.Mask) << (i * _palette.BitsPerEntry);
 
-                    for (int i = 0; i < _data.Count; i++)
-                        _data[i] = filledLong;
-                }
-                finally
-                {
-                    _lock.ExitWriteLock();
-                }
+                for (int i = 0; i < _data.Count; i++)
+                    _data[i] = filledLong;
             }
             return;
         }
@@ -84,6 +74,7 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
         // First pass - identify unique values
         foreach (var value in values)
         {
+            if (value == null) continue;
             if (!uniqueValues.ContainsKey(value))
             {
                 var id = _palette.GetId(value);
@@ -99,27 +90,20 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
         if (_isSingleEntryMode && hasNonDefaultValues)
             _palette.ForceNormalMode();
 
-        _lock.EnterWriteLock();
-        try
+        // Ensure we have enough capacity for all values
+        EnsureCapacity(values.Length - 1);
+
+        // Second pass - write values directly to storage
+        for (int i = 0; i < values.Length; i++)
         {
-            // Ensure we have enough capacity for all values
-            EnsureCapacity(values.Length - 1);
+            if (values[i] == null) continue;
+            var paletteId = (ulong)uniqueValues[values[i]];
+            if (paletteId == 0) continue; // Skip default values
 
-            // Second pass - write values directly to storage
-            for (int i = 0; i < values.Length; i++)
-            {
-                var paletteId = (ulong)uniqueValues[values[i]];
-                if (paletteId == 0) continue; // Skip default values
+            var longIndex = i / _entriesPerLong;
+            var bitOffset = (i % _entriesPerLong) * _palette.BitsPerEntry;
 
-                var longIndex = i / _entriesPerLong;
-                var bitOffset = (i % _entriesPerLong) * _palette.BitsPerEntry;
-
-                _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
-            }
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
+            _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
         }
     }
 
@@ -129,22 +113,14 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
 
         if (_isSingleEntryMode) return _palette.GetValue(0);
 
-        _lock.EnterReadLock();
-        try
-        {
-            var longIndex = index / _entriesPerLong;
-            if (longIndex >= _data.Count) return _palette.DefaultValue;
+        var longIndex = index / _entriesPerLong;
+        if (longIndex >= _data.Count) return _palette.DefaultValue;
 
-            var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
-            var mask = _palette.Mask << bitOffset;
-            var value = (_data[longIndex] & mask) >> bitOffset;
+        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
+        var mask = _palette.Mask << bitOffset;
+        var value = (_data[longIndex] & mask) >> bitOffset;
 
-            return _palette.GetValue((int)value);
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
+        return _palette.GetValue((int)value);
     }
 
     public void Set(int index, T value)
@@ -161,21 +137,13 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
                 _palette.ForceNormalMode();
         }
 
-        _lock.EnterWriteLock();
-        try
-        {
-            EnsureCapacity(index);
+        EnsureCapacity(index);
 
-            var longIndex = index / _entriesPerLong;
-            var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
+        var longIndex = index / _entriesPerLong;
+        var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
 
-            _data[longIndex] &= ~(_palette.Mask << bitOffset);
-            _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+        _data[longIndex] &= ~(_palette.Mask << bitOffset);
+        _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
     }
 
     public void SetRange(IEnumerable<(int Index, T Value)> entries)
@@ -198,26 +166,18 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
                 return; // All entries have the default value, nothing to do
         }
 
-        _lock.EnterWriteLock();
-        try
-        {
-            // Find the highest index to ensure capacity once
-            var maxIndex = entriesList.Max(e => e.Index);
-            EnsureCapacity(maxIndex);
+        // Find the highest index to ensure capacity once
+        var maxIndex = entriesList.Max(e => e.Index);
+        EnsureCapacity(maxIndex);
 
-            foreach (var (index, value) in entriesList)
-            {
-                var paletteId = (ulong)_palette.GetId(value);
-                var longIndex = index / _entriesPerLong;
-                var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
-
-                _data[longIndex] &= ~(_palette.Mask << bitOffset);
-                _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
-            }
-        }
-        finally
+        foreach (var (index, value) in entriesList)
         {
-            _lock.ExitWriteLock();
+            var paletteId = (ulong)_palette.GetId(value);
+            var longIndex = index / _entriesPerLong;
+            var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
+
+            _data[longIndex] &= ~(_palette.Mask << bitOffset);
+            _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
         }
     }
 
@@ -232,37 +192,29 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
     {
         if (_isSingleEntryMode) return;
 
-        _lock.EnterWriteLock();
-        try
+        var oldData = _data;
+        _data = new List<ulong>(CalculateNewCapacity(oldData.Count, oldBits, newBits));
+
+        var oldEntriesPerLong = 64 / oldBits;
+        var newEntriesPerLong = 64 / newBits;
+        var totalEntries = oldData.Count * oldEntriesPerLong;
+
+        for (var i = 0; i < totalEntries; i++)
         {
-            var oldData = _data;
-            _data = new List<ulong>(CalculateNewCapacity(oldData.Count, oldBits, newBits));
+            var oldLongIndex = i / oldEntriesPerLong;
+            var oldBitOffset = (i % oldEntriesPerLong) * oldBits;
+            var oldValue = (oldData[oldLongIndex] >> oldBitOffset) & ((1UL << oldBits) - 1);
 
-            var oldEntriesPerLong = 64 / oldBits;
-            var newEntriesPerLong = 64 / newBits;
-            var totalEntries = oldData.Count * oldEntriesPerLong;
+            var newLongIndex = i / newEntriesPerLong;
+            var newBitOffset = (i % newEntriesPerLong) * newBits;
 
-            for (var i = 0; i < totalEntries; i++)
-            {
-                var oldLongIndex = i / oldEntriesPerLong;
-                var oldBitOffset = (i % oldEntriesPerLong) * oldBits;
-                var oldValue = (oldData[oldLongIndex] >> oldBitOffset) & ((1UL << oldBits) - 1);
+            if (newLongIndex >= _data.Count)
+                _data.Add(0UL);
 
-                var newLongIndex = i / newEntriesPerLong;
-                var newBitOffset = (i % newEntriesPerLong) * newBits;
-
-                if (newLongIndex >= _data.Count)
-                    _data.Add(0UL);
-
-                _data[newLongIndex] |= (oldValue & _palette.Mask) << newBitOffset;
-            }
-
-            UpdateEntriesPerLong();
+            _data[newLongIndex] |= (oldValue & _palette.Mask) << newBitOffset;
         }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+
+        UpdateEntriesPerLong();
     }
 
     private int CalculateNewCapacity(int oldLongCount, int oldBits, int newBits)
@@ -275,16 +227,8 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
     {
         if (_isSingleEntryMode == isSingleEntry) return;
 
-        _lock.EnterWriteLock();
-        try
-        {
-            _isSingleEntryMode = isSingleEntry;
-            if (isSingleEntry) _data.Clear();
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+        _isSingleEntryMode = isSingleEntry;
+        if (isSingleEntry) _data.Clear();
     }
 
     private void UpdateEntriesPerLong() =>
@@ -294,7 +238,6 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
 
     public void Dispose()
     {
-        _lock.Dispose();
         GC.SuppressFinalize(this);
     }
 
