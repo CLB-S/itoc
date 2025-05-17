@@ -3,6 +3,10 @@
 .vs/
 .aider*
 
+# .NET specific ignores
+obj/
+bin/
+
 # Godot 4+ specific ignores
 .godot/
 /android/
