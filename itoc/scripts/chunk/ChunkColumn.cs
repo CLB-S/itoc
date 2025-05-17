@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using ITOC;
-using Palette;
+using ITOC.Libs.Palette;
 
 public class ChunkColumn
 {

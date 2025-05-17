@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Palette;
+namespace ITOC.Libs.Palette;
 
 public class Palette<T> where T : IEquatable<T>
 {

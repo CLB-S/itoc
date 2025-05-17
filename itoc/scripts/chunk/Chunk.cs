@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Collections.Generic;
 using Godot;
-using Palette;
+using ITOC.Libs.Palette;
 
 namespace ITOC;
 
