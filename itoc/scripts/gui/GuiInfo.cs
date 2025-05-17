@@ -25,8 +25,7 @@ public partial class GuiInfo : RichTextLabel
         var camFacing = CameraHelper.Instance.GetCameraFacing();
         var camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
         var camFacingDirName = camFacingDir.Name();
-        var chunkIndex = World.WorldToChunkPosition(camPos);
-        var chunkColumn = Core.Instance.CurrentWorld.ChunkColumns.GetValueOrDefault(new Vector2I(chunkIndex.X, chunkIndex.Z), null);
+        var chunkIndex = World.WorldToChunkIndex(camPos);
 
         // Time
         var worldTime = Core.Instance.CurrentWorld.Time;
@@ -53,8 +52,11 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkIndex.X}, {chunkIndex.Y}, {chunkIndex.Z}");
         debugTextBuilder.AppendLine(
             $"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
-        debugTextBuilder.AppendLine(
-            $"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn?.GetBiomeWeights(camPos.X, camPos.Z))}");
+
+        if (Core.Instance.CurrentWorld.ChunkColumns.TryGetValue(new Vector2I(chunkIndex.X, chunkIndex.Z), out var chunkColumn))
+            debugTextBuilder.AppendLine(
+                $"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn.GetBiomeWeights(camPos.X, camPos.Z))}");
+
         debugTextBuilder.AppendLine(
             $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
         debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {Core.Instance.CurrentWorld.Chunks.Count}");

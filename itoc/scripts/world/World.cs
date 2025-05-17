@@ -86,7 +86,7 @@ public class World
 
         if ((PlayerPos - _lastPlayerPosition).Length() > ChunkMesher.CS / 2)
         {
-            PlayerChunk = WorldToChunkPosition(PlayerPos);
+            PlayerChunk = WorldToChunkIndex(PlayerPos);
             UpdateChunkLoading();
             _lastPlayerPosition = PlayerPos;
             OnPlayerMovedHalfAChunk?.Invoke(this, PlayerPos);
@@ -113,7 +113,7 @@ public class World
 
     public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
-        var chunkIndex = WorldToChunkPosition(worldPos);
+        var chunkIndex = WorldToChunkIndex(worldPos);
         Chunks.TryGetValue(chunkIndex, out var chunk);
         return chunk;
     }
@@ -169,7 +169,7 @@ public class World
 
     #region Utility methods
 
-    public static Vector3I WorldToChunkPosition(Vector3 worldPos)
+    public static Vector3I WorldToChunkIndex(Vector3 worldPos)
     {
         return new Vector3I(
             Mathf.FloorToInt(worldPos.X / ChunkMesher.CS),
