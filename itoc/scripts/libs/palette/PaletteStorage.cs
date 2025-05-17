@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace ITOC.Libs.Palette;
 
-// TODO: Testing & OnBitsDecreased
-
-public class PaletteStorage<T> where T : IEquatable<T>
+public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
 {
     private readonly Palette<T> _palette;
     private List<ulong> _data = new();
     private int _entriesPerLong;
     private bool _isSingleEntryMode;
-    private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.NoRecursion);
 
     public PaletteStorage(Palette<T> palette)
     {
@@ -25,16 +24,15 @@ public class PaletteStorage<T> where T : IEquatable<T>
 
     public T Get(int index)
     {
-        if (index < 0) return _palette.GetValue(-1);
+        if (index < 0) return _palette.DefaultValue;
 
-        // If we're in single entry mode, always return the first palette entry
         if (_isSingleEntryMode) return _palette.GetValue(0);
 
         _lock.EnterReadLock();
         try
         {
             var longIndex = index / _entriesPerLong;
-            if (longIndex >= _data.Count) return _palette.GetValue(-1);
+            if (longIndex >= _data.Count) return _palette.DefaultValue;
 
             var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
             var mask = _palette.Mask << bitOffset;
@@ -56,14 +54,10 @@ public class PaletteStorage<T> where T : IEquatable<T>
 
     public void Set(int index, ulong paletteId)
     {
-        // If we're in single entry mode, we don't need to store anything
-        // Just ensure the palette ID is 0 (first entry)
         if (_isSingleEntryMode)
         {
             if (paletteId != 0)
-                // This would exit single entry mode, handled by UpdateSingleEntryMode callback
-                _palette.GetId(_palette.GetValue((int)paletteId));
-            return;
+                _palette.ForceNormalMode();
         }
 
         _lock.EnterWriteLock();
@@ -74,12 +68,51 @@ public class PaletteStorage<T> where T : IEquatable<T>
             var longIndex = index / _entriesPerLong;
             var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
 
-            // Clear the current value
-            var clearMask = ~(_palette.Mask << bitOffset);
-            _data[longIndex] &= clearMask;
-
-            // Set the new value
+            _data[longIndex] &= ~(_palette.Mask << bitOffset);
             _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    public void SetRange(IEnumerable<(int Index, T Value)> entries)
+    {
+        if (entries == null || !entries.Any())
+            return;
+
+        // Convert to list to avoid multiple enumeration
+        var entriesList = entries.ToList();
+
+        // In single entry mode, check if we need to transition
+        if (_isSingleEntryMode)
+        {
+            // Check if all entries have the same palette ID 0
+            var allSameValue = entriesList.All(e => _palette.GetId(e.Value) == 0);
+
+            if (!allSameValue)
+                _palette.ForceNormalMode();
+            else
+                return; // All entries have the default value, nothing to do
+        }
+
+        _lock.EnterWriteLock();
+        try
+        {
+            // Find the highest index to ensure capacity once
+            var maxIndex = entriesList.Max(e => e.Index);
+            EnsureCapacity(maxIndex);
+
+            foreach (var (index, value) in entriesList)
+            {
+                var paletteId = (ulong)_palette.GetId(value);
+                var longIndex = index / _entriesPerLong;
+                var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
+
+                _data[longIndex] &= ~(_palette.Mask << bitOffset);
+                _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
+            }
         }
         finally
         {
@@ -89,52 +122,52 @@ public class PaletteStorage<T> where T : IEquatable<T>
 
     private void EnsureCapacity(int index)
     {
-        // No need to ensure capacity in single entry mode
-        if (_isSingleEntryMode) return;
-
-        // This method is called from Set which already has a write lock
         var requiredLongs = index / _entriesPerLong + 1;
         while (_data.Count < requiredLongs)
             _data.Add(0UL);
     }
 
-    private void MigrateData(int newBits)
+    private void MigrateData(int oldBits, int newBits)
     {
-        // If we're in single entry mode, no need to migrate
         if (_isSingleEntryMode) return;
 
         _lock.EnterWriteLock();
         try
         {
             var oldData = _data;
-            _data = new List<ulong>();
-            UpdateEntriesPerLong();
+            _data = new List<ulong>(CalculateNewCapacity(oldData.Count, oldBits, newBits));
 
-            var entriesToMigrate = oldData.Count * _entriesPerLong;
-            for (var i = 0; i < entriesToMigrate; i++)
+            var oldEntriesPerLong = 64 / oldBits;
+            var newEntriesPerLong = 64 / newBits;
+            var totalEntries = oldData.Count * oldEntriesPerLong;
+
+            for (var i = 0; i < totalEntries; i++)
             {
-                // Reconstruct the value using old packing
-                var oldLongIndex = i / (64 / (newBits - 1));
-                var oldBitOffset = i % (64 / (newBits - 1)) * (newBits - 1);
-                var oldValue = (oldData[oldLongIndex] >> oldBitOffset) & ((1UL << (newBits - 1)) - 1);
+                var oldLongIndex = i / oldEntriesPerLong;
+                var oldBitOffset = (i % oldEntriesPerLong) * oldBits;
+                var oldValue = (oldData[oldLongIndex] >> oldBitOffset) & ((1UL << oldBits) - 1);
 
-                // Store with new packing - calling Set() with the write lock already acquired would deadlock
-                // So we duplicate the logic from Set() here
-                var longIndex = i / _entriesPerLong;
-                var bitOffset = i % _entriesPerLong * _palette.BitsPerEntry;
+                var newLongIndex = i / newEntriesPerLong;
+                var newBitOffset = (i % newEntriesPerLong) * newBits;
 
-                // Ensure capacity
-                while (_data.Count <= longIndex)
+                if (newLongIndex >= _data.Count)
                     _data.Add(0UL);
 
-                // Set the new value
-                _data[longIndex] |= (oldValue & _palette.Mask) << bitOffset;
+                _data[newLongIndex] |= (oldValue & _palette.Mask) << newBitOffset;
             }
+
+            UpdateEntriesPerLong();
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+    }
+
+    private int CalculateNewCapacity(int oldLongCount, int oldBits, int newBits)
+    {
+        var totalEntries = oldLongCount * (64 / oldBits);
+        return (totalEntries + (64 / newBits) - 1) / (64 / newBits);
     }
 
     private void UpdateSingleEntryMode(bool isSingleEntry)
@@ -145,14 +178,7 @@ public class PaletteStorage<T> where T : IEquatable<T>
         try
         {
             _isSingleEntryMode = isSingleEntry;
-
-            if (_isSingleEntryMode)
-            {
-                // Transitioning to single entry mode, we can clear the data
-                _data.Clear();
-            }
-            // Transitioning from single entry mode to normal mode
-            // All entries were implicitly 0, no need to initialize anything
+            if (isSingleEntry) _data.Clear();
         }
         finally
         {
@@ -160,29 +186,16 @@ public class PaletteStorage<T> where T : IEquatable<T>
         }
     }
 
-    private void UpdateEntriesPerLong()
-    {
+    private void UpdateEntriesPerLong() =>
         _entriesPerLong = 64 / _palette.BitsPerEntry;
-    }
 
-    public int GetStorageSize()
-    {
-        if (_isSingleEntryMode) return 0;
+    public int StorageSize => _isSingleEntryMode ? 0 : _data.Count;
 
-        _lock.EnterReadLock();
-        try
-        {
-            return _data.Count;
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
-
-    // Ensure proper disposal of the lock
-    ~PaletteStorage()
+    public void Dispose()
     {
         _lock.Dispose();
+        GC.SuppressFinalize(this);
     }
+
+    ~PaletteStorage() => Dispose();
 }

@@ -4,23 +4,28 @@ using System.Threading;
 
 namespace ITOC.Libs.Palette;
 
-public class Palette<T> where T : IEquatable<T>
+public sealed class Palette<T> : IDisposable where T : IEquatable<T>
 {
     private readonly List<T> _entries = new();
-    private readonly T _defaultValue;
     private readonly int _initialBits;
-    private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-    public event Action<int> OnBitsIncreased;
+    private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.NoRecursion);
+
+    public event Action<int, int> OnBitsIncreased;
     public event Action<bool> OnSingleEntryStateChanged;
 
     public Palette(T defaultValue, int initialBits = 4)
     {
-        _defaultValue = defaultValue;
+        DefaultValue = defaultValue;
         _entries.Add(defaultValue);
         _initialBits = initialBits;
         UpdateBits(initialBits);
         IsSingleEntry = true;
     }
+
+    public T DefaultValue { get; }
+    public int BitsPerEntry { get; private set; }
+    public ulong Mask { get; private set; }
+    public bool IsSingleEntry { get; private set; }
 
     public int GetId(T value)
     {
@@ -28,43 +33,26 @@ public class Palette<T> where T : IEquatable<T>
         try
         {
             for (var i = 0; i < _entries.Count; i++)
-                if (_entries[i] == null)
-                {
-                    if (value == null) return i;
-                }
-                else if (_entries[i].Equals(value))
-                {
+                if (EqualityComparer<T>.Default.Equals(_entries[i], value))
                     return i;
-                }
 
             _lock.EnterWriteLock();
             try
             {
-                // Double-check in case another thread added the value while we were waiting for the write lock
-                for (var i = 0; i < _entries.Count; i++)
-                    if (_entries[i] == null)
-                    {
-                        if (value == null) return i;
-                    }
-                    else if (_entries[i].Equals(value))
-                    {
-                        return i;
-                    }
-
                 var newId = _entries.Count;
                 _entries.Add(value);
 
-                // Update single entry state
                 var wasSingleEntry = IsSingleEntry;
-                IsSingleEntry = _entries.Count <= 1;
-                if (wasSingleEntry != IsSingleEntry)
-                    OnSingleEntryStateChanged?.Invoke(IsSingleEntry);
+                IsSingleEntry = false;
+                if (wasSingleEntry)
+                    OnSingleEntryStateChanged?.Invoke(false);
 
                 var requiredBits = CalculateRequiredBits();
                 if (requiredBits > BitsPerEntry)
                 {
+                    var oldBits = BitsPerEntry;
                     UpdateBits(requiredBits);
-                    OnBitsIncreased?.Invoke(requiredBits);
+                    OnBitsIncreased?.Invoke(oldBits, requiredBits);
                 }
 
                 return newId;
@@ -85,7 +73,7 @@ public class Palette<T> where T : IEquatable<T>
         _lock.EnterReadLock();
         try
         {
-            return id >= 0 && id < _entries.Count ? _entries[id] : _defaultValue;
+            return id >= 0 && id < _entries.Count ? _entries[id] : DefaultValue;
         }
         finally
         {
@@ -93,44 +81,43 @@ public class Palette<T> where T : IEquatable<T>
         }
     }
 
-    private int CalculateRequiredBits()
+    public void ForceNormalMode()
     {
-        if (_entries.Count <= Math.Pow(2, _initialBits))
-            return _initialBits;
+        if (!IsSingleEntry) return;
 
-        return _entries.Count <= 1 ? 1 : (int)Math.Ceiling(Math.Log2(_entries.Count));
-    }
-
-    private void UpdateBits(int bits)
-    {
-        BitsPerEntry = bits;
-        Mask = (1UL << bits) - 1UL;
-    }
-
-    public int BitsPerEntry { get; private set; }
-    public ulong Mask { get; private set; }
-
-    public int Count
-    {
-        get
+        _lock.EnterWriteLock();
+        try
         {
-            _lock.EnterReadLock();
-            try
-            {
-                return _entries.Count;
-            }
-            finally
-            {
-                _lock.ExitReadLock();
-            }
+            IsSingleEntry = false;
+            OnSingleEntryStateChanged?.Invoke(false);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
         }
     }
 
-    public bool IsSingleEntry { get; private set; }
+    private int CalculateRequiredBits()
+    {
+        var count = _entries.Count;
+        if (count <= 1) return 1;
 
-    // Ensure proper disposal of the lock
-    ~Palette()
+        int bits = _initialBits;
+        while ((1 << bits) < count) bits++;
+        return bits;
+    }
+
+    private void UpdateBits(int newBits)
+    {
+        BitsPerEntry = newBits;
+        Mask = (1UL << newBits) - 1UL;
+    }
+
+    public void Dispose()
     {
         _lock.Dispose();
+        GC.SuppressFinalize(this);
     }
+
+    ~Palette() => Dispose();
 }

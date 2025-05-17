@@ -130,7 +130,7 @@ public class Chunk : IDisposable
 
     public virtual int GetBytes()
     {
-        return _paletteStorage.GetStorageSize() * sizeof(ulong) +
+        return _paletteStorage.StorageSize * sizeof(ulong) +
                _opaqueMask.Length * sizeof(ulong)
                  + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
     }
@@ -204,6 +204,57 @@ public class Chunk : IDisposable
         {
             _transparentMasks ??= new ulong[ChunkMesher.CS_P2];
             ChunkMesher.AddOpaqueVoxel(_transparentMasks, x, y, z);
+        }
+    }
+
+    public virtual void SetRange(IEnumerable<(Vector3I Position, Block Block)> blocks)
+    {
+        var entriesForPalette = new List<(int Index, Block Block)>();
+        var positionsToUpdate = new List<(int X, int Y, int Z, Block Block)>();
+        var blockUpdates = new List<OnBlockUpdatedEventArgs>();
+
+        foreach (var (pos, block) in blocks)
+        {
+            if (!IsPositionInChunk(pos))
+                continue;
+
+            var index = ChunkMesher.GetBlockIndex(pos.X, pos.Y, pos.Z);
+            var oldBlock = _paletteStorage.Get(index);
+            if (oldBlock == block)
+                continue;
+
+            entriesForPalette.Add((index, block));
+            positionsToUpdate.Add((pos.X + 1, pos.Y + 1, pos.Z + 1, block));
+
+            if (State == ChunkState.Ready)
+                blockUpdates.Add(new OnBlockUpdatedEventArgs(pos, oldBlock, block));
+        }
+
+        // Batch update the palette storage
+        _paletteStorage.SetRange(entriesForPalette.ToArray());
+
+        // Update mesher masks
+        _lock.EnterWriteLock();
+        try
+        {
+            foreach (var (x, y, z, block) in positionsToUpdate)
+                SetMesherMaskInternal(x, y, z, block);
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+
+        // Trigger events if the chunk is ready
+        if (State == ChunkState.Ready)
+        {
+            foreach (var update in blockUpdates)
+            {
+                OnBlockUpdated?.Invoke(this, update);
+            }
+
+            if (blockUpdates.Count > 0)
+                OnMeshUpdated?.Invoke(this, EventArgs.Empty);
         }
     }
 
