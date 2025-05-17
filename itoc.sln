@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "itoc", "itoc.csproj", "{6D010806-6247-48C0-875F-8ED8CA4E2966}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "itoc", "itoc\itoc.csproj", "{6D010806-6247-48C0-875F-8ED8CA4E2966}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
