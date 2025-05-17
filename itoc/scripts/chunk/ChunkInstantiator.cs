@@ -20,15 +20,22 @@ public partial class ChunkInstantiator : Node3D
     private int _maxLodLevel = 0;
     private double[] _lodDistanceThresholds;
 
+    private Vector3I _playerChunkIndex = Vector3I.Zero;
+
     private World _world;
 
     public ChunkInstantiator(World world)
     {
         _world = world;
         _world.OnPlayerMoved += (s, pos) => UpdatePlayerPosition(pos);
-        _world.OnPlayerMovedHalfAChunk += (s, pos) => UpdateCollisionShapes();
+
+        _world.OnPlayerMovedHalfAChunk += (s, pos) =>
+        {
+            UpdateVisibility();
+            UpdateCollisionShapes();
+        };
+
         _world.OnChunkGenerated += (s, chunk) => AddChunk(chunk);
-        _world.OnChunkMeshUpdated += (s, chunk) => QueueChunkForUpdate(chunk);
     }
 
     public override void _Ready()
@@ -51,43 +58,63 @@ public partial class ChunkInstantiator : Node3D
 
         _lodDistanceThresholds = new double[_maxLodLevel];
         UpdateLodThreshoulds();
+
+        _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        // Update chunk meshes and remove them from the dictionary
+        foreach (var chunk in _chunksToUpdateMesh)
+            AddOrUpdateChunkMesh(chunk.Value);
+
+        _chunksToUpdateMesh.Clear();
     }
 
     public void UpdatePlayerPosition(Vector3 position)
     {
         _playerPosition = position;
-        UpdateInstances();
+        _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
     }
 
     private void UpdateCollisionShapes()
     {
-        var playerChunkPos = World.WorldToChunkPosition(_playerPosition);
-        var physicsDistance = Core.Instance.Settings.PhysicsDistance;
-
         foreach (var chunkMesh in _lodChunkMeshes[0].Values)
+            UpdateCollision(chunkMesh);
+    }
+
+    private void UpdateCollision(ChunkMesh chunkMesh)
+    {
+        var physicsDistance = Core.Instance.Settings.PhysicsDistance;
+        bool shouldHaveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) <= physicsDistance;
+        bool shouldRemoveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) >= physicsDistance + 1;
+
+        // Add collision if needed and not already present
+        if (shouldHaveCollision && chunkMesh.State == ChunkMeshState.Rendered && chunkMesh.CollisionBody == null)
         {
-            bool shouldHaveCollision = chunkMesh.Index.DistanceTo(playerChunkPos) <= physicsDistance;
-            bool shouldRemoveCollision = chunkMesh.Index.DistanceTo(playerChunkPos) >= physicsDistance + 1;
+            var collisionBody = _collisionBodyPool.Get();
+            collisionBody.Position = chunkMesh.Position;
 
-            // Add collision if needed and not already present
-            if (shouldHaveCollision && chunkMesh.State == ChunkMeshState.Rendered && chunkMesh.CollisionBody == null)
-            {
-                var collisionBody = _collisionBodyPool.Get();
-                collisionBody.Position = chunkMesh.Position;
+            var collisionShape = collisionBody.GetChild<CollisionShape3D>(0);
+            collisionShape.Shape = chunkMesh.Mesh?.CreateTrimeshShape();
 
-                var collisionShape = collisionBody.GetChild<CollisionShape3D>(0);
-                collisionShape.Shape = chunkMesh.Mesh?.CreateTrimeshShape();
-
-                chunkMesh.CollisionBody = collisionBody;
-            }
-            // Remove collision if it's out of range but has collision
-            else if (shouldRemoveCollision && chunkMesh.CollisionBody != null)
-            {
-                _collisionBodyPool.Release(chunkMesh.CollisionBody);
-                chunkMesh.CollisionBody = null;
-            }
+            chunkMesh.CollisionBody = collisionBody;
+            chunkMesh.CollisionShape = collisionShape;
+        }
+        // Remove collision if it's out of range but has collision
+        else if (shouldRemoveCollision && chunkMesh.CollisionBody != null)
+        {
+            _collisionBodyPool.Release(chunkMesh.CollisionBody);
+            chunkMesh.CollisionBody = null;
+            chunkMesh.CollisionShape = null;
         }
     }
+
+    private void UpdateCollisionShapesDeferred()
+    {
+        CallDeferred(nameof(UpdateCollisionShapes));
+    }
+
 
     private void UpdateLodThreshoulds()
     {
@@ -131,13 +158,8 @@ public partial class ChunkInstantiator : Node3D
         );
     }
 
-    public void UpdateInstances()
+    public void UpdateVisibility()
     {
-        // Update chunk meshes and remove them from the dictionary
-        foreach (var chunk in _chunksToUpdateMesh)
-            AddOrUpdateChunkMesh(chunk.Value);
-        _chunksToUpdateMesh.Clear();
-
         // Track chunks that should be visible at each LOD level
         var visibleChunks = new HashSet<(int, Vector3I)>();
 
@@ -178,7 +200,7 @@ public partial class ChunkInstantiator : Node3D
 
     public void UpdateInstancesDeferred()
     {
-        CallDeferred(nameof(UpdateInstances));
+        CallDeferred(nameof(UpdateVisibility));
     }
 
     private void EnsureChunkIsRendered(ChunkMesh chunkMesh)
@@ -216,12 +238,15 @@ public partial class ChunkInstantiator : Node3D
         if (chunk.Lod != 0)
             throw new ArgumentException("Chunk must be at LOD 0 to be added.");
 
+        chunk.OnMeshUpdated += (s, args) => QueueChunkForUpdate(chunk);
+
         var task = new ActionTask(() =>
         {
             AddOrUpdateChunkMesh(chunk);
-            GenerateOrUpdateParentLodChunk(chunk);
+            UpdateCollisionShapesDeferred();
+            GenerateParentLodChunk(chunk);
             UpdateInstancesDeferred();
-        }, "ChunkInstantiator.AddChunk");
+        }, "ChunkInstantiator.AddChunk", TaskPriority.High);
 
         Core.Instance.TaskManager.EnqueueTask(task);
     }
@@ -234,12 +259,28 @@ public partial class ChunkInstantiator : Node3D
             (key, oldValue) =>
             {
                 oldValue.Mesh = chunk.GetMesh();
-                oldValue.State = ChunkMeshState.NeedUpdate;
+                if (oldValue.State == ChunkMeshState.Rendered)
+                    CallDeferred(nameof(OnRenderdeChunkMeshUpdated), chunk.Lod, chunk.Index);
+
                 return oldValue;
             });
     }
 
-    private void GenerateOrUpdateParentLodChunk(Chunk chunk)
+    private void OnRenderdeChunkMeshUpdated(int lod, Vector3I index)
+    {
+        // Handle the updated chunk mesh here
+        if (_lodChunkMeshes[lod].TryGetValue(index, out var chunkMesh))
+        {
+            if (chunkMesh.State != ChunkMeshState.Rendered)
+                return;
+
+            chunkMesh.MeshInstance.Mesh = chunkMesh.Mesh;
+            if (chunkMesh.CollisionShape != null)
+                chunkMesh.CollisionShape.Shape = chunkMesh.Mesh.CreateTrimeshShape();
+        }
+    }
+
+    private void GenerateParentLodChunk(Chunk chunk)
     {
         if (chunk.Lod == _maxLodLevel)
             return;
@@ -265,7 +306,7 @@ public partial class ChunkInstantiator : Node3D
         lodChunk.SetChildChunk(localPos, chunk);
         AddOrUpdateChunkMesh(lodChunk);
 
-        GenerateOrUpdateParentLodChunk(lodChunk);
+        GenerateParentLodChunk(lodChunk);
     }
 
     public void QueueChunkForUpdate(Chunk chunk)

@@ -26,7 +26,6 @@ public class ChunkColumnGenerationSecondaryPass : IPass
         var task = new ActionTask(
             () =>
             {
-                // GD.Print($"Executing secondary pass at {chunkColumnPos}");
                 for (int i = -Extend; i <= Extend; i++)
                 {
                     for (int j = -Extend; j <= Extend; j++)
@@ -41,7 +40,7 @@ public class ChunkColumnGenerationSecondaryPass : IPass
             "SecondaryPass");
 
         task.Completed += (sender, args) =>
-            PassCompleted?.Invoke(this, new PassEventArgs(Pass, chunkColumnPos));
+            PassCompleted?.Invoke(this, new PassEventArgs(Pass, chunkColumnPos)); // TODO: Check this. Potential high perf cost. 
 
         Core.Instance.TaskManager.EnqueueTask(task);
     }

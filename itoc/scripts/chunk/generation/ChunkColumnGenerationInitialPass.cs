@@ -25,7 +25,8 @@ public class ChunkColumnGenerationInitialPass : IPass
         var columnTask = new FunctionTask<ChunkColumn>(
             () => World.Generator.GenerateChunkColumn(chunkColumnPos),
             ChunkColumnGenerationCallback,
-            "ChunkColumnGenerationTask-" + chunkColumnPos
+            "ChunkColumnGenerationTask-" + chunkColumnPos,
+            TaskPriority.Low
         );
 
         // var columnTask = new ChunkColumnGenerationTask(Generator, pos, ChunkColumnGenerationCallback);
@@ -56,9 +57,10 @@ public class ChunkColumnGenerationInitialPass : IPass
             }
 
             var dependentTask = new DependentTask(
-                () => PassCompleted?.Invoke(this, new PassEventArgs(Pass, result.Index))
-                , "ChunkColumnGenerationInitialPass-" + result.Index
-                , dependencies: tasks.ToArray()
+                () => PassCompleted?.Invoke(this, new PassEventArgs(Pass, result.Index)),
+                "ChunkColumnGenerationInitialPass-" + result.Index,
+                TaskPriority.High,
+                dependencies: tasks.ToArray()
             );
 
             Core.Instance.TaskManager.EnqueueTask(dependentTask);

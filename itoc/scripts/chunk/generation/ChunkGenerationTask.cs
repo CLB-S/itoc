@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Godot;
 using ITOC.Multithreading;
@@ -37,6 +38,10 @@ public class ChunkGenerationTask : GameTask
 
     private void SetBlocksByHeightMap()
     {
+        // var debugBlock = BlockManager.Instance.GetBlock("dirt");
+        var waterBlock = BlockManager.Instance.GetBlock("water");
+        // var blockUpdates = new List<(Vector3I Position, Block Block)>();
+
         for (var x = 0; x < ChunkMesher.CS; x++)
             for (var z = 0; z < ChunkMesher.CS; z++)
             {
@@ -52,17 +57,23 @@ public class ChunkGenerationTask : GameTask
                     if (actualY <= height)
                     {
                         var blockType = DetermineBlockType(actualY, height, 0, 4);
+
+                        // blockUpdates.Add((new Vector3I(x, y, z), blockType));
                         _chunk.SetBlock(x, y, z, blockType);
                     }
                     else if (actualY <= 0)
                     {
-                        _chunk.SetBlock(x, y, z, "water");
+                        // blockUpdates.Add((new Vector3I(x, y, z), waterBlock));
+                        _chunk.SetBlock(x, y, z, waterBlock);
                     }
                 }
             }
+
+        // Set all blocks at once using the new SetRange method
+        // _chunk.SetRange(blockUpdates);
     }
 
-    private string DetermineBlockType(int actualY, int height, double maxSlope, int dirtDepth)
+    private static string DetermineBlockType(int actualY, int height, double maxSlope, int dirtDepth)
     {
         // Depth-based layers
         if (actualY > height - dirtDepth)
