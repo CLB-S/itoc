@@ -72,32 +72,32 @@ public class ChunkLod : Chunk
     #endregion
 
     #region LOD Management
-    public void SetChildChunk(int x, int y, int z, Chunk chunk)
+    public void SetOrUpdateChildChunk(int x, int y, int z, Chunk chunk)
     {
-        var startTime = DateTime.Now;
+        // var startTime = DateTime.Now;
         _childChunks[x, y, z] = chunk;
-        UpdateBlocksFromChildChunk(x, y, z);
+        SetBlocksFromChildChunk(x, y, z);
 
-        chunk.OnBlockUpdated += (s, e) =>
-        {
-            var lx = Mathf.FloorToInt(e.UpdatePosition.X / 2.0) + (x * ChunkMesher.CS / 2);
-            var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
-            var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
+        // chunk.OnBlockUpdated += (s, e) =>
+        // {
+        //     var lx = Mathf.FloorToInt(e.UpdatePosition.X / 2.0) + (x * ChunkMesher.CS / 2);
+        //     var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
+        //     var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
 
-            var block = GetBlockFromHigherLod(lx, ly, lz, chunk);
-            SetBlock(lx, ly, lz, block);
-        };
+        //     var block = GetBlockFromHigherLod(lx, ly, lz, chunk);
+        //     SetBlock(lx, ly, lz, block);
+        // };
 
-        GD.Print($"Child chunk set at {x}, {y}, {z} for ChunkLod {Index} with LOD {Lod} " +
-            $"in {(DateTime.Now - startTime).TotalMilliseconds} ms. Total children: {GetChildChunks().Count()}");
+        // GD.Print($"Child chunk set at {x}, {y}, {z} for ChunkLod {Index} with LOD {Lod} " +
+        //     $"in {(DateTime.Now - startTime).TotalMilliseconds} ms. Total children: {GetChildChunks().Count()}");
     }
 
-    public void SetChildChunk(Vector3I pos, Chunk chunk)
+    public void SetOrUpdateChildChunk(Vector3I pos, Chunk chunk)
     {
-        SetChildChunk(pos.X, pos.Y, pos.Z, chunk);
+        SetOrUpdateChildChunk(pos.X, pos.Y, pos.Z, chunk);
     }
 
-    private void UpdateBlocksFromChildChunk(int childX, int childY, int childZ)
+    private void SetBlocksFromChildChunk(int childX, int childY, int childZ)
     {
         var chunk = _childChunks[childX, childY, childZ];
         if (chunk == null) return;

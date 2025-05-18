@@ -125,7 +125,7 @@ public partial class ChunkInstantiator : Node3D
             _lodDistanceThresholds[lod] = CameraHelper.Instance.CalculateDistanceThresholdForPixels(pixelThreshold, 1 << lod);
 
         for (int lod = 0; lod < _lodDistanceThresholds.Length; lod++)
-            GD.Print($"LOD {lod} distance threshold: {_lodDistanceThresholds[lod]}");
+            GD.Print($"LOD {lod + 1} distance threshold: {_lodDistanceThresholds[lod]}");
     }
 
     // Determine the appropriate LOD level based on distance
@@ -244,7 +244,7 @@ public partial class ChunkInstantiator : Node3D
         {
             AddOrUpdateChunkMesh(chunk);
             UpdateCollisionShapesDeferred();
-            GenerateParentLodChunk(chunk);
+            GenerateOrUpdateParentLodChunk(chunk);
             UpdateInstancesDeferred();
         }, "ChunkInstantiator.AddChunk", TaskPriority.High);
 
@@ -280,7 +280,7 @@ public partial class ChunkInstantiator : Node3D
         }
     }
 
-    private void GenerateParentLodChunk(Chunk chunk)
+    private void GenerateOrUpdateParentLodChunk(Chunk chunk)
     {
         if (chunk.Lod == _maxLodLevel)
             return;
@@ -303,10 +303,10 @@ public partial class ChunkInstantiator : Node3D
             Mathf.PosMod(chunk.Index.Z, 2)
         );
 
-        lodChunk.SetChildChunk(localPos, chunk);
+        lodChunk.SetOrUpdateChildChunk(localPos, chunk);
         AddOrUpdateChunkMesh(lodChunk);
 
-        GenerateParentLodChunk(lodChunk);
+        GenerateOrUpdateParentLodChunk(lodChunk);
     }
 
     public void QueueChunkForUpdate(Chunk chunk)
