@@ -74,6 +74,7 @@ public class ChunkLod : Chunk
     #region LOD Management
     public void SetChildChunk(int x, int y, int z, Chunk chunk)
     {
+        var startTime = DateTime.Now;
         _childChunks[x, y, z] = chunk;
         UpdateBlocksFromChildChunk(x, y, z);
 
@@ -83,10 +84,11 @@ public class ChunkLod : Chunk
             var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
             var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
 
-            UpdateBlockFromHigherLod(lx, ly, lz, chunk);
+            GetBlockFromHigherLod(lx, ly, lz, chunk);
         };
 
-        // GD.Print($"Child chunk set at {x}, {y}, {z} for ChunkLod {Index} with LOD {Lod}. Total children: {GetChildChunks().Count()}");
+        GD.Print($"Child chunk set at {x}, {y}, {z} for ChunkLod {Index} with LOD {Lod} " +
+            $"in {(DateTime.Now - startTime).TotalMilliseconds} ms. Total children: {GetChildChunks().Count()}");
     }
 
     public void SetChildChunk(Vector3I pos, Chunk chunk)
@@ -105,15 +107,52 @@ public class ChunkLod : Chunk
         int baseZ = childZ * (ChunkMesher.CS / 2);
 
         // For each 2x2x2 group of blocks in the child chunk, determine the dominant block type
-        for (int x = 0; x < ChunkMesher.CS / 2; x++)
-            for (int y = 0; y < ChunkMesher.CS / 2; y++)
-                for (int z = 0; z < ChunkMesher.CS / 2; z++)
-                    UpdateBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, chunk);
+        var blocksToUpdate = new List<(Vector3I, Block)>();
+
+        // Check if the child chunk is a ChunkLod
+        if (chunk is ChunkLod childLod)
+        {
+            // Only update blocks where the child ChunkLod has loaded children
+            for (int cx = 0; cx < 2; cx++)
+                for (int cy = 0; cy < 2; cy++)
+                    for (int cz = 0; cz < 2; cz++)
+                    {
+                        var childChunk = childLod._childChunks[cx, cy, cz];
+                        if (childChunk == null) continue;
+
+                        // Calculate the start position for this sub-chunk in our coordinate system
+                        int startX = baseX + cx * (ChunkMesher.CS / 4);
+                        int startY = baseY + cy * (ChunkMesher.CS / 4);
+                        int startZ = baseZ + cz * (ChunkMesher.CS / 4);
+
+                        // Update the corresponding blocks in this LOD
+                        for (int x = 0; x < ChunkMesher.CS / 4; x++)
+                            for (int y = 0; y < ChunkMesher.CS / 4; y++)
+                                for (int z = 0; z < ChunkMesher.CS / 4; z++)
+                                {
+                                    var block = GetBlockFromHigherLod(startX + x, startY + y, startZ + z, childLod);
+                                    blocksToUpdate.Add((new Vector3I(startX + x, startY + y, startZ + z), block));
+                                }
+                    }
+        }
+        else
+        {
+            // Original logic for regular chunks
+            for (int x = 0; x < ChunkMesher.CS / 2; x++)
+                for (int y = 0; y < ChunkMesher.CS / 2; y++)
+                    for (int z = 0; z < ChunkMesher.CS / 2; z++)
+                    {
+                        var block = GetBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, chunk);
+                        blocksToUpdate.Add((new Vector3I(baseX + x, baseY + y, baseZ + z), block));
+                    }
+        }
+
+        SetRange(blocksToUpdate);
 
         State = ChunkState.Ready;
     }
 
-    public void UpdateBlockFromHigherLod(int x, int y, int z, Chunk childChunk = null)
+    public Block GetBlockFromHigherLod(int x, int y, int z, Chunk childChunk = null)
     {
         // Normalize the coordinates relative to the child chunk
         int localX = x % (ChunkMesher.CS / 2);
@@ -131,7 +170,7 @@ public class ChunkLod : Chunk
 
             // Skip if the child chunk isn't loaded
             if (childChunk == null)
-                return;
+                return null;
         }
 
         // Count occurrences of each block type in the 2x2x2 region
@@ -156,10 +195,7 @@ public class ChunkLod : Chunk
 
         // If all blocks are air, set this block to air
         if (airCount == 8)
-        {
-            SetBlock(x, y, z, (Block)null);
-            return;
-        }
+            return null;
 
         // Find the dominant block type
         Block dominantBlock = null;
@@ -172,7 +208,7 @@ public class ChunkLod : Chunk
                 dominantBlock = pair.Key;
             }
 
-        SetBlock(x, y, z, dominantBlock);
+        return dominantBlock;
     }
 
     #endregion

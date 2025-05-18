@@ -284,11 +284,7 @@ public class Chunk : IDisposable
                 _lock.EnterWriteLock();
                 try
                 {
-                    // Batch update the palette storage
-                    foreach (var (index, block) in entriesForPalette)
-                    {
-                        _paletteStorage.Set(index, block);
-                    }
+                    _paletteStorage.SetRange(entriesForPalette);
                 }
                 finally
                 {
@@ -321,9 +317,7 @@ public class Chunk : IDisposable
         if (State == ChunkState.Ready)
         {
             foreach (var update in blockUpdates)
-            {
                 OnBlockUpdated?.Invoke(this, update);
-            }
 
             if (blockUpdates.Count > 0)
                 OnMeshUpdated?.Invoke(this, EventArgs.Empty);
