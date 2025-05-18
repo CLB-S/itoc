@@ -42,7 +42,7 @@ public class ChunkColumnGenerationInitialPass : IPass
             World.ChunkColumns[result.Index] = result;
 
             var high = Mathf.FloorToInt(result.HeightMapHigh / ChunkMesher.CS);
-            var low = Mathf.FloorToInt((result.HeightMapLow - 2) / ChunkMesher.CS) - 1;
+            var low = Mathf.FloorToInt(result.HeightMapLow / ChunkMesher.CS);
 
             List<GameTask> tasks = new();
             for (var y = low; y <= high; y++)
