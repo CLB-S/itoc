@@ -122,6 +122,89 @@ public class Chunk : IDisposable
         }
     }
 
+    public Dictionary<Vector3I, Block> GetBlocks(Vector3I start, Vector3I end)
+    {
+        // Ensure start coordinates are less than or equal to end coordinates
+        var min = new Vector3I(
+            Mathf.Min(start.X, end.X),
+            Mathf.Min(start.Y, end.Y),
+            Mathf.Min(start.Z, end.Z)
+        );
+
+        var max = new Vector3I(
+            Mathf.Max(start.X, end.X),
+            Mathf.Max(start.Y, end.Y),
+            Mathf.Max(start.Z, end.Z)
+        );
+
+        // Clamp to chunk bounds
+        min = ClampPositionToChunk(min);
+        max = ClampPositionToChunk(max);
+
+        var result = new Dictionary<Vector3I, Block>();
+
+        _lock.EnterReadLock();
+        try
+        {
+            for (int x = min.X; x <= max.X; x++)
+                for (int y = min.Y; y <= max.Y; y++)
+                    for (int z = min.Z; z <= max.Z; z++)
+                    {
+                        var position = new Vector3I(x, y, z);
+                        var index = ChunkMesher.GetBlockIndex(position);
+                        result[position] = _paletteStorage.Get(index);
+                    }
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+
+        return result;
+    }
+
+    public Dictionary<Vector3I, Block> GetBlocks(IEnumerable<Vector3I> positions)
+    {
+        var result = new Dictionary<Vector3I, Block>();
+
+        _lock.EnterReadLock();
+        try
+        {
+            foreach (var position in positions)
+            {
+                if (!IsPositionInChunk(position))
+                    continue;
+
+                var index = ChunkMesher.GetBlockIndex(position);
+                result[position] = _paletteStorage.Get(index);
+            }
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+
+        return result;
+    }
+
+    public Block[] GetBlocks()
+    {
+        var blocks = new Block[ChunkMesher.CS_3];
+
+        _lock.EnterReadLock();
+        try
+        {
+            for (var i = 0; i < blocks.Length; i++)
+                blocks[i] = _paletteStorage.Get(i);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+
+        return blocks;
+    }
+
     public virtual ChunkMesher.MeshData GetRawMeshData()
     {
         if (State != ChunkState.Ready)
@@ -184,6 +267,9 @@ public class Chunk : IDisposable
 
     public virtual void SetBlock(int x, int y, int z, Block block)
     {
+        if (!IsPositionInChunk(new Vector3I(x, y, z)))
+            return;
+
         var index = ChunkMesher.GetBlockIndex(x, y, z);
 
         Block oldBlock;
@@ -253,7 +339,7 @@ public class Chunk : IDisposable
         }
     }
 
-    public virtual void SetRange(IEnumerable<(Vector3I Position, Block Block)> blocks)
+    public virtual void SetBlocks(IEnumerable<(Vector3I Position, Block Block)> blocks)
     {
         var entriesForPalette = new List<(int Index, Block Block)>();
         var positionsToUpdate = new List<(int X, int Y, int Z, Block Block)>();

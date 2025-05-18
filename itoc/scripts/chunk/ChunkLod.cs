@@ -84,7 +84,8 @@ public class ChunkLod : Chunk
             var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
             var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
 
-            GetBlockFromHigherLod(lx, ly, lz, chunk);
+            var block = GetBlockFromHigherLod(lx, ly, lz, chunk);
+            SetBlock(lx, ly, lz, block);
         };
 
         GD.Print($"Child chunk set at {x}, {y}, {z} for ChunkLod {Index} with LOD {Lod} " +
@@ -110,6 +111,7 @@ public class ChunkLod : Chunk
         var blocksToUpdate = new List<(Vector3I, Block)>();
 
         // Check if the child chunk is a ChunkLod
+        var blocks = chunk.GetBlocks();
         if (chunk is ChunkLod childLod)
         {
             // Only update blocks where the child ChunkLod has loaded children
@@ -126,11 +128,12 @@ public class ChunkLod : Chunk
                         int startZ = baseZ + cz * (ChunkMesher.CS / 4);
 
                         // Update the corresponding blocks in this LOD
-                        for (int x = 0; x < ChunkMesher.CS / 4; x++)
-                            for (int y = 0; y < ChunkMesher.CS / 4; y++)
-                                for (int z = 0; z < ChunkMesher.CS / 4; z++)
+                        for (int x = 0; x <= ChunkMesher.CS / 4; x++)
+                            for (int y = 0; y <= ChunkMesher.CS / 4; y++)
+                                for (int z = 0; z <= ChunkMesher.CS / 4; z++)
                                 {
-                                    var block = GetBlockFromHigherLod(startX + x, startY + y, startZ + z, childLod);
+                                    // var block = GetBlockFromHigherLod(startX + x, startY + y, startZ + z, childChunk);
+                                    var block = GetBlockFromHigherLod(startX + x, startY + y, startZ + z, blocks: blocks);
                                     blocksToUpdate.Add((new Vector3I(startX + x, startY + y, startZ + z), block));
                                 }
                     }
@@ -142,24 +145,27 @@ public class ChunkLod : Chunk
                 for (int y = 0; y < ChunkMesher.CS / 2; y++)
                     for (int z = 0; z < ChunkMesher.CS / 2; z++)
                     {
-                        var block = GetBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, chunk);
+                        var block = GetBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, blocks: blocks);
+                        // var block = GetBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, chunk);
                         blocksToUpdate.Add((new Vector3I(baseX + x, baseY + y, baseZ + z), block));
                     }
         }
 
-        SetRange(blocksToUpdate);
+        SetBlocks(blocksToUpdate);
 
         State = ChunkState.Ready;
     }
 
-    public Block GetBlockFromHigherLod(int x, int y, int z, Chunk childChunk = null)
+    public Block GetBlockFromHigherLod(int x, int y, int z, Chunk childChunk = null, Block[] blocks = null)
     {
         // Normalize the coordinates relative to the child chunk
         int localX = x % (ChunkMesher.CS / 2);
         int localY = y % (ChunkMesher.CS / 2);
         int localZ = z % (ChunkMesher.CS / 2);
 
-        if (childChunk == null)
+        var useBlocks = blocks != null && blocks.Length == ChunkMesher.CS_3;
+
+        if (!useBlocks && childChunk == null)
         {
             // If no child chunk is provided, use the one based on the coordinates
             int childX = x / (ChunkMesher.CS / 2);
@@ -181,7 +187,11 @@ public class ChunkLod : Chunk
             for (int dy = 0; dy < 2; dy++)
                 for (int dz = 0; dz < 2; dz++)
                 {
-                    Block block = childChunk.GetBlock(localX * 2 + dx, localY * 2 + dy, localZ * 2 + dz);
+                    Block block;
+                    if (useBlocks)
+                        block = blocks[ChunkMesher.GetBlockIndex(localX * 2 + dx, localY * 2 + dy, localZ * 2 + dz)];
+                    else
+                        block = childChunk.GetBlock(localX * 2 + dx, localY * 2 + dy, localZ * 2 + dz);
 
                     if (block == null)
                         airCount++;
