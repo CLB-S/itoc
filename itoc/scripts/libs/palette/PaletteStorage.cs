@@ -148,36 +148,12 @@ public sealed class PaletteStorage<T> : IDisposable where T : IEquatable<T>
 
     public void SetRange(IEnumerable<(int Index, T Value)> entries)
     {
-        if (entries == null || !entries.Any())
-            return;
+        if (entries == null) return;
 
-        // Convert to list to avoid multiple enumeration
-        var entriesList = entries.ToList();
-
-        // In single entry mode, check if we need to transition
-        if (_isSingleEntryMode)
+        foreach (var (index, value) in entries)
         {
-            // Check if all entries have the same palette ID 0
-            var allSameValue = entriesList.All(e => _palette.GetId(e.Value) == 0);
-
-            if (!allSameValue)
-                _palette.ForceNormalMode();
-            else
-                return; // All entries have the default value, nothing to do
-        }
-
-        // Find the highest index to ensure capacity once
-        var maxIndex = entriesList.Max(e => e.Index);
-        EnsureCapacity(maxIndex);
-
-        foreach (var (index, value) in entriesList)
-        {
-            var paletteId = (ulong)_palette.GetId(value);
-            var longIndex = index / _entriesPerLong;
-            var bitOffset = index % _entriesPerLong * _palette.BitsPerEntry;
-
-            _data[longIndex] &= ~(_palette.Mask << bitOffset);
-            _data[longIndex] |= (paletteId & _palette.Mask) << bitOffset;
+            if (index < 0) continue;
+            Set(index, value);
         }
     }
 

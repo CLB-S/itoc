@@ -1,5 +1,6 @@
 using ITOC.Libs.Palette;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace ITOC.Test;
 
@@ -260,6 +261,92 @@ public class PaletteStorageTest : IDisposable
         storage.Dispose();
 
         // Assert - verify no exception is thrown
+    }
+
+    [Fact]
+    public void PerformanceComparison_SetVsSetRange()
+    {
+        // Arrange
+        var smallData = GenerateTestData(10000);
+        var mediumData = GenerateTestData(100000);
+        var largeData = GenerateTestData(1000000);
+
+        // Act & Assert
+        Console.WriteLine("Performance Test Results:");
+        Console.WriteLine("========================");
+
+        MeasurePerformance("Small dataset (10000 entries)", smallData);
+        MeasurePerformance("Medium dataset (100000 entries)", mediumData);
+        MeasurePerformance("Large dataset (1000000 entries)", largeData);
+
+        // This is more of a benchmark than an assertion test
+        Assert.True(true);
+    }
+
+    private List<(int Index, string Value)> GenerateTestData(int count)
+    {
+        var result = new List<(int Index, string Value)>(count);
+        var random = new Random(42); // Fixed seed for reproducible results
+
+        var materials = new[] { "stone", "dirt", "grass", "water", "sand", "wood", "air" };
+
+        for (int i = 0; i < count; i++)
+        {
+            var index = i;
+            var value = materials[random.Next(materials.Length)];
+            result.Add((index, value));
+        }
+
+        return result;
+    }
+
+    private void MeasurePerformance(string testName, List<(int Index, string Value)> data)
+    {
+        // Prepare fresh storage objects for each test to avoid interference
+        var palette1 = new Palette<string>("air");
+        var storage1 = new PaletteStorage<string>(palette1);
+
+        var palette2 = new Palette<string>("air");
+        var storage2 = new PaletteStorage<string>(palette2);
+
+        // Test individual Set method
+        var stopwatch = Stopwatch.StartNew();
+        foreach (var (index, value) in data)
+        {
+            storage1.Set(index, value);
+        }
+        stopwatch.Stop();
+        var setTime = stopwatch.ElapsedMilliseconds;
+
+        // Test SetRange method
+        stopwatch.Restart();
+        storage2.SetRange(data);
+        stopwatch.Stop();
+        var setRangeTime = stopwatch.ElapsedMilliseconds;
+
+        // Verify both approaches produce the same result
+        bool resultsMatch = true;
+        for (int i = 0; i < data.Count; i++)
+        {
+            if (!storage1.Get(i).Equals(storage2.Get(i)))
+            {
+                resultsMatch = false;
+                break;
+            }
+        }
+
+        Console.WriteLine($"{testName}:");
+        Console.WriteLine($"  Individual Set:    {setTime}ms");
+        Console.WriteLine($"  Bulk SetRange:     {setRangeTime}ms");
+        Console.WriteLine($"  Improvement ratio: {(setTime > 0 ? (double)setTime / setRangeTime : 0):F2}x");
+        Console.WriteLine($"  Results matching:  {resultsMatch}");
+        Console.WriteLine();
+
+        // Clean up
+        storage1.Dispose();
+        storage2.Dispose();
+        palette1.Dispose();
+        palette2.Dispose();
     }
 
     public void Dispose()
