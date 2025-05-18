@@ -18,6 +18,7 @@ public class ChunkMesh
     public Mesh Mesh { get; set; }
     public MeshInstance3D MeshInstance { get; set; }
     public StaticBody3D CollisionBody { get; set; }
+    public CollisionShape3D CollisionShape { get; set; }
 
     public int Lod { get; private set; }
     public Vector3I Index { get; private set; }

@@ -14,6 +14,7 @@ public static class ChunkMesher
     public const int CS = 62;
     public const int CS_P = CS + 2;
     public const int CS_2 = CS * CS;
+    public const int CS_3 = CS * CS * CS;
     public const int CS_P2 = CS_P * CS_P;
     public const int CS_P3 = CS_P * CS_P * CS_P;
 
@@ -45,6 +46,16 @@ public static class ChunkMesher
     public static int GetBlockIndex(int x, int y, int z)
     {
         return z + x * CS + y * CS_2;
+    }
+
+    public static (int x, int y, int z) GetBlockIndex(int index)
+    {
+        var z = index % CS;
+        index -= z;
+        var x = (index / CS) % CS;
+        index -= x * CS;
+        var y = index / CS_2;
+        return (x, y, z);
     }
 
     public static int GetBlockIndex(Vector3I vec)

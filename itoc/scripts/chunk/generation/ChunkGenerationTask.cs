@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Godot;
+using ITOC.Libs.Palette;
 using ITOC.Multithreading;
 
 namespace ITOC.ChunkGeneration;
@@ -12,7 +13,7 @@ public class ChunkGenerationTask : GameTask
     public Vector3I ChunkIndex { get; }
     public ChunkColumn ChunkColumn { get; }
     public Action<Chunk> Callback { get; }
-    private readonly Chunk _chunk;
+    private Chunk _chunk;
 
     public ChunkGenerationTask(
         WorldGenerator worldGenerator,
@@ -27,17 +28,18 @@ public class ChunkGenerationTask : GameTask
         ChunkIndex = index;
         ChunkColumn = chunkColumn;
         Callback = callback;
-        _chunk = new Chunk(ChunkIndex);
     }
 
     protected override void ExecuteCore(CancellationToken cancellationToken)
     {
-        SetBlocksByHeightMap();
+        _chunk = CreateFromHeightMap();
         Callback?.Invoke(_chunk);
     }
 
-    private void SetBlocksByHeightMap()
+    private Chunk CreateFromHeightMap()
     {
+        var blocks = new Block[ChunkMesher.CS_3];
+
         // var debugBlock = BlockManager.Instance.GetBlock("dirt");
         var waterBlock = BlockManager.Instance.GetBlock("water");
         // var blockUpdates = new List<(Vector3I Position, Block Block)>();
@@ -57,17 +59,22 @@ public class ChunkGenerationTask : GameTask
                     if (actualY <= height)
                     {
                         var blockType = DetermineBlockType(actualY, height, 0, 4);
-
+                        blocks[ChunkMesher.GetBlockIndex(x, y, z)] = BlockManager.Instance.GetBlock(blockType);
                         // blockUpdates.Add((new Vector3I(x, y, z), blockType));
-                        _chunk.SetBlock(x, y, z, blockType);
+                        // _chunk.SetBlock(x, y, z, blockType);
                     }
                     else if (actualY <= 0)
                     {
+                        blocks[ChunkMesher.GetBlockIndex(x, y, z)] = waterBlock;
+
                         // blockUpdates.Add((new Vector3I(x, y, z), waterBlock));
-                        _chunk.SetBlock(x, y, z, waterBlock);
+                        // _chunk.SetBlock(x, y, z, waterBlock);
                     }
                 }
             }
+
+        var chunk = new Chunk(ChunkIndex, blocks);
+        return chunk;
 
         // Set all blocks at once using the new SetRange method
         // _chunk.SetRange(blockUpdates);
