@@ -335,11 +335,6 @@ public partial class ChunkInstantiator : Node3D
             }
     }
 
-    public void UpdateVisibilityDeferred()
-    {
-        CallDeferred(nameof(UpdateVisibilityForAll));
-    }
-
     public void UpdateVisibility(Chunk chunk)
     {
         if (chunk.Lod != 0)
@@ -349,18 +344,12 @@ public partial class ChunkInstantiator : Node3D
         if (!_lodChunkMeshes[0].TryGetValue(chunk.Index, out var chunkMesh))
             return;
 
-        double distanceToPlayer = chunkMesh.CenterPosition.DistanceTo(_playerPosition);
-        int appropriateLod = DetermineLodLevel(distanceToPlayer);
-
         // Check if any parent LOD chunk should be visible instead
         bool shouldBeHidden = false;
 
         // Check each LOD level above this chunk
         for (int lod = 1; lod <= _maxLodLevel; lod++)
         {
-            if (appropriateLod < lod)
-                break; // Don't check higher LODs if we're already below the threshold
-
             Vector3I parentIndex = CalculateLodParentIndex(chunk.Index, lod);
 
             // If the parent LOD chunk exists and should be visible
@@ -374,7 +363,6 @@ public partial class ChunkInstantiator : Node3D
                     // Parent LOD should be visible, so this chunk should be hidden
                     shouldBeHidden = true;
                     RenderChunkMesh(parentChunkMesh);
-                    break;
                 }
             }
         }
