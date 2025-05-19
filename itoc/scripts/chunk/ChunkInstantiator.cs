@@ -190,7 +190,51 @@ public partial class ChunkInstantiator : Node3D
                 _collisionBodyPool.Release(chunkMesh.CollisionBody);
         }
 
-        // TODO: LOD logic
+        // Process LOD chunks removal
+        RemoveLodChunksIfEmpty(index);
+    }
+
+    private void RemoveLodChunksIfEmpty(Vector3I chunkIndex, int parentLod = 1)
+    {
+        if (parentLod > _maxLodLevel)
+            return;
+
+        // Calculate parent index at this LOD level
+        Vector3I parentIndex = CalculateLodParentIndex(chunkIndex);
+
+        // Check if the parent LOD chunk exists
+        if (!_lodChunks[parentLod].TryGetValue(parentIndex, out var lodChunk))
+            return;
+
+        // Get the local position of this chunk within its parent
+        var localPos = new Vector3I(
+            Mathf.PosMod(chunkIndex.X, 2),
+            Mathf.PosMod(chunkIndex.Y, 2),
+            Mathf.PosMod(chunkIndex.Z, 2)
+        );
+
+        // Remove this chunk from its parent
+        lodChunk.RemoveChildChunk(localPos);
+
+        // If the parent has no more children, remove it as well
+        if (lodChunk.ChildCount == 0)
+        {
+            // Remove from dictionaries
+            _lodChunks[parentLod].TryRemove(parentIndex, out _);
+
+            // Clean up mesh resources if the mesh exists
+            if (_lodChunkMeshes[parentLod].TryRemove(parentIndex, out var parentMesh))
+            {
+                if (parentMesh.MeshInstance != null)
+                    _meshPool.Release(parentMesh.MeshInstance);
+
+                if (parentMesh.CollisionBody != null)
+                    _collisionBodyPool.Release(parentMesh.CollisionBody);
+            }
+
+            // Recursively check higher LOD levels
+            RemoveLodChunksIfEmpty(parentIndex, parentLod + 1);
+        }
     }
 
     #endregion
@@ -441,6 +485,7 @@ public partial class ChunkInstantiator : Node3D
             if (chunkMesh.CollisionBody != null)
                 _collisionBodyPool.Release(chunkMesh.CollisionBody);
         }
+
         _lodChunkMeshes[0].Clear();
 
         // Clean up LOD chunk meshes

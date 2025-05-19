@@ -18,6 +18,8 @@ public class ChunkLod : Chunk
         _childChunks[1, 1, 0] != null &&
         _childChunks[1, 1, 1] != null;
 
+    public int ChildCount => _childChunks.Length;
+
     // Reference to the child chunks that make up this chunk (can be either Chunk or ChunkLod objects)
     private Chunk[,,] _childChunks;
 
@@ -222,6 +224,17 @@ public class ChunkLod : Chunk
             }
 
         return dominantBlock;
+    }
+
+    public void RemoveChildChunk(int x, int y, int z)
+    {
+        // Just set the child chunk to null. Keep the LOD blocks.
+        _childChunks[x, y, z] = null;
+    }
+
+    public void RemoveChildChunk(Vector3I pos)
+    {
+        RemoveChildChunk(pos.X, pos.Y, pos.Z);
     }
 
     #endregion
