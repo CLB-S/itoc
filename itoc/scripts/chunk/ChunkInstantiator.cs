@@ -22,7 +22,8 @@ public partial class ChunkInstantiator : Node3D
     // Chunk storage
     private Dictionary<int, ConcurrentDictionary<Vector3I, ChunkMesh>> _lodChunkMeshes = new();
     private Dictionary<int, ConcurrentDictionary<Vector3I, ChunkLod>> _lodChunks = new();
-    private ConcurrentDictionary<(int, Vector3I), Chunk> _chunksToUpdateMesh = new();
+    private ConcurrentQueue<Chunk> _chunksAdded = new();
+    private ConcurrentDictionary<(int, Vector3I), Chunk> _chunksUpdated = new();
 
     // Node pools
     private NodePool<MeshInstance3D> _meshPool;
@@ -39,8 +40,8 @@ public partial class ChunkInstantiator : Node3D
 
         _world.OnPlayerMovedHalfAChunk += (s, pos) =>
         {
-            UpdateVisibility();
-            UpdateCollisionShapes();
+            UpdateVisibilityForAll();
+            UpdateCollisionShapesForAll();
         };
 
         _world.OnChunkGenerated += (s, chunk) => AddChunk(chunk);
@@ -84,11 +85,20 @@ public partial class ChunkInstantiator : Node3D
 
     public override void _PhysicsProcess(double delta)
     {
-        // Update chunk meshes and remove them from the dictionary
-        foreach (var chunk in _chunksToUpdateMesh)
-            AddOrUpdateChunkMesh(chunk.Value);
+        // Process added chunks
+        while (_chunksAdded.TryDequeue(out var chunk))
+        {
+            // Update visibility and collision for the added chunk
+            UpdateVisibility(chunk);
+            if (_lodChunkMeshes[0].TryGetValue(chunk.Index, out var chunkMesh))
+                UpdateCollision(chunkMesh);
+        }
 
-        _chunksToUpdateMesh.Clear();
+        // Process updated chunks
+        foreach (var chunk in _chunksUpdated.Values)
+            AddOrUpdateChunkMesh(chunk);
+
+        _chunksUpdated.Clear();
     }
 
     #endregion
@@ -102,6 +112,89 @@ public partial class ChunkInstantiator : Node3D
     }
 
     #endregion
+
+
+    #region Chunk Management
+
+    public void AddChunk(Chunk chunk)
+    {
+        if (chunk.Lod != 0)
+            throw new ArgumentException("Chunk must be at LOD 0 to be added.");
+
+        chunk.OnMeshUpdated += (s, args) => _chunksUpdated.TryAdd((chunk.Lod, chunk.Index), chunk);
+
+        var task = new ActionTask(() =>
+        {
+            AddOrUpdateChunkMesh(chunk);
+            GenerateOrUpdateParentLodChunks(chunk);
+            _chunksAdded.Enqueue(chunk);
+        }, "ChunkInstantiator.AddChunk", TaskPriority.High);
+
+        Core.Instance.TaskManager.EnqueueTask(task);
+    }
+
+    private ChunkMesh AddOrUpdateChunkMesh(Chunk chunk)
+    {
+        // Add or update the LOD chunk mesh
+        _lodChunkMeshes[chunk.Lod].AddOrUpdate(chunk.Index,
+            new ChunkMesh(chunk.Index, chunk.GetMesh(), chunk.Lod),
+            (key, oldValue) =>
+            {
+                oldValue.Mesh = chunk.GetMesh();
+                // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
+                return oldValue;
+            });
+
+        return _lodChunkMeshes[chunk.Lod][chunk.Index];
+    }
+
+    private void GenerateOrUpdateParentLodChunks(Chunk chunk)
+    {
+        if (chunk.Lod == _maxLodLevel)
+            return;
+
+        // Calculate the parent chunk index at this LOD level
+        Vector3I lodParentIndex = CalculateLodParentIndex(chunk.Index);
+        var parentLod = chunk.Lod + 1;
+
+        // Get or create the ChunkLod for this level
+        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out ChunkLod lodChunk))
+        {
+            lodChunk = new ChunkLod(lodParentIndex, parentLod);
+            _lodChunks[parentLod].TryAdd(lodParentIndex, lodChunk);
+            lodChunk.OnMeshUpdated += (s, args) => _chunksUpdated.TryAdd((lodChunk.Lod, lodChunk.Index), lodChunk);
+        }
+
+        // Set this chunk as a child of the LOD chunk
+        var localPos = new Vector3I(
+            Mathf.PosMod(chunk.Index.X, 2),
+            Mathf.PosMod(chunk.Index.Y, 2),
+            Mathf.PosMod(chunk.Index.Z, 2)
+        );
+
+        lodChunk.SetOrUpdateChildChunk(localPos, chunk);
+        AddOrUpdateChunkMesh(lodChunk);
+
+        GenerateOrUpdateParentLodChunks(lodChunk);
+    }
+
+    public void RemoveChunk(Vector3I index)
+    {
+        // Remove the base chunk mesh (LOD 0)
+        if (_lodChunkMeshes[0].TryRemove(index, out var chunkMesh))
+        {
+            if (chunkMesh.MeshInstance != null)
+                _meshPool.Release(chunkMesh.MeshInstance);
+
+            if (chunkMesh.CollisionBody != null)
+                _collisionBodyPool.Release(chunkMesh.CollisionBody);
+        }
+
+        // TODO: LOD logic
+    }
+
+    #endregion
+
 
     #region LOD Management
 
@@ -151,7 +244,7 @@ public partial class ChunkInstantiator : Node3D
 
     #region Visibility Management
 
-    public void UpdateVisibility()
+    public void UpdateVisibilityForAll()
     {
         // Track chunks that should be visible at each LOD level
         var visibleChunks = new HashSet<(int, Vector3I)>();
@@ -167,7 +260,6 @@ public partial class ChunkInstantiator : Node3D
             visibleChunks.Add((0, chunkMesh.Index));
 
         for (int lod = 1; lod <= _maxLodLevel; lod++)
-        {
             foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
             {
                 var distanceToPlayer = chunkMesh.CenterPosition.DistanceTo(_playerPosition);
@@ -185,7 +277,6 @@ public partial class ChunkInstantiator : Node3D
                             visibleChunks.Remove((childChunk.Lod, childChunk.Index));
                 }
             }
-        }
     }
 
     private void ApplyVisibilityChanges(HashSet<(int, Vector3I)> visibleChunks)
@@ -196,16 +287,68 @@ public partial class ChunkInstantiator : Node3D
                 if (!visibleChunks.Contains((i, chunkMesh.Index)))
                     HideChunkMesh(chunkMesh);
                 else
-                    EnsureChunkIsRendered(chunkMesh);
+                    RenderChunkMesh(chunkMesh);
             }
     }
 
-    public void UpdateInstancesDeferred()
+    public void UpdateVisibilityDeferred()
     {
-        CallDeferred(nameof(UpdateVisibility));
+        CallDeferred(nameof(UpdateVisibilityForAll));
     }
 
-    private void EnsureChunkIsRendered(ChunkMesh chunkMesh)
+    public void UpdateVisibility(Chunk chunk)
+    {
+        if (chunk.Lod != 0)
+            return;
+
+        // Calculate distance to player
+        if (!_lodChunkMeshes[0].TryGetValue(chunk.Index, out var chunkMesh))
+            return;
+
+        double distanceToPlayer = chunkMesh.CenterPosition.DistanceTo(_playerPosition);
+        int appropriateLod = DetermineLodLevel(distanceToPlayer);
+
+        // Check if any parent LOD chunk should be visible instead
+        bool shouldBeHidden = false;
+
+        // Check each LOD level above this chunk
+        for (int lod = 1; lod <= _maxLodLevel; lod++)
+        {
+            if (appropriateLod < lod)
+                break; // Don't check higher LODs if we're already below the threshold
+
+            Vector3I parentIndex = CalculateLodParentIndex(chunk.Index, lod);
+
+            // If the parent LOD chunk exists and should be visible
+            if (_lodChunkMeshes[lod].TryGetValue(parentIndex, out var parentChunkMesh))
+            {
+                double parentDistance = parentChunkMesh.CenterPosition.DistanceTo(_playerPosition);
+                int parentAppropriateLevel = DetermineLodLevel(parentDistance);
+
+                if (parentAppropriateLevel >= lod)
+                {
+                    // Parent LOD should be visible, so this chunk should be hidden
+                    shouldBeHidden = true;
+                    RenderChunkMesh(parentChunkMesh);
+                    break;
+                }
+            }
+        }
+
+        // Update this chunk's visibility
+        if (shouldBeHidden)
+            HideChunkMesh(chunkMesh);
+        else
+            RenderChunkMesh(chunkMesh);
+    }
+
+
+    /// <summary>
+    /// Renders the chunk mesh if it is not already rendered.
+    /// This method will not update the chunk mesh if already rendered. 
+    /// </summary>
+    /// <param name="chunkMesh"> The chunk mesh to render.</param>
+    private void RenderChunkMesh(ChunkMesh chunkMesh)
     {
         if (chunkMesh.State == ChunkMeshState.Rendered)
             return;
@@ -239,14 +382,20 @@ public partial class ChunkInstantiator : Node3D
 
     #region Collision Management
 
-    private void UpdateCollisionShapes()
+    private void UpdateCollisionShapesForAll()
     {
         foreach (var chunkMesh in _lodChunkMeshes[0].Values)
             UpdateCollision(chunkMesh);
     }
 
+    /// <summary>
+    /// This method will not update the collision shape if already created. 
+    /// </summary>
     private void UpdateCollision(ChunkMesh chunkMesh)
     {
+        if (chunkMesh.Lod != 0)
+            return;
+
         var physicsDistance = Core.Instance.Settings.PhysicsDistance;
         bool shouldHaveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) <= physicsDistance;
         bool shouldRemoveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) >= physicsDistance + 1;
@@ -274,107 +423,7 @@ public partial class ChunkInstantiator : Node3D
 
     private void UpdateCollisionShapesDeferred()
     {
-        CallDeferred(nameof(UpdateCollisionShapes));
-    }
-
-    #endregion
-
-    #region Chunk Management
-
-    public void AddChunk(Chunk chunk)
-    {
-        if (chunk.Lod != 0)
-            throw new ArgumentException("Chunk must be at LOD 0 to be added.");
-
-        chunk.OnMeshUpdated += (s, args) => QueueChunkForUpdate(chunk);
-
-        var task = new ActionTask(() =>
-        {
-            AddOrUpdateChunkMesh(chunk);
-            UpdateCollisionShapesDeferred();
-            GenerateOrUpdateParentLodChunk(chunk);
-            UpdateInstancesDeferred();
-        }, "ChunkInstantiator.AddChunk", TaskPriority.High);
-
-        Core.Instance.TaskManager.EnqueueTask(task);
-    }
-
-    private void AddOrUpdateChunkMesh(Chunk chunk)
-    {
-        // Add or update the LOD chunk mesh
-        _lodChunkMeshes[chunk.Lod].AddOrUpdate(chunk.Index,
-            new ChunkMesh(chunk.Index, chunk.GetMesh(), chunk.Lod),
-            (key, oldValue) =>
-            {
-                oldValue.Mesh = chunk.GetMesh();
-                if (oldValue.State == ChunkMeshState.Rendered)
-                    CallDeferred(nameof(OnRenderdeChunkMeshUpdated), chunk.Lod, chunk.Index);
-
-                return oldValue;
-            });
-    }
-
-    private void OnRenderdeChunkMeshUpdated(int lod, Vector3I index)
-    {
-        // Handle the updated chunk mesh here
-        if (_lodChunkMeshes[lod].TryGetValue(index, out var chunkMesh))
-        {
-            if (chunkMesh.State != ChunkMeshState.Rendered)
-                return;
-
-            chunkMesh.MeshInstance.Mesh = chunkMesh.Mesh;
-            if (chunkMesh.CollisionShape != null)
-                chunkMesh.CollisionShape.Shape = chunkMesh.Mesh.CreateTrimeshShape();
-        }
-    }
-
-    private void GenerateOrUpdateParentLodChunk(Chunk chunk)
-    {
-        if (chunk.Lod == _maxLodLevel)
-            return;
-
-        // Calculate the parent chunk index at this LOD level
-        Vector3I lodParentIndex = CalculateLodParentIndex(chunk.Index);
-        var parentLod = chunk.Lod + 1;
-        // Get or create the ChunkLod for this level
-        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out ChunkLod lodChunk))
-        {
-            lodChunk = new ChunkLod(lodParentIndex, parentLod);
-            _lodChunks[parentLod].TryAdd(lodParentIndex, lodChunk);
-            // lodChunk.OnMeshUpdated += (sender, args) => QueueChunkForUpdate(lodChunk);
-        }
-
-        // Set this chunk as a child of the LOD chunk
-        var localPos = new Vector3I(
-            Mathf.PosMod(chunk.Index.X, 2),
-            Mathf.PosMod(chunk.Index.Y, 2),
-            Mathf.PosMod(chunk.Index.Z, 2)
-        );
-
-        lodChunk.SetOrUpdateChildChunk(localPos, chunk);
-        AddOrUpdateChunkMesh(lodChunk);
-
-        GenerateOrUpdateParentLodChunk(lodChunk);
-    }
-
-    public void QueueChunkForUpdate(Chunk chunk)
-    {
-        _chunksToUpdateMesh.TryAdd((chunk.Lod, chunk.Index), chunk);
-    }
-
-    public void RemoveChunk(Vector3I index)
-    {
-        // Remove the base chunk mesh (LOD 0)
-        if (_lodChunkMeshes[0].TryRemove(index, out var chunkMesh))
-        {
-            if (chunkMesh.MeshInstance != null)
-                _meshPool.Release(chunkMesh.MeshInstance);
-
-            if (chunkMesh.CollisionBody != null)
-                _collisionBodyPool.Release(chunkMesh.CollisionBody);
-        }
-
-        // TODO: LOD logic
+        CallDeferred(nameof(UpdateCollisionShapesForAll));
     }
 
     #endregion

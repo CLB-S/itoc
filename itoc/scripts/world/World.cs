@@ -22,7 +22,6 @@ public class World
     public bool UseDebugMaterial = false;
     public ShaderMaterial DebugMaterial;
 
-    public event EventHandler<Chunk> OnChunkMeshUpdated;
     public event EventHandler<Chunk> OnChunkGenerated;
     public event EventHandler<Vector3> OnPlayerMovedHalfAChunk;
     public event EventHandler<Vector3> OnPlayerMoved;
@@ -67,7 +66,6 @@ public class World
             chunk.State = ChunkState.Ready;
             OnChunkGenerated?.Invoke(this, chunk);
             chunk.OnBlockUpdated += OnChunkBlockUpdated;
-            chunk.OnMeshUpdated += (s, e) => OnChunkMeshUpdated?.Invoke(this, chunk);
         }
     }
 

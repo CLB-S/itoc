@@ -339,7 +339,7 @@ public class Chunk : IDisposable
         }
     }
 
-    public virtual void SetBlocks(IEnumerable<(Vector3I Position, Block Block)> blocks)
+    public virtual void SetBlocks(IEnumerable<(Vector3I Position, Block Block)> blocks, bool triggerEvents = true)
     {
         var entriesForPalette = new List<(int Index, Block Block)>();
         var positionsToUpdate = new List<(int X, int Y, int Z, Block Block)>();
@@ -400,7 +400,7 @@ public class Chunk : IDisposable
         }
 
         // Trigger events if the chunk is ready
-        if (State == ChunkState.Ready)
+        if (triggerEvents && State == ChunkState.Ready)
         {
             foreach (var update in blockUpdates)
                 OnBlockUpdated?.Invoke(this, update);

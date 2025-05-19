@@ -75,21 +75,24 @@ public class ChunkLod : Chunk
     public void SetOrUpdateChildChunk(int x, int y, int z, Chunk chunk)
     {
         // var startTime = DateTime.Now;
-        _childChunks[x, y, z] = chunk;
+        if (_childChunks[x, y, z] == null)
+        {
+            _childChunks[x, y, z] = chunk;
+
+            chunk.OnBlockUpdated += (s, e) =>
+            {
+                var lx = Mathf.FloorToInt(e.UpdatePosition.X / 2.0) + (x * ChunkMesher.CS / 2);
+                var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
+                var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
+
+                var block = GetBlockFromHigherLod(lx, ly, lz, chunk);
+                SetBlock(lx, ly, lz, block);
+
+                // GD.Print($"Block updated at {lx}, {ly}, {lz} for ChunkLod {Index} with LOD {Lod}");
+            };
+        }
+
         SetBlocksFromChildChunk(x, y, z);
-
-        // chunk.OnBlockUpdated += (s, e) =>
-        // {
-        //     var lx = Mathf.FloorToInt(e.UpdatePosition.X / 2.0) + (x * ChunkMesher.CS / 2);
-        //     var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
-        //     var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
-
-        //     var block = GetBlockFromHigherLod(lx, ly, lz, chunk);
-        //     SetBlock(lx, ly, lz, block);
-        // };
-
-        // GD.Print($"Child chunk set at {x}, {y}, {z} for ChunkLod {Index} with LOD {Lod} " +
-        //     $"in {(DateTime.Now - startTime).TotalMilliseconds} ms. Total children: {GetChildChunks().Count()}");
     }
 
     public void SetOrUpdateChildChunk(Vector3I pos, Chunk chunk)
@@ -151,7 +154,7 @@ public class ChunkLod : Chunk
                     }
         }
 
-        SetBlocks(blocksToUpdate);
+        SetBlocks(blocksToUpdate, false);
 
         State = ChunkState.Ready;
     }

@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 namespace ITOC;
@@ -7,15 +6,24 @@ public enum ChunkMeshState
 {
     Created,
     Ready,
-    ToRender,
     Rendered,
-    NeedUpdate,
 }
 
 public class ChunkMesh
 {
     public ChunkMeshState State { get; set; } = ChunkMeshState.Created;
-    public Mesh Mesh { get; set; }
+    private Mesh _mesh;
+    public Mesh Mesh
+    {
+        get { return _mesh; }
+        set
+        {
+            _mesh = value;
+            MeshInstance?.SetDeferred(MeshInstance3D.PropertyName.Mesh, value);
+            CollisionShape?.SetDeferred(CollisionShape3D.PropertyName.Shape, value.CreateTrimeshShape());
+        }
+    }
+
     public MeshInstance3D MeshInstance { get; set; }
     public StaticBody3D CollisionBody { get; set; }
     public CollisionShape3D CollisionShape { get; set; }
