@@ -178,7 +178,7 @@ public partial class ChunkInstantiator : Node3D
             (key, oldValue) =>
             {
                 oldValue.Chunk = chunk;
-                GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
+                // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
                 return oldValue;
             });
 
@@ -300,11 +300,11 @@ public partial class ChunkInstantiator : Node3D
     // Determine the appropriate LOD level based on distance
     private int DetermineLodLevel(double distance)
     {
-        for (int lod = 0; lod < _lodDistanceThresholds.Length; lod++)
+        for (int lod = 0; lod < _maxLodLevel; lod++)
             if (distance < _lodDistanceThresholds[lod])
                 return lod;
 
-        return _lodDistanceThresholds.Length - 1; // Return the highest LOD level if beyond all thresholds
+        return _maxLodLevel; // Return the highest LOD level if beyond all thresholds
     }
 
     // Calculate the parent chunk index at a specific LOD level
