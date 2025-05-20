@@ -18,9 +18,6 @@ public class ChunkMesh
         get { return _chunk; }
         set
         {
-            if (value == _chunk)
-                return;
-
             _chunk = value;
             UpdateMesh();
         }
@@ -31,11 +28,11 @@ public class ChunkMesh
     public StaticBody3D CollisionBody { get; set; }
     public CollisionShape3D CollisionShape { get; set; }
 
-    public int Lod => Chunk?.Lod ?? 0;
-    public Vector3I Index => Chunk?.Index ?? Vector3I.Zero;
-    public Vector3 Position => Chunk?.Position ?? Vector3.Zero;
-    public Vector3 CenterPosition => Chunk?.CenterPosition ?? Vector3.Zero;
-    public Vector3 Size => Chunk?.Size ?? Vector3.Zero;
+    public int Lod => Chunk.Lod;
+    public Vector3I Index => Chunk.Index;
+    public Vector3 Position => Chunk.Position;
+    public Vector3 CenterPosition => Chunk.CenterPosition;
+    public Vector3 Size => Chunk.Size;
 
     public ChunkMesh(Chunk chunk)
     {

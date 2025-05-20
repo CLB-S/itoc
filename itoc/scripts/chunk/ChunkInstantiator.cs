@@ -67,13 +67,14 @@ public partial class ChunkInstantiator : Node3D
             UpdateCollisionShapesForAll();
         };
 
+        // World.OnChunkGenerated is multi-threaded.
         _world.OnChunkGenerated += (s, chunk) => AddChunk(chunk);
     }
 
     public override void _Ready()
     {
         InitializeNodePools();
-        InitializeLodSettings();
+        InitializeLods();
         _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
     }
 
@@ -91,7 +92,7 @@ public partial class ChunkInstantiator : Node3D
         _debugMeshPool = new Node3DPool<MeshInstance3D>(debugCube, this, 0);
     }
 
-    private void InitializeLodSettings()
+    private void InitializeLods()
     {
         // Initialize LOD dictionaries
         _maxLodLevel = Core.Instance.Settings.MaxLodLevel;
@@ -176,14 +177,8 @@ public partial class ChunkInstantiator : Node3D
             new ChunkMesh(chunk),
             (key, oldValue) =>
             {
-                if (oldValue.Chunk == chunk)
-                {
-                    oldValue.UpdateMesh();
-                    return oldValue;
-                }
-
                 oldValue.Chunk = chunk;
-                // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
+                GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
                 return oldValue;
             });
 
@@ -352,21 +347,20 @@ public partial class ChunkInstantiator : Node3D
             visibleChunks.Add((0, chunkMesh.Index));
 
         for (int lod = 1; lod <= _maxLodLevel; lod++)
-            foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
+            foreach (var chunk in _lodChunks[lod].Values)
             {
-                var distanceToPlayer = chunkMesh.CenterPosition.DistanceTo(_playerPosition);
+                var distanceToPlayer = chunk.CenterPosition.DistanceTo(_playerPosition);
                 int appropriateLod = DetermineLodLevel(distanceToPlayer);
 
                 // If this chunk should be rendered at this LOD level
                 if (appropriateLod >= lod)
                 {
                     // Mark this chunk as visible
-                    visibleChunks.Add((lod, chunkMesh.Index));
+                    visibleChunks.Add((lod, chunk.Index));
 
                     // If this is a higher LOD level, mark child chunks as covered
-                    if (_lodChunks[lod].TryGetValue(chunkMesh.Index, out var lodChunk))
-                        foreach (var childChunk in lodChunk.GetChildChunks())
-                            visibleChunks.Remove((childChunk.Lod, childChunk.Index));
+                    foreach (var childChunk in chunk.GetChildChunks())
+                        visibleChunks.Remove((childChunk.Lod, childChunk.Index));
                 }
             }
     }
@@ -388,38 +382,25 @@ public partial class ChunkInstantiator : Node3D
         if (chunk.Lod != 0)
             return;
 
-        // Calculate distance to player
-        if (!_lodChunkMeshes[0].TryGetValue(chunk.Index, out var chunkMesh))
-            return;
-
-        // Check if any parent LOD chunk should be visible instead
-        bool shouldBeHidden = false;
-
-        // Check each LOD level above this chunk
-        for (int lod = 1; lod <= _maxLodLevel; lod++)
+        for (int lod = _maxLodLevel; lod >= 1; lod--)
         {
-            Vector3I parentIndex = CalculateLodParentIndex(chunk.Index, lod);
+            var parentIndex = CalculateLodParentIndex(chunk.Index, lod);
+            if (!_lodChunks[lod].TryGetValue(parentIndex, out var lodChunk))
+                continue;
 
-            // If the parent LOD chunk exists and should be visible
-            if (_lodChunkMeshes[lod].TryGetValue(parentIndex, out var parentChunkMesh))
-            {
-                double parentDistance = parentChunkMesh.CenterPosition.DistanceTo(_playerPosition);
-                int parentAppropriateLevel = DetermineLodLevel(parentDistance);
+            var distanceToPlayer = lodChunk.CenterPosition.DistanceTo(_playerPosition);
+            int appropriateLod = DetermineLodLevel(distanceToPlayer);
 
-                if (parentAppropriateLevel >= lod)
+            // If this chunk should be rendered at this LOD level
+            if (appropriateLod >= lod)
+                if (_lodChunkMeshes[lod].TryGetValue(lodChunk.Index, out var chunkMesh))
                 {
-                    // Parent LOD should be visible, so this chunk should be hidden
-                    shouldBeHidden = true;
-                    RenderChunkMesh(parentChunkMesh);
+                    RenderChunkMesh(chunkMesh);
+                    return;
                 }
-            }
         }
 
-        // Update this chunk's visibility
-        if (shouldBeHidden)
-            HideChunkMesh(chunkMesh);
-        else
-            RenderChunkMesh(chunkMesh);
+        RenderChunkMesh(_lodChunkMeshes[0][chunk.Index]);
     }
 
 
@@ -488,7 +469,7 @@ public partial class ChunkInstantiator : Node3D
             var collisionBody = _collisionBodyPool.GetAt(chunkMesh.Position);
 
             var collisionShape = collisionBody.GetChild<CollisionShape3D>(0);
-            collisionShape.Shape = chunkMesh.MeshInstance.Mesh?.CreateTrimeshShape();
+            collisionShape.Shape = chunkMesh.MeshInstance.Mesh.CreateTrimeshShape();
 
             chunkMesh.CollisionBody = collisionBody;
             chunkMesh.CollisionShape = collisionShape;
