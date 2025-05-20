@@ -12,15 +12,17 @@ public enum ChunkMeshState
 public class ChunkMesh
 {
     public ChunkMeshState State { get; set; } = ChunkMeshState.Created;
-    private Mesh _mesh;
-    public Mesh Mesh
+    private Chunk _chunk;
+    public Chunk Chunk
     {
-        get { return _mesh; }
+        get { return _chunk; }
         set
         {
-            _mesh = value;
-            MeshInstance?.SetDeferred(MeshInstance3D.PropertyName.Mesh, value);
-            CollisionShape?.SetDeferred(CollisionShape3D.PropertyName.Shape, value.CreateTrimeshShape());
+            if (value == _chunk)
+                return;
+
+            _chunk = value;
+            UpdateMesh();
         }
     }
 
@@ -28,18 +30,27 @@ public class ChunkMesh
     public StaticBody3D CollisionBody { get; set; }
     public CollisionShape3D CollisionShape { get; set; }
 
-    public int Lod { get; private set; }
-    public Vector3I Index { get; private set; }
-    public Vector3 Position => Index * ChunkMesher.CS * (1 << Lod);
-    public Vector3 CenterPosition => Position + Vector3I.One * (ChunkMesher.CS * (1 << Lod) / 2);
+    public int Lod => Chunk?.Lod ?? 0;
+    public Vector3I Index => Chunk?.Index ?? Vector3I.Zero;
+    public Vector3 Position => Chunk?.Position ?? Vector3.Zero;
+    public Vector3 CenterPosition => Chunk?.CenterPosition ?? Vector3.Zero;
 
-    public ChunkMesh(Vector3I index, Mesh mesh, int lod = 0)
+    public ChunkMesh(Chunk chunk)
     {
-        Index = index;
-        Mesh = mesh;
-        Lod = lod;
+        Chunk = chunk;
 
-        if (Mesh != null)
+        if (Chunk != null)
             State = ChunkMeshState.Ready;
+    }
+
+
+    public void UpdateMesh()
+    {
+        if (Chunk == null || State != ChunkMeshState.Rendered)
+            return;
+
+        var mesh = Chunk.GetMesh();
+        MeshInstance?.SetDeferred(MeshInstance3D.PropertyName.Mesh, mesh);
+        CollisionShape?.SetDeferred(CollisionShape3D.PropertyName.Shape, mesh.CreateTrimeshShape());
     }
 }

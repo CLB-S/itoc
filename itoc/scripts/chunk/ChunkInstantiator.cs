@@ -137,10 +137,16 @@ public partial class ChunkInstantiator : Node3D
     {
         // Add or update the LOD chunk mesh
         _lodChunkMeshes[chunk.Lod].AddOrUpdate(chunk.Index,
-            new ChunkMesh(chunk.Index, chunk.GetMesh(), chunk.Lod),
+            new ChunkMesh(chunk),
             (key, oldValue) =>
             {
-                oldValue.Mesh = chunk.GetMesh();
+                if (oldValue.Chunk == chunk)
+                {
+                    oldValue.UpdateMesh();
+                    return oldValue;
+                }
+
+                oldValue.Chunk = chunk;
                 // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
                 return oldValue;
             });
@@ -385,7 +391,7 @@ public partial class ChunkInstantiator : Node3D
         if (chunkMesh.State == ChunkMeshState.Rendered)
             return;
 
-        if (chunkMesh.Mesh == null || chunkMesh.State == ChunkMeshState.Created)
+        if (chunkMesh.Chunk == null || chunkMesh.State == ChunkMeshState.Created)
             return;
 
         // Create mesh instance if needed
@@ -395,7 +401,7 @@ public partial class ChunkInstantiator : Node3D
             chunkMesh.MeshInstance.Position = chunkMesh.Position;
         }
 
-        chunkMesh.MeshInstance.Mesh = chunkMesh.Mesh;
+        chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh();
         chunkMesh.MeshInstance.Visible = true;
         chunkMesh.State = ChunkMeshState.Rendered;
     }
@@ -439,7 +445,7 @@ public partial class ChunkInstantiator : Node3D
             collisionBody.Position = chunkMesh.Position;
 
             var collisionShape = collisionBody.GetChild<CollisionShape3D>(0);
-            collisionShape.Shape = chunkMesh.Mesh?.CreateTrimeshShape();
+            collisionShape.Shape = chunkMesh.MeshInstance.Mesh?.CreateTrimeshShape();
 
             chunkMesh.CollisionBody = collisionBody;
             chunkMesh.CollisionShape = collisionShape;

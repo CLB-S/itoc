@@ -28,12 +28,12 @@ public enum ChunkState
 
 public class Chunk : IDisposable
 {
+    public int Lod { get; protected set; } = 0;
     public Vector3I Index { get; protected set; }
     public ChunkState State { get; set; }
-    public Vector3 WorldPosition => Index * ChunkMesher.CS;
-    public Vector3 CenterPosition => Index * ChunkMesher.CS + Vector3I.One * (ChunkMesher.CS / 2);
+    public Vector3 Position => Index * ChunkMesher.CS * (1 << Lod);
+    public Vector3 CenterPosition => Position + Vector3I.One * (ChunkMesher.CS * (1 << Lod) / 2);
 
-    public int Lod { get; protected set; } = 0;
 
     public event EventHandler<OnBlockUpdatedEventArgs> OnBlockUpdated;
     public event EventHandler OnMeshUpdated;
