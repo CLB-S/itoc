@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using DelaunatorSharp;
 using Godot;
+using PatternSystem;
 
-namespace ITOC;
+namespace ITOC.WorldGeneration;
 
 public partial class WorldGenerator
 {
@@ -244,8 +246,8 @@ public partial class WorldGenerator
             {
                 var triangleIndex = Delaunator.TriangleOfEdge(i);
                 var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
-                if (GeometryUtils.IsPointInTriangle(point, SamplePoints[points[0]], SamplePoints[points[1]],
-                        SamplePoints[points[2]], out barycentricPos))
+                if (GeometryUtils.IsPointInTriangle(point, _points[points[0]], _points[points[1]],
+                        _points[points[2]], out barycentricPos))
                     return (points[0], points[1], points[2]);
             }
         }
@@ -286,4 +288,139 @@ public partial class WorldGenerator
     {
         return GetTriangleContainingPoint(new Vector2(x, y), out _);
     }
+
+    private static Vector2 Warp(Vector2 point, PatternTreeNode pattern)
+    {
+        var warpedPoint = new Vector2(point.X, point.Y);
+        warpedPoint.X += pattern.Evaluate(warpedPoint.X, warpedPoint.Y);
+        warpedPoint.Y += pattern.Evaluate(warpedPoint.Y, warpedPoint.X);
+        return warpedPoint;
+    }
+
+    #region Loop subdivision
+
+    private readonly ConcurrentDictionary<(int, int), Vector2> _edgeMidpoints = new();
+    private readonly ConcurrentDictionary<(int, int), double> _edgeMidpointHeights = new();
+    private readonly ConcurrentDictionary<int, double> _adjustedVertexHeights = new();
+
+    private double GetAdjustedVertexHeight(int vertexIndex)
+    {
+        return _adjustedVertexHeights.GetOrAdd(vertexIndex, index =>
+        {
+            // Get neighbors of this vertex to calculate the adjusted height
+            var neighbors = GetNeighborCellIndices(index).ToList();
+            var n = neighbors.Count;
+
+            if (n <= 2)
+                return CellDatas[index].Height;
+
+            // Loop subdivision weight formula: (1-n*beta) * original + beta * sum(neighbors)
+            // where beta = 1/n * (5/8 - (3/8 + 1/4 * cos(2*PI/n))^2)
+            double beta;
+            if (n == 3)
+                beta = 3.0 / 16.0;
+            else
+                beta = 3.0 / (8.0 * n);
+
+            // Calculate the sum of neighbor heights
+            double neighborSum = 0;
+            foreach (var neighbor in neighbors)
+                neighborSum += CellDatas[neighbor].Height;
+
+            // Calculate the adjusted height using Loop formula
+            var originalHeight = CellDatas[index].Height;
+            return (1 - n * beta) * originalHeight + beta * neighborSum;
+        });
+    }
+
+    private (Vector2, double) GetOrCreateEdgeMidpoint(int i, int j)
+    {
+        // Ensure i < j for consistent dictionary keys
+        if (i > j)
+            (i, j) = (j, i);
+
+        var key = (i, j);
+
+        // Attempt to get existing midpoint
+        if (_edgeMidpoints.TryGetValue(key, out var midpoint) &&
+            _edgeMidpointHeights.TryGetValue(key, out var height))
+            return (midpoint, height);
+
+        // Calculate the midpoint position and height using Loop subdivision rules
+        var newMidpoint = (_points[i] + _points[j]) * 0.5f;
+        var newHeight = (CellDatas[i].Height + CellDatas[j].Height) * 0.5;
+
+        // Use GetOrAdd to ensure thread-safety for both dictionaries
+        midpoint = _edgeMidpoints.GetOrAdd(key, newMidpoint);
+        height = _edgeMidpointHeights.GetOrAdd(key, newHeight);
+
+        return (midpoint, height);
+    }
+
+    public (Vector2[], double[]) SubdivideTriangle(int i0, int i1, int i2)
+    {
+        // Get original triangle vertices and heights
+        var p0 = _points[i0];
+        var p1 = _points[i1];
+        var p2 = _points[i2];
+
+        var h0 = GetAdjustedVertexHeight(i0);
+        var h1 = GetAdjustedVertexHeight(i1);
+        var h2 = GetAdjustedVertexHeight(i2);
+
+        // Get or create edge midpoints
+        var (e01, h01) = GetOrCreateEdgeMidpoint(i0, i1);
+        var (e12, h12) = GetOrCreateEdgeMidpoint(i1, i2);
+        var (e20, h20) = GetOrCreateEdgeMidpoint(i2, i0);
+
+        // Return all points and heights of the subdivided triangle
+        // Original vertices + edge midpoints
+        return (
+            [p0, p1, p2, e01, e12, e20],
+            [h0, h1, h2, h01, h12, h20]
+        );
+    }
+
+    public (Vector2, Vector2, Vector2, double, double, double) GetSubdividedTriangleContainingPoint(Vector2 point,
+        int i0, int i1, int i2)
+    {
+        var (points, heights) = SubdivideTriangle(i0, i1, i2);
+
+        // Original vertices
+        var p0 = points[0];
+        var p1 = points[1];
+        var p2 = points[2];
+
+        // Edge midpoints
+        var e01 = points[3];
+        var e12 = points[4];
+        var e20 = points[5];
+
+        // Heights
+        var h0 = heights[0];
+        var h1 = heights[1];
+        var h2 = heights[2];
+        var h01 = heights[3];
+        var h12 = heights[4];
+        var h20 = heights[5];
+
+        // Check which of the four subdivided triangles contains the point
+        if (GeometryUtils.IsPointInTriangle(point, p0, e01, e20))
+            return (p0, e01, e20, h0, h01, h20);
+
+        if (GeometryUtils.IsPointInTriangle(point, e01, p1, e12))
+            return (e01, p1, e12, h01, h1, h12);
+
+        if (GeometryUtils.IsPointInTriangle(point, e20, e12, p2))
+            return (e20, e12, p2, h20, h12, h2);
+
+        if (GeometryUtils.IsPointInTriangle(point, e01, e12, e20))
+            return (e01, e12, e20, h01, h12, h20);
+
+        // Fallback - should not happen if the point is in the original triangle
+        GD.PrintErr("Point is not in any subdivided triangle.");
+        return (p0, p1, p2, h0, h1, h2);
+    }
+
+    #endregion
 }

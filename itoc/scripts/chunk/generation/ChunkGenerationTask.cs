@@ -4,6 +4,7 @@ using System.Threading;
 using Godot;
 using ITOC.Libs.Palette;
 using ITOC.Multithreading;
+using ITOC.WorldGeneration;
 
 namespace ITOC.ChunkGeneration;
 

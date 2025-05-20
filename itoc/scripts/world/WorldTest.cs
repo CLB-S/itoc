@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using ITOC;
+using ITOC.WorldGeneration;
 using Array = Godot.Collections.Array;
 
 public partial class WorldTest : Node2D
@@ -322,7 +323,7 @@ public partial class WorldTest : Node2D
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
             {
                 if (i % 10 != 0) continue;
-                var pos = _worldGenerator.SamplePoints[i] * _scalingFactor;
+                var pos = cellData.Position * _scalingFactor;
                 var end = pos + cellData.TectonicMovement * 3;
                 var length = (float)(cellData.TectonicMovement.LengthSquared() / 100.0);
                 DrawArrow(pos, end, new Color(length, 0.5f, 1 - length));
@@ -332,18 +333,20 @@ public partial class WorldTest : Node2D
         if (DrawRivers && _worldGenerator.State == WorldGenerationState.Completed)
         {
             // Access the stream graph data from the world generator
-            var streamGraph = _worldGenerator.StreamGraph;
             var receivers = _worldGenerator.Receivers;
 
-            if (streamGraph != null && receivers != null && receivers.Count > 0)
+            if (receivers != null && receivers.Count > 0)
                 // Draw stream connections (edges in the stream tree)
-                foreach (var cell in streamGraph)
+                foreach (var cell in _worldGenerator.CellDatas.Values)
+                {
+                    if (cell.PlateType != PlateType.Continent) continue;
+
                     if (receivers.TryGetValue(cell.Index, out var receiverIndex))
                         if (_worldGenerator.CellDatas.TryGetValue(receiverIndex, out var receiver))
                         {
                             if (cell.Index == receiverIndex) continue;
-                            var start = _worldGenerator.SamplePoints[cell.Index] * _scalingFactor;
-                            var end = _worldGenerator.SamplePoints[receiverIndex] * _scalingFactor;
+                            var start = cell.Position * _scalingFactor;
+                            var end = receiver.Position * _scalingFactor;
 
                             if ((start - end).LengthSquared() >
                                 _worldGenerator.Settings.MinimumCellDistance *
@@ -361,13 +364,14 @@ public partial class WorldTest : Node2D
 
                             DrawLine(start, end, color, width);
                         }
+                }
 
             // Draw lake areas in a lighter blue color
             foreach (var lakeId in _worldGenerator.Lakes)
             {
                 if (_worldGenerator.CellDatas[lakeId].IsRiverMouth) continue;
 
-                var pos = _worldGenerator.SamplePoints[lakeId] * _scalingFactor;
+                var pos = _worldGenerator.CellDatas[lakeId].Position * _scalingFactor;
                 DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
             }
             // foreach (var cell in streamGraph)

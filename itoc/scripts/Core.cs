@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Godot;
 using ITOC;
 using ITOC.Multithreading;
+using ITOC.WorldGeneration;
 
 public enum GameState
 {

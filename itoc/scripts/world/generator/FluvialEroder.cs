@@ -1,34 +1,51 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using DelaunatorSharp;
 using Godot;
 
-namespace ITOC;
+namespace ITOC.WorldGeneration;
+
+public class FluvialEroderSettings
+{
+    public double ErosionRate { get; set; } = 0.01;
+    public double ErosionTimeStep { get; set; } = 0.1;
+    public double ErosionConvergenceThreshold { get; set; } = 0.001;
+    public int MaxErosionIterations { get; set; } = 1000;
+    public double MaxErosionSlopeAngle { get; set; } = 45.0;
+    public double DefaultCellArea { get; set; } = 1000.0;
+}
 
 // By make some steps parallel, total time is reduced about 10%.
-public partial class WorldGenerator
+public class FluvialEroder(
+    Dictionary<int, CellData> cellDatas,
+    HashSet<int> riverMouths,
+    FluvialEroderSettings settings,
+    Func<CellData, IEnumerable<CellData>> getNeighborCellsFunc,
+    Func<Vector2, Vector2, double> distanceFunc = null)
 {
-    private readonly List<CellData> _streamGraph = new();
     private int _iterationCount;
     private readonly Dictionary<int, int> _receivers = new(); // Maps node indices to their receiver node indices
     private readonly Dictionary<int, List<int>> _children = new(); // Maps node indices to their children node indices
     private readonly Dictionary<int, double> _drainageAreas = new(); // Maps node indices to their drainage area
     private readonly Dictionary<int, double> _drainages = new(); // Maps node indices to their drainage area
     private readonly HashSet<int> _lakes = new();
-    private readonly HashSet<int> _riverMouths = new();
     private readonly ConcurrentDictionary<int, int> _lakeIdentifiers = new(); // Maps node indices to lake identifiers
 
-    protected bool _powerEquationConverged { get; private set; }
+    private bool _powerEquationConverged = false;
 
-    public double MaxHeight { get; protected set; }
-    public IReadOnlyList<CellData> StreamGraph => _streamGraph;
+    public double MaxHeight { get; private set; }
     public IReadOnlySet<int> Lakes => _lakes;
     public IReadOnlyDictionary<int, int> Receivers => _receivers;
     public IReadOnlyDictionary<int, double> Drainages => _drainages;
 
-    protected void PrepareStreamGraph()
+    public event Action<string> OnProgressReport;
+    private void ReportProgress(string message)
+    {
+        OnProgressReport?.Invoke(message);
+    }
+
+    private void PrepareStreamGraph()
     {
         ComputeStreamTrees();
         IdentifyLakes();
@@ -36,36 +53,19 @@ public partial class WorldGenerator
         ComputeDrainages();
     }
 
-    protected void FindRiverMouths()
+    public void Erode()
     {
-        // ReportProgress("Finding river mouths");
-
-        _riverMouths.Clear();
-        foreach (var edge in _voronoiEdges)
+        // Solve the stream power equation iteratively until convergence
+        while (!_powerEquationConverged)
         {
-            var cellPId = _delaunator.Triangles[edge.Index];
-            var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
-            if (_cellDatas.TryGetValue(cellPId, out var cellP) && _cellDatas.TryGetValue(cellQId, out var cellQ))
-            {
-                if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
-                {
-                    cellP.IsRiverMouth = true;
-                    _riverMouths.Add(cellP.Index);
-                }
-                else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
-                {
-                    cellQ.IsRiverMouth = true;
-                    _riverMouths.Add(cellQ.Index);
-                }
-            }
+            PrepareStreamGraph();
+            SolvePowerEquation();
         }
     }
 
-    protected void ComputeStreamTrees()
+    private void ComputeStreamTrees()
     {
         // ReportProgress("Computing stream trees");
-
-        if (_streamGraph.Count == 0) return;
 
         // Reset the receivers and children maps
         _receivers.Clear();
@@ -76,8 +76,11 @@ public partial class WorldGenerator
         var receiverPairs = new ConcurrentBag<(int CellIndex, int ReceiverIndex)>();
         var lakes = new ConcurrentBag<int>();
 
-        Parallel.ForEach(_streamGraph, cell =>
+        Parallel.ForEach(cellDatas.Values, cell =>
         {
+            if (cell.PlateType != PlateType.Continent)
+                return; // Skip non-continental cells
+
             var lowestNeighbor = GetLowestNeighbor(cell);
             if (lowestNeighbor != cell)
                 receiverPairs.Add((cell.Index, lowestNeighbor.Index));
@@ -109,7 +112,7 @@ public partial class WorldGenerator
         CellData lowest = null;
         var lowestElevation = double.MaxValue;
 
-        foreach (var neighbor in GetNeighborCells(cell))
+        foreach (var neighbor in getNeighborCellsFunc(cell))
             if (neighbor.Height < lowestElevation)
             {
                 lowest = neighbor;
@@ -119,13 +122,11 @@ public partial class WorldGenerator
         return lowest.Height < cell.Height ? lowest : cell;
     }
 
-    protected void IdentifyLakes()
+    private void IdentifyLakes()
     {
-        // ReportProgress("Identifying lakes");
-
         _lakeIdentifiers.Clear();
         // Assign lake identifiers to all nodes in each lake's drainage area
-        Parallel.ForEach(_lakes, lakeIndex => { AssignLakeIdentifiers(lakeIndex, lakeIndex, _lakeIdentifiers); });
+        Parallel.ForEach(_lakes, lakeIndex => AssignLakeIdentifiers(lakeIndex, lakeIndex, _lakeIdentifiers));
     }
 
 
@@ -156,7 +157,7 @@ public partial class WorldGenerator
     }
 
 
-    protected void ProcessLakeOverflow()
+    private void ProcessLakeOverflow()
     {
         // ReportProgress("Processing lake overflow");
 
@@ -174,15 +175,18 @@ public partial class WorldGenerator
             new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, double passHeight)>>();
 
         // For each cell in a lake
-        foreach (var cell in _streamGraph)
+        foreach (var cell in cellDatas.Values)
         {
+            if (cell.PlateType != PlateType.Continent)
+                continue; // Skip non-continental cells
+
             if (!_lakeIdentifiers.TryGetValue(cell.Index, out var sourceLakeId))
                 continue; // Skip if the cell is not in a lake
 
             if (cell.IsRiverMouth)
                 continue; // Skip river mouths
 
-            foreach (var neighbor in GetNeighborCells(cell))
+            foreach (var neighbor in getNeighborCellsFunc(cell))
             {
                 if (!_lakeIdentifiers.TryGetValue(neighbor.Index, out var targetLakeId))
                     continue; // Skip if the neighbor is not in a lake
@@ -214,7 +218,7 @@ public partial class WorldGenerator
         var lakeTrees = new Dictionary<int, (int targetLake, int targetNode)>(); // Maps lake ID to its receiver lake ID
 
         // Identify all unique lake IDs
-        foreach (var lakeId in _riverMouths) lakeTrees[lakeId] = (-1, -1); // -1 indicates a root lake (no receiver)
+        foreach (var lakeId in riverMouths) lakeTrees[lakeId] = (-1, -1); // -1 indicates a root lake (no receiver)
 
         // Create a list of all lake connections sorted by pass height
         var sortedConnections =
@@ -262,7 +266,7 @@ public partial class WorldGenerator
         }
     }
 
-    protected void ComputeDrainages()
+    private void ComputeDrainages()
     {
         // ReportProgress("Computing drainage and slopes");
 
@@ -271,16 +275,16 @@ public partial class WorldGenerator
         _drainages.Clear();
 
         // Initialize the drainage area for each node with its own area
-        foreach (var cell in _streamGraph)
+        foreach (var cell in cellDatas.Values)
         {
+            if (cell.PlateType != PlateType.Continent)
+                continue; // Skip non-continental cells
+
             // Use Voronoi cell area for each cell (approximation)
             // The area represents how much rain this cell directly receives
             _drainageAreas[cell.Index] = cell.Area;
             _drainages[cell.Index] = cell.Area * cell.Precipitation;
         }
-
-        // Collect all river mouths (roots)
-        var riverMouths = _streamGraph.Where(c => c.IsRiverMouth).ToList();
 
         // Perform post-order traversal starting from each river mouth to collect nodes in processing order
         var postOrderList = new List<int>();
@@ -289,7 +293,7 @@ public partial class WorldGenerator
         foreach (var riverMouth in riverMouths)
         {
             var stack = new Stack<int>();
-            stack.Push(riverMouth.Index);
+            stack.Push(riverMouth);
 
             while (stack.Count > 0)
             {
@@ -323,14 +327,14 @@ public partial class WorldGenerator
                 }
     }
 
-    protected void SolvePowerEquation()
+    private void SolvePowerEquation()
     {
         // ReportProgress("Solving stream power equation");
 
         // Parameters for the stream power equation
-        var k = Settings.ErosionRate; // Erodibility coefficient
+        var k = settings.ErosionRate; // Erodibility coefficient
         var m = 0.5; // Drainage area exponent (typically 0.5)
-        var dt = Settings.ErosionTimeStep; // Time step
+        var dt = settings.ErosionTimeStep; // Time step
         var maxChange = 0.0; // Track maximum height change for convergence check
 
         // Sort nodes from downstream to upstream to ensure proper calculation order
@@ -339,10 +343,10 @@ public partial class WorldGenerator
 
         // Start from river mouths (outflow points)
         var queue = new Queue<CellData>();
-        foreach (var cell in _streamGraph.Where(c => c.IsRiverMouth))
+        foreach (var index in riverMouths)
         {
-            queue.Enqueue(cell);
-            visited.Add(cell.Index);
+            queue.Enqueue(cellDatas[index]);
+            visited.Add(index);
         }
 
         // Breadth-first traversal from downstream to upstream
@@ -355,7 +359,7 @@ public partial class WorldGenerator
             if (_children.TryGetValue(current.Index, out var children))
                 foreach (var childIndex in children)
                     if (visited.Add(childIndex)) // Add returns true if the item was not already in the set
-                        queue.Enqueue(_cellDatas[childIndex]);
+                        queue.Enqueue(cellDatas[childIndex]);
         }
 
         // Process nodes from downstream to upstream (river mouths to sources)
@@ -366,17 +370,18 @@ public partial class WorldGenerator
             if (cell.IsRiverMouth || !_receivers.TryGetValue(cell.Index, out var receiverIndex))
                 continue;
 
-            var receiver = _cellDatas[receiverIndex];
+            var receiver = cellDatas[receiverIndex];
 
             // Calculate the slope between this node and its receiver
-            var distance = UniformDistance(_points[cell.Index], _points[receiverIndex]);
+            var distance = distanceFunc == null ? cell.Position.DistanceTo(receiver.Position) :
+                distanceFunc(cell.Position, receiver.Position);
 
             // Skip if distance is zero to avoid division by zero
             if (distance < 0.001f) continue;
 
             // Get the drainage area for this node
             // Instead of using drainage, drainage area will generate higher mountains at low latitudes.  
-            var drainageArea = _drainageAreas.GetValueOrDefault(cell.Index, _cellArea);
+            var drainageArea = _drainageAreas.GetValueOrDefault(cell.Index, settings.DefaultCellArea);
 
             // Apply uplift
             var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01;
@@ -389,7 +394,7 @@ public partial class WorldGenerator
             var newHeight = (oldHeight + dt * (uplift + erosionTerm * receiver.Height)) / (1 + erosionTerm * dt);
 
             // Apply thermal erosion correction: limit the maximum slope
-            var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(Settings.MaxErosionSlopeAngle));
+            var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(settings.MaxErosionSlopeAngle));
             if (newHeight > maxSlopeHeight) newHeight = maxSlopeHeight;
 
             // Update the height
@@ -403,72 +408,15 @@ public partial class WorldGenerator
         }
 
         // Check for convergence
-        _powerEquationConverged = maxChange < Settings.ErosionConvergenceThreshold ||
-                                  ++_iterationCount >= Settings.MaxErosionIterations;
+        _powerEquationConverged = maxChange < settings.ErosionConvergenceThreshold ||
+                                  ++_iterationCount >= settings.MaxErosionIterations;
 
         ReportProgress($"""
-                        [{_iterationCount}/{Settings.MaxErosionIterations}] Stream power equation solved.
+                        [{_iterationCount}/{settings.MaxErosionIterations}] Stream power equation solved.
                         Max height change: {maxChange:f4}. Total change: {totalChange:f2}
                         """);
 
         if (_powerEquationConverged)
             ReportProgress($"Stream power equation converged. Max height {MaxHeight:f2}.");
-    }
-
-    protected void CalculateNormals()
-    {
-        ReportProgress("Calculating normals");
-
-        foreach (var (index, cellData) in _cellDatas)
-        {
-            var normal = Vector3.Zero;
-
-            foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_triangleIndicesMap[index])))
-            {
-                var triangleIndex = Delaunator.TriangleOfEdge(i);
-                var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
-
-                for (var j = 0; j < 3; j++)
-                    if (_edgePointsMap.TryGetValue(points[j], out var value))
-                        points[j] = value;
-
-                var p0XY = SamplePoints[points[0]];
-                var p0 = new Vector3(p0XY.X, _cellDatas[points[0]].Height, p0XY.Y);
-                var p1XY = SamplePoints[points[1]];
-                var p1 = new Vector3(p1XY.X, _cellDatas[points[1]].Height, p1XY.Y);
-                var p2XY = SamplePoints[points[2]];
-                var p2 = new Vector3(p2XY.X, _cellDatas[points[2]].Height, p2XY.Y);
-                var normalTriangle = GeometryUtils.CalculateTriangleNormal(p0, p1, p2);
-                var area = GeometryUtils.CalculateTriangleArea(p0, p1, p2);
-                normal += normalTriangle * area;
-            }
-
-            cellData.Normal = normal.Normalized();
-        }
-
-        /*
-        // Compute normal for this node if it has a receiver
-        if (_receivers.TryGetValue(index, out var receiverIndex))
-        {
-            var cell = _cellDatas[index];
-            var cellPos = _points[index];
-            var receiver = _cellDatas[receiverIndex];
-            var receiverPos = _points[receiverIndex];
-            var distance = UniformDistance(cellPos, receiverPos);
-
-            if (cell.Height > receiver.Height)
-                cell.Normal = new Vector3(
-                    receiverPos.X - cellPos.X,
-                    distance * distance / (cell.Height - receiver.Height),
-                    receiverPos.Y - cellPos.Y
-                ).Normalized();
-            else if (cell.Height < receiver.Height)
-                cell.Normal = new Vector3(
-                    cellPos.X - receiverPos.X,
-                    distance * distance / (receiver.Height - cell.Height),
-                    cellPos.Y - receiverPos.Y
-                ).Normalized();
-        }
-        */
     }
 }

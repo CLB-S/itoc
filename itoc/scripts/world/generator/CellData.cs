@@ -1,11 +1,19 @@
 using DelaunatorSharp;
 using Godot;
 
-namespace ITOC;
+namespace ITOC.WorldGeneration;
+
+public enum PlateType
+{
+    Continent,
+    Oceans
+}
+
 
 public class CellData
 {
     public int Index => Cell.Index;
+    public Vector2 Position;
     public VoronoiCell Cell;
     public Vector2 TectonicMovement;
     public PlateType PlateType;

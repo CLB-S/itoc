@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Godot;
 using ITOC.ChunkGeneration;
+using ITOC.WorldGeneration;
 
 namespace ITOC;
 

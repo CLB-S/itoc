@@ -2,7 +2,8 @@ using System;
 using Godot;
 using PatternSystem;
 
-namespace ITOC;
+namespace ITOC.WorldGeneration;
+
 
 // TODO: World without sample points.
 public class DebugWorldGenerator : WorldGenerator
@@ -46,29 +47,6 @@ public class DebugWorldGenerator : WorldGenerator
         return pattern1.Evaluate(x, y) * weight + pattern2.Evaluate(x, y) * (1.0 - weight);
     }
 
-    protected override void InitializePipeline()
-    {
-        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.Initializing, InitializeResources));
-        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.GeneratingSamplePoints, GenerateSamplePoints));
-        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.InitializingCellDatas, InitializeCellDatas));
-
-        // _generationPipeline.AddLast(new GenerationStep(GenerationState.Custom, ApplyHeight));
-
-        // _generationPipeline.AddLast(new GenerationStep(GenerationState.InitInterpolator, InitInterpolator));
-
-        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.AdjustingTemperature,
-            AdjustTemperatureAccordingToHeight));
-        _generationPipeline.AddLast(new WorldGenerationStep(WorldGenerationState.SettingBiome, SetBiomes));
-    }
-
-    private void SetHeightForSamplePoints()
-    {
-        foreach (var (i, cell) in _cellDatas)
-        {
-            var pos = SamplePoints[i];
-            cell.Height = _debugHeightPattern.Evaluate(pos.X, pos.Y);
-        }
-    }
 
     public override double[,] CalculateChunkHeightMap(Vector2I chunkColumnPos, Func<double, double, double> getHeight)
     {

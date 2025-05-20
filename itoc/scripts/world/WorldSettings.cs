@@ -1,5 +1,7 @@
 using Godot;
 
+// TODO: Seperating world settings and world generator settings.
+
 public class WorldSettings
 {
     #region General Settings
