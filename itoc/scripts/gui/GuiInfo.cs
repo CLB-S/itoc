@@ -1,10 +1,19 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Godot;
 using ITOC;
 
 public partial class GuiInfo : RichTextLabel
 {
+    private Process _process;
+
+    public override void _Ready()
+    {
+        _process = Process.GetCurrentProcess();
+    }
+
+
     public override void _PhysicsProcess(double delta)
     {
         if (!Visible) return;
@@ -13,8 +22,12 @@ public partial class GuiInfo : RichTextLabel
         var fps = Performance.GetMonitor(Performance.Monitor.TimeFps);
         var drawCalls = Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame);
         var vertices = Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame);
-        var staticMem = Performance.GetMonitor(Performance.Monitor.MemoryStatic);
-        var staticMemMax = Performance.GetMonitor(Performance.Monitor.MemoryStaticMax);
+        // var staticMem = Performance.GetMonitor(Performance.Monitor.MemoryStatic);
+        // var staticMemMax = Performance.GetMonitor(Performance.Monitor.MemoryStaticMax);
+
+        _process.Refresh();
+        var memory = _process.WorkingSet64;
+        var memoryMax = _process.PeakWorkingSet64;
 
         // var chunkMem = 0;
         // foreach (var chunk in World.Instance.Chunks.Values)
@@ -46,7 +59,7 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine($"[color=yellow]Draw Calls:[/color] {drawCalls}");
         debugTextBuilder.AppendLine($"[color=yellow]Vertices:[/color] {vertices}");
         debugTextBuilder.AppendLine(
-            $"[color=yellow]Static Mem:[/color] {BytesToString(staticMem)}/{BytesToString(staticMemMax)}");
+            $"[color=yellow]Static Mem:[/color] {BytesToString(memory)}/{BytesToString(memoryMax)}");
         // debugTextBuilder.AppendLine($"[color=yellow]Chunk Mem:[/color] {BytesToString(chunkMem)}");
         debugTextBuilder.AppendLine($"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}");
         debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkIndex.X}, {chunkIndex.Y}, {chunkIndex.Z}");
