@@ -18,7 +18,7 @@ public class ChunkLod : Chunk
         _childChunks[1, 1, 0] != null &&
         _childChunks[1, 1, 1] != null;
 
-    public int ChildCount => _childChunks.Length;
+    public int ChildCount => _childChunks.Cast<Chunk>().Count(c => c != null);
 
     // Reference to the child chunks that make up this chunk (can be either Chunk or ChunkLod objects)
     private Chunk[,,] _childChunks;
@@ -42,7 +42,18 @@ public class ChunkLod : Chunk
         if (State != ChunkState.Ready)
             throw new InvalidOperationException("Chunk is not ready.");
 
-        return new ChunkMesher.MeshData(_opaqueMask) { Lod = Lod };
+        _lock.EnterReadLock();
+        try
+        {
+            // Create a copy of the mesh data to avoid thread safety issues
+            ulong[] opaqueMaskCopy = new ulong[_opaqueMask.Length];
+            Array.Copy(_opaqueMask, opaqueMaskCopy, _opaqueMask.Length);
+            return new ChunkMesher.MeshData(opaqueMaskCopy) { Lod = Lod };
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
     }
 
     #endregion
