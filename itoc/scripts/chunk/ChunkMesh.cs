@@ -27,6 +27,7 @@ public class ChunkMesh
     }
 
     public MeshInstance3D MeshInstance { get; set; }
+    public MeshInstance3D DebugMeshInstance { get; set; }
     public StaticBody3D CollisionBody { get; set; }
     public CollisionShape3D CollisionShape { get; set; }
 
@@ -34,6 +35,7 @@ public class ChunkMesh
     public Vector3I Index => Chunk?.Index ?? Vector3I.Zero;
     public Vector3 Position => Chunk?.Position ?? Vector3.Zero;
     public Vector3 CenterPosition => Chunk?.CenterPosition ?? Vector3.Zero;
+    public Vector3 Size => Chunk?.Size ?? Vector3.Zero;
 
     public ChunkMesh(Chunk chunk)
     {

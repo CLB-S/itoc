@@ -24,7 +24,7 @@ public partial class WorldNode : Node
 
         _player = GetNode<PlayerController>("../Player");
 
-        _debugCube = ResourceLoader.Load<PackedScene>("res://scenes/debug_cube.tscn");
+        _debugCube = ResourceLoader.Load<PackedScene>("res://assets/meshes/debug_cube.tscn");
 
         _chunkInstantiator = new ChunkInstantiator(World);
         AddChild(_chunkInstantiator);

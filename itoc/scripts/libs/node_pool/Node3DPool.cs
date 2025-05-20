@@ -75,12 +75,16 @@ public class Node3DPool<T> : NodePool<T> where T : Node3D
     /// </summary>
     /// <param name="position">Position to place the node</param>
     /// <param name="rotation">Rotation in radians as a Vector3 (x, y, z)</param>
+    /// <param name="scale">Scale to apply</param>
     /// <returns>A positioned and rotated node instance ready for use</returns>
-    public T GetAt(Vector3 position, Vector3 rotation)
+    public T GetAt(Vector3 position, Vector3? rotation = null, Vector3? scale = null)
     {
         var node = Get();
         node.Position = position;
-        node.Rotation = rotation;
+        if (rotation.HasValue)
+            node.Rotation = rotation.Value;
+        if (scale.HasValue)
+            node.Scale = scale.Value;
         return node;
     }
 

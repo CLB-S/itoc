@@ -33,7 +33,7 @@ public class Chunk : IDisposable
     public ChunkState State { get; set; }
     public Vector3 Position => Index * ChunkMesher.CS * (1 << Lod);
     public Vector3 CenterPosition => Position + Vector3I.One * (ChunkMesher.CS * (1 << Lod) / 2);
-
+    public Vector3 Size => Vector3I.One * (ChunkMesher.CS * (1 << Lod));
 
     public event EventHandler<OnBlockUpdatedEventArgs> OnBlockUpdated;
     public event EventHandler OnMeshUpdated;

@@ -26,8 +26,31 @@ public partial class ChunkInstantiator : Node3D
     private ConcurrentDictionary<(int, Vector3I), Chunk> _chunksUpdated = new();
 
     // Node pools
-    private NodePool<MeshInstance3D> _meshPool;
-    private NodePool<StaticBody3D> _collisionBodyPool;
+    private Node3DPool<MeshInstance3D> _meshPool;
+    private Node3DPool<StaticBody3D> _collisionBodyPool;
+
+    // Debug
+    private bool _showChunkBounds = true;
+    private Node3DPool<MeshInstance3D> _debugMeshPool;
+
+    /// <summary>
+    /// Gets or sets whether chunk boundaries should be displayed.
+    /// When set to true, wireframe cubes will be shown around each chunk.
+    /// </summary>
+    public bool ShowChunkBounds
+    {
+        get => _showChunkBounds;
+        set
+        {
+            if (_showChunkBounds == value) return;
+            _showChunkBounds = value;
+
+            if (_showChunkBounds)
+                ShowAllChunkBounds();
+            else
+                HideAllChunkBounds();
+        }
+    }
 
     #endregion
 
@@ -56,13 +79,16 @@ public partial class ChunkInstantiator : Node3D
 
     private void InitializeNodePools()
     {
-        _meshPool = new NodePool<MeshInstance3D>(() => new MeshInstance3D(), this, 100);
-        _collisionBodyPool = new NodePool<StaticBody3D>(() =>
+        _meshPool = new Node3DPool<MeshInstance3D>(() => new MeshInstance3D(), this, 100);
+        _collisionBodyPool = new Node3DPool<StaticBody3D>(() =>
         {
             var body = new StaticBody3D();
             body.AddChild(new CollisionShape3D());
             return body;
         }, this, 50);
+
+        var debugCube = ResourceLoader.Load<PackedScene>("res://assets/meshes/debug_cube.tscn");
+        _debugMeshPool = new Node3DPool<MeshInstance3D>(debugCube, this, 0);
     }
 
     private void InitializeLodSettings()
@@ -99,6 +125,16 @@ public partial class ChunkInstantiator : Node3D
             AddOrUpdateChunkMesh(chunk);
 
         _chunksUpdated.Clear();
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        // F3 + G
+        if (@event.IsActionPressed("toggle_chunk_bounds") && Input.IsActionPressed("debug_key"))
+        {
+            ShowChunkBounds = !ShowChunkBounds;
+            // GD.Print($"Debug chunk bounds: {ShowChunkBounds}");
+        }
     }
 
     #endregion
@@ -194,6 +230,9 @@ public partial class ChunkInstantiator : Node3D
 
             if (chunkMesh.CollisionBody != null)
                 _collisionBodyPool.Release(chunkMesh.CollisionBody);
+
+            // Hide debug mesh
+            HideChunkBound(chunkMesh);
         }
 
         // Process LOD chunks removal
@@ -236,6 +275,9 @@ public partial class ChunkInstantiator : Node3D
 
                 if (parentMesh.CollisionBody != null)
                     _collisionBodyPool.Release(parentMesh.CollisionBody);
+
+                // Hide debug mesh
+                HideChunkBound(parentMesh);
             }
 
             // Recursively check higher LOD levels
@@ -395,15 +437,14 @@ public partial class ChunkInstantiator : Node3D
             return;
 
         // Create mesh instance if needed
-        if (chunkMesh.MeshInstance == null)
-        {
-            chunkMesh.MeshInstance = _meshPool.Get();
-            chunkMesh.MeshInstance.Position = chunkMesh.Position;
-        }
+        chunkMesh.MeshInstance ??= _meshPool.GetAt(chunkMesh.Position);
 
         chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh();
         chunkMesh.MeshInstance.Visible = true;
         chunkMesh.State = ChunkMeshState.Rendered;
+
+        // Debug bounds
+        ShowChunkBoundIfEnabled(chunkMesh);
     }
 
     private void HideChunkMesh(ChunkMesh chunkMesh)
@@ -414,6 +455,9 @@ public partial class ChunkInstantiator : Node3D
             chunkMesh.MeshInstance = null;
             chunkMesh.State = ChunkMeshState.Ready;
         }
+
+        // Hide debug bounds
+        HideChunkBound(chunkMesh);
     }
 
     #endregion
@@ -441,8 +485,7 @@ public partial class ChunkInstantiator : Node3D
         // Add collision if needed and not already present
         if (shouldHaveCollision && chunkMesh.State == ChunkMeshState.Rendered && chunkMesh.CollisionBody == null)
         {
-            var collisionBody = _collisionBodyPool.Get();
-            collisionBody.Position = chunkMesh.Position;
+            var collisionBody = _collisionBodyPool.GetAt(chunkMesh.Position);
 
             var collisionShape = collisionBody.GetChild<CollisionShape3D>(0);
             collisionShape.Shape = chunkMesh.MeshInstance.Mesh?.CreateTrimeshShape();
@@ -492,6 +535,75 @@ public partial class ChunkInstantiator : Node3D
             }
             _lodChunkMeshes[lod].Clear();
             _lodChunks[lod].Clear();
+        }
+
+        // Clean up debug meshes
+        _debugMeshPool.ReleaseAll();
+    }
+
+    #endregion
+
+    #region Debug Visualization
+
+    /// <summary>
+    /// Shows wireframe boundaries for all currently loaded chunks.
+    /// </summary>
+    private void ShowAllChunkBounds()
+    {
+        for (int lod = 0; lod <= _maxLodLevel; lod++)
+            foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
+            {
+                if (chunkMesh.DebugMeshInstance != null && chunkMesh.State != ChunkMeshState.Rendered)
+                    HideChunkBound(chunkMesh);
+
+                if (chunkMesh.DebugMeshInstance == null && chunkMesh.State == ChunkMeshState.Rendered)
+                    ShowChunkBound(chunkMesh);
+            }
+    }
+
+    /// <summary>
+    /// Shows a wireframe boundary for a specific chunk.
+    /// </summary>
+    private void ShowChunkBound(ChunkMesh chunkMesh, Color? color = null)
+    {
+        if (!_showChunkBounds) return;
+
+        var debugMesh = _debugMeshPool.GetAt(chunkMesh.CenterPosition, null, chunkMesh.Size);
+        chunkMesh.DebugMeshInstance = debugMesh;
+
+        // Set color based on LOD level or use provided color
+        // if (color.HasValue)
+        // debugMesh.MaterialOverride = new StandardMaterial3D { AlbedoColor = color.Value };
+        // else
+        // debugMesh.MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0f, 1f, 0f) };
+    }
+
+    /// <summary>
+    /// Hides all chunk boundary visualizations.
+    /// </summary>
+    private void HideAllChunkBounds()
+    {
+        _debugMeshPool.ReleaseAll();
+        for (int lod = 0; lod <= _maxLodLevel; lod++)
+            foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
+                chunkMesh.DebugMeshInstance = null;
+    }
+
+    /// <summary>
+    /// Shows the debug wireframe for a newly added chunk.
+    /// </summary>
+    private void ShowChunkBoundIfEnabled(ChunkMesh chunkMesh)
+    {
+        if (_showChunkBounds)
+            ShowChunkBound(chunkMesh);
+    }
+
+    private void HideChunkBound(ChunkMesh chunkMesh)
+    {
+        if (chunkMesh.DebugMeshInstance != null)
+        {
+            _debugMeshPool.Release(chunkMesh.DebugMeshInstance);
+            chunkMesh.DebugMeshInstance = null;
         }
     }
 

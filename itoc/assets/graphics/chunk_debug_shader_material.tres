@@ -5,3 +5,6 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_68o8n")
+shader_parameter/x_color = Color(1, 0, 0, 1)
+shader_parameter/y_color = Color(0, 1, 0, 1)
+shader_parameter/z_color = Color(0, 0, 1, 1)
