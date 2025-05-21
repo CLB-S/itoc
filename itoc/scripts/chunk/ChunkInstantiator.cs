@@ -194,12 +194,27 @@ public partial class ChunkInstantiator : Node3D
         Vector3I lodParentIndex = CalculateLodParentIndex(chunk.Index);
         var parentLod = chunk.Lod + 1;
 
-        // Get or create the ChunkLod for this level
-        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out ChunkLod lodChunk))
+        // Thread-safe approach to get or create the ChunkLod for this level
+        ChunkLod lodChunk;
+        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out lodChunk))
         {
-            lodChunk = new ChunkLod(lodParentIndex, parentLod);
-            _lodChunks[parentLod].TryAdd(lodParentIndex, lodChunk);
-            lodChunk.OnMeshUpdated += (s, args) => _chunksUpdated.TryAdd((lodChunk.Lod, lodChunk.Index), lodChunk);
+            // Create a placeholder to reserve the slot atomically
+            ChunkLod newLodChunk = new ChunkLod(lodParentIndex, parentLod);
+
+            // Try to add the new chunk - if this returns true, we won the race
+            if (_lodChunks[parentLod].TryAdd(lodParentIndex, newLodChunk))
+            {
+                // GD.Print($"Creating LOD chunk {lodParentIndex} for LOD {parentLod}");
+
+                // We successfully added the new chunk
+                lodChunk = newLodChunk;
+                lodChunk.OnMeshUpdated += (s, args) => _chunksUpdated.TryAdd((lodChunk.Lod, lodChunk.Index), lodChunk);
+            }
+            else
+            {
+                // Another thread created the chunk first, get that instance
+                _lodChunks[parentLod].TryGetValue(lodParentIndex, out lodChunk);
+            }
         }
 
         // Set this chunk as a child of the LOD chunk
