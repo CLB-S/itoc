@@ -30,7 +30,7 @@ public partial class ChunkInstantiator : Node3D
     private Node3DPool<StaticBody3D> _collisionBodyPool;
 
     // Debug
-    private bool _showChunkBounds = true;
+    private bool _showChunkBounds = false;
     private Node3DPool<MeshInstance3D> _debugMeshPool;
 
     /// <summary>
