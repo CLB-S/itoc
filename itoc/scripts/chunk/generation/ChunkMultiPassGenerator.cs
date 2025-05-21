@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Godot;
 
 namespace ITOC.ChunkGeneration;
 
 public class ChunkMultiPassGenerator
 {
-    public int PassCount = 2;
-    public int[] PassExtends = [0, 1]; // Pass 0 always has 0 extend
+    public int PassCount { get; private set; }
+    public int[] PassExtends { get; private set; } // Pass 0 should always has 0 extend
 
     public int MarkersLayerCount { get; private set; }
 
