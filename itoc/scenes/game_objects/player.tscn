@@ -17,5 +17,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Head"]
 current = true
+far = 40000.0
 
 [node name="Orientation" type="Node3D" parent="."]
