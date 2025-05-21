@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Godot;
-using ITOC;
 using Array = Godot.Collections.Array;
 using Vector2 = Godot.Vector2;
 using Vector3 = Godot.Vector3;
@@ -11,12 +10,18 @@ namespace ITOC;
 
 public static class ChunkMesher
 {
+    #region Constants
+
     public const int CS = 62;
     public const int CS_P = CS + 2;
     public const int CS_2 = CS * CS;
     public const int CS_3 = CS * CS * CS;
     public const int CS_P2 = CS_P * CS_P;
     public const int CS_P3 = CS_P * CS_P * CS_P;
+
+    #endregion
+
+    #region Index Utils
 
     public static int GetAxisIndex(int axis, int a, int b, int c, int size = CS_P)
     {
@@ -63,10 +68,147 @@ public static class ChunkMesher
         return vec.Z + vec.X * CS + vec.Y * CS_2;
     }
 
+    #endregion
+
+
+    #region Mask Utils
+
+    public static void AddOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
+    {
+        opaqueMask[y * CS_P + x] |= 1UL << z;
+    }
+
+    public static void AddNonOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
+    {
+        opaqueMask[y * CS_P + x] &= ~(1UL << z);
+    }
+
+    #endregion
+
+    #region Quads
+
     private static ulong GetQuad(ulong x, ulong y, ulong z, ulong w, ulong h, ulong type)
     {
         return (type << 32) | (h << 24) | (w << 18) | (z << 12) | (y << 6) | x;
     }
+
+    private static void ParseQuad(Direction dir, Block block, ulong quad, int lod,
+        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
+    {
+        if (block == null) return; // TODO: Shouldn't be null 
+
+        var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
+        if (!surfaceArrayDict.ContainsKey(blockDirPair))
+            surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
+        var surfaceArrayData = surfaceArrayDict[blockDirPair];
+
+        var x = (quad & 0x3F) << lod;         // 6 bits
+        var y = ((quad >> 6) & 0x3F) << lod;  // 6 bits
+        var z = ((quad >> 12) & 0x3F) << lod; // 6 bits
+        var w = ((quad >> 18) & 0x3F) << lod; // 6 bits (width)
+        var h = ((quad >> 24) & 0x3F) << lod; // 6 bits (height)
+        // ushort blockType = (ushort)((quad >> 32) & 0x7);
+
+        // GD.Print($"{dir.Name()}: {x},{y},{z} ({w},{h})");
+        // if (dir != Direction.PositiveY && dir != Direction.NegativeY) return;
+        // Color color = GetBlockColor(blockType);
+
+        var baseIndex = surfaceArrayData.Vertices.Count;
+        Vector3[] corners;
+        if (block.BlockId == "water" && lod == 0)
+        {
+            if (dir == Direction.PositiveY)
+                corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
+            else if (dir == Direction.PositiveZ || dir == Direction.NegativeZ)
+                corners = GetQuadCorners(dir, x, y, z, w, h - 0.1f);
+            else if (dir == Direction.NegativeX)
+                corners = GetQuadCorners(dir, x, y, z, w - 0.1f, h);
+            else if (dir == Direction.PositiveX)
+                corners = GetQuadCorners(dir, x, y - 0.1f, z, w - 0.1f, h);
+            else
+                corners = GetQuadCorners(dir, x, y, z, w, h);
+        }
+        else
+        {
+            corners = GetQuadCorners(dir, x, y, z, w, h);
+        }
+
+        surfaceArrayData.Vertices.AddRange(corners);
+
+        var normal = dir.Norm();
+        for (var i = 0; i < 4; i++) surfaceArrayData.Normals.Add(normal);
+
+        var offset = 0.0014f;
+
+        h >>= lod;
+        w >>= lod;
+
+        if (dir == Direction.PositiveZ ||
+            dir == Direction.NegativeZ ||
+            dir == Direction.NegativeY)
+        {
+            surfaceArrayData.UVs.Add(new Vector2(offset, h - offset));
+            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(w - offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(w - offset, h - offset));
+        }
+        else
+        {
+            surfaceArrayData.UVs.Add(new Vector2(offset, w - offset));
+            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(h - offset, offset));
+            surfaceArrayData.UVs.Add(new Vector2(h - offset, w - offset));
+        }
+
+        surfaceArrayData.Indices.Add(baseIndex + 0);
+        surfaceArrayData.Indices.Add(baseIndex + 1);
+        surfaceArrayData.Indices.Add(baseIndex + 2);
+        surfaceArrayData.Indices.Add(baseIndex + 0);
+        surfaceArrayData.Indices.Add(baseIndex + 2);
+        surfaceArrayData.Indices.Add(baseIndex + 3);
+    }
+
+    private static Vector3[] GetQuadCorners(Direction dir, float x, float y, float z, float w, float h)
+    {
+        return dir switch
+        {
+            Direction.PositiveY => [
+                new(x, y, z),
+                new(x + w, y, z),
+                new(x + w, y, z + h),
+                new(x, y, z + h)],
+            Direction.NegativeY => [
+                new(x - w, y, z),
+                new(x - w, y, z + h),
+                new(x, y, z + h),
+                new(x, y, z)],
+            Direction.PositiveX => [
+                new(x, y - w, z + h),
+                new(x, y, z + h),
+                new(x, y, z),
+                new(x, y - w, z)],
+            Direction.NegativeX => [
+                new(x, y, z),
+                new(x, y + w, z),
+                new(x, y + w, z + h),
+                new(x, y, z + h)],
+            Direction.PositiveZ => [
+                new(x - w, y, z),
+                new(x - w, y + h, z),
+                new(x, y + h, z),
+                new(x, y, z)],
+            Direction.NegativeZ => [
+                new(x + w, y, z),
+                new(x + w, y + h, z),
+                new(x, y + h, z),
+                new(x, y, z)],
+            _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null),
+        };
+    }
+
+    #endregion
+
+    #region Meshing
 
     /// <summary>
     /// Calculate MeshData according to the chunk data.
@@ -278,15 +420,9 @@ public static class ChunkMesher
         }
     }
 
-    public static void AddOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
-    {
-        opaqueMask[y * CS_P + x] |= 1UL << z;
-    }
+    #endregion
 
-    public static void AddNonOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
-    {
-        opaqueMask[y * CS_P + x] &= ~(1UL << z);
-    }
+    #region Mesh Generation
 
     public static ArrayMesh GenerateMesh(MeshData meshData)
     {
@@ -311,145 +447,9 @@ public static class ChunkMesher
         return _arrayMesh;
     }
 
-    private static void ParseQuad(Direction dir, Block block, ulong quad, int lod,
-        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
-    {
-        if (block == null) return; // TODO: Shouldn't be null 
+    #endregion
 
-        var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
-        if (!surfaceArrayDict.ContainsKey(blockDirPair))
-            surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
-        var surfaceArrayData = surfaceArrayDict[blockDirPair];
-
-        var x = (quad & 0x3F) << lod;         // 6 bits
-        var y = ((quad >> 6) & 0x3F) << lod;  // 6 bits
-        var z = ((quad >> 12) & 0x3F) << lod; // 6 bits
-        var w = ((quad >> 18) & 0x3F) << lod; // 6 bits (width)
-        var h = ((quad >> 24) & 0x3F) << lod; // 6 bits (height)
-        // ushort blockType = (ushort)((quad >> 32) & 0x7);
-
-        // GD.Print($"{dir.Name()}: {x},{y},{z} ({w},{h})");
-        // if (dir != Direction.PositiveY && dir != Direction.NegativeY) return;
-        // Color color = GetBlockColor(blockType);
-
-        var baseIndex = surfaceArrayData.Vertices.Count;
-        Vector3[] corners;
-        if (block.BlockId == "water" && lod == 0)
-        {
-            if (dir == Direction.PositiveY)
-                corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
-            else if (dir == Direction.PositiveZ || dir == Direction.NegativeZ)
-                corners = GetQuadCorners(dir, x, y, z, w, h - 0.1f);
-            else if (dir == Direction.NegativeX)
-                corners = GetQuadCorners(dir, x, y, z, w - 0.1f, h);
-            else if (dir == Direction.PositiveX)
-                corners = GetQuadCorners(dir, x, y - 0.1f, z, w - 0.1f, h);
-            else
-                corners = GetQuadCorners(dir, x, y, z, w, h);
-        }
-        else
-        {
-            corners = GetQuadCorners(dir, x, y, z, w, h);
-        }
-
-        surfaceArrayData.Vertices.AddRange(corners);
-
-        var normal = dir.Norm();
-        for (var i = 0; i < 4; i++) surfaceArrayData.Normals.Add(normal);
-
-        var offset = 0.0014f;
-
-        h >>= lod;
-        w >>= lod;
-
-        if (dir == Direction.PositiveZ ||
-            dir == Direction.NegativeZ ||
-            dir == Direction.NegativeY)
-        {
-            surfaceArrayData.UVs.Add(new Vector2(offset, h - offset));
-            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(w - offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(w - offset, h - offset));
-        }
-        else
-        {
-            surfaceArrayData.UVs.Add(new Vector2(offset, w - offset));
-            surfaceArrayData.UVs.Add(new Vector2(offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(h - offset, offset));
-            surfaceArrayData.UVs.Add(new Vector2(h - offset, w - offset));
-        }
-
-        surfaceArrayData.Indices.Add(baseIndex + 0);
-        surfaceArrayData.Indices.Add(baseIndex + 1);
-        surfaceArrayData.Indices.Add(baseIndex + 2);
-        surfaceArrayData.Indices.Add(baseIndex + 0);
-        surfaceArrayData.Indices.Add(baseIndex + 2);
-        surfaceArrayData.Indices.Add(baseIndex + 3);
-    }
-
-    private static Vector3[] GetQuadCorners(Direction dir, float x, float y, float z, float w, float h)
-    {
-        // 0 PositiveY wDir = 0 hDir = 2
-        // 1 NegativeY wDir = 0 hDir = 2
-        // 2 PositiveX wDir = 1 hDir = 2
-        // 3 NegativeX wDir = 1 hDir = 2
-        // 4 PositiveZ wDir = 0 hDir = 1
-        // 5 NegativeZ wDir = 0 hDir = 1
-
-        switch (dir)
-        {
-            case Direction.PositiveY: // Y+
-                return
-                [
-                    new(x, y, z),
-                    new(x + w, y, z),
-                    new(x + w, y, z + h),
-                    new(x, y, z + h)
-                ];
-            case Direction.NegativeY: // Y-
-                return
-                [
-                    new(x - w, y, z),
-                    new(x - w, y, z + h),
-                    new(x, y, z + h),
-                    new(x, y, z)
-                ];
-            case Direction.PositiveX: // X+
-                return
-                [
-                    new(x, y - w, z + h),
-                    new(x, y, z + h),
-                    new(x, y, z),
-                    new(x, y - w, z)
-                ];
-            case Direction.NegativeX: // X-
-                return
-                [
-                    new(x, y, z),
-                    new(x, y + w, z),
-                    new(x, y + w, z + h),
-                    new(x, y, z + h)
-                ];
-            case Direction.PositiveZ: // Z+
-                return
-                [
-                    new(x - w, y, z),
-                    new(x - w, y + h, z),
-                    new(x, y + h, z),
-                    new(x, y, z)
-                ];
-            case Direction.NegativeZ: // Z-
-                return
-                [
-                    new(x + w, y, z),
-                    new(x + w, y + h, z),
-                    new(x, y + h, z),
-                    new(x, y, z)
-                ];
-            default:
-                throw new ArgumentOutOfRangeException(nameof(dir), dir, null);
-        }
-    }
+    #region Data Classes
 
     private class SurfaceArrayData
     {
@@ -496,4 +496,6 @@ public static class ChunkMesher
             OpaqueMask = new ulong[CS_P2];
         }
     }
+
+    #endregion
 }
