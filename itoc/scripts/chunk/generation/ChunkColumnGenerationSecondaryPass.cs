@@ -33,7 +33,7 @@ public class ChunkColumnGenerationSecondaryPass : IPass
                         var neighborColumnPos = new Vector2I(chunkColumnPos.X + i, chunkColumnPos.Y + j);
                         var column = World.ChunkColumns[neighborColumnPos];
                         var topChunk = column.Chunks.Values.MaxBy(c => c.Index.Y);
-                        topChunk.SetBlock(31 + i * 2, 60, 31 + j * 2, BlockManager.Instance.GetBlock("debug"));
+                        topChunk.SetBlock(31 + i * 2, 60, 31 + j * 2, BlockManager.Instance.GetBlock("itoc:debug"));
                     }
                 }
             },

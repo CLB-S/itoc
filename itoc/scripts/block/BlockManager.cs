@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Godot;
+using ITOC.Libs.Registry;
 using ITOC.Models;
 
 namespace ITOC;
@@ -7,9 +9,38 @@ namespace ITOC;
 public class BlockManager
 {
     private static BlockManager _instance;
-    private readonly Dictionary<string, Block> _blocks = new();
+    public static BlockManager Instance => _instance ??= new BlockManager();
 
-    public BlockManager()
+    // private readonly Dictionary<string, Block> _blocks = new();
+
+
+    /// <summary>
+    /// The block registry
+    /// </summary>
+    public Registry<Block> BlockRegistry { get; }
+
+    /// <summary>
+    /// The tag manager for blocks
+    /// </summary>
+    public TagManager<Block> BlockTags { get; }
+
+    private BlockManager()
+    {
+        // Get the block registry from the registry manager
+        BlockRegistry = RegistryManager.Instance.GetRegistry<Block>(RegistryManager.Keys.Blocks);
+
+        // Create a tag manager for blocks
+        BlockTags = new TagManager<Block>(BlockRegistry);
+
+        // Register default blocks
+        RegisterDefaultBlocks();
+
+        // Create default tags
+        // CreateDefaultTags();
+
+    }
+
+    private void RegisterDefaultBlocks()
     {
         RegisterBlock(new Block("itoc:debug", "Debug Block", new CubeAllModel("res://assets/blocks/debug.png")));
         RegisterBlock(new Block("itoc:stone", "Stone", new CubeAllModel("res://assets/blocks/stone.png")));
@@ -17,29 +48,41 @@ public class BlockManager
         RegisterBlock(new Block("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png")));
         RegisterBlock(new Block("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png")));
 
-        var waterMaterial = new MaterialSettings("res://assets/blocks/water_material.tres");
+        var waterMaterial = ResourceLoader.Load<Material>("res://assets/blocks/water_material.tres");
         RegisterBlock(new Block("itoc:water", "Water", new CubeAllModel(waterMaterial), BlockProperties.Transparent));
         RegisterBlock(new DirectionalBlock("itoc:grass_block", "Grass Block", new CubeBottomTopModel("res://assets/blocks/grass_block/round.png", "res://assets/blocks/dirt.png", "res://assets/blocks/grass_block/top.png"),
             null, Direction.PositiveY));
     }
 
-    public static BlockManager Instance => _instance ??= new BlockManager();
 
     public void RegisterBlock(Block block)
     {
-        if (_blocks.ContainsKey(block.Id.ToString()))
-            throw new ArgumentException($"Block ID {block.Id} already exists");
+        try
+        {
+            BlockRegistry.Register(block.Id, block);
 
-        _blocks[block.Id.ToString()] = block;
+            // Also register the block as an item
+            // var itemRegistry = RegistryManager.Instance.GetRegistry<IItem>(RegistryManager.Keys.Items);
+            // itemRegistry.Register(id, block);
+        }
+        catch (ArgumentException e)
+        {
+            throw new ArgumentException($"Failed to register block {block.Id}: {e.Message}", e);
+        }
     }
 
-    public Block GetBlock(string blockId)
+    /// <summary>
+    /// Gets a block by ID
+    /// </summary>
+    /// <param name="blockId">The ID of the block</param>
+    /// <returns>The block, or null if not found</returns>
+    public Block GetBlock(Identifier blockId)
     {
-        return _blocks.TryGetValue(blockId, out var block) ? block : null;
+        return BlockRegistry.Get(blockId); // TODO: Air block and default block.
     }
 
     public int GetBlockCount()
     {
-        return _blocks.Count;
+        return BlockRegistry.Count;
     }
 }

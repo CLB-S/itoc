@@ -54,7 +54,7 @@ public class Chunk : IDisposable
             if (blocks.Length != ChunkMesher.CS_3)
                 throw new ArgumentException($"Blocks array must be of size {ChunkMesher.CS_3}");
 
-            var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
+            var palette = new Palette<Block>(BlockManager.Instance.GetBlock("itoc:air"));
             _paletteStorage = new PaletteStorage<Block>(palette, blocks);
 
             for (var i = 0; i < blocks.Length; i++)
@@ -68,7 +68,7 @@ public class Chunk : IDisposable
         }
         else
         {
-            var palette = new Palette<Block>(BlockManager.Instance.GetBlock("air"));
+            var palette = new Palette<Block>(BlockManager.Instance.GetBlock("itoc:air"));
             _paletteStorage = new PaletteStorage<Block>(palette);
         }
 
