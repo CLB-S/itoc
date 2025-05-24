@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://co4tsgsrvuwmk"]
 
-[ext_resource type="Material" uid="uid://cfnidhkhnbkyk" path="res://assets/graphics/chunk_debug_shader_material.tres" id="1_b1arq"]
+[ext_resource type="Material" uid="uid://cfnidhkhnbkyk" path="res://assets/materials/chunk_debug_shader_material.tres" id="1_b1arq"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_0xm2m"]
 

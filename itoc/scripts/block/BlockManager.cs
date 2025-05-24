@@ -48,7 +48,7 @@ public class BlockManager
         RegisterBlock(new Block("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png")));
         RegisterBlock(new Block("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png")));
 
-        var waterMaterial = ResourceLoader.Load<Material>("res://assets/blocks/water_material.tres");
+        var waterMaterial = ResourceLoader.Load<Material>("res://assets/materials/water_material.tres");
         RegisterBlock(new Block("itoc:water", "Water", new CubeAllModel(waterMaterial), BlockProperties.Transparent));
         RegisterBlock(new DirectionalBlock("itoc:grass_block", "Grass Block", new CubeBottomTopModel("res://assets/blocks/grass_block/round.png", "res://assets/blocks/dirt.png", "res://assets/blocks/grass_block/top.png"),
             null, Direction.PositiveY));

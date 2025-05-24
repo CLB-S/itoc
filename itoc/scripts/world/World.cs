@@ -20,9 +20,6 @@ public class World
 
     public ChunkMultiPassGenerator ChunkGenerator { get; private set; }
 
-    public bool UseDebugMaterial = false;
-    public ShaderMaterial DebugMaterial;
-
     public event EventHandler<Chunk> OnChunkGenerated;
     public event EventHandler<Vector3> OnPlayerMovedHalfAChunk;
     public event EventHandler<Vector3> OnPlayerMoved;
@@ -51,8 +48,6 @@ public class World
         _chunkGenerationPass1 = new ChunkColumnGenerationSecondaryPass(this);
         ChunkGenerator = new ChunkMultiPassGenerator(true, _chunkGenerationPass0, _chunkGenerationPass1);
         ChunkGenerator.AllPassesCompleted += OnChunkColumnAllPassesCompleted;
-
-        DebugMaterial = ResourceLoader.Load<ShaderMaterial>("res://assets/graphics/chunk_debug_shader_material.tres");
 
         _ready = true;
     }
