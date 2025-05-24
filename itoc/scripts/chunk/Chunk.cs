@@ -232,11 +232,11 @@ public class Chunk : IDisposable
         }
     }
 
-    public virtual Mesh GetMesh()
+    public virtual Mesh GetMesh(Material materialOverride = null)
     {
         var meshData = GetRawMeshData();
         ChunkMesher.MeshChunk(this, meshData);
-        return ChunkMesher.GenerateMesh(meshData);
+        return ChunkMesher.GenerateMesh(meshData, materialOverride);
     }
 
     public virtual int GetBytes()

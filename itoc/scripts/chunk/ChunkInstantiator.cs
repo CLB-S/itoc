@@ -32,6 +32,18 @@ public partial class ChunkInstantiator : Node3D
     // Debug
     private bool _showChunkBounds = false;
     private Node3DPool<MeshInstance3D> _debugMeshPool;
+    private bool _wireframedMesh = false;
+    public bool WireframedMesh
+    {
+        get => _wireframedMesh;
+        set
+        {
+            if (_wireframedMesh == value) return;
+            _wireframedMesh = value;
+            RefreshAllMeshes();
+        }
+    }
+    private Material _wireframeMaterial;
 
     /// <summary>
     /// Gets or sets whether chunk boundaries should be displayed.
@@ -75,7 +87,10 @@ public partial class ChunkInstantiator : Node3D
     {
         InitializeNodePools();
         InitializeLods();
+
         _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
+
+        _wireframeMaterial = ResourceLoader.Load<Material>("res://assets/materials/chunk_debug_shader_material.tres");
     }
 
     private void InitializeNodePools()
@@ -131,11 +146,12 @@ public partial class ChunkInstantiator : Node3D
     public override void _Input(InputEvent @event)
     {
         // F3 + G
-        if (@event.IsActionPressed("toggle_chunk_bounds") && Input.IsActionPressed("debug_key"))
-        {
+        if (@event.IsActionPressed("#toggle_chunk_bounds") && Input.IsActionPressed("debug_key"))
             ShowChunkBounds = !ShowChunkBounds;
-            // GD.Print($"Debug chunk bounds: {ShowChunkBounds}");
-        }
+
+        // F3 + F
+        if (@event.IsActionPressed("#toggle_wireframe_mesh") && Input.IsActionPressed("debug_key"))
+            WireframedMesh = !WireframedMesh;
     }
 
     #endregion
@@ -178,6 +194,7 @@ public partial class ChunkInstantiator : Node3D
             (key, oldValue) =>
             {
                 oldValue.Chunk = chunk;
+                oldValue.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
                 // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
                 return oldValue;
             });
@@ -194,12 +211,12 @@ public partial class ChunkInstantiator : Node3D
         Vector3I lodParentIndex = CalculateLodParentIndex(chunk.Index);
         var parentLod = chunk.Lod + 1;
 
+        // `ConcurrentDictionary` is not universal, may change this later.
         // Thread-safe approach to get or create the ChunkLod for this level
-        ChunkLod lodChunk;
-        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out lodChunk))
+        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out ChunkLod lodChunk))
         {
             // Create a placeholder to reserve the slot atomically
-            ChunkLod newLodChunk = new ChunkLod(lodParentIndex, parentLod);
+            var newLodChunk = new ChunkLod(lodParentIndex, parentLod);
 
             // Try to add the new chunk - if this returns true, we won the race
             if (_lodChunks[parentLod].TryAdd(lodParentIndex, newLodChunk))
@@ -435,7 +452,7 @@ public partial class ChunkInstantiator : Node3D
         // Create mesh instance if needed
         chunkMesh.MeshInstance ??= _meshPool.GetAt(chunkMesh.Position);
 
-        chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh();
+        chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh(_wireframedMesh ? _wireframeMaterial : null);
         chunkMesh.MeshInstance.Visible = true;
         chunkMesh.State = ChunkMeshState.Rendered;
 
@@ -501,6 +518,25 @@ public partial class ChunkInstantiator : Node3D
     private void UpdateCollisionShapesDeferred()
     {
         CallDeferred(nameof(UpdateCollisionShapesForAll));
+    }
+
+    #endregion
+
+    #region Refresh
+
+    /// <summary>
+    /// Refreshes all chunk meshes and their collision shapes.
+    /// </summary>
+    public void RefreshAllMeshes()
+    {
+        // Refresh base chunks (LOD 0)
+        foreach (var chunkMesh in _lodChunkMeshes[0].Values)
+            chunkMesh.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
+
+        // Refresh LOD chunks
+        for (int lod = 1; lod <= _maxLodLevel; lod++)
+            foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
+                chunkMesh.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
     }
 
     #endregion

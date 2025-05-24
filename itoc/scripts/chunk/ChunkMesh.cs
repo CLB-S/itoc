@@ -12,16 +12,7 @@ public enum ChunkMeshState
 public class ChunkMesh
 {
     public ChunkMeshState State { get; set; } = ChunkMeshState.Created;
-    private Chunk _chunk;
-    public Chunk Chunk
-    {
-        get { return _chunk; }
-        set
-        {
-            _chunk = value;
-            UpdateMesh();
-        }
-    }
+    public Chunk Chunk { get; set; }
 
     public MeshInstance3D MeshInstance { get; set; }
     public MeshInstance3D DebugMeshInstance { get; set; }
@@ -43,12 +34,12 @@ public class ChunkMesh
     }
 
 
-    public void UpdateMesh()
+    public void UpdateMesh(Material materialOverride = null)
     {
         if (Chunk == null || State != ChunkMeshState.Rendered)
             return;
 
-        var mesh = Chunk.GetMesh();
+        var mesh = Chunk.GetMesh(materialOverride);
         MeshInstance?.SetDeferred(MeshInstance3D.PropertyName.Mesh, mesh);
         CollisionShape?.SetDeferred(CollisionShape3D.PropertyName.Shape, mesh.CreateTrimeshShape());
     }
