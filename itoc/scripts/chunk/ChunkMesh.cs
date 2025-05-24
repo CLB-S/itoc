@@ -39,8 +39,7 @@ public class ChunkMesh
         if (Chunk == null || State != ChunkMeshState.Rendered)
             return;
 
-        var mesh = Chunk.GetMesh(materialOverride);
-        MeshInstance?.SetDeferred(MeshInstance3D.PropertyName.Mesh, mesh);
-        CollisionShape?.SetDeferred(CollisionShape3D.PropertyName.Shape, mesh.CreateTrimeshShape());
+        MeshInstance?.SetDeferred(MeshInstance3D.PropertyName.Mesh, Chunk.GetMesh(materialOverride));
+        CollisionShape?.SetDeferred(CollisionShape3D.PropertyName.Shape, Chunk.GetCollisionShape());
     }
 }

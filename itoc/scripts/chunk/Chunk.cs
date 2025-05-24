@@ -239,6 +239,13 @@ public class Chunk : IDisposable
         return ChunkMesher.GenerateMesh(meshData, materialOverride);
     }
 
+    public virtual Shape3D GetCollisionShape()
+    {
+        var meshData = GetRawMeshData();
+        ChunkMesher.MeshChunk(this, meshData, true);
+        return ChunkMesher.GenerateMesh(meshData).CreateTrimeshShape();
+    }
+
     public virtual int GetBytes()
     {
         return _paletteStorage.StorageSize * sizeof(ulong) +

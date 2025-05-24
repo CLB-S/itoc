@@ -501,7 +501,7 @@ public partial class ChunkInstantiator : Node3D
             var collisionBody = _collisionBodyPool.GetAt(chunkMesh.Position);
 
             var collisionShape = collisionBody.GetChild<CollisionShape3D>(0);
-            collisionShape.Shape = chunkMesh.MeshInstance.Mesh.CreateTrimeshShape();
+            collisionShape.Shape = chunkMesh.Chunk.GetCollisionShape();
 
             chunkMesh.CollisionBody = collisionBody;
             chunkMesh.CollisionShape = collisionShape;
