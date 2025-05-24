@@ -1,7 +1,9 @@
+using ITOC;
+
 public interface IItem
 {
     ItemType Type { get; }
-    string Id { get; }
+    Identifier Id { get; }
     string Name { get; }
     string Description { get; }
 

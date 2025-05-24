@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using ITOC;
 
 public partial class GuiInventoryHotbar : GridContainer
 {
@@ -15,12 +16,12 @@ public partial class GuiInventoryHotbar : GridContainer
 
         _slots[_activeSlotIndex].IsActive = true;
 
-        _slots[0].SetItem(BlockManager.Instance.GetBlock("dirt"));
-        _slots[1].SetItem(BlockManager.Instance.GetBlock("stone"));
-        _slots[2].SetItem(BlockManager.Instance.GetBlock("grass_block"));
-        _slots[3].SetItem(BlockManager.Instance.GetBlock("sand"));
-        _slots[4].SetItem(BlockManager.Instance.GetBlock("snow"));
-        _slots[5].SetItem(BlockManager.Instance.GetBlock("debug"));
+        _slots[0].SetItem(BlockManager.Instance.GetBlock("itoc:dirt"));
+        _slots[1].SetItem(BlockManager.Instance.GetBlock("itoc:stone"));
+        _slots[2].SetItem(BlockManager.Instance.GetBlock("itoc:grass_block"));
+        _slots[3].SetItem(BlockManager.Instance.GetBlock("itoc:sand"));
+        _slots[4].SetItem(BlockManager.Instance.GetBlock("itoc:snow"));
+        _slots[5].SetItem(BlockManager.Instance.GetBlock("itoc:debug"));
     }
 
     public void SetActiveSlot(int index)

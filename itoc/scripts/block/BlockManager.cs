@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using ITOC.Models;
+
+namespace ITOC;
 
 public class BlockManager
 {
@@ -8,25 +11,26 @@ public class BlockManager
 
     public BlockManager()
     {
-        RegisterBlock(new BasicBlock("debug", "Debug Block"));
-        RegisterBlock(new BasicBlock("stone", "Stone"));
-        RegisterBlock(new BasicBlock("dirt", "Dirt"));
-        RegisterBlock(new BasicBlock("sand", "Sand"));
-        RegisterBlock(new BasicBlock("snow", "Snow"));
-        RegisterBlock(new BasicBlock("water", "Water", "res://assets/blocks/water_material.tres") { IsOpaque = false });
-        RegisterBlock(new DirectionalBlock("grass_block", "Grass Block", Direction.PositiveY,
-            textureBottomPath: "res://assets/blocks/dirt.png"));
+        RegisterBlock(new Block("itoc:debug", "Debug Block", new CubeAllModel("res://assets/blocks/debug.png")));
+        RegisterBlock(new Block("itoc:stone", "Stone", new CubeAllModel("res://assets/blocks/stone.png")));
+        RegisterBlock(new Block("itoc:dirt", "Dirt", new CubeAllModel("res://assets/blocks/dirt.png")));
+        RegisterBlock(new Block("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png")));
+        RegisterBlock(new Block("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png")));
+
+        var waterMaterial = new MaterialSettings("res://assets/blocks/water_material.tres");
+        RegisterBlock(new Block("itoc:water", "Water", new CubeAllModel(waterMaterial), BlockProperties.Transparent));
+        RegisterBlock(new DirectionalBlock("itoc:grass_block", "Grass Block", new CubeBottomTopModel("res://assets/blocks/grass_block/round.png", "res://assets/blocks/dirt.png", "res://assets/blocks/grass_block/top.png"),
+            null, Direction.PositiveY));
     }
 
     public static BlockManager Instance => _instance ??= new BlockManager();
 
     public void RegisterBlock(Block block)
     {
-        if (_blocks.ContainsKey(block.BlockId))
-            throw new ArgumentException($"Block ID {block.BlockId} already exists");
+        if (_blocks.ContainsKey(block.Id.ToString()))
+            throw new ArgumentException($"Block ID {block.Id} already exists");
 
-        _blocks[block.BlockId] = block;
-        block.LoadResources();
+        _blocks[block.Id.ToString()] = block;
     }
 
     public Block GetBlock(string blockId)

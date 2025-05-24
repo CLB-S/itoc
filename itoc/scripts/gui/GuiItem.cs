@@ -1,9 +1,10 @@
 using Godot;
+using ITOC;
 
 public partial class GuiItem : Control
 {
     public IItem Item { get; private set; }
-    public string ItemId => Item?.Id;
+    // public string ItemId => Item?.Id;
     public string ItemName => Item?.Name;
     public string ItemDescription => Item?.Description;
 

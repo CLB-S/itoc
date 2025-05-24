@@ -1,5 +1,7 @@
 using Godot;
 
+namespace ITOC;
+
 public static class BlockHelper
 {
     public static Material GetMaterialByTexture(Texture2D texture)

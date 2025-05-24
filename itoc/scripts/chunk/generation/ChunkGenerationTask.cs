@@ -42,7 +42,7 @@ public class ChunkGenerationTask : GameTask
         var blocks = new Block[ChunkMesher.CS_3];
 
         // var debugBlock = BlockManager.Instance.GetBlock("dirt");
-        var waterBlock = BlockManager.Instance.GetBlock("water");
+        var waterBlock = BlockManager.Instance.GetBlock("itoc:water");
         // var blockUpdates = new List<(Vector3I Position, Block Block)>();
 
         for (var x = 0; x < ChunkMesher.CS; x++)
@@ -88,7 +88,7 @@ public class ChunkGenerationTask : GameTask
         {
             // Elevation-based blocks
             if (actualY <= 3)
-                return "sand"; // maxSlope <= 1 ? "sand" : "gravel";
+                return "itoc:sand"; // maxSlope <= 1 ? "sand" : "gravel";
 
             // Surface layers
             if (actualY == height)
@@ -101,13 +101,13 @@ public class ChunkGenerationTask : GameTask
                 // if (_rng.Randf() < (actualY - 170) / 50.0f)
                 //     return maxSlope <= 1 ? "grass_block" : "stone";
 
-                return "grass_block";
+                return "itoc:grass_block";
             }
 
-            return "dirt";
+            return "itoc:dirt";
             // return maxSlope > 2.5 ? "stone" : "dirt";
         }
 
-        return "stone";
+        return "itoc:stone";
     }
 }

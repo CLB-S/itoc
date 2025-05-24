@@ -94,4 +94,30 @@ public static class DirectionHelper
             _ => Direction.PositiveZ
         };
     }
+
+    public static Direction Right(this Direction dir)
+    {
+        return dir switch
+        {
+            Direction.PositiveX => Direction.PositiveY,
+            Direction.NegativeX => Direction.NegativeY,
+            Direction.PositiveY => Direction.PositiveZ,
+            Direction.NegativeY => Direction.NegativeZ,
+            Direction.PositiveZ => Direction.PositiveX,
+            _ => Direction.NegativeX
+        };
+    }
+
+    public static Direction Forward(this Direction dir)
+    {
+        return dir switch
+        {
+            Direction.PositiveX => Direction.PositiveZ,
+            Direction.NegativeX => Direction.NegativeZ,
+            Direction.PositiveY => Direction.PositiveX,
+            Direction.NegativeY => Direction.NegativeX,
+            Direction.PositiveZ => Direction.PositiveY,
+            _ => Direction.NegativeY
+        };
+    }
 }

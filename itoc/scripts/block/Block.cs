@@ -1,48 +1,34 @@
 using System;
-using Godot;
+using ITOC.Models;
 
-public abstract class Block : IEquatable<Block>, IItem
+namespace ITOC;
+
+public class Block : IEquatable<Block>, IItem
 {
-    /// <summary>
-    ///     The namespaced ID of the block (e.g. "stone")
-    /// </summary>
-    public string BlockId { get; }
-
-    public string BlockName { get; }
-    public Color Color { get; set; } = Colors.White;
-    public float Hardness { get; set; } = 1.0f;
-    public bool IsSolid { get; set; } = true;
-    public bool IsOpaque { get; set; } = true;
-    public bool IsLightSource { get; set; } = false;
-    public float LightStrength { get; set; } = 0;
-
+    public Identifier Id { get; }
+    public string Name { get; }
+    public bool IsOpaque { get; } = true;
+    public CubeModelBase BlockModel { get; }
 
     public ItemType Type => ItemType.Block;
-    public string Id => BlockId;
-    public string Name => BlockName;
-    public string Description => string.Empty;
 
-    protected Block(string blockId, string blockName)
+    public string Description => "";
+
+    public Block(Identifier id, string name, CubeModelBase blockModel, BlockProperties properties = null)
     {
-        if (!StringUtils.IsValidId(blockId))
-            throw new ArgumentException(
-                $"Invalid block ID format: {blockId}. Must be in format 'block_id' using lowercase letters, numbers and underscores");
+        Id = id;
+        Name = name;
+        BlockModel = blockModel ?? throw new ArgumentNullException(nameof(blockModel));
 
-        BlockId = blockId;
-        BlockName = blockName;
+        properties ??= BlockProperties.Default;
+        IsOpaque = properties.IsOpaque;
     }
 
-    public static bool IsTransparent(string blockId)
+    public virtual bool Equals(Block other)
     {
-        return string.IsNullOrEmpty(blockId) || !BlockManager.Instance.GetBlock(blockId).IsOpaque;
+        if (other == null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Id.Equals(other.Id);
     }
-
-    public abstract void LoadResources();
-
-    public abstract Material GetMaterial(Direction face = Direction.PositiveY);
-    public abstract Texture2D GetTexture(Direction face = Direction.PositiveY);
-
-    public abstract bool Equals(Block other);
-
-    // public virtual Mesh GetMesh(string modelType = "cube") => null;
 }

@@ -115,7 +115,7 @@ public static class ChunkMesher
 
         var baseIndex = surfaceArrayData.Vertices.Count;
         Vector3[] corners;
-        if (block.BlockId == "water" && lod == 0)
+        if (block.Id == "itoc:water" && lod == 0)
         {
             if (dir == Direction.PositiveY)
                 corners = GetQuadCorners(dir, x, y - 0.1f, z, w, h);
@@ -231,20 +231,19 @@ public static class ChunkMesher
                 var baIndex = b - 1 + (a - 1) * CS;
                 var abIndex = a - 1 + (b - 1) * CS;
 
+                // 1 -> Render the face.
                 var columnBits = meshData.OpaqueMask[a * CS_P + b] & ~((1UL << 63) | 1);
-                meshData.FaceMasks[baIndex + 0 * CS_2] =
-                    (columnBits & ~meshData.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
-                meshData.FaceMasks[baIndex + 1 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P - CS_P + b]) >> 1;
-                meshData.FaceMasks[abIndex + 2 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + b + 1]) >> 1;
-                meshData.FaceMasks[abIndex + 3 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + (b - 1)]) >> 1;
-                meshData.FaceMasks[baIndex + 4 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] >> 1);
-                meshData.FaceMasks[baIndex + 5 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] << 1);
+                meshData.FaceMasks[baIndex + 0 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
+                meshData.FaceMasks[baIndex + 1 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P - CS_P + b]) >> 1; // -Y
+                meshData.FaceMasks[abIndex + 2 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + b + 1]) >> 1;    // +X
+                meshData.FaceMasks[abIndex + 3 * CS_2] = (columnBits & ~meshData.OpaqueMask[aCS_P + (b - 1)]) >> 1;  // -X
+                meshData.FaceMasks[baIndex + 4 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] >> 1); // +Z
+                meshData.FaceMasks[baIndex + 5 * CS_2] = columnBits & ~(meshData.OpaqueMask[aCS_P + b] << 1); // -Z
 
                 if (meshData.WaterMasks != null)
                 {
                     // Water top face.
-                    meshData.FaceMasks[baIndex + 0 * CS_2] |= (meshData.WaterMasks[a * CS_P + b] & ~((1UL << 63) | 1) &
-                                                               ~meshData.WaterMasks[aCS_P + CS_P + b]) >> 1; // +Y
+                    meshData.FaceMasks[baIndex + 0 * CS_2] |= (meshData.WaterMasks[a * CS_P + b] & ~((1UL << 63) | 1) & ~meshData.WaterMasks[aCS_P + CS_P + b]) >> 1; // +Y
 
                     columnBits = (meshData.WaterMasks[a * CS_P + b] | meshData.OpaqueMask[a * CS_P + b]) &
                                  ~((1UL << 63) | 1);
@@ -441,7 +440,7 @@ public static class ChunkMesher
         {
             _arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
             _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                block.GetMaterial(dir));
+                block.BlockModel.GetMaterial(dir));
         }
 
         return _arrayMesh;
@@ -479,7 +478,7 @@ public static class ChunkMesher
         public int[] FaceVertexBegin = new int[6];
         public int[] FaceVertexLength = new int[6];
         public byte[] ForwardMerged = new byte[CS_2];
-        public ulong[] OpaqueMask;
+        public ulong[] OpaqueMask; // Each mask is 32 KB.
         public ulong[] WaterMasks;
         public List<Block> QuadBlocks = new(1000);
         public List<ulong> Quads = new(1000);
