@@ -78,11 +78,6 @@ public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifi
             throw new ArgumentException($"Invalid path format: '{path}'. Path can only contain lowercase letters, numbers, underscores, hyphens, periods, and forward slashes", nameof(path));
     }
 
-    /// <summary>
-    /// Returns the string representation of this identifier (namespace:path)
-    /// </summary>
-    public override string ToString() => $"{Namespace}{NamespaceSeparator}{Path}";
-
     public bool Equals(Identifier other) =>
         string.Equals(Namespace, other.Namespace) &&
         string.Equals(Path, other.Path);
@@ -107,7 +102,14 @@ public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifi
     public static bool operator >=(Identifier left, Identifier right) => left.CompareTo(right) >= 0;
 
     /// <summary>
+    /// Returns the string representation of this identifier (namespace:path)
+    /// </summary>
+    public override string ToString() => $"{Namespace}{NamespaceSeparator}{Path}";
+
+    /// <summary>
     /// Implicitly converts a string to an Identifier
     /// </summary>
     public static implicit operator Identifier(string identifier) => new(identifier);
+
+    public static implicit operator string(Identifier identifier) => identifier.ToString();
 }
