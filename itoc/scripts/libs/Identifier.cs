@@ -4,13 +4,12 @@ using System.Text.RegularExpressions;
 namespace ITOC;
 
 /// <summary>
-/// Represents a unique identifier for registry entries with namespace support.
 /// Format: "namespace:path" (e.g., "itoc:stone")
 /// </summary>
 public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifier>
 {
-    private static readonly Regex NamespaceRegex = new(@"^[a-z0-9_\-.]+$", RegexOptions.Compiled);
-    private static readonly Regex PathRegex = new(@"^[a-z0-9_\-.]+$", RegexOptions.Compiled);
+    private static readonly Regex NamespaceRegex = new(@"^[a-zA-Z0-9_\-.]+$", RegexOptions.Compiled);
+    private static readonly Regex PathRegex = new(@"^[a-zA-Z0-9_\-.]+$", RegexOptions.Compiled);
 
     public const string ItocNamespace = "itoc";
     public const string NamespaceSeparator = ":";
