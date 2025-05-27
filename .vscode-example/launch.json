@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "godot-mono",
+      "cwd": "${workspaceRoot}/itoc"
+    },
+    {
+      "name": "Attach",
+      "type": "godot-mono",
+      "request": "attach",
+      "address": "localhost",
+      "port": 23685
+    }
+  ]
+}

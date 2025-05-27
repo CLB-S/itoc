@@ -1,0 +1,6 @@
+{
+  "explorer.fileNesting.patterns": {
+    "*.cs": "${capture}.cs.uid"
+  },
+  "explorer.fileNesting.enabled": true
+}
