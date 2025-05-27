@@ -1,6 +1,6 @@
 using ITOC.Libs.Palette;
 
-namespace ITOC.Test;
+namespace ITOC.Test.Palette;
 
 public class PaletteTest : IDisposable
 {

@@ -2,7 +2,7 @@ using ITOC.Libs.Palette;
 using System.Reflection;
 using System.Diagnostics;
 
-namespace ITOC.Test;
+namespace ITOC.Test.Palette;
 
 public class PaletteStorageTest : IDisposable
 {
