@@ -1,5 +1,7 @@
 using Godot;
 
+namespace ITOC;
+
 public partial class GuiHud : Control
 {
     public GuiInventoryHotbar InventoryHotbar;

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Godot;
 
+namespace ITOC;
+
 public partial class GuiManager : Node
 {
     private readonly Stack<GuiState> _stateStack = new();

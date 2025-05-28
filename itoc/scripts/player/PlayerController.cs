@@ -1,6 +1,9 @@
 using System;
 using Godot;
-using ITOC;
+using ITOC.Core;
+using ITOC.Core.Item;
+
+namespace ITOC;
 
 public partial class PlayerController : CharacterBody3D
 {
@@ -146,13 +149,13 @@ public partial class PlayerController : CharacterBody3D
 
                     var resultCube = spaceState.IntersectShape(queryCube, 1);
                     if (resultCube.Count == 0 && ItemHandhelding?.Type == ItemType.Block)
-                        Core.Instance.CurrentWorld.SetBlock(pos, ItemHandhelding as Block);
+                        GameControllerNode.Instance.CurrentWorld.SetBlock(pos, ItemHandhelding as Block);
                 }
 
                 if (breakBlockPressed)
                 {
                     var pos = result["position"].AsVector3() - 0.5f * result["normal"].AsVector3();
-                    Core.Instance.CurrentWorld.SetBlock(pos, (Block)null);
+                    GameControllerNode.Instance.CurrentWorld.SetBlock(pos, (Block)null);
                 }
             }
             catch (Exception e)

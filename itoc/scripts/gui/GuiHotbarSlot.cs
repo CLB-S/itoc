@@ -1,4 +1,7 @@
 using Godot;
+using ITOC.Core.Item;
+
+namespace ITOC;
 
 public partial class GuiHotbarSlot : TextureRect
 {

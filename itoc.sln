@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "itoc", "itoc\itoc.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "itoc.test", "itoc.test\itoc.test.csproj", "{13A77802-C1C2-CB98-0F05-128D6630FEBF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "itoc.core", "itoc.core\itoc.core.csproj", "{52C657B4-E837-4B09-BE1B-E1A7071A2B08}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,12 @@ Global
 		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
 		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
 		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

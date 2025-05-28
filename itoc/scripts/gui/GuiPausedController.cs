@@ -1,3 +1,8 @@
+using Godot;
+using ITOC.Core;
+
+namespace ITOC;
+
 public partial class GuiPausedController : GuiController
 {
     public override void _Ready()

@@ -1,5 +1,16 @@
 using Godot;
 
+namespace ITOC;
+
+public enum GuiState
+{
+    Gameplay,
+    Paused,
+    Inventory,
+    Settings,
+    Dialogue
+}
+
 public partial class GuiController : Control
 {
     protected static GuiState[] PausingStates = [GuiState.Settings, GuiState.Paused];
@@ -9,14 +20,14 @@ public partial class GuiController : Control
         ProcessMode = ProcessModeEnum.Always;
         Visible = true;
         if (ShouldPauseGame())
-            Core.Instance.PauseGame();
+            GameControllerNode.Instance.PauseGame();
         UpdateMouseState();
     }
 
     public virtual void OnExit()
     {
         Visible = false;
-        Core.Instance.ResumeGame();
+        GameControllerNode.Instance.ResumeGame();
         UpdateMouseState();
     }
 

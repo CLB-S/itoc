@@ -1,5 +1,8 @@
-using Godot;
 using System;
+using Godot;
+using ITOC.Core.Utils;
+
+namespace ITOC;
 
 public partial class EnvironmentController : WorldEnvironment
 {
@@ -41,7 +44,7 @@ public partial class EnvironmentController : WorldEnvironment
 
     public override void _Ready()
     {
-        _dayLength = Core.Instance.CurrentWorld.Settings.MinutesPerDay * 60.0;
+        _dayLength = GameControllerNode.Instance.CurrentWorld.Settings.MinutesPerDay * 60.0;
 
         // Setup sky
         _sky = Environment.Sky;
@@ -79,9 +82,9 @@ public partial class EnvironmentController : WorldEnvironment
 
     public override void _PhysicsProcess(double delta)
     {
-        var time = Core.Instance.CurrentWorld.Time;
-        var worldSettings = Core.Instance.CurrentWorld.Settings;
-        var playerPos = Core.Instance.CurrentWorld.PlayerPos;
+        var time = GameControllerNode.Instance.CurrentWorld.Time;
+        var worldSettings = GameControllerNode.Instance.CurrentWorld.Settings;
+        var playerPos = GameControllerNode.Instance.CurrentWorld.PlayerPos;
         var normalizedPos =
             (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / worldSettings.Bounds.Size +
             Vector2.One / 2;

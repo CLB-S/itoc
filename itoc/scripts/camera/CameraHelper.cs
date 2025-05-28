@@ -1,4 +1,7 @@
 using Godot;
+using ITOC.Core;
+
+namespace ITOC;
 
 // Singleton class to manage the camera
 public partial class CameraHelper : Node

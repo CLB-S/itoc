@@ -2,7 +2,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using Godot;
-using ITOC;
+using ITOC.Core;
+using ITOC.Core.Utils;
+
+namespace ITOC;
 
 public partial class GuiInfo : RichTextLabel
 {
@@ -41,9 +44,9 @@ public partial class GuiInfo : RichTextLabel
         var chunkIndex = World.WorldToChunkIndex(camPos);
 
         // Time
-        var worldTime = Core.Instance.CurrentWorld.Time;
-        var worldSettings = Core.Instance.CurrentWorld.Settings;
-        var playerPos = Core.Instance.CurrentWorld.PlayerPos;
+        var worldTime = GameControllerNode.Instance.CurrentWorld.Time;
+        var worldSettings = GameControllerNode.Instance.CurrentWorld.Settings;
+        var playerPos = GameControllerNode.Instance.CurrentWorld.PlayerPos;
         var normalizedPos =
             (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / worldSettings.Bounds.Size +
             Vector2.One / 2;
@@ -66,14 +69,14 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine(
             $"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
 
-        if (Core.Instance.CurrentWorld.ChunkColumns.TryGetValue(new Vector2I(chunkIndex.X, chunkIndex.Z), out var chunkColumn))
+        if (GameControllerNode.Instance.CurrentWorld.ChunkColumns.TryGetValue(new Vector2I(chunkIndex.X, chunkIndex.Z), out var chunkColumn))
             debugTextBuilder.AppendLine(
                 $"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn.GetBiomeWeights(camPos.X, camPos.Z))}");
 
         debugTextBuilder.AppendLine(
             $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
-        debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {Core.Instance.CurrentWorld.Chunks.Count}");
-        debugTextBuilder.AppendLine($"[color=Greenyellow]ChunkColumn Num:[/color] {Core.Instance.CurrentWorld.ChunkColumns.Count}");
+        debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {GameControllerNode.Instance.CurrentWorld.Chunks.Count}");
+        debugTextBuilder.AppendLine($"[color=Greenyellow]ChunkColumn Num:[/color] {GameControllerNode.Instance.CurrentWorld.ChunkColumns.Count}");
         debugTextBuilder.AppendLine($"[color=green]Time:[/color] {worldTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Local Time:[/color] {localTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Sunrise:[/color] {sunriseTime:0.00}");

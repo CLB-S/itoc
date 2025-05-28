@@ -1,5 +1,7 @@
 using Godot;
-using ITOC;
+using ITOC.Core;
+
+namespace ITOC;
 
 public partial class GuiBlockItem : Control
 {

@@ -1,5 +1,8 @@
 using Godot;
-using ITOC;
+using ITOC.Core;
+using ITOC.Core.Item;
+
+namespace ITOC;
 
 public partial class GuiItem : Control
 {

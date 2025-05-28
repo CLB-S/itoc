@@ -1,6 +1,7 @@
 using Godot;
-using ITOC;
-using ITOC.WorldGeneration;
+using ITOC.Core.WorldGeneration;
+
+namespace ITOC;
 
 public partial class GuiStartScreen : Node
 {
@@ -8,19 +9,19 @@ public partial class GuiStartScreen : Node
 
     public void OnStartButtonPressed()
     {
-        Core.Instance.GenerateWorldAndStartGame();
+        GameControllerNode.Instance.GenerateWorldAndStartGame();
         LoadingScreen.Visible = true;
     }
 
     public void OnDebugWorldButtonPressed()
     {
-        Core.Instance.GenerateWorldAndStartGame(new DebugWorldGenerator(Core.Instance.WorldSettings));
+        GameControllerNode.Instance.GenerateWorldAndStartGame(new DebugWorldGenerator(GameControllerNode.Instance.WorldSettings));
         LoadingScreen.Visible = true;
     }
 
     public void OnWorld2dButtonPressed()
     {
-        Core.Instance.GotoScene("res://scenes/world_2d.tscn");
+        GameControllerNode.Instance.GotoScene("res://scenes/world_2d.tscn");
     }
 
     public void OnQuitButtonPressed()

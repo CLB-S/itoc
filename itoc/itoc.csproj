@@ -4,8 +4,6 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="MathEvaluator" Version="2.3.0" />
-        <PackageReference Include="Supercluster.KDTree.Standard" Version="1.0.5" />
-        <PackageReference Include="YamlDotNet" Version="16.3.0" />
+        <ProjectReference Include="..\itoc.core\itoc.core.csproj" />
     </ItemGroup>
 </Project>
