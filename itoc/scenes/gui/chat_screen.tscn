@@ -1,0 +1,48 @@
+[gd_scene load_steps=3 format=3 uid="uid://df1d2tkm0n0sl"]
+
+[ext_resource type="Script" uid="uid://dwfyjvjvwyyjd" path="res://scripts/command/Integration/CommandConsole.cs" id="1_ve1cc"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ve1cc"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.172549, 0.180392, 0.215686, 0.941176)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 6
+
+[node name="ChatScreen" type="Node"]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ve1cc")
+
+[node name="OutputRichTextLabel" type="RichTextLabel" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+vertical_alignment = 2
+drag_and_drop_selection_enabled = false
+
+[node name="InputLineEdit" type="LineEdit" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/caret_width = 2
+
+[node name="SuggestionsList" type="ItemList" parent="VBoxContainer/InputLineEdit"]
+visible = false
+layout_mode = 1
+offset_top = -74.0
+offset_right = 61.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_ve1cc")
+allow_search = false
+auto_width = true
+auto_height = true

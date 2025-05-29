@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://dh0kmu20kn02x"]
+
+[ext_resource type="PackedScene" uid="uid://df1d2tkm0n0sl" path="res://scenes/gui/chat_screen.tscn" id="1_yyas6"]
+
+[node name="ChatScreenTest" type="Node"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ChatScreen" parent="CanvasLayer" instance=ExtResource("1_yyas6")]
