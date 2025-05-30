@@ -1,4 +1,5 @@
 using Godot;
+using ITOC.Core.ChunkMeshing;
 
 namespace ITOC.Core;
 
@@ -34,7 +35,7 @@ public class ChunkLod : Chunk
 
     #region Get
 
-    public override ChunkMesher.MeshData GetRawMeshData()
+    public override MeshBuffer GetMeshBuffer()
     {
         if (State != ChunkState.Ready)
             throw new InvalidOperationException("Chunk is not ready.");
@@ -45,7 +46,7 @@ public class ChunkLod : Chunk
             // Create a copy of the mesh data to avoid thread safety issues
             ulong[] opaqueMaskCopy = new ulong[_opaqueMask.Length];
             Array.Copy(_opaqueMask, opaqueMaskCopy, _opaqueMask.Length);
-            return new ChunkMesher.MeshData(opaqueMaskCopy) { Lod = Lod };
+            return new MeshBuffer(opaqueMaskCopy) { Lod = Lod };
         }
         finally
         {
@@ -91,9 +92,9 @@ public class ChunkLod : Chunk
 
             chunk.OnBlockUpdated += (s, e) =>
             {
-                var lx = Mathf.FloorToInt(e.UpdatePosition.X / 2.0) + (x * ChunkMesher.CS / 2);
-                var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * ChunkMesher.CS / 2);
-                var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * ChunkMesher.CS / 2);
+                var lx = Mathf.FloorToInt(e.UpdatePosition.X / 2.0) + (x * SIZE / 2);
+                var ly = Mathf.FloorToInt(e.UpdatePosition.Y / 2.0) + (y * SIZE / 2);
+                var lz = Mathf.FloorToInt(e.UpdatePosition.Z / 2.0) + (z * SIZE / 2);
 
                 var block = GetBlockFromHigherLod(lx, ly, lz, chunk);
                 SetBlock(lx, ly, lz, block);
@@ -116,9 +117,9 @@ public class ChunkLod : Chunk
         if (chunk == null) return;
 
         // Calculate the base position in this LOD chunk corresponding to the child chunk
-        int baseX = childX * (ChunkMesher.CS / 2);
-        int baseY = childY * (ChunkMesher.CS / 2);
-        int baseZ = childZ * (ChunkMesher.CS / 2);
+        int baseX = childX * (SIZE / 2);
+        int baseY = childY * (SIZE / 2);
+        int baseZ = childZ * (SIZE / 2);
 
         // For each 2x2x2 group of blocks in the child chunk, determine the dominant block type
         var blocksToUpdate = new List<(Vector3I, Block)>();
@@ -136,14 +137,14 @@ public class ChunkLod : Chunk
                         if (childChunk == null) continue;
 
                         // Calculate the start position for this sub-chunk in our coordinate system
-                        int startX = baseX + cx * (ChunkMesher.CS / 4);
-                        int startY = baseY + cy * (ChunkMesher.CS / 4);
-                        int startZ = baseZ + cz * (ChunkMesher.CS / 4);
+                        int startX = baseX + cx * (SIZE / 4);
+                        int startY = baseY + cy * (SIZE / 4);
+                        int startZ = baseZ + cz * (SIZE / 4);
 
                         // Update the corresponding blocks in this LOD
-                        for (int x = 0; x <= ChunkMesher.CS / 4; x++)
-                            for (int y = 0; y <= ChunkMesher.CS / 4; y++)
-                                for (int z = 0; z <= ChunkMesher.CS / 4; z++)
+                        for (int x = 0; x <= SIZE / 4; x++)
+                            for (int y = 0; y <= SIZE / 4; y++)
+                                for (int z = 0; z <= SIZE / 4; z++)
                                 {
                                     // var block = GetBlockFromHigherLod(startX + x, startY + y, startZ + z, childChunk);
                                     var block = GetBlockFromHigherLod(startX + x, startY + y, startZ + z, blocks: blocks);
@@ -154,9 +155,9 @@ public class ChunkLod : Chunk
         else
         {
             // Original logic for regular chunks
-            for (int x = 0; x < ChunkMesher.CS / 2; x++)
-                for (int y = 0; y < ChunkMesher.CS / 2; y++)
-                    for (int z = 0; z < ChunkMesher.CS / 2; z++)
+            for (int x = 0; x < SIZE / 2; x++)
+                for (int y = 0; y < SIZE / 2; y++)
+                    for (int z = 0; z < SIZE / 2; z++)
                     {
                         var block = GetBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, blocks: blocks);
                         // var block = GetBlockFromHigherLod(baseX + x, baseY + y, baseZ + z, chunk);
@@ -172,18 +173,18 @@ public class ChunkLod : Chunk
     public Block GetBlockFromHigherLod(int x, int y, int z, Chunk childChunk = null, Block[] blocks = null)
     {
         // Normalize the coordinates relative to the child chunk
-        int localX = x % (ChunkMesher.CS / 2);
-        int localY = y % (ChunkMesher.CS / 2);
-        int localZ = z % (ChunkMesher.CS / 2);
+        int localX = x % (SIZE / 2);
+        int localY = y % (SIZE / 2);
+        int localZ = z % (SIZE / 2);
 
-        var useBlocks = blocks != null && blocks.Length == ChunkMesher.CS_3;
+        var useBlocks = blocks != null && blocks.Length == SIZE_3;
 
         if (!useBlocks && childChunk == null)
         {
             // If no child chunk is provided, use the one based on the coordinates
-            int childX = x / (ChunkMesher.CS / 2);
-            int childY = y / (ChunkMesher.CS / 2);
-            int childZ = z / (ChunkMesher.CS / 2);
+            int childX = x / (SIZE / 2);
+            int childY = y / (SIZE / 2);
+            int childZ = z / (SIZE / 2);
 
             childChunk = _childChunks[childX, childY, childZ];
 

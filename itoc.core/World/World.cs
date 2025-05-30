@@ -79,7 +79,7 @@ public class World
             _lastPlayerPosition1 = PlayerPos;
         }
 
-        if ((PlayerPos - _lastPlayerPosition).Length() > ChunkMesher.CS / 2)
+        if ((PlayerPos - _lastPlayerPosition).Length() > Chunk.SIZE / 2)
         {
             PlayerChunk = WorldToChunkIndex(PlayerPos);
             UpdateChunkLoading();
@@ -168,18 +168,18 @@ public class World
     public static Vector3I WorldToChunkIndex(Vector3 worldPos)
     {
         return new Vector3I(
-            Mathf.FloorToInt(worldPos.X / ChunkMesher.CS),
-            Mathf.FloorToInt(worldPos.Y / ChunkMesher.CS),
-            Mathf.FloorToInt(worldPos.Z / ChunkMesher.CS)
+            Mathf.FloorToInt(worldPos.X / Chunk.SIZE),
+            Mathf.FloorToInt(worldPos.Y / Chunk.SIZE),
+            Mathf.FloorToInt(worldPos.Z / Chunk.SIZE)
         );
     }
 
     public static Vector3 WorldToLocalPosition(Vector3 worldPos)
     {
         return new Vector3(
-            Mathf.PosMod(worldPos.X, ChunkMesher.CS),
-            Mathf.PosMod(worldPos.Y, ChunkMesher.CS),
-            Mathf.PosMod(worldPos.Z, ChunkMesher.CS)
+            Mathf.PosMod(worldPos.X, Chunk.SIZE),
+            Mathf.PosMod(worldPos.Y, Chunk.SIZE),
+            Mathf.PosMod(worldPos.Z, Chunk.SIZE)
         );
     }
 
@@ -293,10 +293,10 @@ public class World
             var neighbourChunkIndex = sourceChunkIndex;
             neighbourChunkIndex.X -= 1;
             if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
-                neighbourChunk.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
+                neighbourChunk.SetMesherMask(Chunk.SIZE_P - 1, y + 1, z + 1, block);
         }
 
-        if (x == ChunkMesher.CS - 1)
+        if (x == Chunk.SIZE - 1)
         {
             var neighbourChunkIndex = sourceChunkIndex;
             neighbourChunkIndex.X += 1;
@@ -309,10 +309,10 @@ public class World
             var neighbourChunkIndex = sourceChunkIndex;
             neighbourChunkIndex.Y -= 1;
             if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
-                neighbourChunk.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
+                neighbourChunk.SetMesherMask(x + 1, Chunk.SIZE_P - 1, z + 1, block);
         }
 
-        if (y == ChunkMesher.CS - 1)
+        if (y == Chunk.SIZE - 1)
         {
             var neighbourChunkIndex = sourceChunkIndex;
             neighbourChunkIndex.Y += 1;
@@ -325,10 +325,10 @@ public class World
             var neighbourChunkIndex = sourceChunkIndex;
             neighbourChunkIndex.Z -= 1;
             if (Chunks.TryGetValue(neighbourChunkIndex, out var neighbourChunk))
-                neighbourChunk.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
+                neighbourChunk.SetMesherMask(x + 1, y + 1, Chunk.SIZE_P - 1, block);
         }
 
-        if (z == ChunkMesher.CS - 1)
+        if (z == Chunk.SIZE - 1)
         {
             var neighbourChunkIndex = sourceChunkIndex;
             neighbourChunkIndex.Z += 1;
@@ -343,78 +343,78 @@ public class World
 
         if (Chunks.TryGetValue(new Vector3I(chunkIndex.X + 1, chunkIndex.Y, chunkIndex.Z), out var positiveXNeighbor))
         {
-            for (var y = 0; y < ChunkMesher.CS; y++)
-                for (var z = 0; z < ChunkMesher.CS; z++)
+            for (var y = 0; y < Chunk.SIZE; y++)
+                for (var z = 0; z < Chunk.SIZE; z++)
                 {
-                    var block = chunk.GetBlock(ChunkMesher.CS - 1, y, z);
+                    var block = chunk.GetBlock(Chunk.SIZE - 1, y, z);
                     positiveXNeighbor.SetMesherMask(0, y + 1, z + 1, block);
 
                     var neighborBlock = positiveXNeighbor.GetBlock(0, y, z);
-                    chunk.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, neighborBlock);
+                    chunk.SetMesherMask(Chunk.SIZE_P - 1, y + 1, z + 1, neighborBlock);
                 }
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkIndex.X - 1, chunkIndex.Y, chunkIndex.Z), out var negativeXNeighbor))
         {
-            for (var y = 0; y < ChunkMesher.CS; y++)
-                for (var z = 0; z < ChunkMesher.CS; z++)
+            for (var y = 0; y < Chunk.SIZE; y++)
+                for (var z = 0; z < Chunk.SIZE; z++)
                 {
                     var block = chunk.GetBlock(0, y, z);
-                    negativeXNeighbor.SetMesherMask(ChunkMesher.CS_P - 1, y + 1, z + 1, block);
+                    negativeXNeighbor.SetMesherMask(Chunk.SIZE_P - 1, y + 1, z + 1, block);
 
-                    var neighborBlock = negativeXNeighbor.GetBlock(ChunkMesher.CS - 1, y, z);
+                    var neighborBlock = negativeXNeighbor.GetBlock(Chunk.SIZE - 1, y, z);
                     chunk.SetMesherMask(0, y + 1, z + 1, neighborBlock);
                 }
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y + 1, chunkIndex.Z), out var positiveYNeighbor))
         {
-            for (var x = 0; x < ChunkMesher.CS; x++)
-                for (var z = 0; z < ChunkMesher.CS; z++)
+            for (var x = 0; x < Chunk.SIZE; x++)
+                for (var z = 0; z < Chunk.SIZE; z++)
                 {
-                    var block = chunk.GetBlock(x, ChunkMesher.CS - 1, z);
+                    var block = chunk.GetBlock(x, Chunk.SIZE - 1, z);
                     positiveYNeighbor.SetMesherMask(x + 1, 0, z + 1, block);
 
                     var neighborBlock = positiveYNeighbor.GetBlock(x, 0, z);
-                    chunk.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, neighborBlock);
+                    chunk.SetMesherMask(x + 1, Chunk.SIZE_P - 1, z + 1, neighborBlock);
                 }
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y - 1, chunkIndex.Z), out var negativeYNeighbor))
         {
-            for (var x = 0; x < ChunkMesher.CS; x++)
-                for (var z = 0; z < ChunkMesher.CS; z++)
+            for (var x = 0; x < Chunk.SIZE; x++)
+                for (var z = 0; z < Chunk.SIZE; z++)
                 {
                     var block = chunk.GetBlock(x, 0, z);
-                    negativeYNeighbor.SetMesherMask(x + 1, ChunkMesher.CS_P - 1, z + 1, block);
+                    negativeYNeighbor.SetMesherMask(x + 1, Chunk.SIZE_P - 1, z + 1, block);
 
-                    var neighborBlock = negativeYNeighbor.GetBlock(x, ChunkMesher.CS - 1, z);
+                    var neighborBlock = negativeYNeighbor.GetBlock(x, Chunk.SIZE - 1, z);
                     chunk.SetMesherMask(x + 1, 0, z + 1, neighborBlock);
                 }
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y, chunkIndex.Z + 1), out var positiveZNeighbor))
         {
-            for (var x = 0; x < ChunkMesher.CS; x++)
-                for (var y = 0; y < ChunkMesher.CS; y++)
+            for (var x = 0; x < Chunk.SIZE; x++)
+                for (var y = 0; y < Chunk.SIZE; y++)
                 {
-                    var block = chunk.GetBlock(x, y, ChunkMesher.CS - 1);
+                    var block = chunk.GetBlock(x, y, Chunk.SIZE - 1);
                     positiveZNeighbor.SetMesherMask(x + 1, y + 1, 0, block);
 
                     var neighborBlock = positiveZNeighbor.GetBlock(x, y, 0);
-                    chunk.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, neighborBlock);
+                    chunk.SetMesherMask(x + 1, y + 1, Chunk.SIZE_P - 1, neighborBlock);
                 }
         }
 
         if (Chunks.TryGetValue(new Vector3I(chunkIndex.X, chunkIndex.Y, chunkIndex.Z - 1), out var negativeZNeighbor))
         {
-            for (var x = 0; x < ChunkMesher.CS; x++)
-                for (var y = 0; y < ChunkMesher.CS; y++)
+            for (var x = 0; x < Chunk.SIZE; x++)
+                for (var y = 0; y < Chunk.SIZE; y++)
                 {
                     var block = chunk.GetBlock(x, y, 0);
-                    negativeZNeighbor.SetMesherMask(x + 1, y + 1, ChunkMesher.CS_P - 1, block);
+                    negativeZNeighbor.SetMesherMask(x + 1, y + 1, Chunk.SIZE_P - 1, block);
 
-                    var neighborBlock = negativeZNeighbor.GetBlock(x, y, ChunkMesher.CS - 1);
+                    var neighborBlock = negativeZNeighbor.GetBlock(x, y, Chunk.SIZE - 1);
                     chunk.SetMesherMask(x + 1, y + 1, 0, neighborBlock);
                 }
         }

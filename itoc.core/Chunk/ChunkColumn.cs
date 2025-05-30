@@ -12,7 +12,7 @@ public class ChunkColumn
     public Vector2I Index;
 
     /// <summary>
-    ///     [ChunkMesher.CS, ChunkMesher.CS], 62x62
+    ///     [Chunk.SIZE, Chunk.SIZE], 62x62
     /// </summary>
     public double[,] HeightMap;
 
@@ -60,8 +60,8 @@ public class ChunkColumn
     /// <returns>Dictionary mapping biomes to their interpolation weights</returns>
     public Dictionary<Biome, double> GetBiomeWeights(double x, double z)
     {
-        var normalizedX = Mathf.PosMod(x, ChunkMesher.CS) / ChunkMesher.CS;
-        var normalizedZ = Mathf.PosMod(z, ChunkMesher.CS) / ChunkMesher.CS;
+        var normalizedX = Mathf.PosMod(x, Chunk.SIZE) / Chunk.SIZE;
+        var normalizedZ = Mathf.PosMod(z, Chunk.SIZE) / Chunk.SIZE;
 
         var biomeWeights = new Dictionary<Biome, double>();
         normalizedX = (BIOME_MAP_SIZE - 1) * normalizedX;

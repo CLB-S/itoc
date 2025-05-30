@@ -35,14 +35,14 @@ public class ChunkGenerationTask : GameTask
 
     private Chunk CreateFromHeightMap()
     {
-        var blocks = new Block[ChunkMesher.CS_3];
+        var blocks = new Block[Chunk.SIZE_3];
 
         // var debugBlock = BlockManager.Instance.GetBlock("dirt");
         var waterBlock = BlockManager.Instance.GetBlock("itoc:water");
         // var blockUpdates = new List<(Vector3I Position, Block Block)>();
 
-        for (var x = 0; x < ChunkMesher.CS; x++)
-            for (var z = 0; z < ChunkMesher.CS; z++)
+        for (var x = 0; x < Chunk.SIZE; x++)
+            for (var z = 0; z < Chunk.SIZE; z++)
             {
                 var height = Mathf.FloorToInt(ChunkColumn.HeightMap[x, z]);
 
@@ -50,19 +50,19 @@ public class ChunkGenerationTask : GameTask
                 // var maxSlope = CalculateSlope(x, z);
 
                 // var baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
-                for (var y = 0; y < ChunkMesher.CS; y++)
+                for (var y = 0; y < Chunk.SIZE; y++)
                 {
-                    var actualY = ChunkIndex.Y * ChunkMesher.CS + y;
+                    var actualY = ChunkIndex.Y * Chunk.SIZE + y;
                     if (actualY <= height)
                     {
                         var blockType = DetermineBlockType(actualY, height, 0, 4);
-                        blocks[ChunkMesher.GetBlockIndex(x, y, z)] = BlockManager.Instance.GetBlock(blockType);
+                        blocks[Chunk.GetBlockIndex(x, y, z)] = BlockManager.Instance.GetBlock(blockType);
                         // blockUpdates.Add((new Vector3I(x, y, z), blockType));
                         // _chunk.SetBlock(x, y, z, blockType);
                     }
                     else if (actualY <= 0)
                     {
-                        blocks[ChunkMesher.GetBlockIndex(x, y, z)] = waterBlock;
+                        blocks[Chunk.GetBlockIndex(x, y, z)] = waterBlock;
 
                         // blockUpdates.Add((new Vector3I(x, y, z), waterBlock));
                         // _chunk.SetBlock(x, y, z, waterBlock);

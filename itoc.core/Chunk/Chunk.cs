@@ -1,4 +1,5 @@
 using Godot;
+using ITOC.Core.ChunkMeshing;
 using ITOC.Core.Palette;
 
 namespace ITOC.Core;
@@ -25,12 +26,19 @@ public enum ChunkState
 
 public class Chunk : IDisposable
 {
+    public const int SIZE = 62;
+    public const int SIZE_2 = SIZE * SIZE;
+    public const int SIZE_3 = SIZE * SIZE * SIZE;
+    public const int SIZE_P = SIZE + 2;
+    public const int SIZE_P2 = SIZE_P * SIZE_P;
+    public const int SIZE_P3 = SIZE_P * SIZE_P * SIZE_P;
+
     public int Lod { get; protected set; } = 0;
     public Vector3I Index { get; protected set; }
     public ChunkState State { get; set; }
-    public Vector3 Position => Index * ChunkMesher.CS * (1 << Lod);
-    public Vector3 CenterPosition => Position + Vector3I.One * (ChunkMesher.CS * (1 << Lod) / 2);
-    public Vector3 Size => Vector3I.One * (ChunkMesher.CS * (1 << Lod));
+    public Vector3 Position => Index * SIZE * (1 << Lod);
+    public Vector3 CenterPosition => Position + Vector3I.One * (SIZE * (1 << Lod) / 2);
+    public Vector3 Size => Vector3I.One * (SIZE * (1 << Lod));
 
     public event EventHandler<OnBlockUpdatedEventArgs> OnBlockUpdated;
     public event EventHandler OnMeshUpdated;
@@ -38,7 +46,7 @@ public class Chunk : IDisposable
     /// <summary>
     ///     Mask for opaque blocks.
     /// </summary>
-    protected readonly ulong[] _opaqueMask = new ulong[ChunkMesher.CS_P2];
+    protected readonly ulong[] _opaqueMask = new ulong[Chunk.SIZE_P2];
 
     protected ulong[] _transparentMasks;
     protected readonly PaletteStorage<Block> _paletteStorage; // Storage for all blocks 
@@ -48,8 +56,8 @@ public class Chunk : IDisposable
     {
         if (blocks != null)
         {
-            if (blocks.Length != ChunkMesher.CS_3)
-                throw new ArgumentException($"Blocks array must be of size {ChunkMesher.CS_3}");
+            if (blocks.Length != Chunk.SIZE_3)
+                throw new ArgumentException($"Blocks array must be of size {Chunk.SIZE_3}");
 
             var palette = new Palette<Block>(BlockManager.Instance.GetBlock("itoc:air"));
             _paletteStorage = new PaletteStorage<Block>(palette, blocks);
@@ -181,7 +189,7 @@ public class Chunk : IDisposable
 
     public Block[] GetBlocks()
     {
-        var blocks = new Block[ChunkMesher.CS_3];
+        var blocks = new Block[Chunk.SIZE_3];
 
         _lock.EnterReadLock();
         try
@@ -197,7 +205,72 @@ public class Chunk : IDisposable
         return blocks;
     }
 
-    public virtual ChunkMesher.MeshData GetRawMeshData()
+    public virtual int GetBytes()
+    {
+        return _paletteStorage.StorageSize * sizeof(ulong) +
+               _opaqueMask.Length * sizeof(ulong)
+                 + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
+    }
+
+    public double GetDistanceTo(Vector3 pos)
+    {
+        return CenterPosition.DistanceTo(pos);
+    }
+
+    #endregion
+
+    #region Index Utils
+
+    public static int GetAxisIndex(int axis, int a, int b, int c, int size = SIZE_P)
+    {
+        return axis switch
+        {
+            0 => b + a * size + c * size * size,
+            1 => b + c * size + a * size * size,
+            _ => c + a * size + b * size * size
+        };
+    }
+
+    public static int GetIndex(int x, int y, int z)
+    {
+        return z + x * SIZE_P + y * SIZE_P2;
+    }
+
+    public static int GetIndex(Vector3I vec)
+    {
+        return vec.Z + vec.X * SIZE_P + vec.Y * SIZE_P2;
+    }
+
+    public static int GetBlockAxisIndex(int axis, int a, int b, int c)
+    {
+        return GetAxisIndex(axis, a, b, c, SIZE);
+    }
+
+    public static int GetBlockIndex(int x, int y, int z)
+    {
+        return z + x * SIZE + y * SIZE_2;
+    }
+
+    public static (int x, int y, int z) GetBlockIndex(int index)
+    {
+        var z = index % SIZE;
+        index -= z;
+        var x = (index / SIZE) % SIZE;
+        index -= x * SIZE;
+        var y = index / SIZE_2;
+        return (x, y, z);
+    }
+
+    public static int GetBlockIndex(Vector3I vec)
+    {
+        return vec.Z + vec.X * SIZE + vec.Y * SIZE_2;
+    }
+
+    #endregion
+
+    #region Mesh and Collision Shape
+
+    public virtual MeshBuffer GetMeshBuffer()
     {
         if (State != ChunkState.Ready)
             throw new InvalidOperationException("Chunk is not ready.");
@@ -216,7 +289,7 @@ public class Chunk : IDisposable
                 Array.Copy(_transparentMasks, transparentMasksCopy, _transparentMasks.Length);
             }
 
-            return new ChunkMesher.MeshData(opaqueMaskCopy, transparentMasksCopy);
+            return new MeshBuffer(opaqueMaskCopy, transparentMasksCopy);
         }
         finally
         {
@@ -226,28 +299,14 @@ public class Chunk : IDisposable
 
     public virtual Mesh GetMesh(Material materialOverride = null)
     {
-        var meshData = GetRawMeshData();
-        ChunkMesher.MeshChunk(this, meshData);
-        return ChunkMesher.GenerateMesh(meshData, materialOverride);
+        var meshResult = ChunkMesher.Mesh(this);
+        return ChunkMesher.GenerateMesh(meshResult, materialOverride);
     }
 
     public virtual Shape3D GetCollisionShape()
     {
-        var meshData = GetRawMeshData();
-        ChunkMesher.MeshChunk(this, meshData, true);
-        return ChunkMesher.GenerateMesh(meshData).CreateTrimeshShape();
-    }
-
-    public virtual int GetBytes()
-    {
-        return _paletteStorage.StorageSize * sizeof(ulong) +
-               _opaqueMask.Length * sizeof(ulong)
-                 + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
-    }
-
-    public double GetDistanceTo(Vector3 pos)
-    {
-        return CenterPosition.DistanceTo(pos);
+        var meshResult = ChunkMesher.Mesh(this, new MesherSettings { IgnoreBlockType = true });
+        return ChunkMesher.GenerateMesh(meshResult).CreateTrimeshShape();
     }
 
     #endregion
@@ -333,7 +392,7 @@ public class Chunk : IDisposable
 
         if (block != null && !block.IsOpaque)
         {
-            _transparentMasks ??= new ulong[ChunkMesher.CS_P2];
+            _transparentMasks ??= new ulong[Chunk.SIZE_P2];
             ChunkMesher.AddOpaqueVoxel(_transparentMasks, x, y, z);
         }
     }
@@ -414,17 +473,17 @@ public class Chunk : IDisposable
     #region Helpers
     private bool IsPositionInChunk(Vector3I pos)
     {
-        return pos.X >= 0 && pos.X < ChunkMesher.CS &&
-               pos.Y >= 0 && pos.Y < ChunkMesher.CS &&
-               pos.Z >= 0 && pos.Z < ChunkMesher.CS;
+        return pos.X >= 0 && pos.X < SIZE &&
+               pos.Y >= 0 && pos.Y < SIZE &&
+               pos.Z >= 0 && pos.Z < SIZE;
     }
 
     private Vector3I ClampPositionToChunk(Vector3I pos)
     {
         return new Vector3I(
-            Mathf.Clamp(pos.X, 0, ChunkMesher.CS - 1),
-            Mathf.Clamp(pos.Y, 0, ChunkMesher.CS - 1),
-            Mathf.Clamp(pos.Z, 0, ChunkMesher.CS - 1)
+            Mathf.Clamp(pos.X, 0, SIZE - 1),
+            Mathf.Clamp(pos.Y, 0, SIZE - 1),
+            Mathf.Clamp(pos.Z, 0, SIZE - 1)
         );
     }
     #endregion

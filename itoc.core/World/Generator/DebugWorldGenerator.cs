@@ -53,7 +53,7 @@ public class DebugWorldGenerator : WorldGenerator
         if (State != WorldGenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        var rect = new Rect2I(chunkColumnPos * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);
+        var rect = new Rect2I(chunkColumnPos * Chunk.SIZE, Chunk.SIZE, Chunk.SIZE);
         return HeightMapUtils.ConstructChunkHeightMap(rect, (x, y) => 10, 2);
     }
 }

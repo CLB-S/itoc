@@ -541,7 +541,7 @@ public partial class WorldGenerator : WorldGeneratorBase
         if (State != WorldGenerationState.Completed)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        var rect = new Rect2I(chunkColumnIndex * ChunkMesher.CS, ChunkMesher.CS, ChunkMesher.CS);
+        var rect = new Rect2I(chunkColumnIndex * Chunk.SIZE, Chunk.SIZE, Chunk.SIZE);
         return HeightMapUtils.ConstructChunkHeightMap(rect, getHeight, 2);
     }
 
@@ -554,8 +554,8 @@ public partial class WorldGenerator : WorldGeneratorBase
         for (var x = 0; x < ChunkColumn.BIOME_MAP_SIZE; x++)
             for (var z = 0; z < ChunkColumn.BIOME_MAP_SIZE; z++)
             {
-                var point = chunkColumnIndex * ChunkMesher.CS +
-                            new Vector2(x, z) * ChunkMesher.CS / (ChunkColumn.BIOME_MAP_SIZE - 1);
+                var point = chunkColumnIndex * Chunk.SIZE +
+                            new Vector2(x, z) * Chunk.SIZE / (ChunkColumn.BIOME_MAP_SIZE - 1);
                 point = Warp(point, _domainWarpPattern);
 
                 var cell = GetCellDatasNearby(point).First();
