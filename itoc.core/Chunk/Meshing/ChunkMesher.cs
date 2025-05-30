@@ -753,7 +753,7 @@ public static class ChunkMesher
         arrMesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays,
             flags: Godot.Mesh.ArrayFormat.FlagUsesEmptyVertexArray);
 
-        arrMesh.CustomAabb = new Aabb(Vector3.One * Chunk.SIZE, Vector3.Inf);//Vector3.One * Chunk.SIZE);
+        arrMesh.CustomAabb = new Aabb(Vector3.Zero, Vector3.One * Chunk.SIZE);
 
         // Texture Buffer
 
