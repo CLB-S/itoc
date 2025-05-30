@@ -757,30 +757,8 @@ public static class ChunkMesher
 
         // Texture Buffer
 
-        var numPixels = meshResult.Quads.Count * 64 / 32; // 64 bits per quad, 32 bits per pixel
-
         var bufferBytes = BitPacker.PackUInt64Array(meshResult.Quads.ToArray()); // numPixels * 4 bytes
-
-        Image image;
-        if (numPixels > 2048)
-        {
-            var height = Mathf.CeilToInt(numPixels / 2048.0);
-            var requiredPixels = height * 2048;
-
-            // Pad the buffer to fit the required pixels
-            var paddedBuffer = new byte[requiredPixels * 4];
-            Buffer.BlockCopy(bufferBytes, 0, paddedBuffer, 0, bufferBytes.Length);
-
-            image = Image.CreateFromData(
-                2048, height, false, Image.Format.Rf, paddedBuffer
-            );
-        }
-        else
-        {
-            image = Image.CreateFromData(numPixels, 1, false, Image.Format.Rf, bufferBytes);
-        }
-
-        var bufferTexture = ImageTexture.CreateFromImage(image);
+        var (bufferTexture, width) = TextureBuffer.Create(bufferBytes);
 
         // Meterial
 
@@ -788,6 +766,7 @@ public static class ChunkMesher
         var material = new ShaderMaterial { Shader = shader };
 
         material.SetShaderParameter("texture_buff", bufferTexture);
+        material.SetShaderParameter("texture_buff_width", width);
 
         arrMesh.SurfaceSetMaterial(0, material);
 

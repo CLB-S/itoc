@@ -299,6 +299,9 @@ public class Chunk : IDisposable
 
     public virtual Mesh GetMesh(Material materialOverride = null)
     {
+        // var meshResult = ChunkMesher.Mesh(this);
+        // return ChunkMesher.GenerateMesh(meshResult);
+
         var meshResult = ChunkMesher.Mesh(this, new MesherSettings { EnableGreedyMeshing = false });
         return ChunkMesher.GenerateMeshV1(meshResult);
     }
