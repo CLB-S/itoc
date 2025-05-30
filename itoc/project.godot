@@ -207,3 +207,14 @@ debug_key={
 [rendering]
 
 anti_aliasing/quality/msaa_3d=1
+
+[shader_globals]
+
+block_atlas={
+"type": "sampler2D",
+"value": ""
+}
+block_atlas_count={
+"type": "ivec2",
+"value": Vector2i(0, 0)
+}

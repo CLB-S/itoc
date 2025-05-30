@@ -4,17 +4,20 @@ shader_type spatial;
 #include "quads.gdshaderinc"
 #include "texture_buffer.gdshaderinc"
 
+global uniform sampler2D block_atlas;
+global uniform ivec2 block_atlas_count;
+
 uniform usampler2D texture_buff;
 uniform int texture_buff_width;
 
 void vertex() {
-	int quad_index = QUAD_INDICES_MAP[VERTEX_ID % 6];
+	int vertex_index = QUAD_INDICES_MAP[VERTEX_ID % 6];
 
 	uvec2 raw_quad_data = unpack_ulong(texture_buff, texture_buff_width, VERTEX_ID / 6);
 	QuadData quad_data = parse_quad_data(raw_quad_data.x, raw_quad_data.y);
 
-	VERTEX = get_quad_vertex(quad_data, quad_index);
-	UV = QUAD_UVS[quad_index];
+	VERTEX = get_quad_vertex(quad_data, vertex_index);
+	UV = get_quad_uv(quad_data, vertex_index, block_atlas_count);
 	NORMAL = QUAD_NORMS[quad_data.type];
 }
 

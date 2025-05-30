@@ -99,6 +99,7 @@ struct QuadData {
     int type; // 0 to 11 for +y, -y, +x, -x, +z, -z, +xz, -xz, +yz, -yz, +xy, -xy
     vec3 scale;
     vec3 offset_in_block;
+	int texture_index;
 };
 
 const uint QUAD_DATA_LENGTH = 28u;
@@ -143,10 +144,21 @@ QuadData parse_quad_data(uint low, uint high) {
 
     quad_data.offset_in_block = offset_in_block;
 
+	quad_data.texture_index = int((low >> 28u) | ((high & 0xFFu) << 4u));
+
     return quad_data;
 }
 
 vec3 get_quad_vertex(QuadData quad, int index) {
     return QUAD_VERTICES[quad.type * 4 + index] * quad.scale
         + quad.offset_in_block + quad.offset;
+}
+
+vec2 get_quad_uv(QuadData quad, int index, ivec2 atlas_count) {
+	vec2 uv = QUAD_UVS[index] / float(atlas_count.x);
+    int atlas_x = quad.texture_index % atlas_count.x;
+    int atlas_y = quad.texture_index / atlas_count.x;
+    uv.x += float(atlas_x) / float(atlas_count.x);
+    uv.y += float(atlas_y) / float(atlas_count.y);
+    return uv;
 }
