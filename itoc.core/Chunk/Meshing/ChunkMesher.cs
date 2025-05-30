@@ -92,6 +92,17 @@ public static class ChunkMesher
         return (type << 32) | (h << 24) | (w << 18) | (z << 12) | (y << 6) | x;
     }
 
+    private static ulong GetQuadV1(ulong x, ulong y, ulong z, ulong type,
+        ulong halvedX, ulong halvedY, ulong halvedZ,
+        ulong offsetX, ulong offsetY, ulong offsetZ,
+        ulong textureId)
+    {
+        return (textureId << 28) |
+            (offsetZ << 27) | (offsetY << 26) | (offsetX << 25) |
+            (halvedZ << 24) | (halvedY << 23) | (halvedX << 22) |
+            (type << 18) | (z << 12) | (y << 6) | x;
+    }
+
     private static void ParseQuad(Direction dir, Block block, ulong quad, int lod,
         Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
@@ -223,11 +234,20 @@ public static class ChunkMesher
         settings ??= new MesherSettings();
 
         var meshBuffer = chunk.GetMeshBuffer();
-        var meshResult = new MeshResult { Lod = meshBuffer.Lod };
 
-        System.Array.Clear(meshBuffer.FaceMasks, 0, meshBuffer.FaceMasks.Length);
-        System.Array.Clear(meshBuffer.ForwardMerged, 0, meshBuffer.ForwardMerged.Length);
-        System.Array.Clear(meshBuffer.RightMerged, 0, meshBuffer.RightMerged.Length);
+        CullHiddenFaces(meshBuffer);
+
+        if (settings.EnableGreedyMeshing)
+            return MeshMerged(chunk, meshBuffer, settings);
+
+        return MeshWithoutMerging(chunk, meshBuffer);
+    }
+
+    public static MeshBuffer CullHiddenFaces(MeshBuffer meshBuffer)
+    {
+        // System.Array.Clear(meshBuffer.FaceMasks, 0, meshBuffer.FaceMasks.Length);
+        // System.Array.Clear(meshBuffer.ForwardMerged, 0, meshBuffer.ForwardMerged.Length);
+        // System.Array.Clear(meshBuffer.RightMerged, 0, meshBuffer.RightMerged.Length);
 
         // Hidden face culling
         for (var a = 1; a < CS_P - 1; a++)
@@ -276,6 +296,96 @@ public static class ChunkMesher
                 }
             }
         }
+
+        return meshBuffer;
+    }
+
+    private static MeshResult MeshWithoutMerging(Chunk chunk, MeshBuffer meshBuffer)
+    {
+        var meshResult = new MeshResult { Lod = meshBuffer.Lod };
+
+        for (var face = 0; face < 4; face++)
+        {
+            var axis = face / 2;
+            meshResult.FaceVertexBegin[face] = meshResult.Quads.Count;
+
+            for (var layer = 0; layer < CS; layer++)
+            {
+                var bitsLocation = layer * CS + face * CS_2;
+                for (var forward = 0; forward < CS; forward++)
+                {
+                    var bitsHere = meshBuffer.FaceMasks[forward + bitsLocation];
+                    if (bitsHere == 0) continue;
+
+                    while (bitsHere != 0)
+                    {
+                        var bitPos = BitOperations.TrailingZeroCount(bitsHere);
+                        var block = chunk.GetBlock(axis, forward, bitPos, layer);
+                        bitsHere &= ~(1UL << bitPos);
+
+                        var meshFront = forward;
+                        var meshLeft = bitPos;
+                        var meshUp = layer + (~face & 1);
+
+                        ulong quad = GetQuadV1(
+                                (ulong)meshFront,
+                                (ulong)meshUp,
+                                (ulong)meshLeft,
+                                (ulong)face, 0, 0, 0, 0, 0, 0, 0);
+
+                        meshResult.Quads.Add(quad);
+                    }
+                }
+            }
+
+            meshResult.FaceVertexLength[face] = meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
+        }
+
+        for (var face = 4; face < 6; face++)
+        {
+            var axis = face / 2;
+            meshResult.FaceVertexBegin[face] = meshResult.Quads.Count;
+
+            for (var forward = 0; forward < CS; forward++)
+            {
+                var bitsLocation = forward * CS + face * CS_2;
+
+                for (var right = 0; right < CS; right++)
+                {
+                    var bitsHere = meshBuffer.FaceMasks[right + bitsLocation];
+                    if (bitsHere == 0) continue;
+
+                    while (bitsHere != 0)
+                    {
+                        var bitPos = BitOperations.TrailingZeroCount(bitsHere);
+                        bitsHere &= ~(1UL << bitPos);
+
+                        var block = chunk.GetBlock(axis, right, forward, bitPos - 1);
+
+                        var meshLeft = right;
+                        var meshFront = forward;
+                        var meshUp = bitPos - 1 + (~face & 1);
+
+                        var quad = GetQuadV1(
+                            (ulong)meshLeft,
+                            (ulong)meshFront,
+                            (ulong)meshUp,
+                            (ulong)face, 0, 0, 0, 0, 0, 0, 0);
+
+                        meshResult.Quads.Add(quad);
+                    }
+                }
+            }
+
+            meshResult.FaceVertexLength[face] = meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
+        }
+
+        return meshResult;
+    }
+
+    private static MeshResult MeshMerged(Chunk chunk, MeshBuffer meshBuffer, MesherSettings settings)
+    {
+        var meshResult = new MeshResult { Lod = meshBuffer.Lod, QuadBlocks = new List<Block>(1000) };
 
         for (var face = 0; face < 4; face++)
         {
@@ -434,6 +544,168 @@ public static class ChunkMesher
         }
 
         return meshResult;
+    }
+
+    public static Mesh GenerateCollisionMesh(Chunk chunk, MeshBuffer meshBuffer)
+    {
+        List<Vector3> vertices = new();
+        List<int> indices = new();
+
+        void AddQuad(Vector3[] quad)
+        {
+            var baseIndex = vertices.Count;
+            vertices.AddRange(quad);
+
+            indices.Add(baseIndex + 0);
+            indices.Add(baseIndex + 1);
+            indices.Add(baseIndex + 2);
+            indices.Add(baseIndex + 0);
+            indices.Add(baseIndex + 2);
+            indices.Add(baseIndex + 3);
+        }
+
+        for (var face = 0; face < 4; face++)
+        {
+            for (var layer = 0; layer < CS; layer++)
+            {
+                var bitsLocation = layer * CS + face * CS_2;
+                for (var forward = 0; forward < CS; forward++)
+                {
+                    var bitsHere = meshBuffer.FaceMasks[forward + bitsLocation];
+                    if (bitsHere == 0) continue;
+
+                    var bitsNext = forward + 1 < CS ? meshBuffer.FaceMasks[forward + 1 + bitsLocation] : 0;
+
+                    byte rightMerged = 1;
+                    while (bitsHere != 0)
+                    {
+                        var bitPos = BitOperations.TrailingZeroCount(bitsHere);
+                        ref var forwardMergedRef = ref meshBuffer.ForwardMerged[bitPos];
+
+                        if ((bitsNext & (1UL << bitPos)) != 0)
+                        {
+                            forwardMergedRef++;
+                            bitsHere &= ~(1UL << bitPos);
+                            continue;
+                        }
+
+                        for (var right = bitPos + 1; right < CS; right++)
+                        {
+                            if ((bitsHere & (1UL << right)) == 0 ||
+                                forwardMergedRef != meshBuffer.ForwardMerged[right])
+                                break;
+
+                            meshBuffer.ForwardMerged[right] = 0;
+                            rightMerged++;
+                        }
+
+                        bitsHere &= ~((1UL << (bitPos + rightMerged)) - 1);
+
+                        var meshFront = forward - forwardMergedRef;
+                        var meshLeft = bitPos;
+                        var meshUp = layer + (~face & 1);
+
+                        var meshWidth = rightMerged;
+                        var meshLength = forwardMergedRef + 1;
+
+                        Vector3[] quad = face switch
+                        {
+                            0 or 1 => GetQuadCorners((Direction)face,
+                                meshFront + (face == 1 ? meshLength : 0),
+                                meshUp,
+                                meshLeft,
+                                meshLength,
+                                meshWidth),
+                            2 or 3 => GetQuadCorners((Direction)face,
+                                meshUp,
+                                meshFront + (face == 2 ? meshLength : 0),
+                                meshLeft,
+                                meshLength,
+                                meshWidth),
+                            _ => []
+                        };
+
+                        AddQuad(quad);
+
+                        forwardMergedRef = 0;
+                        rightMerged = 1;
+                    }
+                }
+            }
+        }
+
+        for (var face = 4; face < 6; face++)
+        {
+            var axis = face / 2;
+
+            for (var forward = 0; forward < CS; forward++)
+            {
+                var bitsLocation = forward * CS + face * CS_2;
+                var bitsForwardLocation = (forward + 1) * CS + face * CS_2;
+
+                for (var right = 0; right < CS; right++)
+                {
+                    var bitsHere = meshBuffer.FaceMasks[right + bitsLocation];
+                    if (bitsHere == 0) continue;
+
+                    var bitsForward = forward < CS - 1 ? meshBuffer.FaceMasks[right + bitsForwardLocation] : 0;
+                    var bitsRight = right < CS - 1 ? meshBuffer.FaceMasks[right + 1 + bitsLocation] : 0;
+                    var rightCS = right * CS;
+
+                    while (bitsHere != 0)
+                    {
+                        var bitPos = BitOperations.TrailingZeroCount(bitsHere);
+                        bitsHere &= ~(1UL << bitPos);
+
+                        var block = chunk.GetBlock(axis, right, forward, bitPos - 1);
+                        ref var forwardMergedRef = ref meshBuffer.ForwardMerged[rightCS + (bitPos - 1)];
+                        ref var rightMergedRef = ref meshBuffer.RightMerged[bitPos - 1];
+
+                        if (rightMergedRef == 0 &&
+                            (bitsForward & (1UL << bitPos)) != 0)
+                        {
+                            forwardMergedRef++;
+                            continue;
+                        }
+
+                        if ((bitsRight & (1UL << bitPos)) != 0 &&
+                            forwardMergedRef == meshBuffer.ForwardMerged[rightCS + CS + (bitPos - 1)])
+                        {
+                            forwardMergedRef = 0;
+                            rightMergedRef++;
+                            continue;
+                        }
+
+                        var meshLeft = right - rightMergedRef;
+                        var meshFront = forward - forwardMergedRef;
+                        var meshUp = bitPos - 1 + (~face & 1);
+                        var meshWidth = 1 + rightMergedRef;
+                        var meshLength = 1 + forwardMergedRef;
+
+                        var quad = GetQuadCorners((Direction)face,
+                            face == 4 ? meshLeft + meshWidth : meshLeft,
+                            meshFront,
+                            meshUp,
+                            meshWidth,
+                            meshLength
+                        );
+
+                        AddQuad(quad);
+
+                        forwardMergedRef = 0;
+                        rightMergedRef = 0;
+                    }
+                }
+            }
+        }
+
+        var arrMesh = new ArrayMesh();
+        Array arrays = [];
+        arrays.Resize((int)Godot.Mesh.ArrayType.Max);
+        arrays[(int)Godot.Mesh.ArrayType.Vertex] = vertices.ToArray();
+        arrays[(int)Godot.Mesh.ArrayType.Index] = indices.ToArray();
+        arrMesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays);
+        return arrMesh;
     }
 
     #endregion

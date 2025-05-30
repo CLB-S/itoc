@@ -305,8 +305,9 @@ public class Chunk : IDisposable
 
     public virtual Shape3D GetCollisionShape()
     {
-        var meshResult = ChunkMesher.Mesh(this, new MesherSettings { IgnoreBlockType = true });
-        return ChunkMesher.GenerateMesh(meshResult).CreateTrimeshShape();
+        var rawBuffer = GetMeshBuffer();
+        ChunkMesher.CullHiddenFaces(rawBuffer);
+        return ChunkMesher.GenerateCollisionMesh(this, rawBuffer).CreateTrimeshShape();
     }
 
     #endregion
