@@ -94,7 +94,7 @@ public partial class ChunkInstantiator : Node3D
 
         _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
 
-        _wireframeMaterial = ResourceLoader.Load<Material>("res://assets/materials/chunk_debug_shader_material.tres");
+        _wireframeMaterial = ResourceLoader.Load<Material>("res://assets/materials/wireframe.tres");
     }
 
     private void InitializeNodePools()
@@ -580,6 +580,8 @@ public partial class ChunkInstantiator : Node3D
     #endregion
 
     #region Debug Visualization
+
+    // TODO: Use multimesh.
 
     /// <summary>
     /// Shows wireframe boundaries for all currently loaded chunks.
