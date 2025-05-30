@@ -5,7 +5,7 @@
 
 using Godot;
 
-namespace ITOC.Core;
+namespace ITOC.Core.Utils;
 
 public static class FastPoissonDiskSampling
 {
