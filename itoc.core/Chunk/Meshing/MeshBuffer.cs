@@ -2,7 +2,6 @@ namespace ITOC.Core.ChunkMeshing;
 
 public class MeshBuffer
 {
-    public int Lod = 0;
     public ulong[] FaceMasks = new ulong[ChunkMesher.CS_2 * 6];
     public byte[] ForwardMerged = new byte[ChunkMesher.CS_2];
     public byte[] RightMerged = new byte[ChunkMesher.CS];

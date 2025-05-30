@@ -6,7 +6,7 @@ namespace ITOC.Core.ChunkGeneration;
 public class ChunkColumnGenerationSecondaryPass : IPass
 {
     public int Pass => 1;
-    public int Extend => 1;
+    public int Extend => 0;
     public World World { get; private set; }
 
     public event EventHandler<PassEventArgs> PassCompleted;

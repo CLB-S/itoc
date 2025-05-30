@@ -46,7 +46,7 @@ public class ChunkLod : Chunk
             // Create a copy of the mesh data to avoid thread safety issues
             ulong[] opaqueMaskCopy = new ulong[_opaqueMask.Length];
             Array.Copy(_opaqueMask, opaqueMaskCopy, _opaqueMask.Length);
-            return new MeshBuffer(opaqueMaskCopy) { Lod = Lod };
+            return new MeshBuffer(opaqueMaskCopy);
         }
         finally
         {

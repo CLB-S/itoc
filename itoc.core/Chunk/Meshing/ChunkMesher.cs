@@ -1,5 +1,6 @@
 using System.Numerics;
 using Godot;
+using ITOC.Core.Utils;
 using Array = Godot.Collections.Array;
 using Vector2 = Godot.Vector2;
 using Vector3 = Godot.Vector3;
@@ -103,7 +104,7 @@ public static class ChunkMesher
             (type << 18) | (z << 12) | (y << 6) | x;
     }
 
-    private static void ParseQuad(Direction dir, Block block, ulong quad, int lod,
+    private static void ParseQuad(Direction dir, Block block, ulong quad,
         Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
         if (block == null) return; // TODO: Shouldn't be null 
@@ -113,11 +114,11 @@ public static class ChunkMesher
             surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
         var surfaceArrayData = surfaceArrayDict[blockDirPair];
 
-        var x = (quad & 0x3F) << lod;         // 6 bits
-        var y = ((quad >> 6) & 0x3F) << lod;  // 6 bits
-        var z = ((quad >> 12) & 0x3F) << lod; // 6 bits
-        var w = ((quad >> 18) & 0x3F) << lod; // 6 bits (width)
-        var h = ((quad >> 24) & 0x3F) << lod; // 6 bits (height)
+        var x = quad & 0x3F;         // 6 bits
+        var y = (quad >> 6) & 0x3F;  // 6 bits
+        var z = (quad >> 12) & 0x3F; // 6 bits
+        var w = (quad >> 18) & 0x3F; // 6 bits (width)
+        var h = (quad >> 24) & 0x3F; // 6 bits (height)
         // ushort blockType = (ushort)((quad >> 32) & 0x7);
 
         // GD.Print($"{dir.Name()}: {x},{y},{z} ({w},{h})");
@@ -150,9 +151,6 @@ public static class ChunkMesher
         for (var i = 0; i < 4; i++) surfaceArrayData.Normals.Add(normal);
 
         var offset = 0.0014f;
-
-        h >>= lod;
-        w >>= lod;
 
         if (dir == Direction.PositiveZ ||
             dir == Direction.NegativeZ ||
@@ -302,13 +300,11 @@ public static class ChunkMesher
 
     private static MeshResult MeshWithoutMerging(Chunk chunk, MeshBuffer meshBuffer)
     {
-        var meshResult = new MeshResult { Lod = meshBuffer.Lod };
+        var meshResult = new MeshResult();
 
         for (var face = 0; face < 4; face++)
         {
             var axis = face / 2;
-            meshResult.FaceVertexBegin[face] = meshResult.Quads.Count;
-
             for (var layer = 0; layer < CS; layer++)
             {
                 var bitsLocation = layer * CS + face * CS_2;
@@ -327,29 +323,33 @@ public static class ChunkMesher
                         var meshLeft = bitPos;
                         var meshUp = layer + (~face & 1);
 
-                        ulong quad = GetQuadV1(
+                        ulong quad = face switch
+                        {
+                            0 or 1 => GetQuadV1(
                                 (ulong)meshFront,
                                 (ulong)meshUp,
                                 (ulong)meshLeft,
-                                (ulong)face, 0, 0, 0, 0, 0, 0, 0);
+                                (ulong)face, 0, 0, 0, 0, 0, 0, 0),
+                            2 or 3 => GetQuadV1(
+                                (ulong)meshUp,
+                                (ulong)meshFront,
+                                (ulong)meshLeft,
+                                (ulong)face, 0, 0, 0, 0, 0, 0, 0),
+                            _ => 0
+                        };
 
                         meshResult.Quads.Add(quad);
                     }
                 }
             }
-
-            meshResult.FaceVertexLength[face] = meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
         }
 
         for (var face = 4; face < 6; face++)
         {
             var axis = face / 2;
-            meshResult.FaceVertexBegin[face] = meshResult.Quads.Count;
-
             for (var forward = 0; forward < CS; forward++)
             {
                 var bitsLocation = forward * CS + face * CS_2;
-
                 for (var right = 0; right < CS; right++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[right + bitsLocation];
@@ -376,8 +376,6 @@ public static class ChunkMesher
                     }
                 }
             }
-
-            meshResult.FaceVertexLength[face] = meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
         }
 
         return meshResult;
@@ -385,7 +383,7 @@ public static class ChunkMesher
 
     private static MeshResult MeshMerged(Chunk chunk, MeshBuffer meshBuffer, MesherSettings settings)
     {
-        var meshResult = new MeshResult { Lod = meshBuffer.Lod, QuadBlocks = new List<Block>(1000) };
+        var meshResult = new MeshResult { QuadBlocks = new List<Block>(1000) };
 
         for (var face = 0; face < 4; face++)
         {
@@ -545,6 +543,10 @@ public static class ChunkMesher
 
         return meshResult;
     }
+
+    #endregion
+
+    #region Mesh Generation
 
     public static Mesh GenerateCollisionMesh(Chunk chunk, MeshBuffer meshBuffer)
     {
@@ -708,11 +710,7 @@ public static class ChunkMesher
         return arrMesh;
     }
 
-    #endregion
-
-    #region Mesh Generation
-
-    public static ArrayMesh GenerateMesh(MeshResult meshResult, Material materialOverride = null)
+    public static Mesh GenerateMesh(MeshResult meshResult, Material materialOverride = null)
     {
         if (meshResult.Quads.Count == 0) return null;
 
@@ -722,7 +720,7 @@ public static class ChunkMesher
             for (var i = meshResult.FaceVertexBegin[face];
                  i < meshResult.FaceVertexBegin[face] + meshResult.FaceVertexLength[face];
                  i++)
-                ParseQuad((Direction)face, meshResult.QuadBlocks[i], meshResult.Quads[i], meshResult.Lod, surfaceArrayDict);
+                ParseQuad((Direction)face, meshResult.QuadBlocks[i], meshResult.Quads[i], surfaceArrayDict);
 
         var _arrayMesh = new ArrayMesh();
         foreach (var ((block, dir), surfaceArrayData) in surfaceArrayDict)
@@ -733,6 +731,67 @@ public static class ChunkMesher
         }
 
         return _arrayMesh;
+    }
+
+    public static Mesh GenerateMeshV1(MeshResult meshResult)
+    {
+        if (meshResult.Quads.Count == 0) return null;
+
+        // Vertices ArrayMesh
+
+        var arrMesh = new ArrayMesh();
+        Array arrays = [];
+        arrays.Resize((int)Godot.Mesh.ArrayType.Max);
+
+        var numVertices = meshResult.Quads.Count * 6;
+        var arr = new int[numVertices];
+        for (int i = 0; i < numVertices; i++)
+            arr[i] = i;
+
+        arrays[(int)Godot.Mesh.ArrayType.Index] = arr;
+
+        arrMesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays,
+            flags: Godot.Mesh.ArrayFormat.FlagUsesEmptyVertexArray);
+
+        arrMesh.CustomAabb = new Aabb(Vector3.One * Chunk.SIZE, Vector3.Inf);//Vector3.One * Chunk.SIZE);
+
+        // Texture Buffer
+
+        var numPixels = meshResult.Quads.Count * 64 / 32; // 64 bits per quad, 32 bits per pixel
+
+        var bufferBytes = BitPacker.PackUInt64Array(meshResult.Quads.ToArray()); // numPixels * 4 bytes
+
+        Image image;
+        if (numPixels > 2048)
+        {
+            var height = Mathf.CeilToInt(numPixels / 2048.0);
+            var requiredPixels = height * 2048;
+
+            // Pad the buffer to fit the required pixels
+            var paddedBuffer = new byte[requiredPixels * 4];
+            Buffer.BlockCopy(bufferBytes, 0, paddedBuffer, 0, bufferBytes.Length);
+
+            image = Image.CreateFromData(
+                2048, height, false, Image.Format.Rf, paddedBuffer
+            );
+        }
+        else
+        {
+            image = Image.CreateFromData(numPixels, 1, false, Image.Format.Rf, bufferBytes);
+        }
+
+        var bufferTexture = ImageTexture.CreateFromImage(image);
+
+        // Meterial
+
+        var shader = ResourceLoader.Load<Shader>("res://assets/shaders/quads.gdshader");
+        var material = new ShaderMaterial { Shader = shader };
+
+        material.SetShaderParameter("texture_buff", bufferTexture);
+
+        arrMesh.SurfaceSetMaterial(0, material);
+
+        return arrMesh;
     }
 
     #endregion

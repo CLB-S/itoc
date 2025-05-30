@@ -458,6 +458,7 @@ public partial class ChunkInstantiator : Node3D
 
         chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh(_wireframedMesh ? _wireframeMaterial : null);
         chunkMesh.MeshInstance.Visible = true;
+        chunkMesh.MeshInstance.Scale = Vector3.One * (1 << chunkMesh.Lod);
         chunkMesh.State = ChunkMeshState.Rendered;
 
         // Debug bounds
