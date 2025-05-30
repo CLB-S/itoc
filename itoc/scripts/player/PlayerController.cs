@@ -58,7 +58,7 @@ public partial class PlayerController : CharacterBody3D
     private float _cameraTilt;
 
     // Flying
-    private bool _isFlying;
+    private bool _isFlying = true;
     private float _lastJumpPressTime = -1f;
 
     // Inventory
