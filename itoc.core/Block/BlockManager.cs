@@ -36,6 +36,7 @@ public class BlockManager
         // Create default tags
         // CreateDefaultTags();
 
+        TextureManager.Instance.GenerateAtlas();
     }
 
     private void RegisterDefaultBlocks()

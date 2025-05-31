@@ -23,5 +23,12 @@ public class CubeModel : CubeModelBase
 
         materialSettings = new MaterialSettings(texturePathNZ);
         _materials[Direction.NegativeZ] = MaterialManager.Instance.GetMaterial(materialSettings);
+
+        _textureIds[Direction.PositiveY] = TextureManager.Instance.GetTextureId(texturePathPY);
+        _textureIds[Direction.NegativeY] = TextureManager.Instance.GetTextureId(texturePathNY);
+        _textureIds[Direction.PositiveX] = TextureManager.Instance.GetTextureId(texturePathPX);
+        _textureIds[Direction.NegativeX] = TextureManager.Instance.GetTextureId(texturePathNX);
+        _textureIds[Direction.PositiveZ] = TextureManager.Instance.GetTextureId(texturePathPZ);
+        _textureIds[Direction.NegativeZ] = TextureManager.Instance.GetTextureId(texturePathNZ);
     }
 }

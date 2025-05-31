@@ -329,12 +329,14 @@ public static class ChunkMesher
                                 (ulong)meshFront,
                                 (ulong)meshUp,
                                 (ulong)meshLeft,
-                                (ulong)face, 0, 0, 0, 0, 0, 0, 0),
+                                (ulong)face, 0, 0, 0, 0, 0, 0,
+                                (ulong)block.BlockModel.GetTextureId((Direction)face)),
                             2 or 3 => GetQuadV1(
                                 (ulong)meshUp,
                                 (ulong)meshFront,
                                 (ulong)meshLeft,
-                                (ulong)face, 0, 0, 0, 0, 0, 0, 0),
+                                (ulong)face, 0, 0, 0, 0, 0, 0,
+                                (ulong)block.BlockModel.GetTextureId((Direction)face)),
                             _ => 0
                         };
 
@@ -370,7 +372,8 @@ public static class ChunkMesher
                             (ulong)meshLeft,
                             (ulong)meshFront,
                             (ulong)meshUp,
-                            (ulong)face, 0, 0, 0, 0, 0, 0, 0);
+                            (ulong)face, 0, 0, 0, 0, 0, 0,
+                            (ulong)block.BlockModel.GetTextureId((Direction)face));
 
                         meshResult.Quads.Add(quad);
                     }
@@ -735,6 +738,10 @@ public static class ChunkMesher
 
     public static Mesh GenerateMeshV1(MeshResult meshResult)
     {
+        // Create ArrayMesh using only indices. The shader will recover the mesh using vertex pulling.
+        // This is not the best approach, but it works though.
+        // May use RenderingDevice later to improve it.
+
         if (meshResult.Quads.Count == 0) return null;
 
         // Vertices ArrayMesh

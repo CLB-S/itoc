@@ -6,6 +6,7 @@ namespace ITOC.Core.BlockModels;
 public abstract class CubeModelBase : BlockModelBase
 {
     protected readonly Dictionary<Direction, Material> _materials = new();
+    protected readonly Dictionary<Direction, int> _textureIds = new();
 
     public virtual Material GetMaterial(Direction face = Direction.PositiveY)
     {
@@ -15,5 +16,10 @@ public abstract class CubeModelBase : BlockModelBase
     public virtual Texture2D GetTexture(Direction face = Direction.PositiveY)
     {
         return (GetMaterial(face) as BaseMaterial3D).AlbedoTexture;
+    }
+
+    public virtual int GetTextureId(Direction face = Direction.PositiveY)
+    {
+        return _textureIds.TryGetValue(face, out var textureId) ? textureId : 0;
     }
 }

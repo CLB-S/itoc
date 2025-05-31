@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Concurrent;
 
-namespace ITOC;
+namespace ITOC.Core.BlockModels;
 
 /// <summary>
 /// Settings for customizing material properties

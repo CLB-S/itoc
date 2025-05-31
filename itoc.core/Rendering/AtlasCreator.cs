@@ -15,21 +15,26 @@ public class AtlasCreator
         _imageWidth = imageWidth;
         _imageHeight = imageHeight;
         _imageFormat = format;
+
+        GD.Print($"AtlasCreator initialized with size: {_imageWidth}x{_imageHeight}, format: {_imageFormat}");
     }
 
-    public void AddImage(Image image)
+    public int AddImage(Image image)
     {
         if (image.GetWidth() != _imageWidth || image.GetHeight() != _imageHeight)
             throw new ArgumentException(
                 $"All images must have the same size: {_imageWidth}x{_imageHeight}");
 
         _textureImages.Add(image);
+        return _textureImages.Count - 1;
     }
 
-    public void AddImages(IEnumerable<Image> images)
+    public IEnumerable<int> AddImages(IEnumerable<Image> images)
     {
+        var indices = new List<int>();
         foreach (var image in images)
-            AddImage(image);
+            indices.Add(AddImage(image));
+        return indices;
     }
 
     public (ImageTexture Atlas, int TextureCountX, int TextureCountY) CreateAtlas()
@@ -57,6 +62,9 @@ public class AtlasCreator
         atlasImage.GenerateMipmaps();
 
         var texture = ImageTexture.CreateFromImage(atlasImage);
+
+        GD.Print($"Atlas created with size: {atlasWidth}x{atlasHeight}, format: {_imageFormat}, " +
+                  $"images: {imageCount}, countX: {imageCountX}, countY: {imageCountY}");
 
         return (texture, imageCountX, imageCountY);
     }

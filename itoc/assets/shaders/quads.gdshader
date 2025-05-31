@@ -4,7 +4,7 @@ shader_type spatial;
 #include "quads.gdshaderinc"
 #include "texture_buffer.gdshaderinc"
 
-global uniform sampler2D block_atlas;
+global uniform sampler2D block_atlas : source_color, filter_nearest_mipmap;
 global uniform ivec2 block_atlas_count;
 
 uniform usampler2D texture_buff;
@@ -26,5 +26,7 @@ void fragment() {
 	// float r = float(value & 0xFFu)/255.0;
 	// float g = float(value >> 8u & 0xFFu) / 255.0;
 	// float b = 0.0; //float(value & uint(0x0F00))/255.0;
-	ALBEDO = vec3(UV.x * NORMAL.z, UV.y * NORMAL.x, NORMAL.y * UV.x * UV.y);
+	// ALBEDO = vec3(UV.x * NORMAL.z, UV.y * NORMAL.x, NORMAL.y * UV.x * UV.y);
+
+	ALBEDO = texture(block_atlas, UV).rgb;
 }

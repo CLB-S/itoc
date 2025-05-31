@@ -25,4 +25,22 @@ public abstract class CubeDirectionalModel : CubeModelBase
         else
             return base.GetMaterial(face);
     }
+
+    public override int GetTextureId(Direction face = Direction.PositiveY)
+    {
+        if (face == DirectionPY)
+            return base.GetTextureId(Direction.PositiveY);
+        else if (face == DirectionPY.Opposite())
+            return base.GetTextureId(Direction.NegativeY);
+        else if (face == DirectionPX)
+            return base.GetTextureId(Direction.PositiveX);
+        else if (face == DirectionPX.Opposite())
+            return base.GetTextureId(Direction.NegativeX);
+        else if (face == DirectionPZ)
+            return base.GetTextureId(Direction.PositiveZ);
+        else if (face == DirectionPZ.Opposite())
+            return base.GetTextureId(Direction.NegativeZ);
+        else
+            return base.GetTextureId(face);
+    }
 }

@@ -3,10 +3,10 @@ const int[6] QUAD_INDICES_MAP = {
 };
 
 const vec2[4] QUAD_UVS = {
-	vec2(0,0),
 	vec2(0,1),
-	vec2(1,1),
-	vec2(1,0)
+	vec2(0,0),
+	vec2(1,0),
+	vec2(1,1)
 };
 
 #define INV_SQRT_2 0.7071067811865475
@@ -155,7 +155,8 @@ vec3 get_quad_vertex(QuadData quad, int index) {
 }
 
 vec2 get_quad_uv(QuadData quad, int index, ivec2 atlas_count) {
-	vec2 uv = QUAD_UVS[index] / float(atlas_count.x);
+    vec2 uv = QUAD_UVS[index];
+	uv *= vec2(1.0 / float(atlas_count.x), 1.0 / float(atlas_count.y));
     int atlas_x = quad.texture_index % atlas_count.x;
     int atlas_y = quad.texture_index / atlas_count.x;
     uv.x += float(atlas_x) / float(atlas_count.x);

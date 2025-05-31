@@ -1,4 +1,4 @@
-namespace ITOC.Core.Registry;
+namespace ITOC.Core;
 
 /// <summary>
 /// Interface for objects that can be frozen (made immutable)
