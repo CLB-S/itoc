@@ -90,11 +90,7 @@ public static class BitPacker
             return [];
 
         byte[] result = new byte[values.Length * 2];
-        for (int i = 0; i < values.Length; i++)
-        {
-            result[i * 2] = (byte)(values[i] & 0xFFu);
-            result[i * 2 + 1] = (byte)((values[i] >> 8) & 0xFFu);
-        }
+        Buffer.BlockCopy(values, 0, result, 0, result.Length);
 
         return result;
     }
@@ -105,13 +101,7 @@ public static class BitPacker
             return Array.Empty<byte>();
 
         byte[] result = new byte[values.Length * 4];
-        for (int i = 0; i < values.Length; i++)
-        {
-            result[i * 4] = (byte)(values[i] & 0xFFu);
-            result[i * 4 + 1] = (byte)((values[i] >> 8) & 0xFFu);
-            result[i * 4 + 2] = (byte)((values[i] >> 16) & 0xFFu);
-            result[i * 4 + 3] = (byte)((values[i] >> 24) & 0xFFu);
-        }
+        Buffer.BlockCopy(values, 0, result, 0, result.Length);
 
         return result;
     }
@@ -122,17 +112,7 @@ public static class BitPacker
             return Array.Empty<byte>();
 
         byte[] result = new byte[values.Length * 8];
-        for (int i = 0; i < values.Length; i++)
-        {
-            result[i * 8] = (byte)(values[i] & 0xFFu);
-            result[i * 8 + 1] = (byte)((values[i] >> 8) & 0xFFu);
-            result[i * 8 + 2] = (byte)((values[i] >> 16) & 0xFFu);
-            result[i * 8 + 3] = (byte)((values[i] >> 24) & 0xFFu);
-            result[i * 8 + 4] = (byte)((values[i] >> 32) & 0xFFu);
-            result[i * 8 + 5] = (byte)((values[i] >> 40) & 0xFFu);
-            result[i * 8 + 6] = (byte)((values[i] >> 48) & 0xFFu);
-            result[i * 8 + 7] = (byte)((values[i] >> 56) & 0xFFu);
-        }
+        Buffer.BlockCopy(values, 0, result, 0, result.Length);
 
         return result;
     }
