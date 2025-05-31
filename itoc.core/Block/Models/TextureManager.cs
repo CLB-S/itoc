@@ -1,5 +1,4 @@
 using Godot;
-using ITOC.Core.Rendering.Atlas;
 
 namespace ITOC.Core.BlockModels;
 
@@ -11,8 +10,7 @@ public sealed class TextureManager : IFreezable
     private bool _isFrozen = false;
     public bool IsFrozen => _isFrozen;
 
-    private AtlasCreator _atlasCreator;
-    private Dictionary<string, int> _textureCache = new Dictionary<string, int>();
+    private Dictionary<string, (int, Image)> _textureCache = new Dictionary<string, (int, Image)>();
 
     private TextureManager()
     {
@@ -24,35 +22,31 @@ public sealed class TextureManager : IFreezable
             throw new InvalidOperationException("Cannot get texture ID when TextureManager is frozen.");
 
         // Check if the texture has already been processed
-        if (_textureCache.TryGetValue(textureImagePath, out var id))
-            return id;
+        if (_textureCache.TryGetValue(textureImagePath, out var idAndImage))
+            return idAndImage.Item1;
 
         var image = ResourceLoader.Load<Texture2D>(textureImagePath).GetImage();
 
         ArgumentNullException.ThrowIfNull(image, $"Texture image not found: {textureImagePath}");
 
-        if (_atlasCreator == null)
-        {
-            var size = image.GetSize();
-            _atlasCreator = new AtlasCreator(size.X, size.Y, image.GetFormat());
-        }
+        _textureCache[textureImagePath] = (_textureCache.Count, image);
 
-        // Store the texture ID in the cache
-        id = _atlasCreator.AddImage(image);
-        _textureCache[textureImagePath] = id;
-
-        return id;
+        return _textureCache.Count - 1;
     }
 
-    public void GenerateAtlas()
+    public void BuildTextureArray()
     {
         if (_isFrozen)
-            throw new InvalidOperationException("Cannot generate atlas when TextureManager is frozen.");
+            throw new InvalidOperationException("Cannot build texture array when TextureManager is frozen.");
 
-        var (atlas, textureCountX, textureCountY) = _atlasCreator.CreateAtlas();
+        var imageArray = new Godot.Collections.Array<Image>();
 
-        RenderingServer.GlobalShaderParameterSet("block_atlas", atlas);
-        RenderingServer.GlobalShaderParameterSet("block_atlas_count", new Vector2(textureCountX, textureCountY));
+        foreach (var (_, texture) in _textureCache.Values)
+            imageArray.Add(texture);
+
+        var textureArray = new Texture2DArray();
+        textureArray.CreateFromImages(imageArray);
+        RenderingServer.GlobalShaderParameterSet("block_textures", textureArray);
 
         Freeze();
     }

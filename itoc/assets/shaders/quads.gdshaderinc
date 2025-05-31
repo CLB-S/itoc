@@ -156,10 +156,12 @@ vec3 get_quad_vertex(QuadData quad, int index) {
 
 vec2 get_quad_uv(QuadData quad, int index, ivec2 atlas_count) {
     vec2 uv = QUAD_UVS[index];
-	uv *= vec2(1.0 / float(atlas_count.x), 1.0 / float(atlas_count.y));
+    vec2 scaler = vec2(1.0 / float(atlas_count.x), 1.0 / float(atlas_count.y));
+	uv *= 0.996 * scaler;
+    uv += 0.002 * scaler; // Add a small offset to avoid seams
     int atlas_x = quad.texture_index % atlas_count.x;
     int atlas_y = quad.texture_index / atlas_count.x;
-    uv.x += float(atlas_x) / float(atlas_count.x);
-    uv.y += float(atlas_y) / float(atlas_count.y);
+    uv.x += float(atlas_x) * scaler.x;
+    uv.y += float(atlas_y) * scaler.y;
     return uv;
 }
