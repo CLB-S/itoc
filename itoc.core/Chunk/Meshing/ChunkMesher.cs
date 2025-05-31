@@ -772,8 +772,8 @@ public static class ChunkMesher
         var shader = ResourceLoader.Load<Shader>("res://assets/shaders/quads.gdshader");
         var material = new ShaderMaterial { Shader = shader };
 
-        material.SetShaderParameter("texture_buff", bufferTexture);
-        material.SetShaderParameter("texture_buff_width", width);
+        material.SetShaderParameter("quads_buff", bufferTexture);
+        material.SetShaderParameter("quads_buff_width", width);
 
         arrMesh.SurfaceSetMaterial(0, material);
 
