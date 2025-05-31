@@ -99,7 +99,9 @@ public partial class ChunkInstantiator : Node3D
 
     private void InitializeNodePools()
     {
-        _meshPool = new Node3DPool<MeshInstance3D>(() => new MeshInstance3D(), this, 100);
+        _meshPool = new Node3DPool<MeshInstance3D>(() => new MeshInstance3D(), this, 100, resetAction: (node) =>
+            { node.Mesh.SurfaceSetMaterial(0, null); });
+
         _collisionBodyPool = new Node3DPool<StaticBody3D>(() =>
         {
             var body = new StaticBody3D();
@@ -644,6 +646,16 @@ public partial class ChunkInstantiator : Node3D
             _debugMeshPool.Release(chunkMesh.DebugMeshInstance);
             chunkMesh.DebugMeshInstance = null;
         }
+    }
+
+    #endregion
+
+    #region Existing
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPredelete)
+            _meshPool.ReleaseAll();
     }
 
     #endregion
