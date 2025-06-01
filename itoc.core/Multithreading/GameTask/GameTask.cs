@@ -227,7 +227,7 @@ public abstract class GameTask
         {
             Exception = ex;
             State = TaskState.Failed;
-            GD.PrintErr($"Task '{Name}' failed: {ex.Message}");
+            GD.PrintErr($"Task '{Name}' failed: {ex.Message} \n {ex.StackTrace}");
             OnCompleted(false);
         }
         finally

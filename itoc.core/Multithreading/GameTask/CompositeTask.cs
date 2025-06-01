@@ -174,7 +174,7 @@ public class CompositeTask : GameTask
                     // Special handling for failed tasks
                     if (currentTask.State == TaskState.Failed)
                     {
-                        throw new InvalidOperationException($"Sub-task '{currentTask.Name}' failed: {currentTask.Exception?.Message}");
+                        throw new InvalidOperationException($"Sub-task '{currentTask.Name}' failed: {currentTask.Exception?.Message} \n {currentTask.Exception?.StackTrace}");
                     }
                     continue;
                 }
