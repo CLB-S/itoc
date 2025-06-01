@@ -21,17 +21,17 @@ public class ChunkColumn
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
 
     // Biome map storage using Palette system
-    private readonly PaletteStorage<Biome> _biomePaletteStorage;
+    private readonly PaletteArray<Biome> _biomes;
 
     private ChunkColumn()
     {
     }
 
-    public ChunkColumn(Vector2I index, PaletteStorage<Biome> biomePaletteStorage)
+    public ChunkColumn(Vector2I index, PaletteArray<Biome> biomes)
     {
         Index = index;
 
-        _biomePaletteStorage = biomePaletteStorage;
+        _biomes = biomes;
     }
 
     public void SetHeightMap(double[,] heightMap)
@@ -49,7 +49,7 @@ public class ChunkColumn
 
     private Biome GetBiomeFromPalette(int x, int z)
     {
-        return _biomePaletteStorage.Get(GetBiomeIndex(x, z));
+        return _biomes[GetBiomeIndex(x, z)];
     }
 
     /// <summary>

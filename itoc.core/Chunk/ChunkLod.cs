@@ -61,10 +61,10 @@ public class ChunkLod : Chunk
     protected override void SetMesherMaskInternal(int x, int y, int z, Block block)
     {
         // This method assumes the write lock is already held
-        if (block == null)
-            ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
-        else
+        if (block.IsOpaque)
             ChunkMesher.AddOpaqueVoxel(_opaqueMask, x, y, z);
+        else
+            ChunkMesher.AddNonOpaqueVoxel(_opaqueMask, x, y, z);
     }
 
     #endregion
@@ -207,7 +207,7 @@ public class ChunkLod : Chunk
                     else
                         block = childChunk.GetBlock(localX * 2 + dx, localY * 2 + dy, localZ * 2 + dz);
 
-                    if (block == null)
+                    if (block == Block.Air)
                         airCount++;
                     else
                     {
@@ -219,10 +219,10 @@ public class ChunkLod : Chunk
 
         // If all blocks are air, set this block to air
         if (airCount == 8)
-            return null;
+            return Block.Air;
 
         // Find the dominant block type
-        Block dominantBlock = null;
+        Block dominantBlock = Block.Air;
         var maxCount = 0.0;
 
         foreach (var pair in blockCounts)

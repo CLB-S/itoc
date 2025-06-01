@@ -1,5 +1,7 @@
 namespace ITOC.Core.ChunkMeshing;
 
+// TODO: Pooling
+
 public class MeshBuffer
 {
     public ulong[] FaceMasks = new ulong[ChunkMesher.CS_2 * 6];

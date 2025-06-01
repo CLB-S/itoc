@@ -548,8 +548,9 @@ public partial class WorldGenerator : WorldGeneratorBase
     public override ChunkColumn GenerateChunkColumn(Vector2I chunkColumnIndex)
     {
         // Biome
-        var biomePalette = new Palette<Biome>(BiomeLibrary.Instance.GetBiome("plain"));
-        var biomePaletteStorage = new PaletteStorage<Biome>(biomePalette);
+        var defaultBiome = BiomeLibrary.Instance.GetBiome("plain");
+        var size = ChunkColumn.BIOME_MAP_SIZE * ChunkColumn.BIOME_MAP_SIZE;
+        var biomes = new PaletteArray<Biome>(size, defaultBiome);
 
         for (var x = 0; x < ChunkColumn.BIOME_MAP_SIZE; x++)
             for (var z = 0; z < ChunkColumn.BIOME_MAP_SIZE; z++)
@@ -559,10 +560,10 @@ public partial class WorldGenerator : WorldGeneratorBase
                 point = Warp(point, _domainWarpPattern);
 
                 var cell = GetCellDatasNearby(point).First();
-                biomePaletteStorage.Set(ChunkColumn.GetBiomeIndex(x, z), cell.Biome);
+                biomes[ChunkColumn.GetBiomeIndex(x, z)] = cell.Biome;
             }
 
-        var chunkColumn = new ChunkColumn(chunkColumnIndex, biomePaletteStorage);
+        var chunkColumn = new ChunkColumn(chunkColumnIndex, biomes);
 
         // Height map
         var getHeight = new Func<double, double, double>((x, y) =>

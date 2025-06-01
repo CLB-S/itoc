@@ -104,12 +104,11 @@ public static class ChunkMesher
             (type << 18) | (z << 12) | (y << 6) | x;
     }
 
+    // TODO: More block types.
     private static void ParseQuad(Direction dir, Block block, ulong quad,
         Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
     {
-        if (block == null) return; // TODO: Shouldn't be null 
-
-        var blockDirPair = block is DirectionalBlock ? (block, dir) : (block, Direction.PositiveY);
+        var blockDirPair = block is DirectionalCubeBlock ? (block, dir) : (block, Direction.PositiveY);
         if (!surfaceArrayDict.ContainsKey(blockDirPair))
             surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
         var surfaceArrayData = surfaceArrayDict[blockDirPair];
@@ -316,13 +315,13 @@ public static class ChunkMesher
                     while (bitsHere != 0)
                     {
                         var bitPos = BitOperations.TrailingZeroCount(bitsHere);
-                        var block = chunk.GetBlock(axis, forward, bitPos, layer);
                         bitsHere &= ~(1UL << bitPos);
 
                         var meshFront = forward;
                         var meshLeft = bitPos;
                         var meshUp = layer + (~face & 1);
 
+                        var block = chunk.GetBlock(axis, forward, bitPos, layer) as CubeBlock;
                         ulong quad = face switch
                         {
                             0 or 1 => GetQuadV1(
@@ -362,12 +361,11 @@ public static class ChunkMesher
                         var bitPos = BitOperations.TrailingZeroCount(bitsHere);
                         bitsHere &= ~(1UL << bitPos);
 
-                        var block = chunk.GetBlock(axis, right, forward, bitPos - 1);
-
                         var meshLeft = right;
                         var meshFront = forward;
                         var meshUp = bitPos - 1 + (~face & 1);
 
+                        var block = chunk.GetBlock(axis, right, forward, bitPos - 1) as CubeBlock;
                         var quad = GetQuadV1(
                             (ulong)meshLeft,
                             (ulong)meshFront,
@@ -730,7 +728,7 @@ public static class ChunkMesher
         {
             _arrayMesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
             _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                materialOverride ?? block.BlockModel.GetMaterial(dir));
+                materialOverride ?? (block as CubeBlock).BlockModel.GetMaterial(dir));
         }
 
         return _arrayMesh;
@@ -765,6 +763,8 @@ public static class ChunkMesher
         // Texture Buffer
 
         var bufferBytes = BitPacker.PackUInt64Array(meshResult.Quads.ToArray()); // numPixels * 4 bytes
+        // GD.Print($"Packed {meshResult.Quads.Count} quads into {bufferBytes.Length} bytes.");
+
         var (bufferTexture, width) = TextureBuffer.Create(bufferBytes);
 
         // Meterial
