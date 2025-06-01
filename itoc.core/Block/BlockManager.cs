@@ -41,15 +41,16 @@ public class BlockManager
 
     private void RegisterDefaultBlocks()
     {
-        RegisterBlock(new Block("itoc:debug", "Debug Block", new CubeAllModel("res://assets/blocks/debug.png")));
-        RegisterBlock(new Block("itoc:stone", "Stone", new CubeAllModel("res://assets/blocks/stone.png")));
-        RegisterBlock(new Block("itoc:dirt", "Dirt", new CubeAllModel("res://assets/blocks/dirt.png")));
-        RegisterBlock(new Block("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png")));
-        RegisterBlock(new Block("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png")));
+        RegisterBlock(Block.Air);
+        RegisterBlock(new CubeBlock("itoc:debug", "Debug Block", new CubeAllModel("res://assets/blocks/debug.png")));
+        RegisterBlock(new CubeBlock("itoc:stone", "Stone", new CubeAllModel("res://assets/blocks/stone.png")));
+        RegisterBlock(new CubeBlock("itoc:dirt", "Dirt", new CubeAllModel("res://assets/blocks/dirt.png")));
+        RegisterBlock(new CubeBlock("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png")));
+        RegisterBlock(new CubeBlock("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png")));
 
         var waterMaterial = ResourceLoader.Load<Material>("res://assets/materials/water_material.tres");
-        RegisterBlock(new Block("itoc:water", "Water", new CubeAllModel(waterMaterial), BlockProperties.Transparent));
-        RegisterBlock(new DirectionalBlock("itoc:grass_block", "Grass Block", new CubeBottomTopModel("res://assets/blocks/grass_block/round.png", "res://assets/blocks/dirt.png", "res://assets/blocks/grass_block/top.png"),
+        RegisterBlock(new CubeBlock("itoc:water", "Water", new CubeAllModel(waterMaterial), BlockProperties.Transparent));
+        RegisterBlock(new DirectionalCubeBlock("itoc:grass_block", "Grass Block", new CubeBottomTopModel("res://assets/blocks/grass_block/round.png", "res://assets/blocks/dirt.png", "res://assets/blocks/grass_block/top.png"),
             null, Direction.PositiveY));
     }
 

@@ -2,11 +2,11 @@ using ITOC.Core.BlockModels;
 
 namespace ITOC.Core;
 
-public class DirectionalBlock : Block
+public class DirectionalCubeBlock : CubeBlock
 {
     private Direction _direction;
 
-    public DirectionalBlock(Identifier id, string name, CubeModelBase blockModel, BlockProperties properties = null, Direction? freezeDirection = null)
+    public DirectionalCubeBlock(Identifier id, string name, CubeDirectionalModel blockModel, BlockProperties properties = null, Direction? freezeDirection = null)
         : base(id, name, blockModel, properties)
     {
         FreezeDirection = freezeDirection;

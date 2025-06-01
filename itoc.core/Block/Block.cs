@@ -1,24 +1,23 @@
-using ITOC.Core.BlockModels;
 using ITOC.Core.Item;
 
 namespace ITOC.Core;
 
 public class Block : IEquatable<Block>, IItem
 {
+    public static readonly Block Air = new("itoc:air", "Air", BlockProperties.Transparent);
+
     public Identifier Id { get; }
     public string Name { get; }
     public bool IsOpaque { get; } = true;
-    public CubeModelBase BlockModel { get; }
 
     public ItemType Type => ItemType.Block;
 
     public string Description => "";
 
-    public Block(Identifier id, string name, CubeModelBase blockModel, BlockProperties properties = null)
+    protected Block(Identifier id, string name, BlockProperties properties = null)
     {
         Id = id;
         Name = name;
-        BlockModel = blockModel ?? throw new ArgumentNullException(nameof(blockModel));
 
         properties ??= BlockProperties.Default;
         IsOpaque = properties.IsOpaque;
