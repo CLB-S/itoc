@@ -2,7 +2,7 @@ namespace ITOC.Test.Palette;
 
 using System;
 using System.Linq;
-using ITOC.Core.Palette;
+using ITOC.Core.Utils;
 using Xunit;
 
 public class PaletteArrayClassTest

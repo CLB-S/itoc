@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using Godot;
-using ITOC.Core.Palette;
+using ITOC.Core.Utils;
 
 namespace ITOC.Core;
 

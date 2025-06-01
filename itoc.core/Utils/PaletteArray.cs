@@ -1,9 +1,8 @@
-namespace ITOC.Core.Palette;
+namespace ITOC.Core.Utils;
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ITOC.Core.Utils;
 
 /// <summary>
 /// A memory-efficient array that stores values using a palette system.

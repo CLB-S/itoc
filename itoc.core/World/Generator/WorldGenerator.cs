@@ -1,7 +1,6 @@
 using Godot;
 using ITOC.Core.DelaunatorSharp;
 using ITOC.Core.Interpolators;
-using ITOC.Core.Palette;
 using ITOC.Core.PatternSystem;
 using ITOC.Core.Utils;
 using Supercluster.KDTree;

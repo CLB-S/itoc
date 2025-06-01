@@ -1,6 +1,6 @@
 using Godot;
 using ITOC.Core.ChunkMeshing;
-using ITOC.Core.Palette;
+using ITOC.Core.Utils;
 
 namespace ITOC.Core;
 
