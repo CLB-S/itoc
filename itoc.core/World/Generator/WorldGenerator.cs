@@ -7,6 +7,69 @@ using Supercluster.KDTree;
 
 namespace ITOC.Core.WorldGeneration;
 
+public class WorldGeneratorSettings : WorldSettings
+{
+    #region General Settings
+
+    public Rect2I Bounds = new(-50000, -50000, 100000, 100000);
+    public new Vector2 WorldCenter => Bounds.Position + Bounds.Size / 2;
+    public int PoisosonDiskSamplingIterations = 8;
+    public double NormalizedMinimumCellDistance { get; set; } = 0.6;
+
+    public double MinimumCellDistance
+    {
+        get => NormalizedMinimumCellDistance * Bounds.Size.Y / 200.0;
+        set => NormalizedMinimumCellDistance = value * 200.0f / Bounds.Size.Y;
+    }
+
+    public double NormalizedNoiseFrequency { get; set; } = 0.8;
+
+    public double NoiseFrequency
+    {
+        get => NormalizedNoiseFrequency / 10000.0;
+        set => NormalizedNoiseFrequency = value * 10000.0;
+    }
+
+    public double UpliftNoiseFrequency { get; set; } = 0.7;
+    public double UpliftNoiseIntensity { get; set; } = -0.3;
+
+    public double TemperatureNoiseFrequency { get; set; } = 1.0;
+    public double TemperatureNoiseIntensity { get; set; } = 10.0;
+
+    public double PrecipitationNoiseFrequency { get; set; } = 0.8;
+    public double PrecipitationNoiseIntensity { get; set; } = 0.6;
+
+    public double DomainWarpFrequency { get; set; } = 0.02;
+    public double DomainWarpIntensity { get; set; } = 20;
+
+    #endregion
+
+    #region Tectonic Settings
+
+    public double ContinentRatio = 0.8;
+    public double PlateMergeRatio = 0.0;
+    public double MaxTectonicMovement = 10.0;
+    public double MaxUplift = 1000.0;
+    public double UpliftPropagationDecrement = 0.8;
+    public double UpliftPropagationSharpness = 0.0;
+
+    #endregion
+
+    #region Fluvial Erosion Settings
+
+    public double ErosionRate = 4.5;
+    public double ErosionTimeStep = 0.2;
+    public double ErosionConvergenceThreshold = 20.0;
+    public int MaxErosionIterations = 20;
+    public double MaxErosionSlopeAngle = 30.0;
+
+    #endregion
+
+}
+
+/// <summary>
+/// Default limited sample points based world generator.
+/// </summary>
 public partial class WorldGenerator : WorldGeneratorBase
 {
     #region Fields and Properties
@@ -32,7 +95,7 @@ public partial class WorldGenerator : WorldGeneratorBase
     private PatternTree _domainWarpPattern;
     private PatternTree _heightPattern;
 
-    public WorldSettings Settings { get; }
+    public WorldGeneratorSettings Settings => WorldSettings as WorldGeneratorSettings;
 
     public PatternLibrary PatternLibrary { get; private set; }
     public double MaxHeight { get; private set; }
@@ -49,9 +112,9 @@ public partial class WorldGenerator : WorldGeneratorBase
 
     #endregion
 
-    public WorldGenerator(WorldSettings settings = null) : base()
+    public WorldGenerator(WorldGeneratorSettings settings = null)
+        : base(settings ?? new WorldGeneratorSettings())
     {
-        Settings = settings ?? new WorldSettings();
     }
 
     protected override void InitializePipeline()
@@ -534,15 +597,6 @@ public partial class WorldGenerator : WorldGeneratorBase
     #endregion
 
     #region ChunkColumn Generation
-
-    public virtual double[,] CalculateChunkHeightMap(Vector2I chunkColumnIndex, Func<double, double, double> getHeight)
-    {
-        if (State != WorldGenerationState.Completed)
-            throw new InvalidOperationException("World generation is not completed yet.");
-
-        var rect = new Rect2I(chunkColumnIndex * Chunk.SIZE, Chunk.SIZE, Chunk.SIZE);
-        return HeightMapUtils.ConstructChunkHeightMap(rect, getHeight, 2);
-    }
 
     public override ChunkColumn GenerateChunkColumn(Vector2I chunkColumnIndex)
     {

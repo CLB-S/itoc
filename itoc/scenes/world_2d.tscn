@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://dnbce5r6br382"]
 
-[ext_resource type="Script" uid="uid://dve6fx2002n8g" path="res://scripts/world/WorldTest.cs" id="1_ieres"]
+[ext_resource type="Script" uid="uid://bhg8jbxlxwy1k" path="res://scripts/WorldTest.cs" id="1_ieres"]
 [ext_resource type="Script" uid="uid://dteeikkfn2w8b" path="res://scripts/misc/ObjectRotator.cs" id="2_6cuhj"]
 [ext_resource type="Shader" uid="uid://dx5sokiwa158o" path="res://assets/shaders/world_height_map.gdshader" id="3_vydw8"]
 

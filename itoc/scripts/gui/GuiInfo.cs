@@ -4,6 +4,7 @@ using System.Text;
 using Godot;
 using ITOC.Core;
 using ITOC.Core.Utils;
+using ITOC.Core.WorldGeneration;
 
 namespace ITOC;
 
@@ -47,9 +48,11 @@ public partial class GuiInfo : RichTextLabel
         var worldTime = GameControllerNode.Instance.CurrentWorld.Time;
         var worldSettings = GameControllerNode.Instance.CurrentWorld.Settings;
         var playerPos = GameControllerNode.Instance.CurrentWorld.PlayerPos;
-        var normalizedPos =
-            (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / worldSettings.Bounds.Size +
-            Vector2.One / 2;
+
+        var normalizedPos = worldSettings is WorldGeneratorSettings settings ?
+            (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / settings.Bounds.Size +
+            Vector2.One / 2 : Vector2.One / 2;
+
         var latitude = -Mathf.Lerp(-90, 90, normalizedPos.Y);
         var longitude = Mathf.Lerp(-180, 180, normalizedPos.X);
         var localTime = OrbitalUtils.LocalTime(worldTime, longitude, worldSettings.MinutesPerDay);

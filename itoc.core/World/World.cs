@@ -7,8 +7,8 @@ namespace ITOC.Core;
 
 public class World
 {
-    public WorldGenerator Generator { get; private set; }
-    public WorldSettings Settings => Generator.Settings;
+    public IWorldGenerator Generator { get; private set; }
+    public WorldSettings Settings => Generator.WorldSettings;
 
     public Vector3I PlayerChunk { get; private set; } = Vector3I.Zero;
     public double Time { get; private set; }

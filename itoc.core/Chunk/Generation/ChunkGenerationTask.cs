@@ -6,14 +6,14 @@ namespace ITOC.Core.ChunkGeneration;
 
 public class ChunkGenerationTask : GameTask
 {
-    public readonly WorldGenerator WorldGenerator;
+    public readonly IWorldGenerator WorldGenerator;
     public Vector3I ChunkIndex { get; }
     public ChunkColumn ChunkColumn { get; }
     public Action<Chunk> Callback { get; }
     private Chunk _chunk;
 
     public ChunkGenerationTask(
-        WorldGenerator worldGenerator,
+        IWorldGenerator worldGenerator,
         Vector3I index,
         ChunkColumn chunkColumn,
         Action<Chunk> callback = null,

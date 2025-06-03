@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Godot;
 
 namespace ITOC.Core.WorldGeneration;
@@ -7,6 +5,7 @@ namespace ITOC.Core.WorldGeneration;
 public interface IWorldGenerator
 {
     WorldGenerationState State { get; }
+    WorldSettings WorldSettings { get; }
 
     // Events
     event EventHandler<GenerationProgressEventArgs> ProgressUpdatedEvent;

@@ -56,7 +56,7 @@ public partial class WorldTest : Node2D
     public bool DrawInterpolatedHeightMap;
     public bool DrawWinds;
 
-    private WorldGenerator _worldGenerator => GameControllerNode.Instance.WorldGenerator;
+    private WorldGenerator _worldGenerator => GameControllerNode.Instance.WorldGenerator as WorldGenerator;
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
 

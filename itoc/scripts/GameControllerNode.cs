@@ -22,7 +22,7 @@ public partial class GameControllerNode : Node
     public GameController GameController { get; private set; }
 
     public World CurrentWorld => GameController.CurrentWorld;
-    public WorldGenerator WorldGenerator => GameController.WorldGenerator;
+    public IWorldGenerator WorldGenerator => GameController.WorldGenerator;
     public Settings Settings => GameController.Settings;
     public WorldSettings WorldSettings => GameController.WorldSettings;
     public TaskManager TaskManager => GameController.TaskManager;
@@ -42,10 +42,11 @@ public partial class GameControllerNode : Node
         GetWindow().MoveToCenter();
     }
 
-    public void GenerateWorldAndStartGame(WorldGenerator worldGenerator = null)
+    public void GenerateWorldAndStartGame(IWorldGenerator worldGenerator = null)
     {
-        if (worldGenerator != null)
-            GameController.WorldGenerator = worldGenerator;
+        worldGenerator ??= new WorldGenerator();
+
+        GameController.WorldGenerator = worldGenerator;
 
         WorldGenerator.GenerationCompletedEvent += (_, _) => CallDeferred(MethodName.GotoWorldScene);
         Task.Run(WorldGenerator.GenerateWorldAsync);
@@ -54,6 +55,12 @@ public partial class GameControllerNode : Node
     public void GotoWorldScene()
     {
         GotoScene("res://scenes/world.tscn");
+    }
+
+    public void GotoWorldMapScreen()
+    {
+        GameController.WorldGenerator ??= new WorldGenerator();
+        GotoScene("res://scenes/world_2d.tscn");
     }
 
     public void GotoScene(string path)
