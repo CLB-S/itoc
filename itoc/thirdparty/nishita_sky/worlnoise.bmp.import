@@ -1,0 +1,29 @@
+[remap]
+
+importer="3d_texture"
+type="CompressedTexture3D"
+uid="uid://c4dp6g6gouj2b"
+path.bptc="res://.godot/imported/worlnoise.bmp-d098e79f47a994064b9656cb264b6f02.bptc.ctex3d"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+
+[deps]
+
+source_file="res://thirdparty/nishita_sky/worlnoise.bmp"
+dest_files=["res://.godot/imported/worlnoise.bmp-d098e79f47a994064b9656cb264b6f02.bptc.ctex3d"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=true
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+slices/horizontal=32
+slices/vertical=1

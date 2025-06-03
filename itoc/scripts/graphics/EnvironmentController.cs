@@ -101,9 +101,7 @@ public partial class EnvironmentController : WorldEnvironment
 
         // Update moon position (opposite to sun)
         if (MoonLight != null)
-        {
             MoonLight.RotationDegrees = new Vector3(solarElevation, -solarAzimuth, 0);
-        }
 
         // Calculate time-of-day factors for visual transitions based on solar elevation
         var dayFactor = 0.0;
@@ -180,9 +178,7 @@ public partial class EnvironmentController : WorldEnvironment
 
             // Increase glow during sunset/sunrise
             if (sunsetFactor > 0)
-            {
                 glowIntensity = (float)Mathf.Lerp(glowIntensity, SunsetGlowIntensity, sunsetFactor);
-            }
 
             Environment.GlowIntensity = glowIntensity;
             Environment.GlowHdrThreshold = (float)Mathf.Lerp(0.8, 0.5, sunsetFactor);

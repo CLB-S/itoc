@@ -19,7 +19,7 @@ void vertex() {
 	VERTEX = get_quad_vertex(quad_data, vertex_index);
 	UV = QUAD_UVS[vertex_index];
 	NORMAL = QUAD_NORMS[quad_data.type];
-	
+
 	texture_id = float(quad_data.texture_index);
 }
 

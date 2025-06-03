@@ -1,43 +1,14 @@
-[gd_scene load_steps=11 format=3 uid="uid://g8ki650u2whs"]
+[gd_scene load_steps=8 format=3 uid="uid://g8ki650u2whs"]
 
-[ext_resource type="Script" uid="uid://b4g0spdwms0iv" path="res://scripts/graphics/EnvironmentController.cs" id="1_lquwl"]
 [ext_resource type="PackedScene" uid="uid://c367kt62qvrax" path="res://scenes/game_objects/player.tscn" id="2_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://bbjl30lukp4w3" path="res://scenes/gui/hud.tscn" id="2_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://db8v3c26ehokt" path="res://scenes/gui/paused.tscn" id="3_1bvp3"]
 [ext_resource type="Script" uid="uid://dw4e6mkyo6h2u" path="res://scripts/WorldNode.cs" id="3_272bh"]
 [ext_resource type="PackedScene" uid="uid://cvsmxmm442rcn" path="res://scenes/gui/info.tscn" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://c042hy7ajq2u2" path="res://scripts/gui/GuiHud.cs" id="4_7mycd"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_i7141"]
-
-[sub_resource type="Sky" id="Sky_1bvp3"]
-sky_material = SubResource("ProceduralSkyMaterial_i7141")
-
-[sub_resource type="Environment" id="Environment_lquwl"]
-background_mode = 2
-sky = SubResource("Sky_1bvp3")
-ambient_light_source = 3
-reflected_light_source = 2
-tonemap_mode = 2
-ssao_enabled = true
-fog_enabled = true
-fog_sun_scatter = 0.5
-fog_density = 0.0005
-fog_aerial_perspective = 0.5
-fog_sky_affect = 0.5
-fog_depth_begin = 150.0
-fog_depth_end = 250.0
-volumetric_fog_density = 0.005
+[ext_resource type="PackedScene" uid="uid://go64puprbd6v" path="res://scenes/environment/nashita_sky.tscn" id="7_i7141"]
 
 [node name="Main" type="Node"]
-
-[node name="SunLight" type="DirectionalLight3D" parent="."]
-shadow_enabled = true
-directional_shadow_blend_splits = true
-
-[node name="MoonLight" type="DirectionalLight3D" parent="."]
-shadow_enabled = true
-directional_shadow_blend_splits = true
 
 [node name="Player" parent="." node_paths=PackedStringArray("Hud") instance=ExtResource("2_0xm2m")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 200, 0)
@@ -45,15 +16,6 @@ Hud = NodePath("../GUIs/Hud")
 
 [node name="World" type="Node" parent="."]
 script = ExtResource("3_272bh")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." node_paths=PackedStringArray("SunLight", "MoonLight")]
-environment = SubResource("Environment_lquwl")
-script = ExtResource("1_lquwl")
-SunLight = NodePath("../SunLight")
-MoonLight = NodePath("../MoonLight")
-DaySkyColor = Color(0.27, 0.489, 1, 1)
-DayHorizonColor = Color(0.594, 0.6909, 0.9, 1)
-SunsetColor = Color(1, 0.48, 0.2, 0.501961)
 
 [node name="GUIs" type="Control" parent="."]
 texture_filter = 1
@@ -74,3 +36,5 @@ layout_mode = 1
 [node name="Paused" parent="GUIs" instance=ExtResource("3_1bvp3")]
 visible = false
 layout_mode = 1
+
+[node name="NashitaSky" parent="." instance=ExtResource("7_i7141")]
