@@ -1,0 +1,79 @@
+[gd_resource type="Theme" load_steps=13 format=3 uid="uid://ckoadkmttw3xu"]
+
+[ext_resource type="Texture2D" uid="uid://eqaxsmgxdj2c" path="res://assets/gui/itoc_gui.svg" id="1_xpi3a"]
+[ext_resource type="FontFile" uid="uid://bo54mte20221v" path="res://assets/fonts/fusion-pixel-12px-proportional-zh_hans.woff2" id="2_ujn4w"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ujn4w"]
+texture = ExtResource("1_xpi3a")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 16.0
+region_rect = Rect2(24, 440, 144, 60)
+modulate_color = Color(0.5, 0.5, 0.5, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ebygn"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_2itfb"]
+texture = ExtResource("1_xpi3a")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 16.0
+region_rect = Rect2(24, 372, 144, 60)
+modulate_color = Color(0.9, 0.9, 0.9, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5f7vm"]
+texture = ExtResource("1_xpi3a")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 16.0
+region_rect = Rect2(24, 372, 144, 60)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qrnkb"]
+texture = ExtResource("1_xpi3a")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 16.0
+region_rect = Rect2(24, 440, 144, 60)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3g8i3"]
+content_margin_left = 7.0
+content_margin_top = 5.0
+content_margin_right = 7.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5jutl"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fy6pr"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_2kupk"]
+texture = ExtResource("1_xpi3a")
+texture_margin_left = 24.0
+texture_margin_top = 24.0
+texture_margin_right = 36.0
+texture_margin_bottom = 36.0
+region_rect = Rect2(200, 188, 144, 144)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pxaff"]
+
+[resource]
+default_font = ExtResource("2_ujn4w")
+default_font_size = 24
+Button/colors/font_color = Color(1, 1, 1, 1)
+Button/styles/disabled = SubResource("StyleBoxTexture_ujn4w")
+Button/styles/focus = SubResource("StyleBoxEmpty_ebygn")
+Button/styles/hover = SubResource("StyleBoxTexture_2itfb")
+Button/styles/normal = SubResource("StyleBoxTexture_5f7vm")
+Button/styles/pressed = SubResource("StyleBoxTexture_qrnkb")
+CheckButton/styles/disabled = SubResource("StyleBoxEmpty_3g8i3")
+CheckButton/styles/focus = SubResource("StyleBoxEmpty_5jutl")
+CheckButton/styles/hover = SubResource("StyleBoxEmpty_3g8i3")
+CheckButton/styles/hover_pressed = SubResource("StyleBoxEmpty_3g8i3")
+CheckButton/styles/normal = SubResource("StyleBoxEmpty_3g8i3")
+CheckButton/styles/pressed = SubResource("StyleBoxEmpty_3g8i3")
+LineEdit/styles/focus = SubResource("StyleBoxEmpty_fy6pr")
+Panel/styles/panel = SubResource("StyleBoxTexture_2kupk")
+TabBar/styles/tab_focus = SubResource("StyleBoxEmpty_pxaff")

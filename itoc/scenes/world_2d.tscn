@@ -93,7 +93,7 @@ text = "Seed:"
 
 [node name="SeedSpinBox" type="SpinBox" parent="CanvasLayer/Control/VBoxContainer/HSplitContainer"]
 layout_mode = 2
-max_value = 1e+07
+max_value = 10000000.0
 rounded = true
 allow_greater = true
 

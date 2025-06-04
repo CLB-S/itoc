@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://b2xj630e6mcqv"]
+
+[ext_resource type="Script" uid="uid://djbf1vygokbt0" path="res://scenes/gui/GuiTest.cs" id="1_7pdgj"]
+
+[node name="GuiTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7pdgj")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 371.0
+offset_top = 271.0
+offset_right = 920.0
+offset_bottom = 610.0
+
+[node name="Button" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 214.0
+offset_top = 109.0
+offset_right = 328.0
+offset_bottom = 160.0
+text = "Dark!"
+
+[connection signal="pressed" from="Panel/Button" to="." method="OnButtonPressed"]
