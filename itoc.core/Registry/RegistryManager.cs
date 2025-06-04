@@ -1,5 +1,5 @@
-using ITOC.Core.Item;
 using ITOC.Core.Registry;
+using ITOC.Core.Items;
 
 namespace ITOC.Core;
 
@@ -44,7 +44,7 @@ public class RegistryManager
 
         // Create built-in registries
         instance.CreateRegistry<Block>(Keys.Blocks);
-        instance.CreateRegistry<IItem>(Keys.Items);
+        instance.CreateRegistry<Items.Item>(Keys.Items);
         instance.CreateRegistry<Biome>(Keys.Biomes);
 
         return instance;

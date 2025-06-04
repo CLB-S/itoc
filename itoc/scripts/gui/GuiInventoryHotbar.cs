@@ -1,7 +1,6 @@
 using System;
 using Godot;
 using ITOC.Core;
-using ITOC.Core.Item;
 
 namespace ITOC;
 
@@ -10,7 +9,7 @@ public partial class GuiInventoryHotbar : GridContainer
     private GuiHotbarSlot[] _slots;
     private int _activeSlotIndex;
 
-    public IItem ActiveItem => _slots[_activeSlotIndex].Item;
+    // public IItem ActiveItem => _slots[_activeSlotIndex].Item;
 
     public override void _Ready()
     {
@@ -19,12 +18,12 @@ public partial class GuiInventoryHotbar : GridContainer
 
         _slots[_activeSlotIndex].IsActive = true;
 
-        _slots[0].SetItem(BlockManager.Instance.GetBlock("itoc:dirt"));
-        _slots[1].SetItem(BlockManager.Instance.GetBlock("itoc:stone"));
-        _slots[2].SetItem(BlockManager.Instance.GetBlock("itoc:grass_block"));
-        _slots[3].SetItem(BlockManager.Instance.GetBlock("itoc:sand"));
-        _slots[4].SetItem(BlockManager.Instance.GetBlock("itoc:snow"));
-        _slots[5].SetItem(BlockManager.Instance.GetBlock("itoc:debug"));
+        // _slots[0].SetItem(BlockManager.Instance.GetBlock("itoc:dirt"));
+        // _slots[1].SetItem(BlockManager.Instance.GetBlock("itoc:stone"));
+        // _slots[2].SetItem(BlockManager.Instance.GetBlock("itoc:grass_block"));
+        // _slots[3].SetItem(BlockManager.Instance.GetBlock("itoc:sand"));
+        // _slots[4].SetItem(BlockManager.Instance.GetBlock("itoc:snow"));
+        // _slots[5].SetItem(BlockManager.Instance.GetBlock("itoc:debug"));
     }
 
     public void SetActiveSlot(int index)

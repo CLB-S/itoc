@@ -1,5 +1,4 @@
 using Godot;
-using ITOC.Core.Item;
 
 namespace ITOC;
 
@@ -10,7 +9,7 @@ public partial class GuiHotbarSlot : TextureRect
 
     private GuiItem _itemControl;
 
-    public IItem Item => _itemControl.Item;
+    // public IItem Item => _itemControl.Item;
 
     private bool _isActive;
 
@@ -35,10 +34,10 @@ public partial class GuiHotbarSlot : TextureRect
         _itemControl.Clear();
     }
 
-    public void SetItem(IItem item)
-    {
-        _itemControl.SetItem(item);
-    }
+    // public void SetItem(IItem item)
+    // {
+    //     _itemControl.SetItem(item);
+    // }
 
     private void UpdateTexture()
     {

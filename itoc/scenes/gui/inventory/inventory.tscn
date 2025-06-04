@@ -1,0 +1,148 @@
+[gd_scene load_steps=2 format=3 uid="uid://sen2s5jv0mhs"]
+
+[ext_resource type="PackedScene" uid="uid://bfr0iq4f643ft" path="res://scenes/gui/inventory/inventory_slot.tscn" id="1_m2exb"]
+
+[node name="Inventory" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -344.0
+offset_top = -113.0
+offset_right = 344.0
+offset_bottom = 113.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 9
+
+[node name="InventorySlot" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot2" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot3" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot4" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot5" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot6" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot7" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot8" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot9" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot28" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot29" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot30" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot31" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot32" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot33" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot34" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot35" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot36" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot37" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot38" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot39" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot40" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot10" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot11" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot12" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot13" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot14" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot15" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot16" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot17" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot18" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot19" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot20" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot21" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot22" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot23" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot24" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot25" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot26" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2
+
+[node name="InventorySlot27" parent="GridContainer" instance=ExtResource("1_m2exb")]
+layout_mode = 2

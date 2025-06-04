@@ -62,8 +62,6 @@ public class BlockManager
             BlockRegistry.Register(block.Id, block);
 
             // Also register the block as an item
-            // var itemRegistry = RegistryManager.Instance.GetRegistry<IItem>(RegistryManager.Keys.Items);
-            // itemRegistry.Register(id, block);
         }
         catch (ArgumentException e)
         {

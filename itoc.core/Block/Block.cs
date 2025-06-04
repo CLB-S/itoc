@@ -1,16 +1,12 @@
-using ITOC.Core.Item;
-
 namespace ITOC.Core;
 
-public class Block : IEquatable<Block>, IItem
+public class Block : IEquatable<Block>
 {
     public static readonly Block Air = new("itoc:air", "Air", BlockProperties.Transparent);
 
     public Identifier Id { get; }
     public string Name { get; }
     public bool IsOpaque { get; } = true;
-
-    public ItemType Type => ItemType.Block;
 
     public string Description => "";
 

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://2wkwwwgtb67n"]
 
-[ext_resource type="Texture2D" uid="uid://b71xh2j15ro65" path="res://assets/blocks/debug.png" id="1_7xhll"]
-[ext_resource type="Script" uid="uid://c7jk2tlpi1mr5" path="res://scripts/gui/GuiBlockItem.cs" id="1_lodev"]
+[ext_resource type="Script" uid="uid://c7jk2tlpi1mr5" path="res://scripts/gui/GuiBlockItem.cs" id="1_eoyfm"]
+[ext_resource type="Texture2D" uid="uid://b71xh2j15ro65" path="res://assets/blocks/debug.png" id="2_48wyi"]
 
 [node name="BlockItem" type="Control"]
 texture_filter = 1
@@ -13,25 +13,25 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
-scale = Vector2(1.8, 1.8)
-script = ExtResource("1_lodev")
+scale = Vector2(1.6, 1.6)
+script = ExtResource("1_eoyfm")
 
 [node name="RightFace" type="Sprite2D" parent="."]
 modulate = Color(0.564962, 0.564962, 0.564961, 1)
 position = Vector2(6.928, 4)
 rotation = -0.523599
 skew = 0.523599
-texture = ExtResource("1_7xhll")
+texture = ExtResource("2_48wyi")
 
 [node name="LeftFace" type="Sprite2D" parent="."]
 modulate = Color(0.762404, 0.762404, 0.762403, 1)
 position = Vector2(-6.928, 4)
 rotation = 0.523599
 skew = -0.523599
-texture = ExtResource("1_7xhll")
+texture = ExtResource("2_48wyi")
 
 [node name="TopFace" type="Sprite2D" parent="."]
 position = Vector2(0, -8)
 rotation = 0.523599
 skew = 0.523599
-texture = ExtResource("1_7xhll")
+texture = ExtResource("2_48wyi")

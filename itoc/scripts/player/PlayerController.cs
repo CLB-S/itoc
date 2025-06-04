@@ -1,7 +1,6 @@
 using System;
 using Godot;
 using ITOC.Core;
-using ITOC.Core.Item;
 
 namespace ITOC;
 
@@ -62,7 +61,6 @@ public partial class PlayerController : CharacterBody3D
     private float _lastJumpPressTime = -1f;
 
     // Inventory
-    public IItem ItemHandhelding => Hud.InventoryHotbar.ActiveItem;
 
     public override void _Ready()
     {
@@ -148,8 +146,8 @@ public partial class PlayerController : CharacterBody3D
                     };
 
                     var resultCube = spaceState.IntersectShape(queryCube, 1);
-                    if (resultCube.Count == 0 && ItemHandhelding?.Type == ItemType.Block)
-                        GameControllerNode.Instance.CurrentWorld.SetBlock(pos, ItemHandhelding as Block);
+                    // if (resultCube.Count == 0 && ItemHandhelding?.Type == ItemType.Block)
+                    //     GameControllerNode.Instance.CurrentWorld.SetBlock(pos, ItemHandhelding as Block);
                 }
 
                 if (breakBlockPressed)
