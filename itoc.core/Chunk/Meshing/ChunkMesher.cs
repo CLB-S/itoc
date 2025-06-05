@@ -242,10 +242,6 @@ public static class ChunkMesher
 
     public static MeshBuffer CullHiddenFaces(MeshBuffer meshBuffer)
     {
-        // System.Array.Clear(meshBuffer.FaceMasks, 0, meshBuffer.FaceMasks.Length);
-        // System.Array.Clear(meshBuffer.ForwardMerged, 0, meshBuffer.ForwardMerged.Length);
-        // System.Array.Clear(meshBuffer.RightMerged, 0, meshBuffer.RightMerged.Length);
-
         // Hidden face culling
         for (var a = 1; a < CS_P - 1; a++)
         {

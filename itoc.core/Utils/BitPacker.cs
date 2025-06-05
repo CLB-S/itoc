@@ -41,8 +41,7 @@ public static class BitPacker
     /// </summary>
     public static ushort UnpackUInt16(byte[] bytes)
     {
-        if (bytes == null)
-            throw new ArgumentNullException(nameof(bytes));
+        ArgumentNullException.ThrowIfNull(bytes);
         if (bytes.Length < 2)
             throw new ArgumentException("Byte array must be at least 2 bytes long.");
 
@@ -90,8 +89,7 @@ public static class BitPacker
     /// </summary>
     public static uint UnpackUInt32(byte[] bytes)
     {
-        if (bytes == null)
-            throw new ArgumentNullException(nameof(bytes));
+        ArgumentNullException.ThrowIfNull(bytes);
         if (bytes.Length < 4)
             throw new ArgumentException("Byte array must be at least 4 bytes long.");
 
@@ -139,8 +137,7 @@ public static class BitPacker
     /// </summary>
     public static ulong UnpackUInt64(byte[] bytes)
     {
-        if (bytes == null)
-            throw new ArgumentNullException(nameof(bytes));
+        ArgumentNullException.ThrowIfNull(bytes);
         if (bytes.Length < 8)
             throw new ArgumentException("Byte array must be at least 8 bytes long.");
 
@@ -396,10 +393,9 @@ public static class BitPacker
     /// <returns>A byte array containing the packed bits</returns>
     public static byte[] Pack<T>(T[] values, int bitsPerValue) where T : struct
     {
-        if (values == null)
-            throw new ArgumentNullException(nameof(values));
+        ArgumentNullException.ThrowIfNull(values);
         if (values.Length == 0)
-            return Array.Empty<byte>();
+            return [];
 
         int maxBits = GetMaxBitsForType<T>();
         if (bitsPerValue <= 0 || bitsPerValue > maxBits)
@@ -430,7 +426,7 @@ public static class BitPacker
             throw new ArgumentException("Destination span is too small for the packed values");
 
         // Initialize destination to zero to avoid having to clear bits inside WriteBits
-        destination.Slice(0, byteCount).Fill(0);
+        destination[..byteCount].Clear();
 
         int bitPosition = 0;
         ulong maxValue = GetMaxValueForBits(bitsPerValue);
@@ -457,8 +453,7 @@ public static class BitPacker
     /// <returns>An array of unpacked integers</returns>
     public static T[] Unpack<T>(byte[] bytes, int count, int bitsPerValue) where T : struct
     {
-        if (bytes == null)
-            throw new ArgumentNullException(nameof(bytes));
+        ArgumentNullException.ThrowIfNull(bytes);
         if (bytes.Length == 0 || count == 0)
             return Array.Empty<T>();
 

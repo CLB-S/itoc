@@ -1,6 +1,7 @@
 namespace ITOC.Core.Utils;
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -11,7 +12,10 @@ using System.Runtime.CompilerServices;
 /// <typeparam name="T">The type of values to store. Must be ushort, uint, or ulong.</typeparam>
 public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : struct
 {
+    private static ArrayPool<byte> _bytePool = ArrayPool<byte>.Shared;
+
     private readonly byte[] _data;
+    private readonly int _dataValidBytes;
     private readonly int _bitsPerValue;
     private readonly int _count;
     private readonly ulong _maxValue;
@@ -35,7 +39,7 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     /// <summary>
     /// Gets the size of the underlying storage in bytes.
     /// </summary>
-    public int SizeInBytes => _data.Length;
+    public int SizeInBytes => _dataValidBytes;
 
     /// <summary>
     /// Gets the total size of the array in bits.
@@ -62,7 +66,10 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
 
         // Calculate the total number of bytes needed to store the values
         int byteCount = BitPacker.CalculateRequiredBytes(count, bitsPerValue);
-        _data = new byte[byteCount];
+        // _data = new byte[byteCount];
+        _data = _bytePool.Rent(byteCount);
+        Array.Clear(_data, 0, byteCount);
+        _dataValidBytes = byteCount;
     }
 
     /// <summary>
@@ -84,7 +91,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
 
         // Calculate the total number of bytes needed to store the values
         int byteCount = BitPacker.CalculateRequiredBytes(_count, _bitsPerValue);
-        _data = new byte[byteCount];
+        _data = _bytePool.Rent(byteCount);
+        Array.Clear(_data, 0, byteCount);
+        _dataValidBytes = byteCount;
 
         // Pack the values into the data array
         BitPacker.Pack<T>(values, _bitsPerValue, _data);
@@ -115,7 +124,10 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         _maxValue = _bitsPerValue == 64 ? ulong.MaxValue : (1ul << _bitsPerValue) - 1;
 
         // Copy the packed data
-        _data = new byte[requiredBytes];
+        // _data = new byte[requiredBytes];
+        _data = _bytePool.Rent(requiredBytes);
+        Array.Clear(_data, 0, requiredBytes);
+        _dataValidBytes = requiredBytes;
         Buffer.BlockCopy(packedData, 0, _data, 0, requiredBytes);
     }
 
@@ -190,7 +202,7 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         if (_bitsPerValue == 8)
         {
             byte byteValue = (byte)numericValue;
-            Array.Fill(_data, byteValue);
+            Array.Fill(_data, byteValue, 0, _dataValidBytes);
         }
         else if (_bitsPerValue == 16)
         {
@@ -198,9 +210,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             var pattern = new byte[2];
             System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(pattern, (ushort)numericValue);
 
-            for (int i = 0; i < _data.Length; i += 2)
+            for (int i = 0; i < _dataValidBytes; i += 2)
             {
-                int remaining = Math.Min(2, _data.Length - i);
+                int remaining = Math.Min(2, _dataValidBytes - i);
                 Buffer.BlockCopy(pattern, 0, _data, i, remaining);
             }
         }
@@ -210,9 +222,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             var pattern = new byte[4];
             System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(pattern, (uint)numericValue);
 
-            for (int i = 0; i < _data.Length; i += 4)
+            for (int i = 0; i < _dataValidBytes; i += 4)
             {
-                int remaining = Math.Min(4, _data.Length - i);
+                int remaining = Math.Min(4, _dataValidBytes - i);
                 Buffer.BlockCopy(pattern, 0, _data, i, remaining);
             }
         }
@@ -222,9 +234,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             var pattern = new byte[8];
             System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(pattern, numericValue);
 
-            for (int i = 0; i < _data.Length; i += 8)
+            for (int i = 0; i < _dataValidBytes; i += 8)
             {
-                int remaining = Math.Min(8, _data.Length - i);
+                int remaining = Math.Min(8, _dataValidBytes - i);
                 Buffer.BlockCopy(pattern, 0, _data, i, remaining);
             }
         }
@@ -256,20 +268,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     {
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(BitPackedArray<T>));
 
-        var copy = new byte[_data.Length];
-        Buffer.BlockCopy(_data, 0, copy, 0, _data.Length);
+        var copy = new byte[_dataValidBytes];
+        Buffer.BlockCopy(_data, 0, copy, 0, _dataValidBytes);
         return copy;
-    }
-
-    /// <summary>
-    /// Returns the packed data as a ReadOnlySpan.
-    /// </summary>
-    /// <returns>A ReadOnlySpan over the packed data.</returns>
-    public ReadOnlySpan<byte> GetPackedSpan()
-    {
-        ObjectDisposedException.ThrowIf(_isDisposed, nameof(BitPackedArray<T>));
-
-        return _data;
     }
 
     /// <summary>
@@ -309,9 +310,7 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         {
             bitsPerValue = 1;
             while ((1UL << bitsPerValue) - 1 < maxValue && bitsPerValue < 64)
-            {
                 bitsPerValue++;
-            }
         }
         else
         {
@@ -327,9 +326,7 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         // Fill the array
         int index = 0;
         foreach (var value in values)
-        {
             result[index++] = value;
-        }
 
         return result;
     }
@@ -367,9 +364,7 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
 
             bitsPerValue = 1;
             while (((1UL << bitsPerValue) - 1) < maxValue && bitsPerValue < 64)
-            {
                 bitsPerValue++;
-            }
         }
 
         // Create the array and pack the values
@@ -408,13 +403,11 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             // Direct copy for complete bytes
             int completeBytes = (copyCount * _bitsPerValue) / 8;
             if (completeBytes > 0)
-            {
                 Buffer.BlockCopy(_data, 0, result._data, 0, completeBytes);
-            }
 
             // Copy the remaining bits
             int remainingBits = (copyCount * _bitsPerValue) % 8;
-            if (remainingBits > 0 && completeBytes < _data.Length)
+            if (remainingBits > 0 && completeBytes < _dataValidBytes)
             {
                 byte lastByte = _data[completeBytes];
                 byte mask = (byte)((1 << remainingBits) - 1);
@@ -465,7 +458,15 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     public void Dispose()
     {
         if (!_isDisposed)
+        {
+            _bytePool.Return(_data);
             _isDisposed = true;
+        }
+    }
+
+    ~BitPackedArray()
+    {
+        Dispose();
     }
 
     /// <summary>

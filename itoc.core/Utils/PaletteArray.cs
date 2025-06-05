@@ -183,9 +183,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
 
         // Copy existing values
         for (int i = 0; i < _indices.Count; i++)
-        {
             newIndices[i] = _indices[i];
-        }
 
         // Replace the old array
         var oldIndices = _indices;
@@ -379,7 +377,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             return 0;
 
         // Memory for BitPackedArray + palette entries + dictionary overhead (rough estimate)
-        return _indices.SizeInBytes + (_palette.Count * (typeof(T).IsValueType ? 16 : 32));
+        return _indices.EstimateMemoryUsage() + (_palette.Count * (typeof(T).IsValueType ? 16 : 32));
     }
 
     /// <summary>
