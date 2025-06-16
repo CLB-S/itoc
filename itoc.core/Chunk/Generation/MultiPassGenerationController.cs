@@ -3,7 +3,7 @@ using Godot;
 
 namespace ITOC.Core.ChunkGeneration;
 
-public class ChunkMultiPassGenerator
+public class MultiPassGenerationController
 {
     public int PassCount { get; private set; }
     public int[] PassExtends { get; private set; } // Pass 0 should always has 0 extend
@@ -20,7 +20,7 @@ public class ChunkMultiPassGenerator
     private readonly IPass[] _passes;
     private readonly ConcurrentDictionary<Vector2I, int[]> _multiPassMarkers = new();
 
-    public ChunkMultiPassGenerator(bool runNextPassAuto = true, params IPass[] passes)
+    public MultiPassGenerationController(bool runNextPassAuto = true, params IPass[] passes)
     {
         if (passes == null || passes.Length == 0)
             throw new ArgumentException("Passes cannot be null or empty");

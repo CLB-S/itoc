@@ -92,7 +92,7 @@ public partial class ChunkInstantiator : Node3D
         InitializeNodePools();
         InitializeLods();
 
-        _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
+        _playerChunkIndex = World.WorldPositionToChunkIndex(_playerPosition);
 
         _wireframeMaterial = ResourceLoader.Load<Material>("res://assets/materials/wireframe.tres");
     }
@@ -167,7 +167,7 @@ public partial class ChunkInstantiator : Node3D
     public void UpdatePlayerPosition(Vector3 position)
     {
         _playerPosition = position;
-        _playerChunkIndex = World.WorldToChunkIndex(_playerPosition);
+        _playerChunkIndex = World.WorldPositionToChunkIndex(_playerPosition);
     }
 
     #endregion

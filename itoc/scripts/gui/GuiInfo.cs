@@ -42,7 +42,7 @@ public partial class GuiInfo : RichTextLabel
         var camFacing = CameraHelper.Instance.GetCameraFacing();
         var camFacingDir = CameraHelper.Instance.GetCameraFacingDirection();
         var camFacingDirName = camFacingDir.Name();
-        var chunkIndex = World.WorldToChunkIndex(camPos);
+        var chunkIndex = World.WorldPositionToChunkIndex(camPos);
 
         // Time
         var worldTime = GameControllerNode.Instance.CurrentWorld.Time;

@@ -16,7 +16,7 @@ public class World
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
     public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
 
-    public ChunkMultiPassGenerator ChunkGenerator { get; private set; }
+    public MultiPassGenerationController MultiPassController { get; private set; }
 
     public event EventHandler<Chunk> OnChunkGenerated;
     public event EventHandler<Vector3> OnPlayerMovedHalfAChunk;
@@ -47,8 +47,8 @@ public class World
 
         _chunkGenerationPass0 = new ChunkColumnGenerationInitialPass(this, controller.TaskManager);
         _chunkGenerationPass1 = new ChunkColumnGenerationSecondaryPass(this, controller.TaskManager);
-        ChunkGenerator = new ChunkMultiPassGenerator(true, _chunkGenerationPass0, _chunkGenerationPass1);
-        ChunkGenerator.AllPassesCompleted += OnChunkColumnAllPassesCompleted;
+        MultiPassController = new MultiPassGenerationController(true, _chunkGenerationPass0, _chunkGenerationPass1);
+        MultiPassController.AllPassesCompleted += OnChunkColumnAllPassesCompleted;
 
         _ready = true;
     }
@@ -81,7 +81,7 @@ public class World
 
         if ((PlayerPos - _lastPlayerPosition).Length() > Chunk.SIZE / 2)
         {
-            PlayerChunk = WorldToChunkIndex(PlayerPos);
+            PlayerChunk = WorldPositionToChunkIndex(PlayerPos);
             UpdateChunkLoading();
             _lastPlayerPosition = PlayerPos;
             OnPlayerMovedHalfAChunk?.Invoke(this, PlayerPos);
@@ -108,7 +108,7 @@ public class World
 
     public Chunk GetChunkWorldPos(Vector3 worldPos)
     {
-        var chunkIndex = WorldToChunkIndex(worldPos);
+        var chunkIndex = WorldPositionToChunkIndex(worldPos);
         Chunks.TryGetValue(chunkIndex, out var chunk);
         return chunk;
     }
@@ -165,7 +165,7 @@ public class World
 
     #region Utility methods
 
-    public static Vector3I WorldToChunkIndex(Vector3 worldPos)
+    public static Vector3I WorldPositionToChunkIndex(Vector3 worldPos)
     {
         return new Vector3I(
             Mathf.FloorToInt(worldPos.X / Chunk.SIZE),
@@ -180,6 +180,22 @@ public class World
             Mathf.PosMod(worldPos.X, Chunk.SIZE),
             Mathf.PosMod(worldPos.Y, Chunk.SIZE),
             Mathf.PosMod(worldPos.Z, Chunk.SIZE)
+        );
+    }
+
+    public static Vector2I WorldToChunkIndex(Vector2 worldPos)
+    {
+        return new Vector2I(
+            Mathf.FloorToInt(worldPos.X / Chunk.SIZE),
+            Mathf.FloorToInt(worldPos.Y / Chunk.SIZE)
+        );
+    }
+
+    public static Vector2 WorldToLocalPosition(Vector2 worldPos)
+    {
+        return new Vector2(
+            Mathf.PosMod(worldPos.X, Chunk.SIZE),
+            Mathf.PosMod(worldPos.Y, Chunk.SIZE)
         );
     }
 
@@ -228,57 +244,6 @@ public class World
         // Generate 3x3x3 chunks around the player for existing ChunkColumns
         // GeneratePlayerSurroundingChunks();
     }
-
-    // TODO
-    private void GeneratePlayerSurroundingChunks()
-    {
-        // Generate 3x3x3 area around player
-        for (var x = -1; x <= 1; x++)
-            for (var y = -1; y <= 1; y++)
-                for (var z = -1; z <= 1; z++)
-                {
-                    var chunkIndex = PlayerChunk + new Vector3I(x, y, z);
-                    var columnPos = new Vector2I(chunkIndex.X, chunkIndex.Z);
-
-                    // Skip if chunk already exists
-                    if (Chunks.ContainsKey(chunkIndex))
-                        continue;
-
-                    // Only generate chunks for columns that already exist
-                    if (ChunkColumns.TryGetValue(columnPos, out var chunkColumn))
-                    {
-                        // var createCollisionShape = chunkIndex.DistanceTo(PlayerChunk) <= _controller.Settings.PhysicsDistance;
-                        // var chunkTask = new ChunkGenerationTask(Generator, chunkIndex, chunkColumn, ChunkGenerationCallback);
-                        // _controller.TaskManager.EnqueueTask(chunkTask);
-                    }
-                }
-    }
-
-    private void ChunkGenerationCallback(Chunk result)
-    {
-        if (result == null) return;
-
-        // var currentPlayerPos = GetPlayerPosition();
-        // var currentCenter = WorldToChunkPosition(currentPlayerPos);
-        // if (result.ChunkData.GetPosition().DistanceTo(currentCenter) > _controller.Settings.LoadDistance) return;
-
-        var index = result.Index;
-        var indexXZ = new Vector2I(index.X, index.Z);
-        var playerPosition = new Vector2I(PlayerChunk.X, PlayerChunk.Z);
-        if (!Chunks.ContainsKey(index) && ChunkColumns.TryGetValue(indexXZ, out var chunkColumn)
-                                          && playerPosition.DistanceTo(indexXZ) <=
-                                          _controller.Settings.RenderDistance)
-        {
-            // TODO: Rendering
-            // var chunk = new ChunkNode(result);
-            // Chunks[position] = chunk;
-            // chunkColumn.Chunks[position] = chunk;
-            // CallDeferred(Node.MethodName.AddChild, chunk);
-            // UpdateNeighborMesherMasks(chunk);
-            // chunk.LoadDeferred();
-        }
-    }
-
 
     private void OnChunkBlockUpdated(object sender, OnBlockUpdatedEventArgs e)
     {
