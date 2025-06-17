@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Godot;
 
-namespace ITOC.Core.ChunkGeneration;
+namespace ITOC.Core;
 
 public class MultiPassGenerationController
 {
@@ -99,7 +99,7 @@ public class MultiPassGenerationController
             index += PassExtends[i] > 0 ? 2 : 0;
 
         // Use interlocked operations for thread-safe increments
-        var currentValue = System.Threading.Interlocked.Increment(ref markers[index]);
+        var currentValue = Interlocked.Increment(ref markers[index]);
 
         var extend = 1 + 2 * PassExtends[pass];
         if (currentValue == extend * extend)
@@ -115,7 +115,7 @@ public class MultiPassGenerationController
             index += PassExtends[i] > 0 ? 2 : 0;
 
         // Use interlocked operations for thread-safe increments
-        var currentValue = System.Threading.Interlocked.Increment(ref markers[index]);
+        var currentValue = Interlocked.Increment(ref markers[index]);
 
         var extend = 1 + 2 * PassExtends[pass];
         if (currentValue == extend * extend)
