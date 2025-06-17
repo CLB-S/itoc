@@ -6,7 +6,7 @@ namespace ITOC.Core;
 public class MultiPassGenerationController
 {
     public int PassCount { get; private set; }
-    public int[] PassExtends { get; private set; } // Pass 0 should always has 0 extend
+    public int[] PassExpansions { get; private set; } // Pass 0 should always has 0 expansion
 
     public int MarkersLayerCount { get; private set; }
 
@@ -27,9 +27,9 @@ public class MultiPassGenerationController
 
         _passes = passes;
 
-        // Initialize the number of passes and their extents
+        // Initialize the number of passes and their expansions
         PassCount = passes.Length;
-        PassExtends = new int[PassCount];
+        PassExpansions = new int[PassCount];
         MarkersLayerCount = 0;
 
         for (var i = 0; i < PassCount; i++)
@@ -37,23 +37,23 @@ public class MultiPassGenerationController
             if (passes[i].Pass != i)
                 throw new ArgumentException($"Passes must be in order. Pass {i} is not in the correct order.");
 
-            PassExtends[i] = passes[i].Extend;
-            if (PassExtends[i] < 0)
-                throw new ArgumentException("Pass extend must be non-negative");
-            if (PassExtends[i] > 0)
+            PassExpansions[i] = passes[i].Expansion;
+            if (PassExpansions[i] < 0)
+                throw new ArgumentException("Pass expansion must be non-negative");
+            if (PassExpansions[i] > 0)
                 MarkersLayerCount += 2;
 
             passes[i].PassCompleted += (sender, args) =>
             {
-                var extend = PassExtends[args.Pass];
-                if (extend == 0)
+                var expansion = PassExpansions[args.Pass];
+                if (expansion == 0)
                 {
                     PassFullyCompleted?.Invoke(this, args);
                 }
                 else
                 {
-                    for (var i = -extend; i <= extend; i++)
-                        for (var j = -extend; j <= extend; j++)
+                    for (var i = -expansion; i <= expansion; i++)
+                        for (var j = -expansion; j <= expansion; j++)
                         {
                             var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
                             IncreaseMultiPassCompletionMarker(chunkIndex, args.Pass);
@@ -71,13 +71,13 @@ public class MultiPassGenerationController
                 return;
             }
 
-            var extend = PassExtends[args.Pass + 1];
-            if (extend == 0)
+            var expansion = PassExpansions[args.Pass + 1];
+            if (expansion == 0)
                 PassAccessible?.Invoke(this, new PassEventArgs(args.Pass + 1, args.ChunkColumnPos));
             else
             {
-                for (var i = -extend; i <= extend; i++)
-                    for (var j = -extend; j <= extend; j++)
+                for (var i = -expansion; i <= expansion; i++)
+                    for (var j = -expansion; j <= expansion; j++)
                     {
                         var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
                         IncreaseMultiPassAccessibleMarker(chunkIndex, args.Pass + 1);
@@ -90,19 +90,27 @@ public class MultiPassGenerationController
                 _passes[args.Pass].ExecuteAt(args.ChunkColumnPos);
     }
 
+    public int GetTotalExpansionForCompletion()
+    {
+        var totalExpansion = 0;
+        for (var i = 0; i < PassCount; i++)
+            totalExpansion += 2 * PassExpansions[i];
+        return totalExpansion;
+    }
+
     private void IncreaseMultiPassAccessibleMarker(Vector2I chunkColumnPos, int pass)
     {
         var markers = _multiPassMarkers.GetOrAdd(chunkColumnPos, _ => new int[MarkersLayerCount]);
 
         var index = 0;
         for (var i = 0; i < pass; i++)
-            index += PassExtends[i] > 0 ? 2 : 0;
+            index += PassExpansions[i] > 0 ? 2 : 0;
 
         // Use interlocked operations for thread-safe increments
         var currentValue = Interlocked.Increment(ref markers[index]);
 
-        var extend = 1 + 2 * PassExtends[pass];
-        if (currentValue == extend * extend)
+        var expansion = 1 + 2 * PassExpansions[pass];
+        if (currentValue == expansion * expansion)
             PassAccessible?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
     }
 
@@ -112,13 +120,13 @@ public class MultiPassGenerationController
 
         var index = -1;
         for (var i = 0; i <= pass; i++)
-            index += PassExtends[i] > 0 ? 2 : 0;
+            index += PassExpansions[i] > 0 ? 2 : 0;
 
         // Use interlocked operations for thread-safe increments
         var currentValue = Interlocked.Increment(ref markers[index]);
 
-        var extend = 1 + 2 * PassExtends[pass];
-        if (currentValue == extend * extend)
+        var expansion = 1 + 2 * PassExpansions[pass];
+        if (currentValue == expansion * expansion)
             PassFullyCompleted?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
     }
 }
@@ -126,7 +134,7 @@ public class MultiPassGenerationController
 public interface IPass
 {
     int Pass { get; }
-    int Extend { get; }
+    int Expansion { get; }
 
     void ExecuteAt(Vector2I chunkColumnIndex);
 
