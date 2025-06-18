@@ -3,6 +3,7 @@ using Godot;
 using ITOC.Core;
 using ITOC.Core.Multithreading;
 using ITOC.Core.WorldGeneration;
+using ITOC.Core.WorldGeneration.Vanilla;
 
 namespace ITOC;
 
@@ -25,7 +26,6 @@ public partial class GameControllerNode : Node
     public IWorldGenerator WorldGenerator => GameController.WorldGenerator;
     public Settings Settings => GameController.Settings;
     public WorldSettings WorldSettings => GameController.WorldSettings;
-    public TaskManager TaskManager => GameController.TaskManager;
 
     public static GameControllerNode Instance { get; private set; }
 
@@ -44,7 +44,7 @@ public partial class GameControllerNode : Node
 
     public void GenerateWorldAndStartGame(IWorldGenerator worldGenerator = null)
     {
-        worldGenerator ??= new WorldGenerator();
+        worldGenerator ??= new VanillaWorldGenerator();
 
         GameController.WorldGenerator = worldGenerator;
 
@@ -59,7 +59,7 @@ public partial class GameControllerNode : Node
 
     public void GotoWorldMapScreen()
     {
-        GameController.WorldGenerator ??= new WorldGenerator();
+        GameController.WorldGenerator ??= new VanillaWorldGenerator();
         GotoScene("res://scenes/world_2d.tscn");
     }
 
@@ -91,7 +91,7 @@ public partial class GameControllerNode : Node
     {
         State = GameState.Paused;
         GetTree().Paused = true;
-        GameController.TaskManager.Pause();
+        TaskManager.Instance.Pause();
     }
 
     public void ResumeGame()
@@ -100,7 +100,7 @@ public partial class GameControllerNode : Node
         {
             State = GameState.InGame;
             GetTree().Paused = false;
-            GameController.TaskManager.Resume();
+            TaskManager.Instance.Resume();
         }
     }
 
@@ -115,8 +115,8 @@ public partial class GameControllerNode : Node
         // Save settings on quit
         GameController.Settings.Save();
 
-        GameController.TaskManager.Shutdown();
-        GameController.TaskManager.Dispose();
+        TaskManager.Instance.Shutdown();
+        TaskManager.Instance.Dispose();
 
         GD.Print("Quitting game.");
         GetTree().Quit();

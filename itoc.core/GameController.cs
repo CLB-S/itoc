@@ -12,7 +12,6 @@ public class GameController
 
     public Node CurrentScene { get; set; }
     public IWorldGenerator WorldGenerator { get; set; }
-    public TaskManager TaskManager { get; private set; }
     public World CurrentWorld { get; set; }
 
     public GameController()
@@ -21,8 +20,7 @@ public class GameController
         Settings = Settings.Load();
         Settings.ApplyGraphicsSettings();
 
-        TaskManager = TaskManager.Instance;
-        // TaskManager.Initialize(TaskManagerConfig.Development());
-        TaskManager.Initialize(TaskManagerConfig.Production());
+        // TaskManager.Instance.Initialize(TaskManagerConfig.Development());
+        TaskManager.Instance.Initialize(TaskManagerConfig.Production());
     }
 }

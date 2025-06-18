@@ -189,7 +189,7 @@ public partial class ChunkInstantiator : Node3D
             _chunksAdded.Enqueue(chunk);
         }, "ChunkInstantiator.AddChunk", TaskPriority.High);
 
-        GameControllerNode.Instance.TaskManager.EnqueueTask(task);
+        TaskManager.Instance.EnqueueTask(task);
     }
 
     private ChunkMesh AddOrUpdateChunkMesh(Chunk chunk)
