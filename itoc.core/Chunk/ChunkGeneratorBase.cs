@@ -9,6 +9,7 @@ public abstract class ChunkGeneratorBase
     private int _maxConcurrentChunkGenerationTasks = 1;
     private readonly Queue<Vector2I> _pendingGenerationQueue = new();
     private readonly HashSet<Vector2I> _activeGenerationTasks = new();
+    private readonly Dictionary<Vector2I, Action<Vector2I>> _completionCallbacks = new();
     private readonly object _queueLock = new();
 
     /// <summary>
@@ -37,7 +38,7 @@ public abstract class ChunkGeneratorBase
     /// <summary>
     /// All enqueued generation tasks will be processed in order. SO, don't enqueue too many tasks at once,
     /// </summary>
-    public void EnqueueSurfaceChunksGeneration(Vector2I chunkColumnIndex)
+    public void EnqueueSurfaceChunksGeneration(Vector2I chunkColumnIndex, Action<Vector2I> onComplete = null)
     {
         lock (_queueLock)
         {
@@ -47,6 +48,10 @@ public abstract class ChunkGeneratorBase
                 return;
 
             _pendingGenerationQueue.Enqueue(chunkColumnIndex);
+
+            if (onComplete != null)
+                _completionCallbacks[chunkColumnIndex] = onComplete;
+
             ProcessGenerationQueue();
         }
     }
@@ -60,7 +65,16 @@ public abstract class ChunkGeneratorBase
             var chunkColumnIndex = _pendingGenerationQueue.Dequeue();
 
             if (_chunkManager.IsSurfaceChunksGeneratedAt(_pendingGenerationQueue.Peek()))
-                continue; // Skip if already generated
+            {
+                // Invoke completion callback if exists
+                if (_completionCallbacks.TryGetValue(chunkColumnIndex, out var callback))
+                {
+                    _completionCallbacks.Remove(chunkColumnIndex);
+                    callback?.Invoke(chunkColumnIndex);
+                }
+
+                continue;
+            }
 
             _activeGenerationTasks.Add(chunkColumnIndex);
 
@@ -73,6 +87,14 @@ public abstract class ChunkGeneratorBase
         lock (_queueLock)
         {
             _activeGenerationTasks.Remove(chunkColumnIndex);
+
+            // Invoke completion callback if exists
+            if (_completionCallbacks.TryGetValue(chunkColumnIndex, out var callback))
+            {
+                _completionCallbacks.Remove(chunkColumnIndex);
+                callback?.Invoke(chunkColumnIndex);
+            }
+
             OnSurfaceChunksGenerated?.Invoke(this, chunkColumnIndex);
             ProcessGenerationQueue();
         }
