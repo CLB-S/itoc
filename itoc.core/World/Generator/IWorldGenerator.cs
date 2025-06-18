@@ -1,5 +1,3 @@
-using Godot;
-
 namespace ITOC.Core.WorldGeneration;
 
 public interface IWorldGenerator
@@ -14,5 +12,6 @@ public interface IWorldGenerator
     event EventHandler<Exception> GenerationFailedEvent;
 
     Task GenerateWorldAsync();
-    ChunkColumn GenerateChunkColumn(Vector2I chunkColumnIndex);
+
+    ChunkGeneratorBase ChunkGenerator { get; }
 }

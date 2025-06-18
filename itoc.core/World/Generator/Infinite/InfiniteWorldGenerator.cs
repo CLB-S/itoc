@@ -1,3 +1,5 @@
+// deprecated
+
 using Godot;
 using ITOC.Core.PatternSystem;
 using ITOC.Core.Utils;
@@ -35,7 +37,7 @@ public class InfiniteWorldGenerator : WorldGeneratorBase
         return pattern1.Evaluate(x, y) * weight + pattern2.Evaluate(x, y) * (1.0 - weight);
     }
 
-    public override ChunkColumn GenerateChunkColumn(Vector2I chunkColumnIndex)
+    public override ChunkColumn GenerateChunkColumnMetadata(Vector2I chunkColumnIndex)
     {
         // Biome
         var defaultBiome = BiomeLibrary.Instance.GetBiome("plain");

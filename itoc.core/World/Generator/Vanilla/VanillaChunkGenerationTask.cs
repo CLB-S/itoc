@@ -1,19 +1,16 @@
 using Godot;
 using ITOC.Core.Multithreading;
-using ITOC.Core.WorldGeneration;
 
-namespace ITOC.Core.ChunkGeneration;
+namespace ITOC.Core.WorldGeneration.Vanilla;
 
-public class ChunkGenerationTask : GameTask
+public class VanillaChunkGenerationTask : GameTask
 {
-    public readonly IWorldGenerator WorldGenerator;
     public Vector3I ChunkIndex { get; }
     public ChunkColumn ChunkColumn { get; }
     public Action<Chunk> Callback { get; }
     private Chunk _chunk;
 
-    public ChunkGenerationTask(
-        IWorldGenerator worldGenerator,
+    public VanillaChunkGenerationTask(
         Vector3I index,
         ChunkColumn chunkColumn,
         Action<Chunk> callback = null,
@@ -21,7 +18,6 @@ public class ChunkGenerationTask : GameTask
         TaskPriority priority = TaskPriority.Normal)
         : base(name, priority)
     {
-        WorldGenerator = worldGenerator;
         ChunkIndex = index;
         ChunkColumn = chunkColumn;
         Callback = callback;

@@ -1,12 +1,11 @@
 using System.Collections.Concurrent;
 using Godot;
 using ITOC.Core.DelaunatorSharp;
-using ITOC.Core.PatternSystem;
 using ITOC.Core.Utils;
 
-namespace ITOC.Core.WorldGeneration;
+namespace ITOC.Core.WorldGeneration.Vanilla;
 
-public partial class WorldGenerator
+public partial class VanillaWorldGenerator
 {
     /// <summary>
     ///     Creates duplicate points around the edges of a region to ensure continuity in a wrapped world.
@@ -281,19 +280,17 @@ public partial class WorldGenerator
     /// <param name="x">The x-coordinate of the point</param>
     /// <param name="y">
     ///     The y-coordinate of the point</returns>
-    ///     <returns>A tuple of the three vertex indices that form the triangle</returns>
+    /// <returns>A tuple of the three vertex indices that form the triangle</returns>
     public (int, int, int) GetTriangleContainingPoint(double x, double y)
     {
         return GetTriangleContainingPoint(new Vector2(x, y), out _);
     }
 
-    private static Vector2 Warp(Vector2 point, PatternTreeNode pattern)
+    public Vector2 Warp(Vector2 point)
     {
-        var warpedPoint = new Vector2(point.X, point.Y);
-        warpedPoint.X += pattern.Evaluate(warpedPoint.X, warpedPoint.Y);
-        warpedPoint.Y += pattern.Evaluate(warpedPoint.Y, warpedPoint.X);
-        return warpedPoint;
+        return Warp(point, _domainWarpPattern);
     }
+
 
     #region Loop subdivision
 

@@ -20,6 +20,19 @@ public class ChunkColumn
     public double HeightMapLow;
     public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
 
+    private bool _isSurfaceChunksGenerated;
+    public bool IsSurfaceChunksGenerated
+    {
+        get => _isSurfaceChunksGenerated;
+        set
+        {
+            if (_isSurfaceChunksGenerated)
+                throw new InvalidOperationException("Surface chunks have already been generated for this column.");
+
+            _isSurfaceChunksGenerated = value;
+        }
+    }
+
     // Biome map storage using Palette system
     private readonly PaletteArray<Biome> _biomes;
 

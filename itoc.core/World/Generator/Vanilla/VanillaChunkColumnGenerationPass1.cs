@@ -1,36 +1,26 @@
 using Godot;
 using ITOC.Core.Multithreading;
 
-namespace ITOC.Core.ChunkGeneration;
+namespace ITOC.Core.WorldGeneration.Vanilla;
 
-public class ChunkColumnGenerationSecondaryPass : IPass
+public class VanillaChunkColumnGenerationPass1(ChunkManager chunkManager) : IPass
 {
     public int Pass => 1;
-    public int Extend => 0;
-    public World World { get; private set; }
+    public int Expansion => 0;
 
     public event EventHandler<PassEventArgs> PassCompleted;
 
-    private TaskManager _taskManager;
-
-    public ChunkColumnGenerationSecondaryPass(World world, TaskManager taskManager)
-    {
-        World = world ?? throw new ArgumentNullException(nameof(world));
-        _taskManager = taskManager ?? throw new ArgumentNullException(nameof(taskManager));
-    }
-
-
-    public void ExecuteAt(Vector2I chunkColumnPos)
+    public GameTask CreateTaskAt(Vector2I chunkColumnPos)
     {
         var task = new ActionTask(
             () =>
             {
-                for (int i = -Extend; i <= Extend; i++)
+                for (int i = -Expansion; i <= Expansion; i++)
                 {
-                    for (int j = -Extend; j <= Extend; j++)
+                    for (int j = -Expansion; j <= Expansion; j++)
                     {
                         var neighborColumnPos = new Vector2I(chunkColumnPos.X + i, chunkColumnPos.Y + j);
-                        var column = World.ChunkColumns[neighborColumnPos];
+                        var column = chunkManager.ChunkColumns[neighborColumnPos];
                         var topChunk = column.Chunks.Values.MaxBy(c => c.Index.Y);
                         topChunk.SetBlock(31 + i * 2, 60, 31 + j * 2, BlockManager.Instance.GetBlock("itoc:debug"));
                     }
@@ -41,6 +31,6 @@ public class ChunkColumnGenerationSecondaryPass : IPass
         task.Completed += (sender, args) =>
             PassCompleted?.Invoke(this, new PassEventArgs(Pass, chunkColumnPos)); // TODO: Check this. Potential high perf cost. 
 
-        _taskManager.EnqueueTask(task);
+        return task;
     }
 }

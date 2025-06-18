@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Godot;
+using ITOC.Core.PatternSystem;
 using ITOC.Core.Utils;
 
 namespace ITOC.Core.WorldGeneration;
@@ -46,6 +47,8 @@ public abstract class WorldGeneratorBase : IWorldGenerator
     public WorldGenerationState State { get; private set; } = WorldGenerationState.NotStarted;
 
     public WorldSettings WorldSettings { get; protected set; }
+
+    public ChunkGeneratorBase ChunkGenerator { get; protected set; }
 
     // Events
     public event EventHandler<GenerationProgressEventArgs> ProgressUpdatedEvent;
@@ -209,5 +212,15 @@ public abstract class WorldGeneratorBase : IWorldGenerator
         return HeightMapUtils.ConstructChunkHeightMap(rect, getHeight, 2);
     }
 
-    public abstract ChunkColumn GenerateChunkColumn(Vector2I chunkColumnIndex);
+    #region Utils
+
+    public static Vector2 Warp(Vector2 point, PatternTreeNode pattern)
+    {
+        var warpedPoint = new Vector2(point.X, point.Y);
+        warpedPoint.X += pattern.Evaluate(warpedPoint.X, warpedPoint.Y);
+        warpedPoint.Y += pattern.Evaluate(warpedPoint.Y, warpedPoint.X);
+        return warpedPoint;
+    }
+
+    #endregion
 }

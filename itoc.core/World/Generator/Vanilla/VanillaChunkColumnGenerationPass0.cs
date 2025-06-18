@@ -1,45 +1,42 @@
 using Godot;
 using ITOC.Core.Multithreading;
 
-namespace ITOC.Core.ChunkGeneration;
+namespace ITOC.Core.WorldGeneration.Vanilla;
 
-public class ChunkColumnGenerationInitialPass : IPass
+public class VanillaChunkColumnGenerationPass0 : IPass
 {
+    private readonly VanillaChunkGenerator _generator;
+    private readonly ChunkManager _chunkManager;
+
     public int Pass => 0;
 
-    public int Extend => 0;
+    public int Expansion => 0;
 
     public event EventHandler<PassEventArgs> PassCompleted;
 
-    public World World { get; private set; }
-
-    private TaskManager _taskManager;
-
-    public ChunkColumnGenerationInitialPass(World world, TaskManager taskManager)
+    public VanillaChunkColumnGenerationPass0(VanillaChunkGenerator generator, ChunkManager chunkManager)
     {
-        World = world ?? throw new ArgumentNullException(nameof(world));
-        _taskManager = taskManager ?? throw new ArgumentNullException(nameof(taskManager));
+        _generator = generator ?? throw new ArgumentNullException(nameof(generator));
+        _chunkManager = chunkManager ?? throw new ArgumentNullException(nameof(chunkManager));
     }
 
-    public void ExecuteAt(Vector2I chunkColumnPos)
+    public GameTask CreateTaskAt(Vector2I chunkColumnPos)
     {
-        var columnTask = new FunctionTask<ChunkColumn>(
-            () => World.Generator.GenerateChunkColumn(chunkColumnPos),
+        return new FunctionTask<ChunkColumn>(
+            () => _generator.GenerateChunkColumnMetadata(chunkColumnPos),
             ChunkColumnGenerationCallback,
             "ChunkColumnGenerationTask-" + chunkColumnPos,
             TaskPriority.Low
         );
-
-        _taskManager.EnqueueTask(columnTask);
     }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)
     {
         if (result == null) return;
 
-        if (!World.ChunkColumns.ContainsKey(result.Index))
+        if (!_chunkManager.ChunkColumns.ContainsKey(result.Index))
         {
-            World.ChunkColumns[result.Index] = result;
+            _chunkManager.ChunkColumns[result.Index] = result;
 
             var high = Mathf.FloorToInt(result.HeightMapHigh / Chunk.SIZE);
             var low = Mathf.FloorToInt(result.HeightMapLow / Chunk.SIZE);
@@ -48,12 +45,11 @@ public class ChunkColumnGenerationInitialPass : IPass
             for (var y = low; y <= high; y++)
             {
                 var chunkIndex = new Vector3I(result.Index.X, y, result.Index.Y);
-                if (World.Chunks.ContainsKey(chunkIndex)) continue;
+                if (_chunkManager.Chunks.ContainsKey(chunkIndex)) continue;
 
-                var chunkTask = new ChunkGenerationTask(World.Generator, chunkIndex, result,
+                var chunkTask = new VanillaChunkGenerationTask(chunkIndex, result,
                     ChunkGenerationCallback, "ChunkGenerationTask-" + chunkIndex);
-                tasks.Add(chunkTask);
-                _taskManager.EnqueueTask(chunkTask);
+                TaskManager.Instance.EnqueueTask(chunkTask);
             }
 
             var dependentTask = new DependentTask(
@@ -63,7 +59,7 @@ public class ChunkColumnGenerationInitialPass : IPass
                 dependencies: tasks.ToArray()
             );
 
-            _taskManager.EnqueueTask(dependentTask);
+            TaskManager.Instance.EnqueueTask(dependentTask);
         }
     }
 
@@ -74,9 +70,9 @@ public class ChunkColumnGenerationInitialPass : IPass
         var index = result.Index;
         var indexXZ = new Vector2I(index.X, index.Z);
         // var playerPosition = new Vector2I(World.PlayerChunk.X, World.PlayerChunk.Z);
-        if (!World.Chunks.ContainsKey(index) && World.ChunkColumns.TryGetValue(indexXZ, out var chunkColumn))
+        if (!_chunkManager.Chunks.ContainsKey(index) && _chunkManager.ChunkColumns.TryGetValue(indexXZ, out var chunkColumn))
         {
-            World.Chunks[index] = result;
+            _chunkManager.Chunks[index] = result;
             chunkColumn.Chunks[index] = result;
             // CallDeferred(Node.MethodName.AddChild, chunk);
             // World.UpdateNeighborMesherMasks(chunk);

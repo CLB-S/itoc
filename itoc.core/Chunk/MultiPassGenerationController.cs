@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Godot;
+using ITOC.Core.Multithreading;
 
 namespace ITOC.Core;
 
@@ -20,10 +21,16 @@ public class MultiPassGenerationController
     private readonly IPass[] _passes;
     private readonly ConcurrentDictionary<Vector2I, int[]> _multiPassMarkers = new();
 
-    public MultiPassGenerationController(bool runNextPassAuto = true, params IPass[] passes)
+    // This may should be linked to something like a chunk manager. 
+    private readonly ConcurrentDictionary<Vector2I, bool> _executedPass0Positions = new();
+
+    public MultiPassGenerationController(params IPass[] passes)
     {
         if (passes == null || passes.Length == 0)
             throw new ArgumentException("Passes cannot be null or empty");
+
+        if (passes[0].Expansion != 0)
+            throw new ArgumentException("First pass must have Expansion = 0");
 
         _passes = passes;
 
@@ -85,15 +92,14 @@ public class MultiPassGenerationController
             }
         };
 
-        if (runNextPassAuto)
-            PassAccessible += (sender, args) =>
-                _passes[args.Pass].ExecuteAt(args.ChunkColumnPos);
+        PassAccessible += (sender, args) =>
+            _passes[args.Pass].ExecuteAt(args.ChunkColumnPos);
     }
 
     public int GetTotalExpansionForCompletion()
     {
         var totalExpansion = 0;
-        for (var i = 0; i < PassCount; i++)
+        for (var i = 1; i < PassCount; i++)
             totalExpansion += 2 * PassExpansions[i];
         return totalExpansion;
     }
@@ -129,6 +135,55 @@ public class MultiPassGenerationController
         if (currentValue == expansion * expansion)
             PassFullyCompleted?.Invoke(this, new PassEventArgs(pass, chunkColumnPos));
     }
+
+    /// <summary>
+    /// Generates all required passes for the given position.
+    /// This will execute pass 0 at all necessary positions within the total expansion area.
+    /// </summary>
+    /// <param name="targetPosition">The position to fully generate</param>
+    public void GenerateAt(Vector2I targetPosition)
+    {
+        var totalExpansion = GetTotalExpansionForCompletion();
+        var positions = GetRequiredPass0Positions(targetPosition, totalExpansion);
+
+        foreach (var position in positions)
+            if (_executedPass0Positions.TryAdd(position, true))
+                _passes[0].ExecuteAt(position);
+    }
+
+    /// <summary>
+    /// Generates all required passes for multiple positions efficiently.
+    /// </summary>
+    /// <param name="targetPositions">The positions to fully generate</param>
+    public void GenerateAt(IEnumerable<Vector2I> targetPositions)
+    {
+        var totalExpansion = GetTotalExpansionForCompletion();
+        var allPositions = new HashSet<Vector2I>();
+
+        foreach (var targetPosition in targetPositions)
+        {
+            var positions = GetRequiredPass0Positions(targetPosition, totalExpansion);
+            foreach (var position in positions)
+                allPositions.Add(position);
+        }
+
+        foreach (var position in allPositions)
+            if (_executedPass0Positions.TryAdd(position, true))
+                _passes[0].ExecuteAt(position);
+    }
+
+    /// <summary>
+    /// Gets all positions where pass 0 needs to be executed to fully generate the target position.
+    /// </summary>
+    /// <param name="targetPosition">The target position to generate</param>
+    /// <param name="totalExpansion">The total expansion required</param>
+    /// <returns>Collection of positions where pass 0 should be executed</returns>
+    private IEnumerable<Vector2I> GetRequiredPass0Positions(Vector2I targetPosition, int totalExpansion)
+    {
+        for (var i = -totalExpansion; i <= totalExpansion; i++)
+            for (var j = -totalExpansion; j <= totalExpansion; j++)
+                yield return targetPosition + new Vector2I(i, j);
+    }
 }
 
 public interface IPass
@@ -136,10 +191,17 @@ public interface IPass
     int Pass { get; }
     int Expansion { get; }
 
-    void ExecuteAt(Vector2I chunkColumnIndex);
+    GameTask ExecuteAt(Vector2I chunkColumnIndex)
+    {
+        var task = CreateTaskAt(chunkColumnIndex);
+        TaskManager.Instance.EnqueueTask(task);
+        return task;
+    }
+
+    GameTask CreateTaskAt(Vector2I chunkColumnIndex);
 
     /// <summary>
-    /// Event triggered when the pass is completed.
+    /// Event triggered when the pass is completed successfully.
     /// </summary>
     event EventHandler<PassEventArgs> PassCompleted;
 }
