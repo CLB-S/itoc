@@ -37,8 +37,8 @@ project/assembly_name="itoc"
 
 [gui]
 
-theme/default_theme_scale=1.2
 theme/default_font_multichannel_signed_distance_field=true
+theme/default_theme_scale=1.2
 
 [importer_defaults]
 
