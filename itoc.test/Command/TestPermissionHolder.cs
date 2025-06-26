@@ -9,13 +9,8 @@ public class TestPermissionHolder : IPermissionHolder
 {
     private readonly HashSet<string> _permissions;
 
-    public TestPermissionHolder(params string[] permissions)
-    {
-        _permissions = new(permissions);
-    }
+    public TestPermissionHolder(params string[] permissions) => _permissions = new(permissions);
 
-    public bool HasPermission(string permission)
-    {
-        return string.IsNullOrEmpty(permission) || _permissions.Contains(permission);
-    }
+    public bool HasPermission(string permission) =>
+        string.IsNullOrEmpty(permission) || _permissions.Contains(permission);
 }

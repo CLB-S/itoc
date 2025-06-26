@@ -2,8 +2,11 @@ using Godot;
 
 public partial class ObjectRotator : Node2D
 {
-    [Export] public float MouseSensitivity = 0.01f;
-    [Export] public Node3D TargetObject;
+    [Export]
+    public float MouseSensitivity = 0.01f;
+
+    [Export]
+    public Node3D TargetObject;
 
     private bool _isDragging;
 

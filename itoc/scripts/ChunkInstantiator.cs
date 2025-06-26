@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Godot;
 using ITOC.Core;
-using ITOC.Core.NodePool;
-using ITOC.Core.Multithreading;
 using ITOC.Core.Entity;
+using ITOC.Core.Multithreading;
+using ITOC.Core.NodePool;
 
 namespace ITOC;
 
@@ -23,10 +23,11 @@ public partial class ChunkInstantiator : Node3D
     private double[] _lodDistanceThresholds;
 
     // Chunk storage
-    private Dictionary<int, ConcurrentDictionary<Vector3I, ChunkMesh>> _lodChunkMeshes = new();
-    private Dictionary<int, ConcurrentDictionary<Vector3I, ChunkLod>> _lodChunks = new();
-    private ConcurrentQueue<Chunk> _chunksAdded = new();
-    private ConcurrentDictionary<(int, Vector3I), Chunk> _chunksUpdated = new();
+    private readonly Dictionary<int, ConcurrentDictionary<Vector3I, ChunkMesh>> _lodChunkMeshes =
+        new();
+    private readonly Dictionary<int, ConcurrentDictionary<Vector3I, ChunkLod>> _lodChunks = new();
+    private readonly ConcurrentQueue<Chunk> _chunksAdded = new();
+    private readonly ConcurrentDictionary<(int, Vector3I), Chunk> _chunksUpdated = new();
 
     // Node pools
     private Node3DPool<MeshInstance3D> _meshPool;
@@ -43,7 +44,8 @@ public partial class ChunkInstantiator : Node3D
         get => _wireframedMesh;
         set
         {
-            if (_wireframedMesh == value) return;
+            if (_wireframedMesh == value)
+                return;
             _wireframedMesh = value;
             RefreshAllMeshes();
         }
@@ -59,7 +61,8 @@ public partial class ChunkInstantiator : Node3D
         get => _showChunkBounds;
         set
         {
-            if (_showChunkBounds == value) return;
+            if (_showChunkBounds == value)
+                return;
             _showChunkBounds = value;
 
             if (_showChunkBounds)
@@ -97,15 +100,26 @@ public partial class ChunkInstantiator : Node3D
 
     private void InitializeNodePools()
     {
-        _meshPool = new Node3DPool<MeshInstance3D>(() => new MeshInstance3D(), this, 100, resetAction: (node) =>
-            { node.Mesh.SurfaceSetMaterial(0, null); });
+        _meshPool = new Node3DPool<MeshInstance3D>(
+            () => new MeshInstance3D(),
+            this,
+            100,
+            resetAction: (node) =>
+            {
+                node.Mesh.SurfaceSetMaterial(0, null);
+            }
+        );
 
-        _collisionBodyPool = new Node3DPool<StaticBody3D>(() =>
-        {
-            var body = new StaticBody3D();
-            body.AddChild(new CollisionShape3D());
-            return body;
-        }, this, 50);
+        _collisionBodyPool = new Node3DPool<StaticBody3D>(
+            () =>
+            {
+                var body = new StaticBody3D();
+                body.AddChild(new CollisionShape3D());
+                return body;
+            },
+            this,
+            50
+        );
 
         var debugCube = ResourceLoader.Load<PackedScene>("res://assets/meshes/debug_cube.tscn");
         _debugMeshPool = new Node3DPool<MeshInstance3D>(debugCube, this, 0);
@@ -115,10 +129,10 @@ public partial class ChunkInstantiator : Node3D
     {
         // Initialize LOD dictionaries
         _maxLodLevel = GameController.Instance.Settings.MaxLodLevel;
-        for (int lod = 0; lod <= _maxLodLevel; lod++)
+        for (var lod = 0; lod <= _maxLodLevel; lod++)
             _lodChunkMeshes[lod] = new ConcurrentDictionary<Vector3I, ChunkMesh>();
 
-        for (int lod = 1; lod <= _maxLodLevel; lod++)
+        for (var lod = 1; lod <= _maxLodLevel; lod++)
             _lodChunks[lod] = new ConcurrentDictionary<Vector3I, ChunkLod>();
 
         _lodDistanceThresholds = new double[_maxLodLevel];
@@ -180,12 +194,16 @@ public partial class ChunkInstantiator : Node3D
 
         chunk.OnMeshUpdated += (s, args) => _chunksUpdated.TryAdd((chunk.Lod, chunk.Index), chunk);
 
-        var task = new ActionTask(() =>
-        {
-            AddOrUpdateChunkMesh(chunk);
-            GenerateOrUpdateParentLodChunks(chunk);
-            _chunksAdded.Enqueue(chunk);
-        }, "ChunkInstantiator.AddChunk", TaskPriority.High);
+        var task = new ActionTask(
+            () =>
+            {
+                AddOrUpdateChunkMesh(chunk);
+                GenerateOrUpdateParentLodChunks(chunk);
+                _chunksAdded.Enqueue(chunk);
+            },
+            "ChunkInstantiator.AddChunk",
+            TaskPriority.High
+        );
 
         TaskManager.Instance.EnqueueTask(task);
     }
@@ -193,15 +211,18 @@ public partial class ChunkInstantiator : Node3D
     private ChunkMesh AddOrUpdateChunkMesh(Chunk chunk)
     {
         // Add or update the LOD chunk mesh
-        _lodChunkMeshes[chunk.Lod].AddOrUpdate(chunk.Index,
-            new ChunkMesh(chunk),
-            (key, oldValue) =>
-            {
-                oldValue.Chunk = chunk;
-                oldValue.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
-                // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
-                return oldValue;
-            });
+        _lodChunkMeshes[chunk.Lod]
+            .AddOrUpdate(
+                chunk.Index,
+                new ChunkMesh(chunk),
+                (key, oldValue) =>
+                {
+                    oldValue.Chunk = chunk;
+                    oldValue.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
+                    // GD.Print($"Chunk mesh updated at {key} for LOD {chunk.Lod}. {oldValue.CollisionShape}");
+                    return oldValue;
+                }
+            );
 
         return _lodChunkMeshes[chunk.Lod][chunk.Index];
     }
@@ -212,12 +233,12 @@ public partial class ChunkInstantiator : Node3D
             return;
 
         // Calculate the parent chunk index at this LOD level
-        Vector3I lodParentIndex = CalculateLodParentIndex(chunk.Index);
+        var lodParentIndex = CalculateLodParentIndex(chunk.Index);
         var parentLod = chunk.Lod + 1;
 
         // `ConcurrentDictionary` is not universal, may change this later.
         // Thread-safe approach to get or create the ChunkLod for this level
-        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out ChunkLod lodChunk))
+        if (!_lodChunks[parentLod].TryGetValue(lodParentIndex, out var lodChunk))
         {
             // Create a placeholder to reserve the slot atomically
             var newLodChunk = new ChunkLod(lodParentIndex, parentLod);
@@ -229,7 +250,8 @@ public partial class ChunkInstantiator : Node3D
 
                 // We successfully added the new chunk
                 lodChunk = newLodChunk;
-                lodChunk.OnMeshUpdated += (s, args) => _chunksUpdated.TryAdd((lodChunk.Lod, lodChunk.Index), lodChunk);
+                lodChunk.OnMeshUpdated += (s, args) =>
+                    _chunksUpdated.TryAdd((lodChunk.Lod, lodChunk.Index), lodChunk);
             }
             else
             {
@@ -276,7 +298,7 @@ public partial class ChunkInstantiator : Node3D
             return;
 
         // Calculate parent index at this LOD level
-        Vector3I parentIndex = CalculateLodParentIndex(chunkIndex);
+        var parentIndex = CalculateLodParentIndex(chunkIndex);
 
         // Check if the parent LOD chunk exists
         if (!_lodChunks[parentLod].TryGetValue(parentIndex, out var lodChunk))
@@ -323,20 +345,23 @@ public partial class ChunkInstantiator : Node3D
 
     private void UpdateLodThreshoulds()
     {
-        double pixelThreshold = GameController.Instance.Settings.LodPixelThreshold;
+        var pixelThreshold = GameController.Instance.Settings.LodPixelThreshold;
 
         // Calculate distance thresholds for each LOD level
-        for (int lod = 0; lod < _maxLodLevel; lod++)
-            _lodDistanceThresholds[lod] = CameraHelper.Instance.CalculateDistanceThresholdForPixels(pixelThreshold, 1 << lod);
+        for (var lod = 0; lod < _maxLodLevel; lod++)
+            _lodDistanceThresholds[lod] = CameraHelper.Instance.CalculateDistanceThresholdForPixels(
+                pixelThreshold,
+                1 << lod
+            );
 
-        for (int lod = 0; lod < _lodDistanceThresholds.Length; lod++)
+        for (var lod = 0; lod < _lodDistanceThresholds.Length; lod++)
             GD.Print($"LOD {lod + 1} distance threshold: {_lodDistanceThresholds[lod]}");
     }
 
     // Determine the appropriate LOD level based on distance
     private int DetermineLodLevel(double distance)
     {
-        for (int lod = 0; lod < _maxLodLevel; lod++)
+        for (var lod = 0; lod < _maxLodLevel; lod++)
             if (distance < _lodDistanceThresholds[lod])
                 return lod;
 
@@ -344,14 +369,12 @@ public partial class ChunkInstantiator : Node3D
     }
 
     // Calculate the parent chunk index at a specific LOD level
-    private static Vector3I CalculateLodParentIndex(Vector3I chunkIndex)
-    {
-        return new Vector3I(
+    private static Vector3I CalculateLodParentIndex(Vector3I chunkIndex) =>
+        new Vector3I(
             Mathf.FloorToInt(chunkIndex.X / 2.0),
             Mathf.FloorToInt(chunkIndex.Y / 2.0),
             Mathf.FloorToInt(chunkIndex.Z / 2.0)
         );
-    }
 
     private static Vector3I CalculateLodParentIndex(Vector3I chunkIndex, int lodLevel)
     {
@@ -382,11 +405,11 @@ public partial class ChunkInstantiator : Node3D
         foreach (var chunkMesh in _lodChunkMeshes[0].Values)
             visibleChunks.Add((0, chunkMesh.Index));
 
-        for (int lod = 1; lod <= _maxLodLevel; lod++)
+        for (var lod = 1; lod <= _maxLodLevel; lod++)
             foreach (var chunk in _lodChunks[lod].Values)
             {
                 var distanceToPlayer = chunk.CenterPosition.DistanceTo(_playerPosition);
-                int appropriateLod = DetermineLodLevel(distanceToPlayer);
+                var appropriateLod = DetermineLodLevel(distanceToPlayer);
 
                 // If this chunk should be rendered at this LOD level
                 if (appropriateLod >= lod)
@@ -403,7 +426,7 @@ public partial class ChunkInstantiator : Node3D
 
     private void ApplyVisibilityChanges(HashSet<(int, Vector3I)> visibleChunks)
     {
-        for (int i = 0; i <= _maxLodLevel; i++)
+        for (var i = 0; i <= _maxLodLevel; i++)
             foreach (var chunkMesh in _lodChunkMeshes[i].Values)
             {
                 if (!visibleChunks.Contains((i, chunkMesh.Index)))
@@ -418,14 +441,14 @@ public partial class ChunkInstantiator : Node3D
         if (chunk.Lod != 0)
             return;
 
-        for (int lod = _maxLodLevel; lod >= 1; lod--)
+        for (var lod = _maxLodLevel; lod >= 1; lod--)
         {
             var parentIndex = CalculateLodParentIndex(chunk.Index, lod);
             if (!_lodChunks[lod].TryGetValue(parentIndex, out var lodChunk))
                 continue;
 
             var distanceToPlayer = lodChunk.CenterPosition.DistanceTo(_playerPosition);
-            int appropriateLod = DetermineLodLevel(distanceToPlayer);
+            var appropriateLod = DetermineLodLevel(distanceToPlayer);
 
             // If this chunk should be rendered at this LOD level
             if (appropriateLod >= lod)
@@ -439,10 +462,9 @@ public partial class ChunkInstantiator : Node3D
         RenderChunkMesh(_lodChunkMeshes[0][chunk.Index]);
     }
 
-
     /// <summary>
     /// Renders the chunk mesh if it is not already rendered.
-    /// This method will not update the chunk mesh if already rendered. 
+    /// This method will not update the chunk mesh if already rendered.
     /// </summary>
     /// <param name="chunkMesh"> The chunk mesh to render.</param>
     private void RenderChunkMesh(ChunkMesh chunkMesh)
@@ -456,7 +478,9 @@ public partial class ChunkInstantiator : Node3D
         // Create mesh instance if needed
         chunkMesh.MeshInstance ??= _meshPool.GetAt(chunkMesh.Position);
 
-        chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh(_wireframedMesh ? _wireframeMaterial : null);
+        chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh(
+            _wireframedMesh ? _wireframeMaterial : null
+        );
         chunkMesh.MeshInstance.Visible = true;
         chunkMesh.MeshInstance.Scale = Vector3.One * (1 << chunkMesh.Lod);
         chunkMesh.State = ChunkMeshState.Rendered;
@@ -489,7 +513,7 @@ public partial class ChunkInstantiator : Node3D
     }
 
     /// <summary>
-    /// This method will not update the collision shape if already created. 
+    /// This method will not update the collision shape if already created.
     /// </summary>
     private void UpdateCollision(ChunkMesh chunkMesh)
     {
@@ -497,11 +521,16 @@ public partial class ChunkInstantiator : Node3D
             return;
 
         var physicsDistance = GameController.Instance.Settings.PhysicsDistance;
-        bool shouldHaveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) <= physicsDistance;
-        bool shouldRemoveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) >= physicsDistance + 1;
+        var shouldHaveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) <= physicsDistance;
+        var shouldRemoveCollision =
+            chunkMesh.Index.DistanceTo(_playerChunkIndex) >= physicsDistance + 1;
 
         // Add collision if needed and not already present
-        if (shouldHaveCollision && chunkMesh.State == ChunkMeshState.Rendered && chunkMesh.CollisionBody == null)
+        if (
+            shouldHaveCollision
+            && chunkMesh.State == ChunkMeshState.Rendered
+            && chunkMesh.CollisionBody == null
+        )
         {
             var collisionBody = _collisionBodyPool.GetAt(chunkMesh.Position);
 
@@ -520,10 +549,8 @@ public partial class ChunkInstantiator : Node3D
         }
     }
 
-    private void UpdateCollisionShapesDeferred()
-    {
+    private void UpdateCollisionShapesDeferred() =>
         CallDeferred(nameof(UpdateCollisionShapesForAll));
-    }
 
     #endregion
 
@@ -539,7 +566,7 @@ public partial class ChunkInstantiator : Node3D
             chunkMesh.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
 
         // Refresh LOD chunks
-        for (int lod = 1; lod <= _maxLodLevel; lod++)
+        for (var lod = 1; lod <= _maxLodLevel; lod++)
             foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
                 chunkMesh.UpdateMesh(_wireframedMesh ? _wireframeMaterial : null);
     }
@@ -563,7 +590,7 @@ public partial class ChunkInstantiator : Node3D
         _lodChunkMeshes[0].Clear();
 
         // Clean up LOD chunk meshes
-        for (int lod = 1; lod <= _maxLodLevel; lod++)
+        for (var lod = 1; lod <= _maxLodLevel; lod++)
         {
             foreach (var lodMesh in _lodChunkMeshes[lod].Values)
             {
@@ -589,13 +616,19 @@ public partial class ChunkInstantiator : Node3D
     /// </summary>
     private void ShowAllChunkBounds()
     {
-        for (int lod = 0; lod <= _maxLodLevel; lod++)
+        for (var lod = 0; lod <= _maxLodLevel; lod++)
             foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
             {
-                if (chunkMesh.DebugMeshInstance != null && chunkMesh.State != ChunkMeshState.Rendered)
+                if (
+                    chunkMesh.DebugMeshInstance != null
+                    && chunkMesh.State != ChunkMeshState.Rendered
+                )
                     HideChunkBound(chunkMesh);
 
-                if (chunkMesh.DebugMeshInstance == null && chunkMesh.State == ChunkMeshState.Rendered)
+                if (
+                    chunkMesh.DebugMeshInstance == null
+                    && chunkMesh.State == ChunkMeshState.Rendered
+                )
                     ShowChunkBound(chunkMesh);
             }
     }
@@ -605,7 +638,8 @@ public partial class ChunkInstantiator : Node3D
     /// </summary>
     private void ShowChunkBound(ChunkMesh chunkMesh, Color? color = null)
     {
-        if (!_showChunkBounds) return;
+        if (!_showChunkBounds)
+            return;
 
         var debugMesh = _debugMeshPool.GetAt(chunkMesh.CenterPosition, null, chunkMesh.Size);
         chunkMesh.DebugMeshInstance = debugMesh;
@@ -623,7 +657,7 @@ public partial class ChunkInstantiator : Node3D
     private void HideAllChunkBounds()
     {
         _debugMeshPool.ReleaseAll();
-        for (int lod = 0; lod <= _maxLodLevel; lod++)
+        for (var lod = 0; lod <= _maxLodLevel; lod++)
             foreach (var chunkMesh in _lodChunkMeshes[lod].Values)
                 chunkMesh.DebugMeshInstance = null;
     }

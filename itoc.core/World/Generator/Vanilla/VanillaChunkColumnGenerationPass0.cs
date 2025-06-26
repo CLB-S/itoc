@@ -14,25 +14,27 @@ public class VanillaChunkColumnGenerationPass0 : IPass
 
     public event EventHandler<PassEventArgs> PassCompleted;
 
-    public VanillaChunkColumnGenerationPass0(VanillaChunkGenerator generator, ChunkManager chunkManager)
+    public VanillaChunkColumnGenerationPass0(
+        VanillaChunkGenerator generator,
+        ChunkManager chunkManager
+    )
     {
         _generator = generator ?? throw new ArgumentNullException(nameof(generator));
         _chunkManager = chunkManager ?? throw new ArgumentNullException(nameof(chunkManager));
     }
 
-    public GameTask CreateTaskAt(Vector2I chunkColumnPos)
-    {
-        return new FunctionTask<ChunkColumn>(
+    public GameTask CreateTaskAt(Vector2I chunkColumnPos) =>
+        new FunctionTask<ChunkColumn>(
             () => _generator.GenerateChunkColumnMetadata(chunkColumnPos),
             ChunkColumnGenerationCallback,
             "ChunkColumnGenerationTask-" + chunkColumnPos,
             TaskPriority.Low
         );
-    }
 
     private void ChunkColumnGenerationCallback(ChunkColumn result)
     {
-        if (result == null) return;
+        if (result == null)
+            return;
 
         if (!_chunkManager.ChunkColumns.ContainsKey(result.Index))
         {
@@ -45,10 +47,15 @@ public class VanillaChunkColumnGenerationPass0 : IPass
             for (var y = low; y <= high; y++)
             {
                 var chunkIndex = new Vector3I(result.Index.X, y, result.Index.Y);
-                if (_chunkManager.Chunks.ContainsKey(chunkIndex)) continue;
+                if (_chunkManager.Chunks.ContainsKey(chunkIndex))
+                    continue;
 
-                var chunkTask = new VanillaChunkGenerationTask(chunkIndex, result,
-                    ChunkGenerationCallback, "ChunkGenerationTask-" + chunkIndex);
+                var chunkTask = new VanillaChunkGenerationTask(
+                    chunkIndex,
+                    result,
+                    ChunkGenerationCallback,
+                    "ChunkGenerationTask-" + chunkIndex
+                );
                 TaskManager.Instance.EnqueueTask(chunkTask);
                 tasks.Add(chunkTask);
             }
@@ -66,12 +73,16 @@ public class VanillaChunkColumnGenerationPass0 : IPass
 
     private void ChunkGenerationCallback(Chunk result)
     {
-        if (result == null) return;
+        if (result == null)
+            return;
 
         var index = result.Index;
         var indexXZ = new Vector2I(index.X, index.Z);
         // var playerPosition = new Vector2I(World.PlayerChunk.X, World.PlayerChunk.Z);
-        if (!_chunkManager.Chunks.ContainsKey(index) && _chunkManager.ChunkColumns.TryGetValue(indexXZ, out var chunkColumn))
+        if (
+            !_chunkManager.Chunks.ContainsKey(index)
+            && _chunkManager.ChunkColumns.TryGetValue(indexXZ, out var chunkColumn)
+        )
         {
             _chunkManager.Chunks[index] = result; // TODO: Move to ChunkManager?
             chunkColumn.Chunks[index] = result;
@@ -80,5 +91,4 @@ public class VanillaChunkColumnGenerationPass0 : IPass
             // chunk.LoadDeferred();
         }
     }
-
 }

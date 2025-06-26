@@ -34,9 +34,7 @@ public class RegistryManager
         public static readonly Identifier Biomes = new(Identifier.ItocNamespace, "biomes");
     }
 
-    private RegistryManager()
-    {
-    }
+    private RegistryManager() { }
 
     private static RegistryManager CreateInstance()
     {
@@ -58,7 +56,8 @@ public class RegistryManager
     /// <returns>The created registry</returns>
     /// <exception cref="InvalidOperationException">Thrown when registry creation is frozen</exception>
     /// <exception cref="ArgumentException">Thrown when a registry with the same key already exists</exception>
-    public Registry<T> CreateRegistry<T>(Identifier key) where T : class
+    public Registry<T> CreateRegistry<T>(Identifier key)
+        where T : class
     {
         if (_isRegistryCreationFrozen)
             throw new InvalidOperationException("Registry creation is frozen");
@@ -87,7 +86,8 @@ public class RegistryManager
     /// <returns>The registry</returns>
     /// <exception cref="KeyNotFoundException">Thrown when no registry with the specified key exists</exception>
     /// <exception cref="InvalidCastException">Thrown when the registry is of a different type</exception>
-    public Registry<T> GetRegistry<T>(Identifier key) where T : class
+    public Registry<T> GetRegistry<T>(Identifier key)
+        where T : class
     {
         _lock.EnterReadLock();
         try
@@ -98,7 +98,9 @@ public class RegistryManager
             if (registry is Registry<T> typedRegistry)
                 return typedRegistry;
 
-            throw new InvalidCastException($"Registry with key {key} is not of type Registry<{typeof(T).Name}>");
+            throw new InvalidCastException(
+                $"Registry with key {key} is not of type Registry<{typeof(T).Name}>"
+            );
         }
         finally
         {
@@ -113,7 +115,8 @@ public class RegistryManager
     /// <param name="key">The key of the registry</param>
     /// <param name="registry">The registry, if found</param>
     /// <returns>True if the registry was found, false otherwise</returns>
-    public bool TryGetRegistry<T>(Identifier key, out Registry<T> registry) where T : class
+    public bool TryGetRegistry<T>(Identifier key, out Registry<T> registry)
+        where T : class
     {
         _lock.EnterReadLock();
         try
@@ -188,10 +191,7 @@ public class RegistryManager
     /// <summary>
     /// Freezes registry creation, preventing new registries from being created
     /// </summary>
-    public void FreezeRegistryCreation()
-    {
-        _isRegistryCreationFrozen = true;
-    }
+    public void FreezeRegistryCreation() => _isRegistryCreationFrozen = true;
 
     /// <summary>
     /// Freezes all registries, preventing new entries from being registered

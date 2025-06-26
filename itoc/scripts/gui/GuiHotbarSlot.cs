@@ -5,8 +5,11 @@ namespace ITOC;
 
 public partial class GuiHotbarSlot : TextureRect
 {
-    [Export] public Texture2D TextureNormal;
-    [Export] public Texture2D TextureActive;
+    [Export]
+    public Texture2D TextureNormal;
+
+    [Export]
+    public Texture2D TextureActive;
 
     private GuiItem _itemControl;
 
@@ -30,18 +33,9 @@ public partial class GuiHotbarSlot : TextureRect
         UpdateTexture();
     }
 
-    public void Clear()
-    {
-        _itemControl.Clear();
-    }
+    public void Clear() => _itemControl.Clear();
 
-    public void SetItem(IItem item)
-    {
-        _itemControl.SetItem(item);
-    }
+    public void SetItem(IItem item) => _itemControl.SetItem(item);
 
-    private void UpdateTexture()
-    {
-        Texture = IsActive ? TextureActive : TextureNormal;
-    }
+    private void UpdateTexture() => Texture = IsActive ? TextureActive : TextureNormal;
 }

@@ -4,13 +4,11 @@ namespace ITOC.Core.BlockModels;
 
 public class CubeAllModel : CubeModelBase
 {
-    private Material _material;
-    private int _textureId = 0;
+    private readonly Material _material;
+    private readonly int _textureId = 0;
 
-    public CubeAllModel(Material material)
-    {
+    public CubeAllModel(Material material) =>
         _material = material ?? MaterialManager.Instance.GetFallbackMaterial();
-    }
 
     public CubeAllModel(string texturePath)
     {
@@ -20,13 +18,8 @@ public class CubeAllModel : CubeModelBase
         _textureId = TextureManager.Instance.GetTextureId(texturePath);
     }
 
-    public override Material GetMaterial(Direction face = Direction.PositiveY)
-    {
-        return _material ?? MaterialManager.Instance.GetFallbackMaterial();
-    }
+    public override Material GetMaterial(Direction face = Direction.PositiveY) =>
+        _material ?? MaterialManager.Instance.GetFallbackMaterial();
 
-    public override int GetTextureId(Direction face = Direction.PositiveY)
-    {
-        return _textureId;
-    }
+    public override int GetTextureId(Direction face = Direction.PositiveY) => _textureId;
 }

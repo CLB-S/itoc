@@ -24,29 +24,58 @@ public partial class WorldTest : Node2D
         PlateTypes,
         Temperature,
         Precipitation,
-        Biome
+        Biome,
     }
 
     // [Export] public ulong Seed { get; set; } = 0;
 
-    [Export] public RichTextLabel TerminalLabel;
-    [Export] public MeshInstance3D HeightMapMesh;
-    [Export] public OptionButton ColorPresetOptionButton;
-    [Export] public Button GenerateMapButton;
-    [Export] public Button GenerateHeightMapButton;
-    [Export] public Button StartGameButton;
-    [Export] public SpinBox SeedSpinBox;
-    [Export] public SpinBox ContinentRatioSpinBox;
-    [Export] public SpinBox PlateMergeRatioSpinBox;
-    [Export] public SpinBox CellDistanceSpinBox;
-    [Export] public SpinBox NoiseFrequencySpinBox;
-    [Export] public SpinBox ErosionRateSpinBox;
-    [Export] public SpinBox ErotionTimeStepSpinBox;
-    [Export] public SpinBox MaxErosionIterationsSpinBox;
+    [Export]
+    public RichTextLabel TerminalLabel;
 
+    [Export]
+    public MeshInstance3D HeightMapMesh;
 
-    [Export] public Node2D HeightMapSubViewportSprite;
-    [Export] public Rect2 DrawingRect = new(-500, -500, 1000, 1000);
+    [Export]
+    public OptionButton ColorPresetOptionButton;
+
+    [Export]
+    public Button GenerateMapButton;
+
+    [Export]
+    public Button GenerateHeightMapButton;
+
+    [Export]
+    public Button StartGameButton;
+
+    [Export]
+    public SpinBox SeedSpinBox;
+
+    [Export]
+    public SpinBox ContinentRatioSpinBox;
+
+    [Export]
+    public SpinBox PlateMergeRatioSpinBox;
+
+    [Export]
+    public SpinBox CellDistanceSpinBox;
+
+    [Export]
+    public SpinBox NoiseFrequencySpinBox;
+
+    [Export]
+    public SpinBox ErosionRateSpinBox;
+
+    [Export]
+    public SpinBox ErotionTimeStepSpinBox;
+
+    [Export]
+    public SpinBox MaxErosionIterationsSpinBox;
+
+    [Export]
+    public Node2D HeightMapSubViewportSprite;
+
+    [Export]
+    public Rect2 DrawingRect = new(-500, -500, 1000, 1000);
 
     public ImageTexture HeightMapTexture;
 
@@ -57,7 +86,8 @@ public partial class WorldTest : Node2D
     public bool DrawInterpolatedHeightMap;
     public bool DrawWinds;
 
-    private VanillaWorldGenerator _worldGenerator => GameController.Instance.WorldGenerator as VanillaWorldGenerator;
+    private VanillaWorldGenerator _worldGenerator =>
+        GameController.Instance.WorldGenerator as VanillaWorldGenerator;
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
 
@@ -79,7 +109,9 @@ public partial class WorldTest : Node2D
         SeedSpinBox.SetValueNoSignal(_worldGenerator.Settings.Seed);
         ContinentRatioSpinBox.SetValueNoSignal(_worldGenerator.Settings.ContinentRatio);
         PlateMergeRatioSpinBox.SetValueNoSignal(_worldGenerator.Settings.PlateMergeRatio);
-        CellDistanceSpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedMinimumCellDistance);
+        CellDistanceSpinBox.SetValueNoSignal(
+            _worldGenerator.Settings.NormalizedMinimumCellDistance
+        );
         NoiseFrequencySpinBox.SetValueNoSignal(_worldGenerator.Settings.NormalizedNoiseFrequency);
         ErosionRateSpinBox.SetValueNoSignal(_worldGenerator.Settings.ErosionRate);
         ErotionTimeStepSpinBox.SetValueNoSignal(_worldGenerator.Settings.ErosionTimeStep);
@@ -91,9 +123,15 @@ public partial class WorldTest : Node2D
 
         ColorPresetOptionButton.Selected = (int)DrawingCorlorPreset;
 
-        _temperatureGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/temperature_gradient.tres");
-        _precipitationGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/rainbow_gradient.tres");
-        _heightmapGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/heightmap_gradient.tres");
+        _temperatureGradient = ResourceLoader.Load<Gradient>(
+            "res://assets/gradients/temperature_gradient.tres"
+        );
+        _precipitationGradient = ResourceLoader.Load<Gradient>(
+            "res://assets/gradients/rainbow_gradient.tres"
+        );
+        _heightmapGradient = ResourceLoader.Load<Gradient>(
+            "res://assets/gradients/heightmap_gradient.tres"
+        );
 
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
         _worldGenerator.ProgressUpdated += (_, args) => Log(args.Message);
@@ -127,7 +165,8 @@ public partial class WorldTest : Node2D
             if (mouseButtonEvent.IsPressed() && _worldGenerator.State == WorldGenerationState.Ready)
             {
                 var mousePos = GetGlobalMousePosition();
-                if (!DrawingRect.HasPoint(mousePos)) return;
+                if (!DrawingRect.HasPoint(mousePos))
+                    return;
 
                 var worldPos = mousePos / _scalingFactor;
                 var nearestCell = _worldGenerator.GetCellDatasNearby(worldPos);
@@ -141,15 +180,11 @@ public partial class WorldTest : Node2D
         TerminalLabel?.CallDeferred(RichTextLabel.MethodName.AppendText, message + "\n");
     }
 
-    private void SetGenerateMapButtonAvailability(bool isEnabled)
-    {
+    private void SetGenerateMapButtonAvailability(bool isEnabled) =>
         GenerateMapButton.Disabled = !isEnabled;
-    }
 
-    private void SetStartGameButtonAvailability(bool isEnabled)
-    {
+    private void SetStartGameButtonAvailability(bool isEnabled) =>
         StartGameButton.Disabled = !isEnabled;
-    }
 
     private void DrawArrow(Vector2 start, Vector2 end, Color color, bool twoLineHead = false)
     {
@@ -199,9 +234,12 @@ public partial class WorldTest : Node2D
                     var indices = new List<int>();
                     var vertices = new List<Vector3>();
 
-                    var polygonPoints = cellData.Cell.Points.Select(p => p * _scalingFactor).ToArray();
+                    var polygonPoints = cellData
+                        .Cell.Points.Select(p => p * _scalingFactor)
+                        .ToArray();
                     var triangles = Geometry2D.TriangulatePolygon(polygonPoints);
-                    if (triangles == null || triangles.Length == 0) continue;
+                    if (triangles == null || triangles.Length == 0)
+                        continue;
 
                     indices.AddRange(triangles);
                     vertices.AddRange(polygonPoints.Select(p => new Vector3(p.X, p.Y, 0)));
@@ -249,14 +287,17 @@ public partial class WorldTest : Node2D
                 //     DrawMesh(mesh, null, modulate: color);
                 //     break;
                 case ColorPreset.Height:
-                    var height = (float)((cellData.Height * 1.5 / _worldGenerator.MaxHeight + 1) * 0.5 - 0.01);
+                    var height = (float)(
+                        (cellData.Height * 1.5 / _worldGenerator.MaxHeight + 1) * 0.5 - 0.01
+                    );
                     DrawMesh(mesh, null, modulate: _heightmapGradient.Sample(height));
                     break;
                 case ColorPreset.PlateTypes:
                     DrawMesh(mesh, null, modulate: plateColor);
                     break;
                 case ColorPreset.Precipitation:
-                    var precipitation = cellData.Precipitation / _worldGenerator.Settings.MaxPrecipitation;
+                    var precipitation =
+                        cellData.Precipitation / _worldGenerator.Settings.MaxPrecipitation;
                     color = _precipitationGradient
                         .Sample((float)(precipitation / _worldGenerator.Settings.MaxPrecipitation))
                         .Lerp(plateColor, 0.5);
@@ -267,8 +308,9 @@ public partial class WorldTest : Node2D
                     var minTemp = _worldGenerator.Settings.PolarTemperature * 1.2;
                     // var maxTemp = _worldGenerator.Settings.EquatorialTemperature;
                     // minTemp < 0 < maxTemp < -minTemp
-                    var temperatureColor =
-                        _temperatureGradient.Sample((float)((temperature - minTemp) / (2 * -minTemp)));
+                    var temperatureColor = _temperatureGradient.Sample(
+                        (float)((temperature - minTemp) / (2 * -minTemp))
+                    );
                     color = temperatureColor.Lerp(plateColor, 0.5);
                     DrawMesh(mesh, null, modulate: color);
                     break;
@@ -326,7 +368,8 @@ public partial class WorldTest : Node2D
         if (DrawTectonicMovement)
             foreach (var (i, cellData) in _worldGenerator.CellDatas)
             {
-                if (i % 10 != 0) continue;
+                if (i % 10 != 0)
+                    continue;
                 var pos = cellData.Position * _scalingFactor;
                 var end = pos + cellData.TectonicMovement * 3;
                 var length = (float)(cellData.TectonicMovement.LengthSquared() / 100.0);
@@ -343,21 +386,28 @@ public partial class WorldTest : Node2D
                 // Draw stream connections (edges in the stream tree)
                 foreach (var cell in _worldGenerator.CellDatas.Values)
                 {
-                    if (cell.PlateType != PlateType.Continent) continue;
+                    if (cell.PlateType != PlateType.Continent)
+                        continue;
 
                     if (receivers.TryGetValue(cell.Index, out var receiverIndex))
                         if (_worldGenerator.CellDatas.TryGetValue(receiverIndex, out var receiver))
                         {
-                            if (cell.Index == receiverIndex) continue;
+                            if (cell.Index == receiverIndex)
+                                continue;
                             var start = cell.Position * _scalingFactor;
                             var end = receiver.Position * _scalingFactor;
 
-                            if ((start - end).LengthSquared() >
-                                _worldGenerator.Settings.MinimumCellDistance *
-                                _worldGenerator.Settings.MinimumCellDistance * 5) continue;
+                            if (
+                                (start - end).LengthSquared()
+                                > _worldGenerator.Settings.MinimumCellDistance
+                                    * _worldGenerator.Settings.MinimumCellDistance
+                                    * 5
+                            )
+                                continue;
 
                             var drainage = _worldGenerator.Drainages[cell.Index];
-                            if (drainage < 6000000) continue;
+                            if (drainage < 6000000)
+                                continue;
 
                             var width = Mathf.Log(1 + (drainage - 6000000) * 0.0005f) * 0.5f;
 
@@ -373,7 +423,8 @@ public partial class WorldTest : Node2D
             // Draw lake areas in a lighter blue color
             foreach (var lakeId in _worldGenerator.Lakes)
             {
-                if (_worldGenerator.CellDatas[lakeId].IsRiverMouth) continue;
+                if (_worldGenerator.CellDatas[lakeId].IsRiverMouth)
+                    continue;
 
                 var pos = _worldGenerator.CellDatas[lakeId].Position * _scalingFactor;
                 DrawCircle(pos, 4f, new Color(0.2f, 0.6f, 0.9f, 0.7f));
@@ -406,7 +457,8 @@ public partial class WorldTest : Node2D
 
             foreach (var (i, _) in _worldGenerator.CellDatas)
             {
-                if (i % 10 != 0) continue;
+                if (i % 10 != 0)
+                    continue;
 
                 var pos = _worldGenerator.SamplePoints[i];
                 var longitude = _worldGenerator.GetLongitude(pos);
@@ -423,50 +475,31 @@ public partial class WorldTest : Node2D
         Log($"Draw time: {stopwatch.ElapsedMilliseconds / 1000.0f}s");
     }
 
-    public void OnSeedSpinBoxValueChanged(float value)
-    {
+    public void OnSeedSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.Seed = (ulong)value;
-    }
 
-    public void OnContinentRatioSpinBoxValueChanged(float value)
-    {
+    public void OnContinentRatioSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.ContinentRatio = value;
-    }
 
-    public void OnPlateMergeRatioSpinBoxValueChanged(float value)
-    {
+    public void OnPlateMergeRatioSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.PlateMergeRatio = value;
-    }
 
-    public void OnCellDistanceSpinBoxValueChanged(float value)
-    {
+    public void OnCellDistanceSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.NormalizedMinimumCellDistance = value;
-    }
 
-    public void OnNoiseFrequencySpinBoxValueChanged(float value)
-    {
+    public void OnNoiseFrequencySpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.NormalizedNoiseFrequency = value;
-    }
 
-    public void OnErosionRateSpinBoxValueChanged(float value)
-    {
+    public void OnErosionRateSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.ErosionRate = value;
-    }
 
-    public void OnErotionTimeStepSpinBoxValueChanged(float value)
-    {
+    public void OnErotionTimeStepSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.ErosionTimeStep = value;
-    }
 
-    public void OnMaxErosionIterationsSpinBoxValueChanged(float value)
-    {
+    public void OnMaxErosionIterationsSpinBoxValueChanged(float value) =>
         _worldGenerator.Settings.MaxErosionIterations = (int)value;
-    }
 
-    public void OnRegenerateButtonPressed()
-    {
-        Task.Run(_worldGenerator.BeginWorldPreGeneration);
-    }
+    public void OnRegenerateButtonPressed() => Task.Run(_worldGenerator.BeginWorldPreGeneration);
 
     public void OnGenerateHeightMapButtonPressed()
     {
@@ -481,8 +514,11 @@ public partial class WorldTest : Node2D
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         await Task.Run(() =>
-            HeightMapTexture =
-                _worldGenerator.GetFullHeightMapImageTexture(_heightMapResolution, _heightMapResolution));
+            HeightMapTexture = _worldGenerator.GetFullHeightMapImageTexture(
+                _heightMapResolution,
+                _heightMapResolution
+            )
+        );
         GenerateHeightMapButton.Disabled = false;
         var mat = HeightMapMesh.GetSurfaceOverrideMaterial(0) as ShaderMaterial;
         mat.SetShaderParameter("heightmap", HeightMapTexture);
@@ -538,8 +574,6 @@ public partial class WorldTest : Node2D
         QueueRedraw();
     }
 
-    public void OnShow3DHeightMapToggled(bool toggledOn)
-    {
+    public void OnShow3DHeightMapToggled(bool toggledOn) =>
         HeightMapSubViewportSprite.Visible = toggledOn;
-    }
 }

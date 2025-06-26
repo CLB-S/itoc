@@ -8,37 +8,76 @@ namespace ITOC;
 
 public partial class EnvironmentController : WorldEnvironment
 {
-    [Export] public DirectionalLight3D SunLight;
-    [Export] public DirectionalLight3D MoonLight;
+    [Export]
+    public DirectionalLight3D SunLight;
+
+    [Export]
+    public DirectionalLight3D MoonLight;
 
     // Day-night cycle parameters
-    [Export] public Color DaySkyColor = new Color(0.4f, 0.6f, 1.0f);
-    [Export] public Color NightSkyColor = new Color(0.03f, 0.03f, 0.1f);
-    [Export] public Color DayHorizonColor = new Color(0.8f, 0.8f, 0.9f);
-    [Export] public Color NightHorizonColor = new Color(0.1f, 0.1f, 0.2f);
-    [Export] public Color SunsetColor = new Color(1.0f, 0.5f, 0.2f, 0.5f);
+    [Export]
+    public Color DaySkyColor = new Color(0.4f, 0.6f, 1.0f);
 
-    [Export] public Color DayAmbientLight = new Color(0.5f, 0.5f, 0.5f);
-    [Export] public Color NightAmbientLight = new Color(0.1f, 0.1f, 0.2f);
+    [Export]
+    public Color NightSkyColor = new Color(0.03f, 0.03f, 0.1f);
 
-    [Export] public double DayFogDensity = 0.0005f;
-    [Export] public double NightFogDensity = 0.0025f;
-    [Export] public Color DayFogColor = new Color(0.75f, 0.75f, 0.85f);
-    [Export] public Color NightFogColor = new Color(0.05f, 0.05f, 0.1f);
+    [Export]
+    public Color DayHorizonColor = new Color(0.8f, 0.8f, 0.9f);
 
-    [Export] public double SunLightEnergy = 1.0;
-    [Export] public double MoonLightEnergy = 0.1;
+    [Export]
+    public Color NightHorizonColor = new Color(0.1f, 0.1f, 0.2f);
 
-    [Export] public bool EnableGlow = true;
-    [Export] public double DayGlowIntensity = 0.3;
-    [Export] public double NightGlowIntensity = 1.0;
-    [Export] public double SunsetGlowIntensity = 2.5;
+    [Export]
+    public Color SunsetColor = new Color(1.0f, 0.5f, 0.2f, 0.5f);
+
+    [Export]
+    public Color DayAmbientLight = new Color(0.5f, 0.5f, 0.5f);
+
+    [Export]
+    public Color NightAmbientLight = new Color(0.1f, 0.1f, 0.2f);
+
+    [Export]
+    public double DayFogDensity = 0.0005f;
+
+    [Export]
+    public double NightFogDensity = 0.0025f;
+
+    [Export]
+    public Color DayFogColor = new Color(0.75f, 0.75f, 0.85f);
+
+    [Export]
+    public Color NightFogColor = new Color(0.05f, 0.05f, 0.1f);
+
+    [Export]
+    public double SunLightEnergy = 1.0;
+
+    [Export]
+    public double MoonLightEnergy = 0.1;
+
+    [Export]
+    public bool EnableGlow = true;
+
+    [Export]
+    public double DayGlowIntensity = 0.3;
+
+    [Export]
+    public double NightGlowIntensity = 1.0;
+
+    [Export]
+    public double SunsetGlowIntensity = 2.5;
 
     // Solar elevation angle thresholds for day/night transitions
-    [Export] public double SunriseElevationStart = -6.0; // Civil twilight starts at -6 degrees
-    [Export] public double SunriseElevationEnd = 12.0;    // Full daylight when sun is at 3 degrees
-    [Export] public double SunsetElevationStart = 12.0;   // Sunset begins when sun is at 3 degrees
-    [Export] public double SunsetElevationEnd = -6.0;    // Civil twilight ends at -6 degrees
+    [Export]
+    public double SunriseElevationStart = -6.0; // Civil twilight starts at -6 degrees
+
+    [Export]
+    public double SunriseElevationEnd = 12.0; // Full daylight when sun is at 3 degrees
+
+    [Export]
+    public double SunsetElevationStart = 12.0; // Sunset begins when sun is at 3 degrees
+
+    [Export]
+    public double SunsetElevationEnd = -6.0; // Civil twilight ends at -6 degrees
 
     private Sky _sky;
     private ProceduralSkyMaterial _skyMaterial;
@@ -87,15 +126,23 @@ public partial class EnvironmentController : WorldEnvironment
         var time = GameController.Instance.CurrentWorld.Time;
         var worldSettings = GameController.Instance.CurrentWorld.Settings;
         var playerPos = Vector3.Zero; // TODO: GameController.Instance.CurrentWorld.PlayerPos;
-        var normalizedPos = worldSettings is VanillaWorldSettings settings ?
-            (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / settings.Bounds.Size +
-            Vector2.One / 2 : Vector2.One / 2;
+        var normalizedPos = worldSettings is VanillaWorldSettings settings
+            ? (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter)
+                / settings.Bounds.Size
+                + Vector2.One / 2
+            : Vector2.One / 2;
 
         var latitude = -Mathf.Lerp(-90, 90, normalizedPos.Y);
         var longitude = Mathf.Lerp(-180, 180, normalizedPos.X);
 
-        var (solarElevation, solarAzimuth) = OrbitalUtils.CalculateSunPosition(time, latitude, longitude,
-            worldSettings.OrbitalInclinationAngle, worldSettings.OrbitalRevolutionDays, worldSettings.MinutesPerDay);
+        var (solarElevation, solarAzimuth) = OrbitalUtils.CalculateSunPosition(
+            time,
+            latitude,
+            longitude,
+            worldSettings.OrbitalInclinationAngle,
+            worldSettings.OrbitalRevolutionDays,
+            worldSettings.MinutesPerDay
+        );
 
         // Update sun position
         SunLight.RotationDegrees = new Vector3(180 + solarElevation, -solarAzimuth, 0);
@@ -114,7 +161,11 @@ public partial class EnvironmentController : WorldEnvironment
         if (solarElevation >= SunriseElevationStart && solarElevation <= SunriseElevationEnd)
         {
             // Sunrise transition
-            dayFactor = Mathf.InverseLerp(SunriseElevationStart, SunriseElevationEnd, solarElevation);
+            dayFactor = Mathf.InverseLerp(
+                SunriseElevationStart,
+                SunriseElevationEnd,
+                solarElevation
+            );
         }
         else if (solarElevation > SunriseElevationEnd && solarElevation > SunsetElevationStart)
         {
@@ -177,7 +228,8 @@ public partial class EnvironmentController : WorldEnvironment
         // Handle glow effects
         if (EnableGlow)
         {
-            float glowIntensity = (float)Mathf.Lerp(DayGlowIntensity, NightGlowIntensity, 1.0 - dayFactor);
+            var glowIntensity = (float)
+                Mathf.Lerp(DayGlowIntensity, NightGlowIntensity, 1.0 - dayFactor);
 
             // Increase glow during sunset/sunrise
             if (sunsetFactor > 0)

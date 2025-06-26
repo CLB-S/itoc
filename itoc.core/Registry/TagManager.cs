@@ -4,7 +4,8 @@ namespace ITOC.Core.Registry;
 /// Manages tags for a registry
 /// </summary>
 /// <typeparam name="T">The type of content managed by the registry</typeparam>
-public class TagManager<T> where T : class
+public class TagManager<T>
+    where T : class
 {
     private readonly Registry<T> _registry;
     private readonly Dictionary<Identifier, RegistryTag<T>> _tags = new();
@@ -20,10 +21,8 @@ public class TagManager<T> where T : class
     /// Creates a new tag manager for the specified registry
     /// </summary>
     /// <param name="registry">The registry</param>
-    public TagManager(Registry<T> registry)
-    {
+    public TagManager(Registry<T> registry) =>
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-    }
 
     /// <summary>
     /// Creates a new tag with the specified identifier
@@ -156,7 +155,8 @@ public class TagManager<T> where T : class
     /// <param name="id">The identifier of the tag as a string</param>
     /// <param name="tag">The tag, if found</param>
     /// <returns>True if the tag was found, false otherwise</returns>
-    public bool TryGetTag(string id, out RegistryTag<T> tag) => TryGetTag(new Identifier(id), out tag);
+    public bool TryGetTag(string id, out RegistryTag<T> tag) =>
+        TryGetTag(new Identifier(id), out tag);
 
     /// <summary>
     /// Gets all tags
@@ -178,8 +178,5 @@ public class TagManager<T> where T : class
     /// <summary>
     /// Freezes tag creation, preventing new tags from being created
     /// </summary>
-    public void Freeze()
-    {
-        _isFrozen = true;
-    }
+    public void Freeze() => _isFrozen = true;
 }

@@ -6,10 +6,8 @@ public partial class GuiHud : Control
 {
     public GuiInventoryHotbar InventoryHotbar;
 
-    public override void _Ready()
-    {
+    public override void _Ready() =>
         InventoryHotbar = GetNode<GuiInventoryHotbar>("InventoryHotbar");
-    }
 
     public override void _Input(InputEvent @event)
     {

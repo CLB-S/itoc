@@ -5,8 +5,15 @@ namespace ITOC.Core.Interpolators;
 
 public static class LinearInterpolator
 {
-    public static double Interpolate(Vector2 p0, Vector2 p1, Vector2 p2,
-        double h0, double h1, double h2, Vector2 target)
+    public static double Interpolate(
+        Vector2 p0,
+        Vector2 p1,
+        Vector2 p2,
+        double h0,
+        double h1,
+        double h2,
+        Vector2 target
+    )
     {
         var barycentric = GeometryUtils.GetBarycentricCoordinates(target, p0, p1, p2);
         var u = barycentric.X;

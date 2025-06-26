@@ -26,8 +26,10 @@ public class ChunkLoadingSource
             return;
 
         var (chunkColumnIndex, distance) = _surfaceChunksQueue.Dequeue();
-        ChunkGenerator?.EnqueueSurfaceChunksGeneration(chunkColumnIndex,
-            _ => EnqueueSurfaceChunksGeneration());
+        ChunkGenerator?.EnqueueSurfaceChunksGeneration(
+            chunkColumnIndex,
+            _ => EnqueueSurfaceChunksGeneration()
+        );
     }
 
     public void UpdateFrom(Vector3 sourcePosition)
@@ -40,7 +42,7 @@ public class ChunkLoadingSource
         var chunkColumnRange = ChunkRange.ChunkColumnsSorted();
         _surfaceChunksQueue = new Queue<(Vector2I, int)>(chunkColumnRange);
 
-        for (int i = 0; i < ChunkGenerator.MaxConcurrentChunkGenerationTasks + 2; i++)
+        for (var i = 0; i < ChunkGenerator.MaxConcurrentChunkGenerationTasks + 2; i++)
             EnqueueSurfaceChunksGeneration();
     }
 }

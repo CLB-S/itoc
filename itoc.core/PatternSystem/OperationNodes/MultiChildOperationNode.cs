@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-
 namespace ITOC.Core.PatternSystem;
 
 public enum MultiOperationType
@@ -9,7 +6,7 @@ public enum MultiOperationType
     Multiply,
     Min,
     Max,
-    Average
+    Average,
 }
 
 public class MultiChildOperationNode : PatternTreeNode, IOperator
@@ -19,28 +16,29 @@ public class MultiChildOperationNode : PatternTreeNode, IOperator
     public IEnumerable<PatternTreeNode> Children => _children;
     public MultiOperationType OperationType { get; protected set; }
 
-    public MultiChildOperationNode(IEnumerable<PatternTreeNode> children,
-        MultiOperationType operationType = MultiOperationType.Add)
+    public MultiChildOperationNode(
+        IEnumerable<PatternTreeNode> children,
+        MultiOperationType operationType = MultiOperationType.Add
+    )
     {
         _children = children.ToList();
         OperationType = operationType;
     }
 
-    protected virtual double PerformOperation(IEnumerable<double> values)
-    {
-        return OperationType switch
+    protected virtual double PerformOperation(IEnumerable<double> values) =>
+        OperationType switch
         {
             MultiOperationType.Multiply => values.Aggregate(1.0, (acc, value) => acc * value),
             MultiOperationType.Min => values.Min(),
             MultiOperationType.Max => values.Max(),
             MultiOperationType.Average => values.Average(),
-            _ => values.Sum()
+            _ => values.Sum(),
         };
-    }
 
     public override double Evaluate(double x, double y)
     {
-        if (_children.Count == 0) return 0;
+        if (_children.Count == 0)
+            return 0;
 
         var values = _children.Select(child => child.Evaluate(x, y));
         return PerformOperation(values);
@@ -48,7 +46,8 @@ public class MultiChildOperationNode : PatternTreeNode, IOperator
 
     public override double Evaluate(double x, double y, double z)
     {
-        if (_children.Count == 0) return 0;
+        if (_children.Count == 0)
+            return 0;
 
         var values = _children.Select(child => child.Evaluate(x, y, z));
         return PerformOperation(values);

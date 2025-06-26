@@ -25,16 +25,9 @@ public class WorldSettings
     public double PolarTemperature = -50;
     public double MaxPrecipitation = 1.3555;
     public double TemperatureGradientWithAltitude = 2 / 100.0; // Higher then reality.
-
     #endregion
 
-    public WorldSettings(ulong seed = 234)
-    {
-        Seed = seed == 0 ? GD.Randi() : seed;
-    }
+    public WorldSettings(ulong seed = 234) => Seed = seed == 0 ? GD.Randi() : seed;
 
-    public WorldSettings Clone()
-    {
-        return (WorldSettings)MemberwiseClone();
-    }
+    public WorldSettings Clone() => (WorldSettings)MemberwiseClone();
 }

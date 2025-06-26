@@ -10,7 +10,11 @@ public class OnBlockUpdatedEventArgs : EventArgs
     public Block UpdateSourceBlock { get; private set; }
     public Block UpdateTargetBlock { get; private set; }
 
-    public OnBlockUpdatedEventArgs(Vector3I updatePosition, Block updateSourceBlock, Block updateTargetBlock)
+    public OnBlockUpdatedEventArgs(
+        Vector3I updatePosition,
+        Block updateSourceBlock,
+        Block updateTargetBlock
+    )
     {
         UpdatePosition = updatePosition;
         UpdateSourceBlock = updateSourceBlock;
@@ -21,7 +25,7 @@ public class OnBlockUpdatedEventArgs : EventArgs
 public enum ChunkState
 {
     Created,
-    Ready
+    Ready,
 }
 
 public class Chunk : IDisposable
@@ -49,8 +53,10 @@ public class Chunk : IDisposable
     protected readonly ulong[] _opaqueMask = new ulong[SIZE_P2];
 
     protected ulong[] _transparentMasks;
-    protected readonly PaletteArray<Block> _blocks; // Storage for all blocks 
-    protected readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+    protected readonly PaletteArray<Block> _blocks; // Storage for all blocks
+    protected readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(
+        LockRecursionPolicy.NoRecursion
+    );
 
     public Chunk(int x, int y, int z, Block[] blocks = null)
     {
@@ -82,15 +88,11 @@ public class Chunk : IDisposable
         State = ChunkState.Created;
     }
 
-    public Chunk(Vector3I index, Block[] blocks = null) : this(index.X, index.Y, index.Z, blocks)
-    {
-    }
+    public Chunk(Vector3I index, Block[] blocks = null)
+        : this(index.X, index.Y, index.Z, blocks) { }
 
     #region Get
-    public virtual Vector2I GetChunkColumnPosition()
-    {
-        return new Vector2I(Index.X, Index.Z);
-    }
+    public virtual Vector2I GetChunkColumnPosition() => new Vector2I(Index.X, Index.Z);
 
     public Block GetBlock(int axis, int a, int b, int c)
     {
@@ -104,10 +106,7 @@ public class Chunk : IDisposable
         return GetBlock(index);
     }
 
-    public Block GetBlock(Vector3I pos)
-    {
-        return GetBlock(pos.X, pos.Y, pos.Z);
-    }
+    public Block GetBlock(Vector3I pos) => GetBlock(pos.X, pos.Y, pos.Z);
 
     public virtual Block GetBlock(int index)
     {
@@ -146,14 +145,14 @@ public class Chunk : IDisposable
         _lock.EnterReadLock();
         try
         {
-            for (int x = min.X; x <= max.X; x++)
-                for (int y = min.Y; y <= max.Y; y++)
-                    for (int z = min.Z; z <= max.Z; z++)
-                    {
-                        var position = new Vector3I(x, y, z);
-                        var index = ChunkMesher.GetBlockIndex(position);
-                        result[position] = _blocks[index];
-                    }
+            for (var x = min.X; x <= max.X; x++)
+            for (var y = min.Y; y <= max.Y; y++)
+            for (var z = min.Z; z <= max.Z; z++)
+            {
+                var position = new Vector3I(x, y, z);
+                var index = ChunkMesher.GetBlockIndex(position);
+                result[position] = _blocks[index];
+            }
         }
         finally
         {
@@ -205,51 +204,33 @@ public class Chunk : IDisposable
         return blocks;
     }
 
-    public virtual int GetBytes()
-    {
-        return _blocks.GetMemoryUsage() +
-               _opaqueMask.Length * sizeof(ulong)
-                 + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
-    }
+    public virtual int GetBytes() =>
+        _blocks.GetMemoryUsage()
+        + _opaqueMask.Length * sizeof(ulong)
+        + (_transparentMasks?.Length ?? 0) * sizeof(ulong);
 
-    public double GetDistanceTo(Vector3 pos)
-    {
-        return CenterPosition.DistanceTo(pos);
-    }
+    public double GetDistanceTo(Vector3 pos) => CenterPosition.DistanceTo(pos);
 
     #endregion
 
     #region Index Utils
 
-    public static int GetAxisIndex(int axis, int a, int b, int c, int size = SIZE_P)
-    {
-        return axis switch
+    public static int GetAxisIndex(int axis, int a, int b, int c, int size = SIZE_P) =>
+        axis switch
         {
             0 => b + a * size + c * size * size,
             1 => b + c * size + a * size * size,
-            _ => c + a * size + b * size * size
+            _ => c + a * size + b * size * size,
         };
-    }
 
-    public static int GetIndex(int x, int y, int z)
-    {
-        return z + x * SIZE_P + y * SIZE_P2;
-    }
+    public static int GetIndex(int x, int y, int z) => z + x * SIZE_P + y * SIZE_P2;
 
-    public static int GetIndex(Vector3I vec)
-    {
-        return vec.Z + vec.X * SIZE_P + vec.Y * SIZE_P2;
-    }
+    public static int GetIndex(Vector3I vec) => vec.Z + vec.X * SIZE_P + vec.Y * SIZE_P2;
 
-    public static int GetBlockAxisIndex(int axis, int a, int b, int c)
-    {
-        return GetAxisIndex(axis, a, b, c, SIZE);
-    }
+    public static int GetBlockAxisIndex(int axis, int a, int b, int c) =>
+        GetAxisIndex(axis, a, b, c, SIZE);
 
-    public static int GetBlockIndex(int x, int y, int z)
-    {
-        return z + x * SIZE + y * SIZE_2;
-    }
+    public static int GetBlockIndex(int x, int y, int z) => z + x * SIZE + y * SIZE_2;
 
     public static (int x, int y, int z) GetBlockIndex(int index)
     {
@@ -261,10 +242,7 @@ public class Chunk : IDisposable
         return (x, y, z);
     }
 
-    public static int GetBlockIndex(Vector3I vec)
-    {
-        return vec.Z + vec.X * SIZE + vec.Y * SIZE_2;
-    }
+    public static int GetBlockIndex(Vector3I vec) => vec.Z + vec.X * SIZE + vec.Y * SIZE_2;
 
     #endregion
 
@@ -279,7 +257,7 @@ public class Chunk : IDisposable
         try
         {
             // Create a copy of the mesh data to avoid thread safety issues
-            ulong[] opaqueMaskCopy = new ulong[_opaqueMask.Length];
+            var opaqueMaskCopy = new ulong[_opaqueMask.Length];
             Array.Copy(_opaqueMask, opaqueMaskCopy, _opaqueMask.Length);
 
             ulong[] transparentMasksCopy = null;
@@ -353,14 +331,13 @@ public class Chunk : IDisposable
         SetMesherMask(x + 1, y + 1, z + 1, block);
 
         if (State == ChunkState.Ready)
-            OnBlockUpdated?.Invoke(this,
-                new OnBlockUpdatedEventArgs(new Vector3I(x, y, z), oldBlock, block));
+            OnBlockUpdated?.Invoke(
+                this,
+                new OnBlockUpdatedEventArgs(new Vector3I(x, y, z), oldBlock, block)
+            );
     }
 
-    public void SetBlock(Vector3I pos, Block block)
-    {
-        SetBlock(pos.X, pos.Y, pos.Z, block);
-    }
+    public void SetBlock(Vector3I pos, Block block) => SetBlock(pos.X, pos.Y, pos.Z, block);
 
     public void SetMesherMask(int x, int y, int z, Block block)
     {
@@ -398,7 +375,10 @@ public class Chunk : IDisposable
         }
     }
 
-    public virtual void SetBlocks(IEnumerable<(Vector3I Position, Block Block)> blocks, bool triggerEvents = true)
+    public virtual void SetBlocks(
+        IEnumerable<(Vector3I Position, Block Block)> blocks,
+        bool triggerEvents = true
+    )
     {
         var blockUpdates = new List<OnBlockUpdatedEventArgs>();
 
@@ -441,21 +421,15 @@ public class Chunk : IDisposable
     #endregion
 
     #region Helpers
-    private bool IsPositionInChunk(Vector3I pos)
-    {
-        return pos.X >= 0 && pos.X < SIZE &&
-               pos.Y >= 0 && pos.Y < SIZE &&
-               pos.Z >= 0 && pos.Z < SIZE;
-    }
+    private bool IsPositionInChunk(Vector3I pos) =>
+        pos.X >= 0 && pos.X < SIZE && pos.Y >= 0 && pos.Y < SIZE && pos.Z >= 0 && pos.Z < SIZE;
 
-    private Vector3I ClampPositionToChunk(Vector3I pos)
-    {
-        return new Vector3I(
+    private Vector3I ClampPositionToChunk(Vector3I pos) =>
+        new Vector3I(
             Mathf.Clamp(pos.X, 0, SIZE - 1),
             Mathf.Clamp(pos.Y, 0, SIZE - 1),
             Mathf.Clamp(pos.Z, 0, SIZE - 1)
         );
-    }
     #endregion
 
     #region IDisposable

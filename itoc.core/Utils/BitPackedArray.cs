@@ -10,9 +10,10 @@ using System.Runtime.CompilerServices;
 /// A memory-efficient array that stores values using a specified number of bits per value.
 /// </summary>
 /// <typeparam name="T">The type of values to store. Must be ushort, uint, or ulong.</typeparam>
-public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : struct
+public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable
+    where T : struct
 {
-    private static ArrayPool<byte> _bytePool = ArrayPool<byte>.Shared;
+    private static readonly ArrayPool<byte> _bytePool = ArrayPool<byte>.Shared;
 
     private readonly byte[] _data;
     private readonly int _dataValidBytes;
@@ -54,18 +55,24 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     public BitPackedArray(int count, int bitsPerValue)
     {
         if (count < 0)
-            throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than or equal to zero.");
+            throw new ArgumentOutOfRangeException(
+                nameof(count),
+                "Count must be greater than or equal to zero."
+            );
 
-        int maxBits = GetMaxBitsForType<T>();
+        var maxBits = GetMaxBitsForType<T>();
         if (bitsPerValue <= 0 || bitsPerValue > maxBits)
-            throw new ArgumentOutOfRangeException(nameof(bitsPerValue), $"Bits per value must be between 1 and {maxBits}.");
+            throw new ArgumentOutOfRangeException(
+                nameof(bitsPerValue),
+                $"Bits per value must be between 1 and {maxBits}."
+            );
 
         _count = count;
         _bitsPerValue = bitsPerValue;
         _maxValue = _bitsPerValue == 64 ? ulong.MaxValue : (1ul << _bitsPerValue) - 1;
 
         // Calculate the total number of bytes needed to store the values
-        int byteCount = BitPacker.CalculateRequiredBytes(count, bitsPerValue);
+        var byteCount = BitPacker.CalculateRequiredBytes(count, bitsPerValue);
         // _data = new byte[byteCount];
         _data = _bytePool.Rent(byteCount);
         Array.Clear(_data, 0, byteCount);
@@ -81,16 +88,19 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     {
         ArgumentNullException.ThrowIfNull(values);
 
-        int maxBits = GetMaxBitsForType<T>();
+        var maxBits = GetMaxBitsForType<T>();
         if (bitsPerValue <= 0 || bitsPerValue > maxBits)
-            throw new ArgumentOutOfRangeException(nameof(bitsPerValue), $"Bits per value must be between 1 and {maxBits}.");
+            throw new ArgumentOutOfRangeException(
+                nameof(bitsPerValue),
+                $"Bits per value must be between 1 and {maxBits}."
+            );
 
         _count = values.Length;
         _bitsPerValue = bitsPerValue;
         _maxValue = _bitsPerValue == 64 ? ulong.MaxValue : (1ul << _bitsPerValue) - 1;
 
         // Calculate the total number of bytes needed to store the values
-        int byteCount = BitPacker.CalculateRequiredBytes(_count, _bitsPerValue);
+        var byteCount = BitPacker.CalculateRequiredBytes(_count, _bitsPerValue);
         _data = _bytePool.Rent(byteCount);
         Array.Clear(_data, 0, byteCount);
         _dataValidBytes = byteCount;
@@ -109,15 +119,23 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     {
         ArgumentNullException.ThrowIfNull(packedData);
         if (count < 0)
-            throw new ArgumentOutOfRangeException(nameof(count), "Count must be greater than or equal to zero.");
+            throw new ArgumentOutOfRangeException(
+                nameof(count),
+                "Count must be greater than or equal to zero."
+            );
 
-        int maxBits = GetMaxBitsForType<T>();
+        var maxBits = GetMaxBitsForType<T>();
         if (bitsPerValue <= 0 || bitsPerValue > maxBits)
-            throw new ArgumentOutOfRangeException(nameof(bitsPerValue), $"Bits per value must be between 1 and {maxBits}.");
+            throw new ArgumentOutOfRangeException(
+                nameof(bitsPerValue),
+                $"Bits per value must be between 1 and {maxBits}."
+            );
 
-        int requiredBytes = BitPacker.CalculateRequiredBytes(count, bitsPerValue);
+        var requiredBytes = BitPacker.CalculateRequiredBytes(count, bitsPerValue);
         if (packedData.Length < requiredBytes)
-            throw new ArgumentException($"Packed data too small. Expected at least {requiredBytes} bytes for {count} values with {bitsPerValue} bits per value.");
+            throw new ArgumentException(
+                $"Packed data too small. Expected at least {requiredBytes} bytes for {count} values with {bitsPerValue} bits per value."
+            );
 
         _count = count;
         _bitsPerValue = bitsPerValue;
@@ -143,10 +161,12 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             ObjectDisposedException.ThrowIf(_isDisposed, nameof(BitPackedArray<T>));
 
             if (index < 0 || index >= _count)
-                throw new IndexOutOfRangeException($"Index {index} is out of range [0, {_count - 1}].");
+                throw new IndexOutOfRangeException(
+                    $"Index {index} is out of range [0, {_count - 1}]."
+                );
 
-            int bitPosition = index * _bitsPerValue;
-            ulong value = ReadBits(_data, bitPosition, _bitsPerValue);
+            var bitPosition = index * _bitsPerValue;
+            var value = ReadBits(_data, bitPosition, _bitsPerValue);
             return ConvertFromUInt64<T>(value);
         }
         set
@@ -154,14 +174,19 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             ObjectDisposedException.ThrowIf(_isDisposed, nameof(BitPackedArray<T>));
 
             if (index < 0 || index >= _count)
-                throw new IndexOutOfRangeException($"Index {index} is out of range [0, {_count - 1}].");
+                throw new IndexOutOfRangeException(
+                    $"Index {index} is out of range [0, {_count - 1}]."
+                );
 
             // Convert and validate the value
-            ulong numericValue = ConvertToUInt64(value);
+            var numericValue = ConvertToUInt64(value);
             if (numericValue > _maxValue)
-                throw new ArgumentOutOfRangeException(nameof(value), $"Value {value} requires more than {_bitsPerValue} bits to represent.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    $"Value {value} requires more than {_bitsPerValue} bits to represent."
+                );
 
-            int bitPosition = index * _bitsPerValue;
+            var bitPosition = index * _bitsPerValue;
             WriteBits(_data, numericValue, bitPosition, _bitsPerValue);
         }
     }
@@ -175,9 +200,12 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(BitPackedArray<T>));
 
         // Convert and validate the value
-        ulong numericValue = ConvertToUInt64(value);
+        var numericValue = ConvertToUInt64(value);
         if (numericValue > _maxValue)
-            throw new ArgumentOutOfRangeException(nameof(value), $"Value {value} requires more than {_bitsPerValue} bits to represent.");
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                $"Value {value} requires more than {_bitsPerValue} bits to represent."
+            );
 
         // Special case: If the bits per value is a power of 2 that divides byte size, we can optimize
         if (_bitsPerValue == 8 || _bitsPerValue == 16 || _bitsPerValue == 32 || _bitsPerValue == 64)
@@ -187,9 +215,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         }
 
         // General case: Set each individual value
-        for (int i = 0; i < _count; i++)
+        for (var i = 0; i < _count; i++)
         {
-            int bitPosition = i * _bitsPerValue;
+            var bitPosition = i * _bitsPerValue;
             WriteBits(_data, numericValue, bitPosition, _bitsPerValue);
         }
     }
@@ -201,18 +229,21 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     {
         if (_bitsPerValue == 8)
         {
-            byte byteValue = (byte)numericValue;
+            var byteValue = (byte)numericValue;
             Array.Fill(_data, byteValue, 0, _dataValidBytes);
         }
         else if (_bitsPerValue == 16)
         {
             // Fill pattern for 16-bit values
             var pattern = new byte[2];
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(pattern, (ushort)numericValue);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(
+                pattern,
+                (ushort)numericValue
+            );
 
-            for (int i = 0; i < _dataValidBytes; i += 2)
+            for (var i = 0; i < _dataValidBytes; i += 2)
             {
-                int remaining = Math.Min(2, _dataValidBytes - i);
+                var remaining = Math.Min(2, _dataValidBytes - i);
                 Buffer.BlockCopy(pattern, 0, _data, i, remaining);
             }
         }
@@ -220,11 +251,14 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         {
             // Fill pattern for 32-bit values
             var pattern = new byte[4];
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(pattern, (uint)numericValue);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(
+                pattern,
+                (uint)numericValue
+            );
 
-            for (int i = 0; i < _dataValidBytes; i += 4)
+            for (var i = 0; i < _dataValidBytes; i += 4)
             {
-                int remaining = Math.Min(4, _dataValidBytes - i);
+                var remaining = Math.Min(4, _dataValidBytes - i);
                 Buffer.BlockCopy(pattern, 0, _data, i, remaining);
             }
         }
@@ -234,9 +268,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             var pattern = new byte[8];
             System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(pattern, numericValue);
 
-            for (int i = 0; i < _dataValidBytes; i += 8)
+            for (var i = 0; i < _dataValidBytes; i += 8)
             {
-                int remaining = Math.Min(8, _dataValidBytes - i);
+                var remaining = Math.Min(8, _dataValidBytes - i);
                 Buffer.BlockCopy(pattern, 0, _data, i, remaining);
             }
         }
@@ -253,11 +287,18 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
 
         ArgumentNullException.ThrowIfNull(destinationArray);
         if (startIndex < 0)
-            throw new ArgumentOutOfRangeException(nameof(startIndex), "Start index cannot be negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(startIndex),
+                "Start index cannot be negative."
+            );
         if (destinationArray.Length - startIndex < _count)
             throw new ArgumentException("Destination array is too small.");
 
-        BitPacker.Unpack<T>(_data, _bitsPerValue, destinationArray.AsSpan().Slice(startIndex, _count));
+        BitPacker.Unpack<T>(
+            _data,
+            _bitsPerValue,
+            destinationArray.AsSpan().Slice(startIndex, _count)
+        );
     }
 
     /// <summary>
@@ -295,13 +336,13 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     public static BitPackedArray<T> Create(IEnumerable<T> values, int bitsPerValue)
     {
         // First, count the elements and validate the max value
-        int count = 0;
+        var count = 0;
         ulong maxValue = 0;
 
         foreach (var value in values)
         {
             count++;
-            ulong numericValue = ConvertToUInt64(value);
+            var numericValue = ConvertToUInt64(value);
             maxValue = Math.Max(maxValue, numericValue);
         }
 
@@ -315,16 +356,18 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         else
         {
             // Validate that all values fit in the specified bits
-            ulong maxAllowedValue = bitsPerValue == 64 ? ulong.MaxValue : (1UL << bitsPerValue) - 1;
+            var maxAllowedValue = bitsPerValue == 64 ? ulong.MaxValue : (1UL << bitsPerValue) - 1;
             if (maxValue > maxAllowedValue)
-                throw new ArgumentException($"Some values require more than {bitsPerValue} bits to represent.");
+                throw new ArgumentException(
+                    $"Some values require more than {bitsPerValue} bits to represent."
+                );
         }
 
         // Create the array
         var result = new BitPackedArray<T>(count, bitsPerValue);
 
         // Fill the array
-        int index = 0;
+        var index = 0;
         foreach (var value in values)
             result[index++] = value;
 
@@ -336,10 +379,8 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     /// </summary>
     /// <param name="values">The values to store.</param>
     /// <returns>A new bit-packed array.</returns>
-    public static BitPackedArray<T> CreateWithMinimumBits(IEnumerable<T> values)
-    {
-        return Create(values, 0); // 0 triggers automatic calculation of minimum bits
-    }
+    public static BitPackedArray<T> CreateWithMinimumBits(IEnumerable<T> values) =>
+        Create(values, 0); // 0 triggers automatic calculation of minimum bits
 
     /// <summary>
     /// Creates a new bit-packed array from a span of values with the specified bits per value.
@@ -356,9 +397,9 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         ulong maxValue = 0;
         if (bitsPerValue <= 0)
         {
-            for (int i = 0; i < values.Length; i++)
+            for (var i = 0; i < values.Length; i++)
             {
-                ulong numericValue = ConvertToUInt64(values[i]);
+                var numericValue = ConvertToUInt64(values[i]);
                 maxValue = Math.Max(maxValue, numericValue);
             }
 
@@ -368,7 +409,7 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         }
 
         // Create the array and pack the values
-        BitPackedArray<T> result = new BitPackedArray<T>(values.Length, bitsPerValue);
+        var result = new BitPackedArray<T>(values.Length, bitsPerValue);
         BitPacker.Pack<T>(values, bitsPerValue, result._data);
 
         return result;
@@ -397,20 +438,20 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         if (newSize > 0 && _count > 0)
         {
             // Copy the values to the new array
-            int copyCount = Math.Min(newSize, _count);
-            int bytesToCopy = BitPacker.CalculateRequiredBytes(copyCount, _bitsPerValue);
+            var copyCount = Math.Min(newSize, _count);
+            var bytesToCopy = BitPacker.CalculateRequiredBytes(copyCount, _bitsPerValue);
 
             // Direct copy for complete bytes
-            int completeBytes = (copyCount * _bitsPerValue) / 8;
+            var completeBytes = (copyCount * _bitsPerValue) / 8;
             if (completeBytes > 0)
                 Buffer.BlockCopy(_data, 0, result._data, 0, completeBytes);
 
             // Copy the remaining bits
-            int remainingBits = (copyCount * _bitsPerValue) % 8;
+            var remainingBits = (copyCount * _bitsPerValue) % 8;
             if (remainingBits > 0 && completeBytes < _dataValidBytes)
             {
-                byte lastByte = _data[completeBytes];
-                byte mask = (byte)((1 << remainingBits) - 1);
+                var lastByte = _data[completeBytes];
+                var mask = (byte)((1 << remainingBits) - 1);
                 result._data[completeBytes] = (byte)(lastByte & mask);
             }
         }
@@ -425,10 +466,10 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     public int EstimateMemoryUsage()
     {
         // Object overhead + field storage + array overhead + array data
-        int objectOverhead = 24; // Approximate .NET object overhead
-        int fieldStorage = 5 * sizeof(int) + sizeof(bool); // _data reference, _bitsPerValue, _count, _maxValue, _isDisposed
-        int arrayOverhead = 24; // Approximate array overhead
-        int arrayData = _data.Length;
+        var objectOverhead = 24; // Approximate .NET object overhead
+        var fieldStorage = 5 * sizeof(int) + sizeof(bool); // _data reference, _bitsPerValue, _count, _maxValue, _isDisposed
+        var arrayOverhead = 24; // Approximate array overhead
+        var arrayData = _data.Length;
 
         return objectOverhead + fieldStorage + arrayOverhead + arrayData;
     }
@@ -440,17 +481,14 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     {
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(BitPackedArray<T>));
 
-        for (int i = 0; i < _count; i++)
+        for (var i = 0; i < _count; i++)
             yield return this[i];
     }
 
     /// <summary>
     /// Returns an enumerator that iterates through the values in the bit-packed array.
     /// </summary>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// Disposes the bit-packed array, releasing any resources it holds.
@@ -475,25 +513,27 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteBits(byte[] bytes, ulong value, int bitPosition, int numBits)
     {
-        int bytePos = bitPosition / 8;
-        int bitPosInByte = bitPosition % 8;
+        var bytePos = bitPosition / 8;
+        var bitPosInByte = bitPosition % 8;
 
         // Handle the common case where all bits fit in a single byte
         if (bitPosInByte + numBits <= 8)
         {
-            byte mask = (byte)((1 << numBits) - 1);
-            byte packedValue = (byte)((value & mask) << bitPosInByte);
-            byte clearMask = (byte)~(mask << bitPosInByte);
+            var mask = (byte)((1 << numBits) - 1);
+            var packedValue = (byte)((value & mask) << bitPosInByte);
+            var clearMask = (byte)~(mask << bitPosInByte);
             bytes[bytePos] = (byte)((bytes[bytePos] & clearMask) | packedValue);
             return;
         }
 
         // Handle more complex cases that span multiple bytes
         // First byte
-        int bitsInFirstByte = 8 - bitPosInByte;
-        byte firstMask = (byte)((1 << bitsInFirstByte) - 1);
-        byte clearFirstMask = (byte)~(firstMask << bitPosInByte);
-        bytes[bytePos] = (byte)((bytes[bytePos] & clearFirstMask) | ((byte)(value & firstMask) << bitPosInByte));
+        var bitsInFirstByte = 8 - bitPosInByte;
+        var firstMask = (byte)((1 << bitsInFirstByte) - 1);
+        var clearFirstMask = (byte)~(firstMask << bitPosInByte);
+        bytes[bytePos] = (byte)(
+            (bytes[bytePos] & clearFirstMask) | ((byte)(value & firstMask) << bitPosInByte)
+        );
 
         value >>= bitsInFirstByte;
         numBits -= bitsInFirstByte;
@@ -511,8 +551,8 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         // Last byte (if any bits remain)
         if (numBits > 0)
         {
-            byte lastMask = (byte)((1 << numBits) - 1);
-            byte clearLastMask = (byte)~lastMask;
+            var lastMask = (byte)((1 << numBits) - 1);
+            var clearLastMask = (byte)~lastMask;
             bytes[bytePos] = (byte)((bytes[bytePos] & clearLastMask) | ((byte)(value & lastMask)));
         }
     }
@@ -523,23 +563,23 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong ReadBits(byte[] bytes, int bitPosition, int numBits)
     {
-        int bytePos = bitPosition / 8;
-        int bitPosInByte = bitPosition % 8;
+        var bytePos = bitPosition / 8;
+        var bitPosInByte = bitPosition % 8;
 
         // Handle the common case where all bits are within a single byte
         if (bitPosInByte + numBits <= 8)
         {
-            byte mask = (byte)((1 << numBits) - 1);
+            var mask = (byte)((1 << numBits) - 1);
             return (ulong)((bytes[bytePos] >> bitPosInByte) & mask);
         }
 
         // Handle more complex cases that span multiple bytes
         ulong result;
-        int bitsRead = 0;
+        var bitsRead = 0;
 
         // First byte - partial
-        int bitsInFirstByte = 8 - bitPosInByte;
-        byte firstMask = (byte)((1 << bitsInFirstByte) - 1);
+        var bitsInFirstByte = 8 - bitPosInByte;
+        var firstMask = (byte)((1 << bitsInFirstByte) - 1);
         result = (ulong)(bytes[bytePos] >> bitPosInByte) & firstMask;
 
         bitsRead += bitsInFirstByte;
@@ -554,10 +594,10 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         }
 
         // Last byte - partial (if any bits remain)
-        int remainingBits = numBits - bitsRead;
+        var remainingBits = numBits - bitsRead;
         if (remainingBits > 0)
         {
-            byte lastMask = (byte)((1 << remainingBits) - 1);
+            var lastMask = (byte)((1 << remainingBits) - 1);
             result |= (ulong)(bytes[bytePos] & lastMask) << bitsRead;
         }
 
@@ -565,7 +605,8 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetMaxBitsForType<TValue>() where TValue : struct
+    private static int GetMaxBitsForType<TValue>()
+        where TValue : struct
     {
         if (typeof(TValue) == typeof(ushort))
             return 16;
@@ -573,11 +614,14 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             return 32;
         if (typeof(TValue) == typeof(ulong))
             return 64;
-        throw new NotSupportedException($"Type {typeof(TValue).Name} is not supported. Only ushort, uint, and ulong are supported.");
+        throw new NotSupportedException(
+            $"Type {typeof(TValue).Name} is not supported. Only ushort, uint, and ulong are supported."
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong ConvertToUInt64<TValue>(TValue value) where TValue : struct
+    private static ulong ConvertToUInt64<TValue>(TValue value)
+        where TValue : struct
     {
         if (typeof(TValue) == typeof(ushort))
             return Unsafe.As<TValue, ushort>(ref value);
@@ -585,11 +629,14 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
             return Unsafe.As<TValue, uint>(ref value);
         if (typeof(TValue) == typeof(ulong))
             return Unsafe.As<TValue, ulong>(ref value);
-        throw new NotSupportedException($"Type {typeof(TValue).Name} is not supported. Only ushort, uint, and ulong are supported.");
+        throw new NotSupportedException(
+            $"Type {typeof(TValue).Name} is not supported. Only ushort, uint, and ulong are supported."
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static TValue ConvertFromUInt64<TValue>(ulong value) where TValue : struct
+    private static TValue ConvertFromUInt64<TValue>(ulong value)
+        where TValue : struct
     {
         if (typeof(TValue) == typeof(ushort))
         {
@@ -603,6 +650,8 @@ public sealed class BitPackedArray<T> : IEnumerable<T>, IDisposable where T : st
         }
         if (typeof(TValue) == typeof(ulong))
             return Unsafe.As<ulong, TValue>(ref value);
-        throw new NotSupportedException($"Type {typeof(TValue).Name} is not supported. Only ushort, uint, and ulong are supported.");
+        throw new NotSupportedException(
+            $"Type {typeof(TValue).Name} is not supported. Only ushort, uint, and ulong are supported."
+        );
     }
 }

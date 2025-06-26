@@ -2,9 +2,15 @@ namespace ITOC.Core.BlockModels;
 
 public class CubeModel : CubeModelBase
 {
-    public CubeModel(string texturePathPY, string texturePathNY,
-        string texturePathPX, string texturePathNX,
-        string texturePathPZ, string texturePathNZ) : base()
+    public CubeModel(
+        string texturePathPY,
+        string texturePathNY,
+        string texturePathPX,
+        string texturePathNX,
+        string texturePathPZ,
+        string texturePathNZ
+    )
+        : base()
     {
         var materialSettings = new MaterialSettings(texturePathPY);
         _materials[Direction.PositiveY] = MaterialManager.Instance.GetMaterial(materialSettings);

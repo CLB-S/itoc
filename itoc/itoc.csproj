@@ -1,9 +1,9 @@
 <Project Sdk="Godot.NET.Sdk/4.5.0-beta">
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <EnableDynamicLoading>true</EnableDynamicLoading>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\itoc.core\itoc.core.csproj" />
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\itoc.core\itoc.core.csproj" />
+  </ItemGroup>
 </Project>

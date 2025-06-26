@@ -27,7 +27,12 @@ public class ParseResult
     /// </summary>
     public string ErrorMessage { get; }
 
-    private ParseResult(CommandNode command, bool success, Dictionary<string, object> arguments = null, string errorMessage = null)
+    private ParseResult(
+        CommandNode command,
+        bool success,
+        Dictionary<string, object> arguments = null,
+        string errorMessage = null
+    )
     {
         Command = command;
         Success = success;
@@ -38,31 +43,29 @@ public class ParseResult
     /// <summary>
     /// Creates a successful parse result
     /// </summary>
-    public static ParseResult SuccessResult(CommandNode command, Dictionary<string, object> arguments)
-    {
-        return new ParseResult(command, true, arguments);
-    }
+    public static ParseResult SuccessResult(
+        CommandNode command,
+        Dictionary<string, object> arguments
+    ) => new ParseResult(command, true, arguments);
 
-    public static ParseResult PermissionDeniedResult(CommandNode command)
-    {
-        return new ParseResult(command, false, errorMessage: "You do not have permission to execute this command");
-    }
+    public static ParseResult PermissionDeniedResult(CommandNode command) =>
+        new ParseResult(
+            command,
+            false,
+            errorMessage: "You do not have permission to execute this command"
+        );
 
     /// <summary>
     /// Creates a failed parse result
     /// </summary>
-    public static ParseResult FailureResult(CommandNode command, string errorMessage)
-    {
-        return new ParseResult(command, false, errorMessage: errorMessage);
-    }
+    public static ParseResult FailureResult(CommandNode command, string errorMessage) =>
+        new ParseResult(command, false, errorMessage: errorMessage);
 
     /// <summary>
     /// Creates a failed parse result for command not found
     /// </summary>
-    public static ParseResult CommandNotFoundResult(string commandName)
-    {
-        return new ParseResult(null, false, errorMessage: $"Unknown command: {commandName}");
-    }
+    public static ParseResult CommandNotFoundResult(string commandName) =>
+        new ParseResult(null, false, errorMessage: $"Unknown command: {commandName}");
 }
 
 /// <summary>
@@ -70,8 +73,12 @@ public class ParseResult
 /// </summary>
 public class CommandDispatcher
 {
-    private readonly Dictionary<string, CommandNode> _rootCommands = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, CommandNode> _commandAliases = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, CommandNode> _rootCommands = new(
+        StringComparer.OrdinalIgnoreCase
+    );
+    private readonly Dictionary<string, CommandNode> _commandAliases = new(
+        StringComparer.OrdinalIgnoreCase
+    );
 
     /// <summary>
     /// Prefix used for commands (e.g., "/" or "!")
@@ -92,7 +99,9 @@ public class CommandDispatcher
         ArgumentNullException.ThrowIfNull(command);
 
         if (_rootCommands.ContainsKey(command.Name))
-            throw new ArgumentException($"A command with the name '{command.Name}' is already registered");
+            throw new ArgumentException(
+                $"A command with the name '{command.Name}' is already registered"
+            );
 
         _rootCommands.Add(command.Name, command);
 
@@ -100,7 +109,9 @@ public class CommandDispatcher
         foreach (var alias in command.Aliases)
         {
             if (_rootCommands.ContainsKey(alias) || _commandAliases.ContainsKey(alias))
-                throw new ArgumentException($"A command or alias with the name '{alias}' is already registered");
+                throw new ArgumentException(
+                    $"A command or alias with the name '{alias}' is already registered"
+                );
 
             _commandAliases.Add(alias, command);
         }
@@ -122,8 +133,8 @@ public class CommandDispatcher
         _rootCommands.Remove(commandName);
 
         // Clean up aliases
-        var aliasesToRemove = command.Aliases
-            .Where(a => _commandAliases.ContainsKey(a) && _commandAliases[a] == command)
+        var aliasesToRemove = command
+            .Aliases.Where(a => _commandAliases.ContainsKey(a) && _commandAliases[a] == command)
             .ToList();
 
         foreach (var alias in aliasesToRemove)
@@ -172,15 +183,16 @@ public class CommandDispatcher
             return ParseResult.FailureResult(null, "No command provided");
 
         var commandName = args[0];
-        CommandNode command;
 
         // Find the command
-        if (!_rootCommands.TryGetValue(commandName, out command) &&
-            !_commandAliases.TryGetValue(commandName, out command))
+        if (
+            !_rootCommands.TryGetValue(commandName, out var command)
+            && !_commandAliases.TryGetValue(commandName, out command)
+        )
             return ParseResult.CommandNotFoundResult(commandName);
 
         // Navigate the command tree
-        int argIndex = 1;
+        var argIndex = 1;
         while (argIndex < args.Length)
         {
             var next = command.GetChild(args[argIndex]);
@@ -202,23 +214,29 @@ public class CommandDispatcher
 
         // Check if we have enough arguments for all required parameters
         if (args.Length - argIndex < requiredArgs.Count)
-            return ParseResult.FailureResult(command, $"Not enough arguments. Required: {string.Join(", ", requiredArgs.Select(a => a.Name))}");
+            return ParseResult.FailureResult(
+                command,
+                $"Not enough arguments. Required: {string.Join(", ", requiredArgs.Select(a => a.Name))}"
+            );
 
         // Parse required arguments
-        for (int i = 0; i < requiredArgs.Count; i++)
+        for (var i = 0; i < requiredArgs.Count; i++)
         {
             var arg = requiredArgs[i];
             var value = args[argIndex + i];
 
             if (!arg.Type.TryParse(value, out var parsedValue))
-                return ParseResult.FailureResult(command, $"Invalid value for argument '{arg.Name}': {value}");
+                return ParseResult.FailureResult(
+                    command,
+                    $"Invalid value for argument '{arg.Name}': {value}"
+                );
 
             parsedArgs.Add(arg.Name, parsedValue);
         }
 
         // Parse optional arguments if provided
-        int optionalArgsStart = argIndex + requiredArgs.Count;
-        for (int i = 0; i < optionalArgs.Count && optionalArgsStart + i < args.Length; i++)
+        var optionalArgsStart = argIndex + requiredArgs.Count;
+        for (var i = 0; i < optionalArgs.Count && optionalArgsStart + i < args.Length; i++)
         {
             var arg = optionalArgs[i];
             var value = args[optionalArgsStart + i];
@@ -264,10 +282,8 @@ public class CommandDispatcher
     /// <summary>
     /// Gets all root command names
     /// </summary>
-    public IEnumerable<string> AllRootCommandNames()
-    {
-        return _rootCommands.Keys.Concat(_commandAliases.Keys);
-    }
+    public IEnumerable<string> AllRootCommandNames() =>
+        _rootCommands.Keys.Concat(_commandAliases.Keys);
 
     /// <summary>
     /// Gets all root command names that the sender has permission for
@@ -275,8 +291,8 @@ public class CommandDispatcher
     /// <param name="sender">The sender requesting the command names</param>
     public IEnumerable<string> AllRootCommandNames(object sender)
     {
-        var commands = _rootCommands.Values
-            .Where(c => c.HasPermission(sender))
+        var commands = _rootCommands
+            .Values.Where(c => c.HasPermission(sender))
             .Select(c => $"{CommandPrefix}{c.Name}");
 
         var aliases = _commandAliases
@@ -285,7 +301,6 @@ public class CommandDispatcher
 
         return commands.Concat(aliases);
     }
-
 
     /// <summary>
     /// Gets suggestions for the current input
@@ -310,12 +325,18 @@ public class CommandDispatcher
             if (args.Length == 0)
                 return AllRootCommandNames(sender);
 
-            var commands = _rootCommands.Values
-                .Where(c => c.HasPermission(sender) && c.Name.StartsWith(args[0], StringComparison.OrdinalIgnoreCase))
+            var commands = _rootCommands
+                .Values.Where(c =>
+                    c.HasPermission(sender)
+                    && c.Name.StartsWith(args[0], StringComparison.OrdinalIgnoreCase)
+                )
                 .Select(c => $"{CommandPrefix}{c.Name}");
 
-            var aliases = _commandAliases.Where(pair =>
-                    pair.Value.HasPermission(sender) && pair.Key.StartsWith(args[0], StringComparison.OrdinalIgnoreCase))
+            var aliases = _commandAliases
+                .Where(pair =>
+                    pair.Value.HasPermission(sender)
+                    && pair.Key.StartsWith(args[0], StringComparison.OrdinalIgnoreCase)
+                )
                 .Select(pair => $"{CommandPrefix}{pair.Key}");
 
             return commands.Concat(aliases);
@@ -323,14 +344,15 @@ public class CommandDispatcher
 
         // Find the command
         var commandName = args[0];
-        CommandNode command;
 
-        if (!_rootCommands.TryGetValue(commandName, out command) &&
-            !_commandAliases.TryGetValue(commandName, out command))
+        if (
+            !_rootCommands.TryGetValue(commandName, out var command)
+            && !_commandAliases.TryGetValue(commandName, out command)
+        )
             return [];
 
         // Navigate the command tree
-        int argIndex = 1;
+        var argIndex = 1;
         while (argIndex < args.Length)
         {
             var subCommand = command.GetChild(args[argIndex]);
@@ -350,8 +372,11 @@ public class CommandDispatcher
         var prefix = inputEndWithSpace ? string.Empty : args[^1];
 
         // Suggest subcommands
-        var subCommands = command.Children
-            .Where(c => c.HasPermission(sender) && c.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        var subCommands = command
+            .Children.Where(c =>
+                c.HasPermission(sender)
+                && c.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            )
             .Select(c => c.Name);
 
         // Suggest arguments by order
@@ -373,12 +398,12 @@ public class CommandDispatcher
 
         var args = new List<string>();
         var currentArg = new StringBuilder();
-        bool inQuote = false;
-        char quoteChar = '"';
+        var inQuote = false;
+        var quoteChar = '"';
 
-        for (int i = 0; i < input.Length; i++)
+        for (var i = 0; i < input.Length; i++)
         {
-            char c = input[i];
+            var c = input[i];
 
             if ((c == '"' || c == '\'') && (i == 0 || input[i - 1] != '\\'))
             {
@@ -408,7 +433,11 @@ public class CommandDispatcher
                     currentArg.Clear();
                 }
             }
-            else if (c == '\\' && i < input.Length - 1 && (input[i + 1] == '"' || input[i + 1] == '\''))
+            else if (
+                c == '\\'
+                && i < input.Length - 1
+                && (input[i + 1] == '"' || input[i + 1] == '\'')
+            )
             {
                 // Escape sequence for quotes
                 continue;

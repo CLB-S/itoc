@@ -9,45 +9,39 @@ public enum Direction
     PositiveX = 2,
     NegativeX = 3,
     PositiveZ = 4,
-    NegativeZ = 5
+    NegativeZ = 5,
 }
 
 public static class DirectionHelper
 {
-    public static Vector3I Norm(this Direction dir)
-    {
-        return dir switch
+    public static Vector3I Norm(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => Vector3I.Right,
             Direction.NegativeX => Vector3I.Left,
             Direction.PositiveY => Vector3I.Up,
             Direction.NegativeY => Vector3I.Down,
             Direction.PositiveZ => Vector3I.Back,
-            _ => Vector3I.Forward
+            _ => Vector3I.Forward,
         };
-    }
 
-    public static Vector3I Offset(this Direction dir)
-    {
-        return dir switch
+    public static Vector3I Offset(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => Vector3I.Right,
             Direction.PositiveY => Vector3I.Up,
             Direction.PositiveZ => Vector3I.Back,
-            _ => Vector3I.Zero
+            _ => Vector3I.Zero,
         };
-    }
 
-    public static Vector3I AntiOffset(this Direction dir)
-    {
-        return dir switch
+    public static Vector3I AntiOffset(this Direction dir) =>
+        dir switch
         {
             Direction.NegativeX => Vector3I.Right,
             Direction.NegativeY => Vector3I.Up,
             Direction.NegativeZ => Vector3I.Back,
-            _ => Vector3I.Zero
+            _ => Vector3I.Zero,
         };
-    }
 
     public static Direction GetDirection(Vector3 dir)
     {
@@ -58,9 +52,8 @@ public static class DirectionHelper
         return dir.Z > 0 ? Direction.PositiveZ : Direction.NegativeZ;
     }
 
-    public static string Name(this Direction dir)
-    {
-        return dir switch
+    public static string Name(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => "+X",
             Direction.NegativeX => "-X",
@@ -68,57 +61,48 @@ public static class DirectionHelper
             Direction.NegativeY => "-Y",
             Direction.PositiveZ => "+Z",
             Direction.NegativeZ => "-Z",
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(),
         };
-    }
 
-    public static bool IsPositive(this Direction dir)
-    {
-        return dir switch
+    public static bool IsPositive(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => true,
             Direction.PositiveY => true,
             Direction.PositiveZ => true,
-            _ => false
+            _ => false,
         };
-    }
 
-    public static Direction Opposite(this Direction dir)
-    {
-        return dir switch
+    public static Direction Opposite(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => Direction.NegativeX,
             Direction.NegativeX => Direction.PositiveX,
             Direction.PositiveY => Direction.NegativeY,
             Direction.NegativeY => Direction.PositiveY,
             Direction.PositiveZ => Direction.NegativeZ,
-            _ => Direction.PositiveZ
+            _ => Direction.PositiveZ,
         };
-    }
 
-    public static Direction Right(this Direction dir)
-    {
-        return dir switch
+    public static Direction Right(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => Direction.PositiveY,
             Direction.NegativeX => Direction.NegativeY,
             Direction.PositiveY => Direction.PositiveZ,
             Direction.NegativeY => Direction.NegativeZ,
             Direction.PositiveZ => Direction.PositiveX,
-            _ => Direction.NegativeX
+            _ => Direction.NegativeX,
         };
-    }
 
-    public static Direction Forward(this Direction dir)
-    {
-        return dir switch
+    public static Direction Forward(this Direction dir) =>
+        dir switch
         {
             Direction.PositiveX => Direction.PositiveZ,
             Direction.NegativeX => Direction.NegativeZ,
             Direction.PositiveY => Direction.PositiveX,
             Direction.NegativeY => Direction.NegativeX,
             Direction.PositiveZ => Direction.PositiveY,
-            _ => Direction.NegativeY
+            _ => Direction.NegativeY,
         };
-    }
 }

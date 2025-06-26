@@ -5,7 +5,7 @@ public enum WorldGenerationState
     NotStarted,
     PreGeneration,
     Ready,
-    Failed
+    Failed,
 }
 
 public class GenerationProgressEventArgs : EventArgs

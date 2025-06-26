@@ -12,15 +12,20 @@ public static class FastPoissonDiskSampling
     public const double InvertRootTwo = 0.70710678118; // Becaust two dimension grid.
     public const int DefaultIterationPerPoint = 30;
 
+    public static List<Vector2> Sampling(
+        Vector2 bottomLeft,
+        Vector2 topRight,
+        double minimumDistance,
+        RandomNumberGenerator rng
+    ) => Sampling(bottomLeft, topRight, minimumDistance, rng, DefaultIterationPerPoint);
 
-    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, double minimumDistance,
-        RandomNumberGenerator rng)
-    {
-        return Sampling(bottomLeft, topRight, minimumDistance, rng, DefaultIterationPerPoint);
-    }
-
-    public static List<Vector2> Sampling(Vector2 bottomLeft, Vector2 topRight, double minimumDistance,
-        RandomNumberGenerator rng, int iterationPerPoint)
+    public static List<Vector2> Sampling(
+        Vector2 bottomLeft,
+        Vector2 topRight,
+        double minimumDistance,
+        RandomNumberGenerator rng,
+        int iterationPerPoint
+    )
     {
         var settings = GetSettings(
             bottomLeft,
@@ -33,7 +38,7 @@ public static class FastPoissonDiskSampling
         {
             Grid = new Vector2?[settings.GridWidth + 1, settings.GridHeight + 1],
             SamplePoints = new List<Vector2>(),
-            ActivePoints = new List<Vector2>()
+            ActivePoints = new List<Vector2>(),
         };
 
         GetFirstPoint(settings, bags, rng);
@@ -48,7 +53,8 @@ public static class FastPoissonDiskSampling
             for (var k = 0; k < settings.IterationPerPoint; k++)
                 found = found | GetNextPoint(point, settings, bags, rng);
 
-            if (found == false) bags.ActivePoints.RemoveAt(index);
+            if (found == false)
+                bags.ActivePoints.RemoveAt(index);
         } while (bags.ActivePoints.Count > 0);
 
         return bags.SamplePoints;
@@ -82,12 +88,18 @@ public static class FastPoissonDiskSampling
 
     #region "Algorithm Calculations"
 
-    private static bool GetNextPoint(Vector2 point, Settings set, Bags bags, RandomNumberGenerator rng)
+    private static bool GetNextPoint(
+        Vector2 point,
+        Settings set,
+        Bags bags,
+        RandomNumberGenerator rng
+    )
     {
         var found = false;
         var p = GetRandPosInCircle(set.MinimumDistance, 2 * set.MinimumDistance, rng) + point;
 
-        if (set.Dimension.HasPoint(p) == false) return false;
+        if (set.Dimension.HasPoint(p) == false)
+            return false;
 
         var minimum = set.MinimumDistance * set.MinimumDistance;
         var index = GetGridIndex(p, set);
@@ -96,15 +108,18 @@ public static class FastPoissonDiskSampling
         // Although it is Mathf.CeilToInt(set.MinimumDistance / set.CellSize) in the formula, It will be 2 after all.
         var around = 2;
         var fieldMin = new Vector2I(Mathf.Max(0, index.X - around), Mathf.Max(0, index.Y - around));
-        var fieldMax = new Vector2I(Mathf.Min(set.GridWidth, index.X + around),
-            Mathf.Min(set.GridHeight, index.Y + around));
+        var fieldMax = new Vector2I(
+            Mathf.Min(set.GridWidth, index.X + around),
+            Mathf.Min(set.GridHeight, index.Y + around)
+        );
 
         for (var i = fieldMin.X; i <= fieldMax.X && drop == false; i++)
-            for (var j = fieldMin.Y; j <= fieldMax.Y && drop == false; j++)
-            {
-                var q = bags.Grid[i, j];
-                if (q.HasValue && (q.Value - p).LengthSquared() <= minimum) drop = true;
-            }
+        for (var j = fieldMin.Y; j <= fieldMax.Y && drop == false; j++)
+        {
+            var q = bags.Grid[i, j];
+            if (q.HasValue && (q.Value - p).LengthSquared() <= minimum)
+                drop = true;
+        }
 
         if (drop == false)
         {
@@ -136,13 +151,11 @@ public static class FastPoissonDiskSampling
 
     #region "Utils"
 
-    private static Vector2I GetGridIndex(Vector2 point, Settings set)
-    {
-        return new Vector2I(
+    private static Vector2I GetGridIndex(Vector2 point, Settings set) =>
+        new Vector2I(
             Mathf.FloorToInt((point.X - set.BottomLeft.X) / set.CellSize),
             Mathf.FloorToInt((point.Y - set.BottomLeft.Y) / set.CellSize)
         );
-    }
 
     private static Settings GetSettings(Vector2 bl, Vector2 tr, double min, int iteration)
     {
@@ -161,11 +174,15 @@ public static class FastPoissonDiskSampling
 
             CellSize = cell,
             GridWidth = Mathf.CeilToInt(dimension.X / cell),
-            GridHeight = Mathf.CeilToInt(dimension.Y / cell)
+            GridHeight = Mathf.CeilToInt(dimension.Y / cell),
         };
     }
 
-    private static Vector2 GetRandPosInCircle(double fieldMin, double fieldMax, RandomNumberGenerator rng)
+    private static Vector2 GetRandPosInCircle(
+        double fieldMin,
+        double fieldMax,
+        RandomNumberGenerator rng
+    )
     {
         var theta = rng.RandfRange(0, Mathf.Pi * 2);
         var radius = Mathf.Sqrt(rng.RandfRange(fieldMin * fieldMin, fieldMax * fieldMax));

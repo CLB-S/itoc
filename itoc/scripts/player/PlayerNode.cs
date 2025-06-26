@@ -14,13 +14,7 @@ public partial class PlayerNode : CharacterBody3D
         Player.OnReady();
     }
 
-    public override void _Input(InputEvent inputEvent)
-    {
-        Player.OnInput(inputEvent);
-    }
+    public override void _Input(InputEvent inputEvent) => Player.OnInput(inputEvent);
 
-    public override void _PhysicsProcess(double delta)
-    {
-        Player.OnPhysicsProcess(delta);
-    }
+    public override void _PhysicsProcess(double delta) => Player.OnPhysicsProcess(delta);
 }

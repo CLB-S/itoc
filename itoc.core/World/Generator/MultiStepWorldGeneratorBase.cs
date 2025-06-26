@@ -15,7 +15,8 @@ public class WorldGenerationStep
     {
         if (!StringUtils.IsValidId(id))
             throw new ArgumentException(
-                $"Invalid block ID format: {id}. Must be in format 'foo_bar' using lowercase letters, numbers and underscores");
+                $"Invalid block ID format: {id}. Must be in format 'foo_bar' using lowercase letters, numbers and underscores"
+            );
 
         Id = id;
         Action = action;
@@ -99,7 +100,9 @@ public abstract class MultiStepWorldGeneratorBase : IWorldGenerator
         // TODO: Dependency check
 
         if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Ready)
-            throw new InvalidOperationException("Cannot remove steps after generation has started.");
+            throw new InvalidOperationException(
+                "Cannot remove steps after generation has started."
+            );
 
         var node = _generationPipeline.First;
         while (node != null)
@@ -137,7 +140,9 @@ public abstract class MultiStepWorldGeneratorBase : IWorldGenerator
             lock (_stateLock)
             {
                 if (State == WorldGenerationState.Ready)
-                    ReportProgress("Warning: World generation has already been completed. Regenerating...");
+                    ReportProgress(
+                        "Warning: World generation has already been completed. Regenerating..."
+                    );
 
                 State = WorldGenerationState.PreGeneration;
             }
@@ -163,14 +168,15 @@ public abstract class MultiStepWorldGeneratorBase : IWorldGenerator
         }
     }
 
-    protected void ReportProgress(string message)
-    {
-        ProgressUpdated?.Invoke(this, new GenerationProgressEventArgs
-        {
-            Message = $"[{_stopwatch.Elapsed.TotalSeconds:F2}s] {message}",
-            CurrentState = State
-        });
-    }
+    protected void ReportProgress(string message) =>
+        ProgressUpdated?.Invoke(
+            this,
+            new GenerationProgressEventArgs
+            {
+                Message = $"[{_stopwatch.Elapsed.TotalSeconds:F2}s] {message}",
+                CurrentState = State,
+            }
+        );
 
     private void UpdateState(WorldGenerationState newState)
     {
@@ -192,7 +198,10 @@ public abstract class MultiStepWorldGeneratorBase : IWorldGenerator
         GenerationFailed?.Invoke(this, ex);
     }
 
-    public virtual double[,] CalculateChunkHeightMap(Vector2I chunkColumnIndex, Func<double, double, double> getHeight)
+    public virtual double[,] CalculateChunkHeightMap(
+        Vector2I chunkColumnIndex,
+        Func<double, double, double> getHeight
+    )
     {
         if (State != WorldGenerationState.Ready)
             throw new InvalidOperationException("World generation is not completed yet.");

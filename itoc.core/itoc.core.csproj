@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Godot.NET.Sdk/4.5.0-beta">
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="MathEvaluator" Version="2.3.0" />
-        <PackageReference Include="Supercluster.KDTree.Standard" Version="1.0.5" />
-        <PackageReference Include="YamlDotNet" Version="16.3.0" />
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MathEvaluator" Version="2.3.0" />
+    <PackageReference Include="Supercluster.KDTree.Standard" Version="1.0.5" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
 </Project>

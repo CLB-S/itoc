@@ -59,5 +59,4 @@ public class VanillaWorldSettings : WorldSettings
     public double MaxErosionSlopeAngle = 30.0;
 
     #endregion
-
 }

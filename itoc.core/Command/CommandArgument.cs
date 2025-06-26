@@ -43,7 +43,14 @@ public class CommandArgument
     /// <param name="description">Description of the argument</param>
     /// <param name="isRequired">Whether this argument is required</param>
     /// <param name="defaultValue">Default value if argument is not provided</param>
-    public CommandArgument(string name, IArgumentType type, string description = "", string[] suggestionsOverride = null, bool isRequired = true, object defaultValue = null)
+    public CommandArgument(
+        string name,
+        IArgumentType type,
+        string description = "",
+        string[] suggestionsOverride = null,
+        bool isRequired = true,
+        object defaultValue = null
+    )
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Type = type ?? throw new ArgumentNullException(nameof(type));
@@ -92,5 +99,9 @@ public interface IArgumentType
     /// <param name="currentInput">The current input string</param>
     /// <param name="context">Optional context object for contextual suggestions</param>
     /// <returns>A list of suggested values</returns>
-    IEnumerable<string> GetSuggestions(string argumentName, string currentInput, object context = null);
+    IEnumerable<string> GetSuggestions(
+        string argumentName,
+        string currentInput,
+        object context = null
+    );
 }

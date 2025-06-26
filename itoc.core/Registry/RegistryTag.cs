@@ -6,7 +6,8 @@ namespace ITOC.Core.Registry;
 /// A tag that can be applied to registry entries to group them together
 /// </summary>
 /// <typeparam name="T">The type of content managed by the registry</typeparam>
-public class RegistryTag<T> : IEnumerable<T> where T : class
+public class RegistryTag<T> : IEnumerable<T>
+    where T : class
 {
     private readonly HashSet<Identifier> _entries = new();
     private readonly Registry<T> _registry;
@@ -41,7 +42,10 @@ public class RegistryTag<T> : IEnumerable<T> where T : class
     public bool Add(Identifier id)
     {
         if (!_registry.Contains(id))
-            throw new ArgumentException($"Registry {_registry.RegistryName} does not contain an entry with ID {id}", nameof(id));
+            throw new ArgumentException(
+                $"Registry {_registry.RegistryName} does not contain an entry with ID {id}",
+                nameof(id)
+            );
 
         return _entries.Add(id);
     }
@@ -62,52 +66,35 @@ public class RegistryTag<T> : IEnumerable<T> where T : class
     /// </summary>
     /// <param name="id">The identifier of the entry</param>
     /// <returns>True if the entry was removed, false if it wasn't in this tag</returns>
-    public bool Remove(Identifier id)
-    {
-        return _entries.Remove(id);
-    }
+    public bool Remove(Identifier id) => _entries.Remove(id);
 
     /// <summary>
     /// Checks if this tag contains an entry
     /// </summary>
     /// <param name="id">The identifier of the entry</param>
     /// <returns>True if this tag contains the entry, false otherwise</returns>
-    public bool Contains(Identifier id)
-    {
-        return _entries.Contains(id);
-    }
+    public bool Contains(Identifier id) => _entries.Contains(id);
 
     /// <summary>
     /// Gets all entries in this tag
     /// </summary>
     /// <returns>All entries in this tag</returns>
-    public IEnumerable<T> GetEntries()
-    {
-        return _entries.Select(_registry.Get).Where(entry => entry != null);
-    }
+    public IEnumerable<T> GetEntries() =>
+        _entries.Select(_registry.Get).Where(entry => entry != null);
 
     /// <summary>
     /// Gets all identifiers in this tag
     /// </summary>
     /// <returns>All identifiers in this tag</returns>
-    public IEnumerable<Identifier> GetIds()
-    {
-        return _entries.ToList();
-    }
+    public IEnumerable<Identifier> GetIds() => _entries.ToList();
 
     /// <summary>
     /// Returns an enumerator that iterates through all entries in this tag
     /// </summary>
-    public IEnumerator<T> GetEnumerator()
-    {
-        return GetEntries().GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => GetEntries().GetEnumerator();
 
     /// <summary>
     /// Returns an enumerator that iterates through all entries in this tag
     /// </summary>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

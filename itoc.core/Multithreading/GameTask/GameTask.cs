@@ -26,7 +26,7 @@ public enum TaskPriority
     /// <summary>
     /// Critical priority. Used for urgent tasks that must be processed immediately.
     /// </summary>
-    Critical = 3
+    Critical = 3,
 }
 
 /// <summary>
@@ -62,7 +62,7 @@ public enum TaskState
     /// <summary>
     /// Task failed with an exception.
     /// </summary>
-    Failed
+    Failed,
 }
 
 /// <summary>
@@ -126,13 +126,16 @@ public abstract class GameTask
     /// <summary>
     /// Gets the elapsed time since this task started execution, or TimeSpan.Zero if it hasn't started yet.
     /// </summary>
-    public TimeSpan ElapsedSinceStart => StartTime.HasValue ? DateTime.Now - StartTime.Value : TimeSpan.Zero;
+    public TimeSpan ElapsedSinceStart =>
+        StartTime.HasValue ? DateTime.Now - StartTime.Value : TimeSpan.Zero;
 
     /// <summary>
     /// Gets the total execution time of this task, or null if it hasn't completed yet.
     /// </summary>
-    public TimeSpan? ExecutionTime => (StartTime.HasValue && CompletionTime.HasValue) ?
-        CompletionTime.Value - StartTime.Value : null;
+    public TimeSpan? ExecutionTime =>
+        (StartTime.HasValue && CompletionTime.HasValue)
+            ? CompletionTime.Value - StartTime.Value
+            : null;
 
     /// <summary>
     /// Gets the exception that caused this task to fail, or null if it hasn't failed.
@@ -279,17 +282,11 @@ public abstract class GameTask
 
     #region Event Handlers
 
-    private void OnStarted()
-    {
-        Started?.Invoke(this, EventArgs.Empty);
-    }
+    private void OnStarted() => Started?.Invoke(this, EventArgs.Empty);
 
     private void OnCompleted(bool cancelled)
     {
-        var args = new TaskCompletedEventArgs(
-            cancelled,
-            Exception,
-            ExecutionTime ?? TimeSpan.Zero);
+        var args = new TaskCompletedEventArgs(cancelled, Exception, ExecutionTime ?? TimeSpan.Zero);
 
         Completed?.Invoke(this, args);
     }
@@ -307,10 +304,7 @@ public abstract class GameTask
     /// <summary>
     /// Disposes this task, releasing all resources.
     /// </summary>
-    public void Dispose()
-    {
-        _cancellationTokenSource?.Dispose();
-    }
+    public void Dispose() => _cancellationTokenSource?.Dispose();
 
     #endregion
 }

@@ -39,25 +39,13 @@ public partial class CameraHelper : Node
         }
     }
 
-    public Camera3D GetActiveCamera()
-    {
-        return _camera;
-    }
+    public Camera3D GetActiveCamera() => _camera;
 
-    public Vector3 GetCameraPosition()
-    {
-        return CameraPosition;
-    }
+    public Vector3 GetCameraPosition() => CameraPosition;
 
-    public Vector3 GetCameraFacing()
-    {
-        return CameraFacing;
-    }
+    public Vector3 GetCameraFacing() => CameraFacing;
 
-    public Direction GetCameraFacingDirection()
-    {
-        return CameraFacingDirection;
-    }
+    public Direction GetCameraFacingDirection() => CameraFacingDirection;
 
     /// <summary>
     /// Calculates the distance at which a 1 meter line would occupy the specified number of pixels on screen.
@@ -71,7 +59,7 @@ public partial class CameraHelper : Node
             return 0f;
 
         // Get viewport size and camera FOV
-        Vector2 viewportSize = GetViewportSize();
+        var viewportSize = GetViewportSize();
         var fovY = _camera.Fov * Mathf.Pi / 180.0; // Convert to radians
 
         // Calculate distance based on the number of pixels a 1m object should occupy
@@ -99,8 +87,5 @@ public partial class CameraHelper : Node
     /// Gets the current viewport size
     /// </summary>
     /// <returns>Viewport dimensions in pixels</returns>
-    public Vector2 GetViewportSize()
-    {
-        return GetViewport().GetVisibleRect().Size;
-    }
+    public Vector2 GetViewportSize() => GetViewport().GetVisibleRect().Size;
 }

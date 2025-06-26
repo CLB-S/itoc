@@ -6,9 +6,8 @@ namespace ITOC.Core.WorldGeneration;
 public enum PlateType
 {
     Continent,
-    Oceans
+    Oceans,
 }
-
 
 public class CellData
 {
@@ -28,10 +27,7 @@ public class CellData
     public double Temperature = 0;
     public Biome Biome;
 
-    public override string ToString()
-    {
-        return
-            $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Normal=({Normal.X:f2}, {Normal.Y:f2}, {Normal.Z:f2}), " +
-            $"Area={Area:f2}, Precipitation={Precipitation:f2}, Temperature={Temperature:f2}, Biome={Biome?.Id ?? "None"}";
-    }
+    public override string ToString() =>
+        $"Cell {Index}: Type={PlateType}, Uplift={Uplift:f2}, Height={Height:f2}, Normal=({Normal.X:f2}, {Normal.Y:f2}, {Normal.Z:f2}), "
+        + $"Area={Area:f2}, Precipitation={Precipitation:f2}, Temperature={Temperature:f2}, Biome={Biome?.Id ?? "None"}";
 }

@@ -7,7 +7,8 @@ namespace ITOC;
 
 public partial class GuiStartScreen : Node
 {
-    [Export] public Control LoadingScreen;
+    [Export]
+    public Control LoadingScreen;
 
     public void OnStartButtonPressed()
     {
@@ -21,13 +22,8 @@ public partial class GuiStartScreen : Node
         LoadingScreen.Visible = true;
     }
 
-    public void OnWorld2dButtonPressed()
-    {
-        GameController.Instance.GotoWorldMapScreen();
-    }
+    public void OnWorld2dButtonPressed() => GameController.Instance.GotoWorldMapScreen();
 
-    public void OnQuitButtonPressed()
-    {
+    public void OnQuitButtonPressed() =>
         GetTree().Root.PropagateNotification((int)NotificationWMCloseRequest);
-    }
 }

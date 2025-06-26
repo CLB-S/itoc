@@ -2,7 +2,6 @@
 
 using Godot;
 using ITOC.Core.PatternSystem;
-using ITOC.Core.Utils;
 
 namespace ITOC.Core.WorldGeneration.Infinite;
 
@@ -12,15 +11,11 @@ public class InfiniteWorldGenerator : MultiStepWorldGeneratorBase
     private PatternTreeNode _debugHeightPattern;
     private PatternTreeNode _debugHeightPattern1;
 
-    protected override ChunkGeneratorBase InitializeChunkGenerator()
-    {
+    protected override ChunkGeneratorBase InitializeChunkGenerator() =>
         throw new NotImplementedException();
-    }
 
-    protected override void InitializePipeline()
-    {
+    protected override void InitializePipeline() =>
         _generationPipeline.AddLast(new WorldGenerationStep("initialize", Initialize));
-    }
 
     private void Initialize()
     {
@@ -28,7 +23,13 @@ public class InfiniteWorldGenerator : MultiStepWorldGeneratorBase
         _debugHeightPattern1 = PatternLibrary.Instance.GetPattern("plain");
     }
 
-    private double MergePatterns(double x, double y, PatternTreeNode pattern1, PatternTreeNode pattern2, double weight)
+    private double MergePatterns(
+        double x,
+        double y,
+        PatternTreeNode pattern1,
+        PatternTreeNode pattern2,
+        double weight
+    )
     {
         // Ensure weight is between 0 and 1
         weight = Mathf.Clamp((float)weight, 0.0f, 1.0f);

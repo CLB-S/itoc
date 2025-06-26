@@ -6,9 +6,9 @@ public class AtlasCreator
 {
     private readonly List<Image> _textureImages = new();
 
-    private int _imageWidth;
-    private int _imageHeight;
-    private Image.Format _imageFormat;
+    private readonly int _imageWidth;
+    private readonly int _imageHeight;
+    private readonly Image.Format _imageFormat;
 
     public AtlasCreator(int imageWidth, int imageHeight, Image.Format format = Image.Format.Rgba8)
     {
@@ -16,14 +16,17 @@ public class AtlasCreator
         _imageHeight = imageHeight;
         _imageFormat = format;
 
-        GD.Print($"AtlasCreator initialized with size: {_imageWidth}x{_imageHeight}, format: {_imageFormat}");
+        GD.Print(
+            $"AtlasCreator initialized with size: {_imageWidth}x{_imageHeight}, format: {_imageFormat}"
+        );
     }
 
     public int AddImage(Image image)
     {
         if (image.GetWidth() != _imageWidth || image.GetHeight() != _imageHeight)
             throw new ArgumentException(
-                $"All images must have the same size: {_imageWidth}x{_imageHeight}");
+                $"All images must have the same size: {_imageWidth}x{_imageHeight}"
+            );
 
         _textureImages.Add(image);
         return _textureImages.Count - 1;
@@ -50,21 +53,27 @@ public class AtlasCreator
 
         var atlasImage = Image.CreateEmpty(atlasWidth, atlasHeight, false, _imageFormat);
 
-        for (int i = 0; i < imageCount; i++)
+        for (var i = 0; i < imageCount; i++)
         {
             var image = _textureImages[i];
-            int x = (i % imageCountX) * _imageWidth;
-            int y = (i / imageCountX) * _imageHeight;
+            var x = (i % imageCountX) * _imageWidth;
+            var y = (i / imageCountX) * _imageHeight;
 
-            atlasImage.BlitRect(image, new Rect2I(0, 0, _imageWidth, _imageHeight), new Vector2I(x, y));
+            atlasImage.BlitRect(
+                image,
+                new Rect2I(0, 0, _imageWidth, _imageHeight),
+                new Vector2I(x, y)
+            );
         }
 
         atlasImage.GenerateMipmaps();
 
         var texture = ImageTexture.CreateFromImage(atlasImage);
 
-        GD.Print($"Atlas created with size: {atlasWidth}x{atlasHeight}, format: {_imageFormat}, " +
-                  $"images: {imageCount}, countX: {imageCountX}, countY: {imageCountY}");
+        GD.Print(
+            $"Atlas created with size: {atlasWidth}x{atlasHeight}, format: {_imageFormat}, "
+                + $"images: {imageCount}, countX: {imageCountX}, countY: {imageCountY}"
+        );
 
         return (texture, imageCountX, imageCountY);
     }

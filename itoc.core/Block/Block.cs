@@ -25,8 +25,10 @@ public class Block : IEquatable<Block>, IItem
 
     public virtual bool Equals(Block other)
     {
-        if (other == null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other == null)
+            return false;
+        if (ReferenceEquals(this, other))
+            return true;
 
         return Id.Equals(other.Id);
     }

@@ -61,7 +61,8 @@ public class NodePool<T>
         int maxSize = 0,
         bool autoExpand = true,
         Action<T> resetAction = null,
-        Action<T> initializeAction = null)
+        Action<T> initializeAction = null
+    )
     {
         _scene = scene ?? throw new ArgumentNullException(nameof(scene));
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
@@ -91,7 +92,8 @@ public class NodePool<T>
         int maxSize = 0,
         bool autoExpand = true,
         Action<T> resetAction = null,
-        Action<T> initializeAction = null)
+        Action<T> initializeAction = null
+    )
     {
         _nodeFactory = nodeFactory ?? throw new ArgumentNullException(nameof(nodeFactory));
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
@@ -102,7 +104,7 @@ public class NodePool<T>
         _initializeAction = initializeAction;
 
         // Create initial nodes using the factory
-        for (int i = 0; i < _initialSize; i++)
+        for (var i = 0; i < _initialSize; i++)
         {
             var node = nodeFactory();
             PrepareNodeForPool(node);
@@ -116,11 +118,13 @@ public class NodePool<T>
     /// <param name="count">Number of instances to create</param>
     public void PrewarmPool(int count)
     {
-        if (_scene == null && _nodeFactory == null) return;
+        if (_scene == null && _nodeFactory == null)
+            return;
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            if (_maxSize > 0 && TotalCount >= _maxSize) break;
+            if (_maxSize > 0 && TotalCount >= _maxSize)
+                break;
 
             var instance = CreateNewInstance();
             _inactiveNodes.Enqueue(instance);
@@ -164,7 +168,9 @@ public class NodePool<T>
 
         if (!_activeNodes.Contains(node))
         {
-            GD.PushWarning($"Trying to release a node that is not managed by this pool: {node.Name}");
+            GD.PushWarning(
+                $"Trying to release a node that is not managed by this pool: {node.Name}"
+            );
             return;
         }
 
@@ -203,7 +209,6 @@ public class NodePool<T>
         }
     }
 
-
     /// <summary>
     /// Clears the pool, removing all nodes from the scene tree
     /// </summary>
@@ -232,14 +237,16 @@ public class NodePool<T>
         }
 
         // Add nodes if we don't have enough
-        int nodesToAdd = targetSize - _inactiveNodes.Count;
+        var nodesToAdd = targetSize - _inactiveNodes.Count;
         PrewarmPool(nodesToAdd);
     }
 
     private T CreateNewInstance()
     {
         if (_scene == null && _nodeFactory == null)
-            throw new InvalidOperationException("Cannot create instance: no scene or factory provided.");
+            throw new InvalidOperationException(
+                "Cannot create instance: no scene or factory provided."
+            );
 
         var instance = _scene != null ? _scene.Instantiate<T>() : _nodeFactory();
         PrepareNodeForPool(instance);

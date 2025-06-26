@@ -25,7 +25,7 @@ public class BitPackerTest
     public void PackUnpack_UInt16_MaxValue_ShouldRetainValue()
     {
         // Arrange
-        ushort original = ushort.MaxValue;
+        var original = ushort.MaxValue;
 
         // Act
         var bytes = BitPacker.PackUInt16(original);
@@ -53,7 +53,7 @@ public class BitPackerTest
     public void PackUnpack_UInt32_MaxValue_ShouldRetainValue()
     {
         // Arrange
-        uint original = uint.MaxValue;
+        var original = uint.MaxValue;
 
         // Act
         var bytes = BitPacker.PackUInt32(original);
@@ -81,7 +81,7 @@ public class BitPackerTest
     public void PackUnpack_UInt64_MaxValue_ShouldRetainValue()
     {
         // Arrange
-        ulong original = ulong.MaxValue;
+        var original = ulong.MaxValue;
 
         // Act
         var bytes = BitPacker.PackUInt64(original);
@@ -183,18 +183,21 @@ public class BitPackerTest
     {
         // Arrange
         ushort[] original = { 1, 10, 100, 1000, 10000 };
-        int bitsPerValue = 14; // Enough to store values up to 16383
+        var bitsPerValue = 14; // Enough to store values up to 16383
 
         // Act
-        byte[] packed = BitPacker.Pack<ushort>(original, bitsPerValue);
-        ushort[] unpacked = BitPacker.Unpack<ushort>(packed, original.Length, bitsPerValue);
+        var packed = BitPacker.Pack<ushort>(original, bitsPerValue);
+        var unpacked = BitPacker.Unpack<ushort>(packed, original.Length, bitsPerValue);
 
         // Assert
         Assert.Equal(original, unpacked);
 
         // Verify compressed size is smaller than full size
         Assert.True(packed.Length < original.Length * sizeof(ushort));
-        Assert.Equal(BitPacker.CalculateRequiredBytes(original.Length, bitsPerValue), packed.Length);
+        Assert.Equal(
+            BitPacker.CalculateRequiredBytes(original.Length, bitsPerValue),
+            packed.Length
+        );
     }
 
     [Fact]
@@ -202,18 +205,21 @@ public class BitPackerTest
     {
         // Arrange
         uint[] original = { 1, 100, 10000, 1000000, 100000000 };
-        int bitsPerValue = 27; // Enough to store values up to 134,217,727
+        var bitsPerValue = 27; // Enough to store values up to 134,217,727
 
         // Act
-        byte[] packed = BitPacker.Pack<uint>(original, bitsPerValue);
-        uint[] unpacked = BitPacker.Unpack<uint>(packed, original.Length, bitsPerValue);
+        var packed = BitPacker.Pack<uint>(original, bitsPerValue);
+        var unpacked = BitPacker.Unpack<uint>(packed, original.Length, bitsPerValue);
 
         // Assert
         Assert.Equal(original, unpacked);
 
         // Verify compressed size is smaller than full size
         Assert.True(packed.Length < original.Length * sizeof(uint));
-        Assert.Equal(BitPacker.CalculateRequiredBytes(original.Length, bitsPerValue), packed.Length);
+        Assert.Equal(
+            BitPacker.CalculateRequiredBytes(original.Length, bitsPerValue),
+            packed.Length
+        );
     }
 
     [Fact]
@@ -221,18 +227,21 @@ public class BitPackerTest
     {
         // Arrange
         ulong[] original = { 1, 100000, 10000000000, 1000000000000, 100000000000000 };
-        int bitsPerValue = 47; // Enough to store values up to 140,737,488,355,327
+        var bitsPerValue = 47; // Enough to store values up to 140,737,488,355,327
 
         // Act
-        byte[] packed = BitPacker.Pack<ulong>(original, bitsPerValue);
-        ulong[] unpacked = BitPacker.Unpack<ulong>(packed, original.Length, bitsPerValue);
+        var packed = BitPacker.Pack<ulong>(original, bitsPerValue);
+        var unpacked = BitPacker.Unpack<ulong>(packed, original.Length, bitsPerValue);
 
         // Assert
         Assert.Equal(original, unpacked);
 
         // Verify compressed size is smaller than full size
         Assert.True(packed.Length < original.Length * sizeof(ulong));
-        Assert.Equal(BitPacker.CalculateRequiredBytes(original.Length, bitsPerValue), packed.Length);
+        Assert.Equal(
+            BitPacker.CalculateRequiredBytes(original.Length, bitsPerValue),
+            packed.Length
+        );
     }
 
     [Fact]
@@ -270,7 +279,7 @@ public class BitPackerTest
     {
         // Arrange
         uint[] values = { 0, 1, 2, 16, 4 }; // 16 is out of range for 4 bits
-        int bitsPerValue = 4; // Can store values 0-15
+        var bitsPerValue = 4; // Can store values 0-15
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => BitPacker.Pack<uint>(values, bitsPerValue));

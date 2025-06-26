@@ -14,24 +14,20 @@ public class PatternTreeJsonConverter
     {
         WriteIndented = true,
         Converters = { new PatternTreeNodeJsonConverter() },
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     /// <summary>
     ///     Serializes a PatternTreeNode to a JSON string.
     /// </summary>
-    public static string Serialize(PatternTreeNode node)
-    {
-        return JsonSerializer.Serialize(node, SerializerOptions);
-    }
+    public static string Serialize(PatternTreeNode node) =>
+        JsonSerializer.Serialize(node, SerializerOptions);
 
     /// <summary>
     ///     Deserializes a JSON string into a PatternTreeNode.
     /// </summary>
-    public static PatternTreeNode Deserialize(string json)
-    {
-        return JsonSerializer.Deserialize<PatternTreeNode>(json, SerializerOptions);
-    }
+    public static PatternTreeNode Deserialize(string json) =>
+        JsonSerializer.Deserialize<PatternTreeNode>(json, SerializerOptions);
 }
 
 /// <summary>
@@ -46,7 +42,11 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
     private const string NamePropertyName = "Name";
     private const string RootNodePropertyName = "RootNode";
 
-    public override PatternTreeNode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override PatternTreeNode Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("Expected start of object");
@@ -127,7 +127,11 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
         return CreateNodeFromJson(nodeType, properties, children);
     }
 
-    public override void Write(Utf8JsonWriter writer, PatternTreeNode value, JsonSerializerOptions options)
+    public override void Write(
+        Utf8JsonWriter writer,
+        PatternTreeNode value,
+        JsonSerializerOptions options
+    )
     {
         writer.WriteStartObject();
 
@@ -146,10 +150,14 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
             // Write node type
             writer.WriteString(TypePropertyName, value?.GetType().Name);
 
-            if (!(value is PositionXNode ||
-                  value is PositionYNode ||
-                  value is PositionZNode ||
-                  value is PositionTransformNode))
+            if (
+                !(
+                    value is PositionXNode
+                    || value is PositionYNode
+                    || value is PositionZNode
+                    || value is PositionTransformNode
+                )
+            )
             {
                 // Write node-specific properties
                 writer.WritePropertyName(PropertiesPropertyName);
@@ -163,7 +171,8 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
             {
                 writer.WritePropertyName(ChildrenPropertyName);
                 writer.WriteStartArray();
-                foreach (var child in operatorNode.Children) Write(writer, child, options);
+                foreach (var child in operatorNode.Children)
+                    Write(writer, child, options);
                 writer.WriteEndArray();
             }
         }
@@ -185,13 +194,19 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
 
                 // Only write values that differ from defaults
                 if (settings.CellularDistanceFunction != defaultSettings.CellularDistanceFunction)
-                    writer.WriteString("CellularDistanceFunction", settings.CellularDistanceFunction.ToString());
+                    writer.WriteString(
+                        "CellularDistanceFunction",
+                        settings.CellularDistanceFunction.ToString()
+                    );
 
                 if (settings.CellularJitter != defaultSettings.CellularJitter)
                     writer.WriteNumber("CellularJitter", settings.CellularJitter);
 
                 if (settings.CellularReturnType != defaultSettings.CellularReturnType)
-                    writer.WriteString("CellularReturnType", settings.CellularReturnType.ToString());
+                    writer.WriteString(
+                        "CellularReturnType",
+                        settings.CellularReturnType.ToString()
+                    );
 
                 if (settings.DomainWarpAmplitude != defaultSettings.DomainWarpAmplitude)
                     writer.WriteNumber("DomainWarpAmplitude", settings.DomainWarpAmplitude);
@@ -202,14 +217,26 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                 if (settings.DomainWarpFractalGain != defaultSettings.DomainWarpFractalGain)
                     writer.WriteNumber("DomainWarpFractalGain", settings.DomainWarpFractalGain);
 
-                if (settings.DomainWarpFractalLacunarity != defaultSettings.DomainWarpFractalLacunarity)
-                    writer.WriteNumber("DomainWarpFractalLacunarity", settings.DomainWarpFractalLacunarity);
+                if (
+                    settings.DomainWarpFractalLacunarity
+                    != defaultSettings.DomainWarpFractalLacunarity
+                )
+                    writer.WriteNumber(
+                        "DomainWarpFractalLacunarity",
+                        settings.DomainWarpFractalLacunarity
+                    );
 
                 if (settings.DomainWarpFractalOctaves != defaultSettings.DomainWarpFractalOctaves)
-                    writer.WriteNumber("DomainWarpFractalOctaves", settings.DomainWarpFractalOctaves);
+                    writer.WriteNumber(
+                        "DomainWarpFractalOctaves",
+                        settings.DomainWarpFractalOctaves
+                    );
 
                 if (settings.DomainWarpFractalType != defaultSettings.DomainWarpFractalType)
-                    writer.WriteString("DomainWarpFractalType", settings.DomainWarpFractalType.ToString());
+                    writer.WriteString(
+                        "DomainWarpFractalType",
+                        settings.DomainWarpFractalType.ToString()
+                    );
 
                 if (settings.DomainWarpFrequency != defaultSettings.DomainWarpFrequency)
                     writer.WriteNumber("DomainWarpFrequency", settings.DomainWarpFrequency);
@@ -274,8 +301,11 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
         }
     }
 
-    private PatternTreeNode CreateNodeFromJson(string nodeType, Dictionary<string, JsonElement> properties,
-        List<PatternTreeNode> children)
+    private PatternTreeNode CreateNodeFromJson(
+        string nodeType,
+        Dictionary<string, JsonElement> properties,
+        List<PatternTreeNode> children
+    )
     {
         switch (nodeType)
         {
@@ -319,7 +349,9 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                             settings.CellularJitter = prop.Value.GetDouble();
                             break;
                         case "CellularReturnType":
-                            settings.CellularReturnType = Enum.Parse<CellularReturnType>(prop.Value.GetString());
+                            settings.CellularReturnType = Enum.Parse<CellularReturnType>(
+                                prop.Value.GetString()
+                            );
                             break;
                         case "DomainWarpAmplitude":
                             settings.DomainWarpAmplitude = prop.Value.GetDouble();
@@ -337,13 +369,17 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                             settings.DomainWarpFractalOctaves = prop.Value.GetInt32();
                             break;
                         case "DomainWarpFractalType":
-                            settings.DomainWarpFractalType = Enum.Parse<DomainWarpFractalType>(prop.Value.GetString());
+                            settings.DomainWarpFractalType = Enum.Parse<DomainWarpFractalType>(
+                                prop.Value.GetString()
+                            );
                             break;
                         case "DomainWarpFrequency":
                             settings.DomainWarpFrequency = prop.Value.GetDouble();
                             break;
                         case "DomainWarpType":
-                            settings.DomainWarpType = Enum.Parse<DomainWarpType>(prop.Value.GetString());
+                            settings.DomainWarpType = Enum.Parse<DomainWarpType>(
+                                prop.Value.GetString()
+                            );
                             break;
                         case "FractalGain":
                             settings.FractalGain = prop.Value.GetDouble();
@@ -384,11 +420,15 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                 return new FastNoiseLiteNode(settings);
 
             case nameof(MultiChildOperationNode):
-                var multiOpType = Enum.Parse<MultiOperationType>(properties["OperationType"].GetString());
+                var multiOpType = Enum.Parse<MultiOperationType>(
+                    properties["OperationType"].GetString()
+                );
                 return new MultiChildOperationNode(children, multiOpType);
 
             case nameof(DualChildOperationNode):
-                var dualOpType = Enum.Parse<DualOperationType>(properties["OperationType"].GetString());
+                var dualOpType = Enum.Parse<DualOperationType>(
+                    properties["OperationType"].GetString()
+                );
                 return new DualChildOperationNode(
                     children.Count > 0 ? children[0] : null,
                     children.Count > 1 ? children[1] : null,
@@ -396,7 +436,9 @@ public class PatternTreeNodeJsonConverter : JsonConverter<PatternTreeNode>
                 );
 
             case nameof(SingleChildOperationNode):
-                var singleOpType = Enum.Parse<SingleOperationType>(properties["OperationType"].GetString());
+                var singleOpType = Enum.Parse<SingleOperationType>(
+                    properties["OperationType"].GetString()
+                );
                 return new SingleChildOperationNode(
                     children.Count > 0 ? children[0] : null,
                     singleOpType

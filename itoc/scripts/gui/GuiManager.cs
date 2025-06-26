@@ -12,7 +12,6 @@ public partial class GuiManager : Node
 
     public GuiState CurrentState { get; private set; } = GuiState.Gameplay;
 
-
     public override void _Ready()
     {
         Instance = this;
@@ -20,10 +19,10 @@ public partial class GuiManager : Node
         SetProcessInput(true);
     }
 
-
     public override void _Input(InputEvent @event)
     {
-        if (@event.IsActionPressed("ui_cancel")) HandleEscapeInput();
+        if (@event.IsActionPressed("ui_cancel"))
+            HandleEscapeInput();
     }
 
     private void HandleEscapeInput()
@@ -58,12 +57,15 @@ public partial class GuiManager : Node
 
     private void ChangeState(GuiState newState)
     {
-        if (CurrentState == newState) return;
+        if (CurrentState == newState)
+            return;
 
-        if (GuiControllers.TryGetValue(CurrentState, out var currentUI)) currentUI.OnExit();
+        if (GuiControllers.TryGetValue(CurrentState, out var currentUI))
+            currentUI.OnExit();
 
         CurrentState = newState;
 
-        if (GuiControllers.TryGetValue(newState, out var newUI)) newUI.OnEnter();
+        if (GuiControllers.TryGetValue(newState, out var newUI))
+            newUI.OnEnter();
     }
 }

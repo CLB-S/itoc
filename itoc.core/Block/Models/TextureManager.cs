@@ -10,16 +10,17 @@ public sealed class TextureManager : IFreezable
     private bool _isFrozen = false;
     public bool IsFrozen => _isFrozen;
 
-    private Dictionary<string, (int, Image)> _textureCache = new Dictionary<string, (int, Image)>();
+    private readonly Dictionary<string, (int, Image)> _textureCache =
+        new Dictionary<string, (int, Image)>();
 
-    private TextureManager()
-    {
-    }
+    private TextureManager() { }
 
     public int GetTextureId(string textureImagePath)
     {
         if (_isFrozen)
-            throw new InvalidOperationException("Cannot get texture ID when TextureManager is frozen.");
+            throw new InvalidOperationException(
+                "Cannot get texture ID when TextureManager is frozen."
+            );
 
         // Check if the texture has already been processed
         if (_textureCache.TryGetValue(textureImagePath, out var idAndImage))
@@ -37,7 +38,9 @@ public sealed class TextureManager : IFreezable
     public void BuildTextureArray()
     {
         if (_isFrozen)
-            throw new InvalidOperationException("Cannot build texture array when TextureManager is frozen.");
+            throw new InvalidOperationException(
+                "Cannot build texture array when TextureManager is frozen."
+            );
 
         var imageArray = new Godot.Collections.Array<Image>();
 
@@ -51,8 +54,5 @@ public sealed class TextureManager : IFreezable
         Freeze();
     }
 
-    public void Freeze()
-    {
-        _isFrozen = true;
-    }
+    public void Freeze() => _isFrozen = true;
 }

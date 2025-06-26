@@ -50,7 +50,8 @@ public class Player : NodeAdapter
     private bool _isSprinting;
 
     // Jump
-    private double _gravity = 3 * ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
+    private readonly double _gravity =
+        3 * ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
     private double _coyoteTimer;
     private double _jumpBufferTimer;
 
@@ -63,17 +64,21 @@ public class Player : NodeAdapter
 
     // Chunk Loading
     private Vector3 _lastPosition = Vector3.Inf;
-    private double _distanceBetweenChunkLoadingUpdates = Chunk.SIZE / 2.0;
-    private ChunkRange _chunkLoadingRange;
-    private ChunkLoadingSource _chunkLoadingSource;
+    private readonly double _distanceBetweenChunkLoadingUpdates = Chunk.SIZE / 2.0;
+    private readonly ChunkRange _chunkLoadingRange;
+    private readonly ChunkLoadingSource _chunkLoadingSource;
 
-    public Player(Node node) : base(node)
+    public Player(Node node)
+        : base(node)
     {
         if (node is not CharacterBody3D)
             throw new ArgumentException("Node must be a CharacterBody3D", nameof(node));
 
         _chunkLoadingRange = new ChunkRange(8, 3);
-        _chunkLoadingSource = new ChunkLoadingSource(_chunkLoadingRange, GameController.Instance.WorldGenerator.ChunkGenerator);
+        _chunkLoadingSource = new ChunkLoadingSource(
+            _chunkLoadingRange,
+            GameController.Instance.WorldGenerator.ChunkGenerator
+        );
     }
 
     public override void OnReady()
@@ -99,8 +104,11 @@ public class Player : NodeAdapter
             // Vertical rotation
             _head.RotateX(Mathf.DegToRad(-mouseMotion.Relative.Y * MouseSensitivity));
             _head.Rotation = new Vector3(
-                Mathf.Clamp(_head.Rotation.X, Mathf.DegToRad(MinLookAngle),
-                    Mathf.DegToRad(MaxLookAngle)),
+                Mathf.Clamp(
+                    _head.Rotation.X,
+                    Mathf.DegToRad(MinLookAngle),
+                    Mathf.DegToRad(MaxLookAngle)
+                ),
                 _head.Rotation.Y,
                 0
             );
@@ -168,15 +176,18 @@ public class Player : NodeAdapter
                     var pos = result["position"].AsVector3() + 0.5f * result["normal"].AsVector3();
 
                     var cubeShape = new BoxShape3D { Size = Vector3.One * 0.95f };
-                    var cubeCenter = new Vector3(Mathf.Floor(pos.X) + 0.5f, Mathf.Floor(pos.Y) + 0.5f,
-                        Mathf.Floor(pos.Z) + 0.5f);
+                    var cubeCenter = new Vector3(
+                        Mathf.Floor(pos.X) + 0.5f,
+                        Mathf.Floor(pos.Y) + 0.5f,
+                        Mathf.Floor(pos.Z) + 0.5f
+                    );
                     var cubeTransform = new Transform3D { Origin = cubeCenter };
 
                     var queryCube = new PhysicsShapeQueryParameters3D
                     {
                         CollideWithAreas = true,
                         Shape = cubeShape,
-                        Transform = cubeTransform
+                        Transform = cubeTransform,
                     };
 
                     var resultCube = spaceState.IntersectShape(queryCube, 1);
@@ -230,7 +241,8 @@ public class Player : NodeAdapter
         var targetVerticalVelocity = verticalVelocity;
 
         // Apply gravity (always full strength, unaffected by air control)
-        if (!_characterBody.IsOnFloor()) targetVerticalVelocity -= _gravity * delta;
+        if (!_characterBody.IsOnFloor())
+            targetVerticalVelocity -= _gravity * delta;
 
         // Calculate acceleration rates
         var accel = _characterBody.IsOnFloor() ? Acceleration : Acceleration * AirControl;
@@ -264,8 +276,10 @@ public class Player : NodeAdapter
 
         // Handle vertical movement for flying
         var verticalInput = 0;
-        if (Input.IsActionPressed("jump")) verticalInput = 1;
-        if (Input.IsActionPressed("sneak")) verticalInput = -1;
+        if (Input.IsActionPressed("jump"))
+            verticalInput = 1;
+        if (Input.IsActionPressed("sneak"))
+            verticalInput = -1;
 
         // Rotate direction vector relative to camera
         var rotatedDirection = _orientation.GlobalTransform.Basis * _direction;
@@ -274,15 +288,15 @@ public class Player : NodeAdapter
         var targetVelocity = rotatedDirection * (_isSprinting ? FlyingSprintSpeed : FlyingSpeed);
 
         // Interpolate velocity
-        _characterBody.Velocity = _characterBody.Velocity.Lerp(targetVelocity, FlyingAcceleration * delta);
+        _characterBody.Velocity = _characterBody.Velocity.Lerp(
+            targetVelocity,
+            FlyingAcceleration * delta
+        );
 
         _characterBody.MoveAndSlide();
     }
 
-    private bool CanJump()
-    {
-        return _characterBody.IsOnFloor() || _coyoteTimer > 0;
-    }
+    private bool CanJump() => _characterBody.IsOnFloor() || _coyoteTimer > 0;
 
     private void HandleCoyoteTime(double delta)
     {
@@ -302,7 +316,8 @@ public class Player : NodeAdapter
             {
                 _isFlying = !_isFlying;
                 var v = _characterBody.Velocity;
-                if (_isFlying) _characterBody.Velocity = new Vector3(v.X, 0, v.Z);
+                if (_isFlying)
+                    _characterBody.Velocity = new Vector3(v.X, 0, v.Z);
             }
 
             _lastJumpPressTime = currentTime;
@@ -319,11 +334,16 @@ public class Player : NodeAdapter
     {
         double targetTilt = 0;
 
-        if (Input.IsActionPressed("move_left")) targetTilt += CameraTiltAmount;
-        if (Input.IsActionPressed("move_right")) targetTilt -= CameraTiltAmount;
+        if (Input.IsActionPressed("move_left"))
+            targetTilt += CameraTiltAmount;
+        if (Input.IsActionPressed("move_right"))
+            targetTilt -= CameraTiltAmount;
 
         _cameraTilt = Mathf.Lerp(_cameraTilt, targetTilt, CameraTiltSpeed * delta);
-        _camera.Rotation = new Vector3(_camera.Rotation.X, _camera.Rotation.Y,
-            Mathf.DegToRad(_cameraTilt));
+        _camera.Rotation = new Vector3(
+            _camera.Rotation.X,
+            _camera.Rotation.Y,
+            Mathf.DegToRad(_cameraTilt)
+        );
     }
 }

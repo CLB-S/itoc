@@ -20,7 +20,7 @@ public class PaletteArrayTest
         Assert.Equal(4, array.BitsPerValue); // Default is 4 bits
 
         // All values should be default
-        for (int i = 0; i < array.Count; i++)
+        for (var i = 0; i < array.Count; i++)
         {
             Assert.Equal("default", array[i]);
         }
@@ -96,24 +96,24 @@ public class PaletteArrayTest
         var array = new PaletteArray<int>(100, 0, 2); // Start with 2-bit storage
 
         // Act
-        for (int i = 0; i < 5; i++) // Add values 0-4
+        for (var i = 0; i < 5; i++) // Add values 0-4
             array[i] = i;
 
         // Assert
         Assert.Equal(3, array.BitsPerValue); // Should be increased to 3 bits to hold 5 values (0-4)
 
         // Add more values
-        for (int i = 0; i < 10; i++)
+        for (var i = 0; i < 10; i++)
             array[10 + i] = 5 + i; // Values 5-14
 
         // Assert
         Assert.Equal(4, array.BitsPerValue); // Should be increased to 4 bits to hold 15 values (0-14)
 
         // Check values
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
             Assert.Equal(i, array[i]);
 
-        for (int i = 0; i < 10; i++)
+        for (var i = 0; i < 10; i++)
             Assert.Equal(5 + i, array[10 + i]);
     }
 
@@ -271,13 +271,13 @@ public class PaletteArrayTest
     {
         // Arrange
         var array = new PaletteArray<string>(1000, "default");
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             array[i] = $"value-{i % 10}"; // Only 10 unique values
         }
 
         // Act
-        int memoryUsage = array.GetMemoryUsage();
+        var memoryUsage = array.GetMemoryUsage();
 
         // Assert
         Assert.True(memoryUsage > 0);

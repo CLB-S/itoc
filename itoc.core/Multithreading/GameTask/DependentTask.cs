@@ -26,7 +26,12 @@ public class DependentTask : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
     /// <param name="dependencies">The tasks that must complete before this task can execute.</param>
-    public DependentTask(Action action, string name = null, TaskPriority priority = TaskPriority.Normal, params GameTask[] dependencies)
+    public DependentTask(
+        Action action,
+        string name = null,
+        TaskPriority priority = TaskPriority.Normal,
+        params GameTask[] dependencies
+    )
         : base(name, priority)
     {
         _action = action ?? throw new ArgumentNullException(nameof(action));
@@ -40,7 +45,12 @@ public class DependentTask : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
     /// <param name="dependencies">The tasks that must complete before this task can execute.</param>
-    public DependentTask(Action<CancellationToken> action, string name = null, TaskPriority priority = TaskPriority.Normal, params GameTask[] dependencies)
+    public DependentTask(
+        Action<CancellationToken> action,
+        string name = null,
+        TaskPriority priority = TaskPriority.Normal,
+        params GameTask[] dependencies
+    )
         : base(name, priority)
     {
         _cancellableAction = action ?? throw new ArgumentNullException(nameof(action));
@@ -56,7 +66,9 @@ public class DependentTask : GameTask
         ArgumentNullException.ThrowIfNull(task);
 
         if (State != TaskState.Created)
-            throw new InvalidOperationException("Cannot add dependencies after the task has been queued.");
+            throw new InvalidOperationException(
+                "Cannot add dependencies after the task has been queued."
+            );
 
         if (task == this)
             throw new ArgumentException("A task cannot depend on itself.", nameof(task));
@@ -77,15 +89,21 @@ public class DependentTask : GameTask
             {
                 if (dependency.State == TaskState.Failed)
                 {
-                    throw new InvalidOperationException($"Dependency task '{dependency.Name}' has failed, cannot execute this task.");
+                    throw new InvalidOperationException(
+                        $"Dependency task '{dependency.Name}' has failed, cannot execute this task."
+                    );
                 }
                 else if (dependency.State == TaskState.Cancelled)
                 {
-                    throw new OperationCanceledException($"Dependency task '{dependency.Name}' was cancelled, cannot execute this task.");
+                    throw new OperationCanceledException(
+                        $"Dependency task '{dependency.Name}' was cancelled, cannot execute this task."
+                    );
                 }
                 else if (dependency.State != TaskState.Completed)
                 {
-                    throw new InvalidOperationException($"Dependency task '{dependency.Name}' is not completed, cannot execute this task.");
+                    throw new InvalidOperationException(
+                        $"Dependency task '{dependency.Name}' is not completed, cannot execute this task."
+                    );
                 }
             }
         }

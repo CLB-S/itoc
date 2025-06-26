@@ -5,10 +5,19 @@ namespace ITOC.Core.Interpolators;
 
 public static class PhongTessellationInterpolator
 {
-    public static double Interpolate(Vector2 p0, Vector2 p1, Vector2 p2,
-        double h0, double h1, double h2,
-        Vector3 n0, Vector3 n1, Vector3 n2,
-        Vector2 target, double alpha = 0.1)
+    public static double Interpolate(
+        Vector2 p0,
+        Vector2 p1,
+        Vector2 p2,
+        double h0,
+        double h1,
+        double h2,
+        Vector3 n0,
+        Vector3 n1,
+        Vector3 n2,
+        Vector2 target,
+        double alpha = 0.1
+    )
     {
         // Get barycentric coordinates using the utility method
         var barycentric = GeometryUtils.GetBarycentricCoordinates(target, p0, p1, p2);

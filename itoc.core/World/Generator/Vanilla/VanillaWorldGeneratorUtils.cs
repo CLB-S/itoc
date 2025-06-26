@@ -14,7 +14,11 @@ public partial class VanillaWorldGenerator
     /// <param name="rect">The rectangular bounds of the region</param>
     /// <param name="edgeDistance">The distance from the edge within which points should be repeated</param>
     /// <returns>A dictionary mapping duplicated point indices to their original indices</returns>
-    private static Dictionary<int, int> RepeatPointsRoundEdges(List<Vector2> points, Rect2 rect, double edgeDistance)
+    private static Dictionary<int, int> RepeatPointsRoundEdges(
+        List<Vector2> points,
+        Rect2 rect,
+        double edgeDistance
+    )
     {
         var indexMap = new Dictionary<int, int>();
         var count = points.Count;
@@ -46,26 +50,37 @@ public partial class VanillaWorldGenerator
                 indexMap[points.Count - 1] = i;
             }
 
-            if (point.X < rect.Position.X + edgeDistance && point.Y < rect.Position.Y + edgeDistance)
+            if (
+                point.X < rect.Position.X + edgeDistance
+                && point.Y < rect.Position.Y + edgeDistance
+            )
             {
                 points.Add(new Vector2(point.X + rect.Size.X, point.Y + rect.Size.Y));
                 indexMap[points.Count - 1] = i;
             }
 
-            if (point.X > rect.Position.X + rect.Size.X - edgeDistance && point.Y < rect.Position.Y + edgeDistance)
+            if (
+                point.X > rect.Position.X + rect.Size.X - edgeDistance
+                && point.Y < rect.Position.Y + edgeDistance
+            )
             {
                 points.Add(new Vector2(point.X - rect.Size.X, point.Y + rect.Size.Y));
                 indexMap[points.Count - 1] = i;
             }
 
-            if (point.X < rect.Position.X + edgeDistance && point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
+            if (
+                point.X < rect.Position.X + edgeDistance
+                && point.Y > rect.Position.Y + rect.Size.Y - edgeDistance
+            )
             {
                 points.Add(new Vector2(point.X + rect.Size.X, point.Y - rect.Size.Y));
                 indexMap[points.Count - 1] = i;
             }
 
-            if (point.X > rect.Position.X + rect.Size.X - edgeDistance &&
-                point.Y > rect.Position.Y + rect.Size.Y - edgeDistance)
+            if (
+                point.X > rect.Position.X + rect.Size.X - edgeDistance
+                && point.Y > rect.Position.Y + rect.Size.Y - edgeDistance
+            )
             {
                 points.Add(new Vector2(point.X - rect.Size.X, point.Y - rect.Size.Y));
                 indexMap[points.Count - 1] = i;
@@ -84,9 +99,9 @@ public partial class VanillaWorldGenerator
     {
         position -= Settings.Bounds.Position;
         return new Vector2(
-            Mathf.PosMod(position.X, Settings.Bounds.Size.X),
-            Mathf.PosMod(position.Y, Settings.Bounds.Size.Y)
-        ) + Settings.Bounds.Position;
+                Mathf.PosMod(position.X, Settings.Bounds.Size.X),
+                Mathf.PosMod(position.Y, Settings.Bounds.Size.Y)
+            ) + Settings.Bounds.Position;
     }
 
     /// <summary>
@@ -112,10 +127,8 @@ public partial class VanillaWorldGenerator
     /// </summary>
     /// <param name="cell">The cell to find neighbors for</param>
     /// <returns>An enumerable of neighbor cell indices</returns>
-    public IEnumerable<int> GetNeighborCellIndices(CellData cell)
-    {
-        return GetNeighborCellIndices(cell.Index);
-    }
+    public IEnumerable<int> GetNeighborCellIndices(CellData cell) =>
+        GetNeighborCellIndices(cell.Index);
 
     /// <summary>
     ///     Gets the indices of cells that are neighbors to the cell with the specified index.
@@ -124,7 +137,11 @@ public partial class VanillaWorldGenerator
     /// <returns>An enumerable of neighbor cell indices</returns>
     public IEnumerable<int> GetNeighborCellIndices(int index)
     {
-        foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_triangleIndicesMap[index])))
+        foreach (
+            var i in _delaunator.EdgesAroundPoint(
+                Delaunator.PreviousHalfedge(_triangleIndicesMap[index])
+            )
+        )
         {
             var neighborIndex = _delaunator.Triangles[i];
 
@@ -164,8 +181,8 @@ public partial class VanillaWorldGenerator
     /// <returns>The latitude in degrees, ranging from -90 to 90</returns>
     public double GetLatitude(Vector2 position)
     {
-        var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
-                            Vector2.One / 2;
+        var normalizedPos =
+            (position - Settings.WorldCenter) / Settings.Bounds.Size + Vector2.One / 2;
         return -Mathf.Lerp(-90, 90, normalizedPos.Y);
     }
 
@@ -176,8 +193,8 @@ public partial class VanillaWorldGenerator
     /// <returns>The longitude in degrees, ranging from -180 to 180</returns>
     public double GetLongitude(Vector2 position)
     {
-        var normalizedPos = (position - Settings.WorldCenter) / Settings.Bounds.Size +
-                            Vector2.One / 2;
+        var normalizedPos =
+            (position - Settings.WorldCenter) / Settings.Bounds.Size + Vector2.One / 2;
         return Mathf.Lerp(-180, 180, normalizedPos.X);
     }
 
@@ -198,7 +215,7 @@ public partial class VanillaWorldGenerator
         {
             Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
             Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-            y
+            y,
         };
 
         var results = _cellDatasKdTree.NearestNeighbors(mappedPosition, numNeighbors);
@@ -213,10 +230,8 @@ public partial class VanillaWorldGenerator
     /// <param name="pos">The position to search near</param>
     /// <param name="numNeighbors">The number of nearby cells to find</param>
     /// <returns>An enumerable of the nearest cell data</returns>
-    public IEnumerable<CellData> GetCellDatasNearby(Vector2 pos, int numNeighbors = 1)
-    {
-        return GetCellDatasNearby(pos.X, pos.Y, numNeighbors);
-    }
+    public IEnumerable<CellData> GetCellDatasNearby(Vector2 pos, int numNeighbors = 1) =>
+        GetCellDatasNearby(pos.X, pos.Y, numNeighbors);
 
     /// <summary>
     ///     Finds the triangle that contains a specified point and calculates its barycentric coordinates.
@@ -231,7 +246,7 @@ public partial class VanillaWorldGenerator
         {
             Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
             Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-            point.Y
+            point.Y,
         };
 
         var nearestNeighbors = _cellDatasKdTree.NearestNeighbors(p, 2);
@@ -239,12 +254,23 @@ public partial class VanillaWorldGenerator
         foreach (var nearestNeighbor in nearestNeighbors)
         {
             var nearestId = nearestNeighbor.Item2;
-            foreach (var i in _delaunator.EdgesAroundPoint(Delaunator.PreviousHalfedge(_triangleIndicesMap[nearestId])))
+            foreach (
+                var i in _delaunator.EdgesAroundPoint(
+                    Delaunator.PreviousHalfedge(_triangleIndicesMap[nearestId])
+                )
+            )
             {
                 var triangleIndex = Delaunator.TriangleOfEdge(i);
                 var points = _delaunator.PointsOfTriangle(triangleIndex).ToArray();
-                if (GeometryUtils.IsPointInTriangle(point, _points[points[0]], _points[points[1]],
-                        _points[points[2]], out barycentricPos))
+                if (
+                    GeometryUtils.IsPointInTriangle(
+                        point,
+                        _points[points[0]],
+                        _points[points[1]],
+                        _points[points[2]],
+                        out barycentricPos
+                    )
+                )
                     return (points[0], points[1], points[2]);
             }
         }
@@ -257,10 +283,8 @@ public partial class VanillaWorldGenerator
     /// </summary>
     /// <param name="point">The point to locate</param>
     /// <returns>A tuple of the three vertex indices that form the triangle</returns>
-    public (int, int, int) GetTriangleContainingPoint(Vector2 point)
-    {
-        return GetTriangleContainingPoint(point, out _);
-    }
+    public (int, int, int) GetTriangleContainingPoint(Vector2 point) =>
+        GetTriangleContainingPoint(point, out _);
 
     /// <summary>
     ///     Finds the triangle that contains a specified point and calculates its barycentric coordinates.
@@ -269,10 +293,11 @@ public partial class VanillaWorldGenerator
     /// <param name="y">The y-coordinate of the point</param>
     /// <param name="barycentricPos">The barycentric coordinates of the point within the triangle</param>
     /// <returns>A tuple of the three vertex indices that form the triangle</returns>
-    public (int, int, int) GetTriangleContainingPoint(double x, double y, out Vector3 barycentricPos)
-    {
-        return GetTriangleContainingPoint(new Vector2(x, y), out barycentricPos);
-    }
+    public (int, int, int) GetTriangleContainingPoint(
+        double x,
+        double y,
+        out Vector3 barycentricPos
+    ) => GetTriangleContainingPoint(new Vector2(x, y), out barycentricPos);
 
     /// <summary>
     ///     Finds the triangle that contains a specified point.
@@ -281,16 +306,10 @@ public partial class VanillaWorldGenerator
     /// <param name="y">
     ///     The y-coordinate of the point</returns>
     /// <returns>A tuple of the three vertex indices that form the triangle</returns>
-    public (int, int, int) GetTriangleContainingPoint(double x, double y)
-    {
-        return GetTriangleContainingPoint(new Vector2(x, y), out _);
-    }
+    public (int, int, int) GetTriangleContainingPoint(double x, double y) =>
+        GetTriangleContainingPoint(new Vector2(x, y), out _);
 
-    public Vector2 Warp(Vector2 point)
-    {
-        return Warp(point, _domainWarpPattern);
-    }
-
+    public Vector2 Warp(Vector2 point) => Warp(point, _domainWarpPattern);
 
     #region Loop subdivision
 
@@ -298,35 +317,36 @@ public partial class VanillaWorldGenerator
     private readonly ConcurrentDictionary<(int, int), double> _edgeMidpointHeights = new();
     private readonly ConcurrentDictionary<int, double> _adjustedVertexHeights = new();
 
-    private double GetAdjustedVertexHeight(int vertexIndex)
-    {
-        return _adjustedVertexHeights.GetOrAdd(vertexIndex, index =>
-        {
-            // Get neighbors of this vertex to calculate the adjusted height
-            var neighbors = GetNeighborCellIndices(index).ToList();
-            var n = neighbors.Count;
+    private double GetAdjustedVertexHeight(int vertexIndex) =>
+        _adjustedVertexHeights.GetOrAdd(
+            vertexIndex,
+            index =>
+            {
+                // Get neighbors of this vertex to calculate the adjusted height
+                var neighbors = GetNeighborCellIndices(index).ToList();
+                var n = neighbors.Count;
 
-            if (n <= 2)
-                return CellDatas[index].Height;
+                if (n <= 2)
+                    return CellDatas[index].Height;
 
-            // Loop subdivision weight formula: (1-n*beta) * original + beta * sum(neighbors)
-            // where beta = 1/n * (5/8 - (3/8 + 1/4 * cos(2*PI/n))^2)
-            double beta;
-            if (n == 3)
-                beta = 3.0 / 16.0;
-            else
-                beta = 3.0 / (8.0 * n);
+                // Loop subdivision weight formula: (1-n*beta) * original + beta * sum(neighbors)
+                // where beta = 1/n * (5/8 - (3/8 + 1/4 * cos(2*PI/n))^2)
+                double beta;
+                if (n == 3)
+                    beta = 3.0 / 16.0;
+                else
+                    beta = 3.0 / (8.0 * n);
 
-            // Calculate the sum of neighbor heights
-            double neighborSum = 0;
-            foreach (var neighbor in neighbors)
-                neighborSum += CellDatas[neighbor].Height;
+                // Calculate the sum of neighbor heights
+                double neighborSum = 0;
+                foreach (var neighbor in neighbors)
+                    neighborSum += CellDatas[neighbor].Height;
 
-            // Calculate the adjusted height using Loop formula
-            var originalHeight = CellDatas[index].Height;
-            return (1 - n * beta) * originalHeight + beta * neighborSum;
-        });
-    }
+                // Calculate the adjusted height using Loop formula
+                var originalHeight = CellDatas[index].Height;
+                return (1 - n * beta) * originalHeight + beta * neighborSum;
+            }
+        );
 
     private (Vector2, double) GetOrCreateEdgeMidpoint(int i, int j)
     {
@@ -337,8 +357,10 @@ public partial class VanillaWorldGenerator
         var key = (i, j);
 
         // Attempt to get existing midpoint
-        if (_edgeMidpoints.TryGetValue(key, out var midpoint) &&
-            _edgeMidpointHeights.TryGetValue(key, out var height))
+        if (
+            _edgeMidpoints.TryGetValue(key, out var midpoint)
+            && _edgeMidpointHeights.TryGetValue(key, out var height)
+        )
             return (midpoint, height);
 
         // Calculate the midpoint position and height using Loop subdivision rules
@@ -370,14 +392,15 @@ public partial class VanillaWorldGenerator
 
         // Return all points and heights of the subdivided triangle
         // Original vertices + edge midpoints
-        return (
-            [p0, p1, p2, e01, e12, e20],
-            [h0, h1, h2, h01, h12, h20]
-        );
+        return ([p0, p1, p2, e01, e12, e20], [h0, h1, h2, h01, h12, h20]);
     }
 
-    public (Vector2, Vector2, Vector2, double, double, double) GetSubdividedTriangleContainingPoint(Vector2 point,
-        int i0, int i1, int i2)
+    public (Vector2, Vector2, Vector2, double, double, double) GetSubdividedTriangleContainingPoint(
+        Vector2 point,
+        int i0,
+        int i1,
+        int i2
+    )
     {
         var (points, heights) = SubdivideTriangle(i0, i1, i2);
 

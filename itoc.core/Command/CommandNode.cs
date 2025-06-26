@@ -18,11 +18,21 @@ public class CommandNode : ICommand
     public CommandNode Parent { get; private set; }
 
     private Func<CommandContext, Task<CommandResult>> _executor;
-    private readonly Dictionary<string, CommandNode> _children = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, CommandNode> _aliasMap = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, CommandNode> _children = new(
+        StringComparer.OrdinalIgnoreCase
+    );
+    private readonly Dictionary<string, CommandNode> _aliasMap = new(
+        StringComparer.OrdinalIgnoreCase
+    );
     private readonly List<CommandArgument> _arguments = new();
 
-    public CommandNode(string name, string description = "", string permission = null, IEnumerable<string> aliases = null, Func<CommandContext, Task<CommandResult>> executor = null)
+    public CommandNode(
+        string name,
+        string description = "",
+        string permission = null,
+        IEnumerable<string> aliases = null,
+        Func<CommandContext, Task<CommandResult>> executor = null
+    )
     {
         ValidateName(name);
 
@@ -49,7 +59,10 @@ public class CommandNode : ICommand
             throw new ArgumentException("Name cannot be null or empty", nameof(name));
 
         if (!NameRegex.IsMatch(name))
-            throw new ArgumentException($"Invalid command name: '{name}'. Name can only contain letters, numbers, underscores, hyphens, and periods", nameof(name));
+            throw new ArgumentException(
+                $"Invalid command name: '{name}'. Name can only contain letters, numbers, underscores, hyphens, and periods",
+                nameof(name)
+            );
     }
 
     /// <summary>
@@ -60,7 +73,9 @@ public class CommandNode : ICommand
         ArgumentNullException.ThrowIfNull(child);
 
         if (_children.ContainsKey(child.Name))
-            throw new ArgumentException($"A subcommand with the name '{child.Name}' already exists");
+            throw new ArgumentException(
+                $"A subcommand with the name '{child.Name}' already exists"
+            );
 
         _children[child.Name] = child;
         child.Parent = this; // Set the parent reference
@@ -69,7 +84,9 @@ public class CommandNode : ICommand
         foreach (var alias in child.Aliases)
         {
             if (_children.ContainsKey(alias) || _aliasMap.ContainsKey(alias))
-                throw new ArgumentException($"A subcommand or alias with the name '{alias}' already exists");
+                throw new ArgumentException(
+                    $"A subcommand or alias with the name '{alias}' already exists"
+                );
 
             _aliasMap[alias] = child;
         }
@@ -121,10 +138,8 @@ public class CommandNode : ICommand
     /// Sets the executor for this command
     /// </summary>
     /// <param name="executor">Function to execute when the command is run</param>
-    public void SetExecutor(Func<CommandContext, Task<CommandResult>> executor)
-    {
+    public void SetExecutor(Func<CommandContext, Task<CommandResult>> executor) =>
         _executor = executor;
-    }
 
     /// <summary>
     /// Checks if the sender has permission to use this command

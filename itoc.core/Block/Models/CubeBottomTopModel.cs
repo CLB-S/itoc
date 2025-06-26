@@ -2,7 +2,11 @@ namespace ITOC.Core.BlockModels;
 
 public class CubeBottomTopModel : CubeDirectionalModel
 {
-    public CubeBottomTopModel(string texturePathSide, string texturePathBottom, string texturePathTop)
+    public CubeBottomTopModel(
+        string texturePathSide,
+        string texturePathBottom,
+        string texturePathTop
+    )
     {
         var materialSettings = new MaterialSettings(texturePathSide);
         _materials[Direction.PositiveX] = MaterialManager.Instance.GetMaterial(materialSettings);

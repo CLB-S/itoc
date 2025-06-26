@@ -4,9 +4,14 @@ namespace ITOC.Core.Utils;
 
 public static class HeightMapUtils
 {
-    public static double[,] ConstructHeightMap(int resolutionX, int resolutionY, Rect2I rect,
+    public static double[,] ConstructHeightMap(
+        int resolutionX,
+        int resolutionY,
+        Rect2I rect,
         Func<double, double, double> getHeight,
-        bool parallel = false, int upscaleLevel = 3)
+        bool parallel = false,
+        int upscaleLevel = 3
+    )
     {
         if (upscaleLevel < 0)
             throw new ArgumentException("Upscale level must be non-negative.");
@@ -25,31 +30,51 @@ public static class HeightMapUtils
         return UpscaleHeightMap(lowResMap, resolutionX, resolutionY);
     }
 
-    private static double[,] ConstructHeightMapOriginal(int resolutionX, int resolutionY, Rect2I rect,
+    private static double[,] ConstructHeightMapOriginal(
+        int resolutionX,
+        int resolutionY,
+        Rect2I rect,
         Func<double, double, double> getHeight,
-        bool parallel = false)
+        bool parallel = false
+    )
     {
         var heightMap = new double[resolutionX, resolutionY];
         var stepX = resolutionX > 1 ? (double)(rect.Size.X - 1) / (resolutionX - 1) : 0;
         var stepY = resolutionY > 1 ? (double)(rect.Size.Y - 1) / (resolutionY - 1) : 0;
 
         if (parallel)
-            Parallel.For(0, resolutionX, i =>
-            {
-                var x = resolutionX > 1 ? rect.Position.X + 0.5 + i * stepX : rect.Position.X + rect.Size.X / 2;
-                for (var j = 0; j < resolutionY; j++)
+            Parallel.For(
+                0,
+                resolutionX,
+                i =>
                 {
-                    var y = resolutionY > 1 ? rect.Position.Y + 0.5 + j * stepY : rect.Position.Y + rect.Size.Y / 2;
-                    heightMap[i, j] = getHeight(x, y);
+                    var x =
+                        resolutionX > 1
+                            ? rect.Position.X + 0.5 + i * stepX
+                            : rect.Position.X + rect.Size.X / 2;
+                    for (var j = 0; j < resolutionY; j++)
+                    {
+                        var y =
+                            resolutionY > 1
+                                ? rect.Position.Y + 0.5 + j * stepY
+                                : rect.Position.Y + rect.Size.Y / 2;
+                        heightMap[i, j] = getHeight(x, y);
+                    }
                 }
-            });
+            );
         else
             for (var i = 0; i < resolutionX; i++)
             {
-                var x = resolutionX > 1 ? rect.Position.X + i * stepX : rect.Position.X + rect.Size.X / 2;
+                var x =
+                    resolutionX > 1
+                        ? rect.Position.X + i * stepX
+                        : rect.Position.X + rect.Size.X / 2;
                 for (var j = 0; j < resolutionY; j++)
                 {
-                    var y = resolutionY > 1 ? rect.Position.Y + j * stepY : rect.Position.Y + rect.Size.Y / 2;
+                    var y =
+                        resolutionY > 1
+                            ? rect.Position.Y + j * stepY
+                            : rect.Position.Y + rect.Size.Y / 2;
                     heightMap[i, j] = getHeight(x, y);
                 }
             }
@@ -69,8 +94,8 @@ public static class HeightMapUtils
         {
             var val = lowResMap[0, 0];
             for (var x = 0; x < targetX; x++)
-                for (var y = 0; y < targetY; y++)
-                    highResMap[x, y] = val;
+            for (var y = 0; y < targetY; y++)
+                highResMap[x, y] = val;
             return highResMap;
         }
 
@@ -139,14 +164,18 @@ public static class HeightMapUtils
         return highResMap;
     }
 
-    public static double[,] ConstructChunkHeightMap(Rect2I chunkRect, Func<double, double, double> getHeight,
-        int upscaleLevel = 3)
-    {
-        return ConstructHeightMap(chunkRect.Size.X, chunkRect.Size.Y, chunkRect, getHeight, upscaleLevel: upscaleLevel);
-    }
+    public static double[,] ConstructChunkHeightMap(
+        Rect2I chunkRect,
+        Func<double, double, double> getHeight,
+        int upscaleLevel = 3
+    ) =>
+        ConstructHeightMap(
+            chunkRect.Size.X,
+            chunkRect.Size.Y,
+            chunkRect,
+            getHeight,
+            upscaleLevel: upscaleLevel
+        );
 
-    private static double Lerp(double a, double b, double t)
-    {
-        return a + (b - a) * t;
-    }
+    private static double Lerp(double a, double b, double t) => a + (b - a) * t;
 }

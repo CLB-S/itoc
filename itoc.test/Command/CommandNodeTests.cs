@@ -89,7 +89,7 @@ public class CommandNodeTests
     public async Task ExecuteAsync_WorksCorrectly()
     {
         // Arrange
-        bool executed = false;
+        var executed = false;
         var command = new CommandNode("test");
         command.SetExecutor(ctx =>
         {
@@ -126,7 +126,11 @@ public class CommandNodeTests
         // Arrange
         var command = new CommandNode("test", permission: "test.permission");
         command.SetExecutor(_ => Task.FromResult(CommandResult.Success));
-        var context = new CommandContext(new TestPermissionHolder(), "test", new Dictionary<string, object>());
+        var context = new CommandContext(
+            new TestPermissionHolder(),
+            "test",
+            new Dictionary<string, object>()
+        );
 
         // Act
         var result = await command.ExecuteAsync(context);

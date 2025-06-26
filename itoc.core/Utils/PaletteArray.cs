@@ -9,7 +9,8 @@ using System.Collections.Generic;
 /// Values are stored as indices to a palette, and the indices are packed using a BitPackedArray.
 /// </summary>
 /// <typeparam name="T">The type of values to store.</typeparam>
-public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEquatable<T>
+public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable
+    where T : IEquatable<T>
 {
     private BitPackedArray<uint> _indices;
     private readonly List<T> _palette = new();
@@ -50,7 +51,10 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             throw new ArgumentOutOfRangeException(nameof(size), "Size must be non-negative.");
 
         if (initialBits <= 0 || initialBits > 32)
-            throw new ArgumentOutOfRangeException(nameof(initialBits), "Bits per value must be between 1 and 32.");
+            throw new ArgumentOutOfRangeException(
+                nameof(initialBits),
+                "Bits per value must be between 1 and 32."
+            );
 
         _defaultValue = defaultValue;
         _initialBits = initialBits;
@@ -76,7 +80,10 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         ArgumentNullException.ThrowIfNull(defaultValue);
 
         if (initialBits <= 0 || initialBits > 32)
-            throw new ArgumentOutOfRangeException(nameof(initialBits), "Bits per value must be between 1 and 32.");
+            throw new ArgumentOutOfRangeException(
+                nameof(initialBits),
+                "Bits per value must be between 1 and 32."
+            );
 
         _defaultValue = defaultValue;
         _initialBits = initialBits;
@@ -93,14 +100,14 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             var v = value ?? _defaultValue;
             if (!_valueToIndex.ContainsKey(v))
             {
-                uint index = (uint)_palette.Count;
+                var index = (uint)_palette.Count;
                 _palette.Add(v);
                 _valueToIndex[v] = index;
             }
         }
 
         // Calculate required bits
-        int requiredBits = CalculateRequiredBits(_palette.Count);
+        var requiredBits = CalculateRequiredBits(_palette.Count);
 
         // Create the bit-packed array for indices
         if (valuesList.Count > 0)
@@ -108,7 +115,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             _indices = new BitPackedArray<uint>(valuesList.Count, requiredBits);
 
             // Second pass: populate the bit-packed array
-            for (int i = 0; i < valuesList.Count; i++)
+            for (var i = 0; i < valuesList.Count; i++)
                 _indices[i] = _valueToIndex[valuesList[i] ?? _defaultValue];
         }
     }
@@ -127,7 +134,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             if (_indices == null || index < 0 || index >= _indices.Count)
                 return _defaultValue;
 
-            uint paletteIndex = _indices[index];
+            var paletteIndex = _indices[index];
             return paletteIndex < _palette.Count ? _palette[(int)paletteIndex] : _defaultValue;
         }
         set
@@ -136,7 +143,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
 
             EnsureCapacity(index);
 
-            if (!_valueToIndex.TryGetValue(value, out uint paletteIndex))
+            if (!_valueToIndex.TryGetValue(value, out var paletteIndex))
             {
                 // Add the new value to the palette
                 paletteIndex = (uint)_palette.Count;
@@ -144,7 +151,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
                 _valueToIndex[value] = paletteIndex;
 
                 // Check if we need more bits
-                int requiredBits = CalculateRequiredBits(_palette.Count);
+                var requiredBits = CalculateRequiredBits(_palette.Count);
                 if (requiredBits > _indices.BitsPerValue)
                     ResizeIndices(requiredBits);
             }
@@ -162,13 +169,13 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         if (_indices == null)
         {
             // Create array with initial size
-            int initialSize = Math.Max(index + 1, 16);
+            var initialSize = Math.Max(index + 1, 16);
             _indices = new BitPackedArray<uint>(initialSize, _initialBits);
         }
         else if (index >= _indices.Count)
         {
             // Need to increase size
-            int newSize = Math.Max(index + 1, _indices.Count * 2);
+            var newSize = Math.Max(index + 1, _indices.Count * 2);
             ResizeArray(newSize);
         }
     }
@@ -182,7 +189,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         var newIndices = new BitPackedArray<uint>(newSize, _indices.BitsPerValue);
 
         // Copy existing values
-        for (int i = 0; i < _indices.Count; i++)
+        for (var i = 0; i < _indices.Count; i++)
             newIndices[i] = _indices[i];
 
         // Replace the old array
@@ -200,7 +207,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         var newIndices = new BitPackedArray<uint>(_indices.Count, newBitsPerValue);
 
         // Copy existing values
-        for (int i = 0; i < _indices.Count; i++)
+        for (var i = 0; i < _indices.Count; i++)
         {
             newIndices[i] = _indices[i];
         }
@@ -218,9 +225,10 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
     /// <returns>The number of bits required.</returns>
     private int CalculateRequiredBits(int paletteSize)
     {
-        if (paletteSize <= 1) return _initialBits;
+        if (paletteSize <= 1)
+            return _initialBits;
 
-        int bits = 1;
+        var bits = 1;
         while ((1U << bits) < paletteSize)
         {
             bits++;
@@ -236,9 +244,10 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
     {
         ObjectDisposedException.ThrowIf(_isDisposed, typeof(PaletteArray<T>));
 
-        if (_indices == null) return;
+        if (_indices == null)
+            return;
 
-        if (!_valueToIndex.TryGetValue(value, out uint paletteIndex))
+        if (!_valueToIndex.TryGetValue(value, out var paletteIndex))
         {
             // Add the new value to the palette
             paletteIndex = (uint)_palette.Count;
@@ -246,13 +255,13 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             _valueToIndex[value] = paletteIndex;
 
             // Check if we need more bits
-            int requiredBits = CalculateRequiredBits(_palette.Count);
+            var requiredBits = CalculateRequiredBits(_palette.Count);
             if (requiredBits > _indices.BitsPerValue)
                 ResizeIndices(requiredBits);
         }
 
         // Fill the array with the palette index
-        for (int i = 0; i < _indices.Count; i++)
+        for (var i = 0; i < _indices.Count; i++)
             _indices[i] = paletteIndex;
     }
 
@@ -265,7 +274,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
     {
         ObjectDisposedException.ThrowIf(_isDisposed, typeof(PaletteArray<T>));
 
-        if (_valueToIndex.TryGetValue(value, out uint index))
+        if (_valueToIndex.TryGetValue(value, out var index))
             return index;
 
         return 0; // Default value index
@@ -309,7 +318,10 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         ArgumentNullException.ThrowIfNull(destinationArray);
 
         if (startIndex < 0)
-            throw new ArgumentOutOfRangeException(nameof(startIndex), "Start index must be non-negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(startIndex),
+                "Start index must be non-negative."
+            );
 
         if (_indices == null)
             return;
@@ -317,11 +329,11 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         if (destinationArray.Length - startIndex < _indices.Count)
             throw new ArgumentException("Destination array is too small.");
 
-        for (int i = 0; i < _indices.Count; i++)
+        for (var i = 0; i < _indices.Count; i++)
         {
-            uint paletteIndex = _indices[i];
-            destinationArray[startIndex + i] = paletteIndex < _palette.Count ?
-                _palette[(int)paletteIndex] : _defaultValue;
+            var paletteIndex = _indices[i];
+            destinationArray[startIndex + i] =
+                paletteIndex < _palette.Count ? _palette[(int)paletteIndex] : _defaultValue;
         }
     }
 
@@ -333,7 +345,8 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
     {
         ObjectDisposedException.ThrowIf(_isDisposed, typeof(PaletteArray<T>));
 
-        if (_indices == null) return Array.Empty<T>();
+        if (_indices == null)
+            return Array.Empty<T>();
 
         var result = new T[_indices.Count];
         CopyTo(result);
@@ -351,10 +364,12 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
         if (_indices == null)
             yield break;
 
-        for (int i = 0; i < _indices.Count; i++)
+        for (var i = 0; i < _indices.Count; i++)
         {
-            uint paletteIndex = _indices[i];
-            yield return paletteIndex < _palette.Count ? _palette[(int)paletteIndex] : _defaultValue;
+            var paletteIndex = _indices[i];
+            yield return paletteIndex < _palette.Count
+                ? _palette[(int)paletteIndex]
+                : _defaultValue;
         }
     }
 
@@ -362,10 +377,7 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
     /// Gets an enumerator that iterates through the array.
     /// </summary>
     /// <returns>An enumerator for the array.</returns>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// Gets the memory usage of this palette array in bytes.
@@ -377,7 +389,8 @@ public sealed class PaletteArray<T> : IEnumerable<T>, IDisposable where T : IEqu
             return 0;
 
         // Memory for BitPackedArray + palette entries + dictionary overhead (rough estimate)
-        return _indices.EstimateMemoryUsage() + (_palette.Count * (typeof(T).IsValueType ? 16 : 32));
+        return _indices.EstimateMemoryUsage()
+            + (_palette.Count * (typeof(T).IsValueType ? 16 : 32));
     }
 
     /// <summary>

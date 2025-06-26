@@ -8,8 +8,7 @@ public class CommandBuilderTests
     public void Create_BuildsCommand_Correctly()
     {
         // Act
-        var command = CommandBuilder.Create("test", "Test command", "test.permission", "t")
-            .Build();
+        var command = CommandBuilder.Create("test", "Test command", "test.permission", "t").Build();
 
         // Assert
         Assert.Equal("test", command.Name);
@@ -22,10 +21,11 @@ public class CommandBuilderTests
     public void Then_BuildsSubcommands_Correctly()
     {
         // Act
-        var command = CommandBuilder.Create("parent")
+        var command = CommandBuilder
+            .Create("parent")
             .Then("child", "Child command")
-                .Then("grandchild", "Grandchild command")
-                .EndCommand()
+            .Then("grandchild", "Grandchild command")
+            .EndCommand()
             .EndCommand()
             .Then("child2")
             .Build();
@@ -49,7 +49,8 @@ public class CommandBuilderTests
     public void WithArgument_AddsArgument_Correctly()
     {
         // Act
-        var command = CommandBuilder.Create("test")
+        var command = CommandBuilder
+            .Create("test")
             .WithArgument("arg1", new StringArgumentType(), "First argument")
             .WithOptionalArgument("arg2", new IntegerArgumentType(), 42, "Second argument")
             .Build();
@@ -75,10 +76,11 @@ public class CommandBuilderTests
     public async Task Executes_SetsExecutor_Correctly()
     {
         // Arrange
-        bool executed = false;
+        var executed = false;
 
         // Act
-        var command = CommandBuilder.Create("test")
+        var command = CommandBuilder
+            .Create("test")
             .Executes(context =>
             {
                 executed = true;
@@ -99,14 +101,15 @@ public class CommandBuilderTests
     public void Build_CreatesCorrectHierarchy()
     {
         // Act
-        var command = CommandBuilder.Create("test")
+        var command = CommandBuilder
+            .Create("test")
             .Then("sub1")
-                .WithArgument("arg1", new StringArgumentType())
-                .Executes(_ => CommandResult.Success)
+            .WithArgument("arg1", new StringArgumentType())
+            .Executes(_ => CommandResult.Success)
             .EndCommand()
             .Then("sub2")
-                .WithArgument("arg2", new IntegerArgumentType())
-                .Executes(_ => CommandResult.Success)
+            .WithArgument("arg2", new IntegerArgumentType())
+            .Executes(_ => CommandResult.Success)
             .EndCommand()
             .Build();
 

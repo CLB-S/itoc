@@ -1,4 +1,3 @@
-
 using Godot;
 
 namespace ITOC.Core.BlockModels;
@@ -15,10 +14,11 @@ public abstract class BlockModelBase
     public BlockModelBase()
     {
         GuiTransform = new Transform3D(
-            Basis.Identity.Rotated(Vector3.Right, Mathf.DegToRad(30))
-                     .Rotated(Vector3.Up, Mathf.DegToRad(225))
-                     .Rotated(Vector3.Forward, Mathf.DegToRad(0))
-                     .Scaled(new Vector3(0.625f, 0.625f, 0.625f)),
+            Basis
+                .Identity.Rotated(Vector3.Right, Mathf.DegToRad(30))
+                .Rotated(Vector3.Up, Mathf.DegToRad(225))
+                .Rotated(Vector3.Forward, Mathf.DegToRad(0))
+                .Scaled(new Vector3(0.625f, 0.625f, 0.625f)),
             new Vector3(0, 0, 0)
         );
 
@@ -33,21 +33,24 @@ public abstract class BlockModelBase
         );
 
         ThirdPersonRightHandTransform = new Transform3D(
-            Basis.Identity.Rotated(Vector3.Right, Mathf.DegToRad(75))
-                     .Rotated(Vector3.Up, Mathf.DegToRad(45))
-                     .Scaled(new Vector3(0.375f, 0.375f, 0.375f)),
+            Basis
+                .Identity.Rotated(Vector3.Right, Mathf.DegToRad(75))
+                .Rotated(Vector3.Up, Mathf.DegToRad(45))
+                .Scaled(new Vector3(0.375f, 0.375f, 0.375f)),
             new Vector3(0, 2.5f, 0)
         );
 
         FirstPersonRightHandTransform = new Transform3D(
-            Basis.Identity.Rotated(Vector3.Up, Mathf.DegToRad(45))
-                     .Scaled(new Vector3(0.40f, 0.40f, 0.40f)),
+            Basis
+                .Identity.Rotated(Vector3.Up, Mathf.DegToRad(45))
+                .Scaled(new Vector3(0.40f, 0.40f, 0.40f)),
             new Vector3(0, 0, 0)
         );
 
         FirstPersonLeftHandTransform = new Transform3D(
-            Basis.Identity.Rotated(Vector3.Up, Mathf.DegToRad(225))
-                     .Scaled(new Vector3(0.40f, 0.40f, 0.40f)),
+            Basis
+                .Identity.Rotated(Vector3.Up, Mathf.DegToRad(225))
+                .Scaled(new Vector3(0.40f, 0.40f, 0.40f)),
             new Vector3(0, 0, 0)
         );
     }

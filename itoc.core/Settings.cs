@@ -59,7 +59,9 @@ public class Settings
 
     public void ApplyGraphicsSettings()
     {
-        DisplayServer.WindowSetVsyncMode(VSync ? DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled);
+        DisplayServer.WindowSetVsyncMode(
+            VSync ? DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled
+        );
         DisplayServer.WindowSetMode(WindowMode);
         DisplayServer.WindowSetSize(new Vector2I(WindowWidth, WindowHeight));
     }

@@ -16,10 +16,13 @@ public class GameController : NodeAdapter
 
     public static GameController Instance { get; private set; }
 
-    public GameController(Node node) : base(node)
+    public GameController(Node node)
+        : base(node)
     {
         if (Instance != null)
-            throw new Exception("GameController instance already exists. Only one instance is allowed.");
+            throw new Exception(
+                "GameController instance already exists. Only one instance is allowed."
+            );
 
         Instance = this;
 
@@ -46,10 +49,7 @@ public class GameController : NodeAdapter
         Task.Run(WorldGenerator.BeginWorldPreGeneration);
     }
 
-    public void GotoWorldScene()
-    {
-        SceneSwitcher.Instance.GotoScene(BuiltInScenes.WorldScreen);
-    }
+    public void GotoWorldScene() => SceneSwitcher.Instance.GotoScene(BuiltInScenes.WorldScreen);
 
     public void GotoWorldMapScreen()
     {

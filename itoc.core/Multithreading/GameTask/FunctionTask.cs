@@ -19,7 +19,9 @@ public class FunctionTask<T> : GameTask
         get
         {
             if (State != TaskState.Completed)
-                throw new InvalidOperationException("Cannot get result of a task that hasn't completed successfully.");
+                throw new InvalidOperationException(
+                    "Cannot get result of a task that hasn't completed successfully."
+                );
             return _result;
         }
     }
@@ -30,7 +32,12 @@ public class FunctionTask<T> : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="function">The function to execute.</param>
     /// <param name="priority">The priority of the task.</param>
-    public FunctionTask(Func<T> function, Action<T> callback, string name = null, TaskPriority priority = TaskPriority.Normal)
+    public FunctionTask(
+        Func<T> function,
+        Action<T> callback,
+        string name = null,
+        TaskPriority priority = TaskPriority.Normal
+    )
         : base(name, priority)
     {
         _function = function ?? throw new ArgumentNullException(nameof(function));
@@ -48,7 +55,12 @@ public class FunctionTask<T> : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="function">The cancellable function to execute.</param>
     /// <param name="priority">The priority of the task.</param>
-    public FunctionTask(Func<CancellationToken, T> function, Action<T> callback, string name = null, TaskPriority priority = TaskPriority.Normal)
+    public FunctionTask(
+        Func<CancellationToken, T> function,
+        Action<T> callback,
+        string name = null,
+        TaskPriority priority = TaskPriority.Normal
+    )
         : base(name, priority)
     {
         _cancellableFunction = function ?? throw new ArgumentNullException(nameof(function));

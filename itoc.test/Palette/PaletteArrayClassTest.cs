@@ -21,32 +21,30 @@ public class PaletteArrayClassTest
 
         public bool Equals(TestClass? other)
         {
-            if (other is null) return false;
+            if (other is null)
+                return false;
             return Id == other.Id && Name == other.Name;
         }
 
         public override bool Equals(object? obj)
         {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null)
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
             return obj is TestClass other && Equals(other);
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Id, Name);
-        }
+        public override int GetHashCode() => HashCode.Combine(Id, Name);
 
         public static bool operator ==(TestClass left, TestClass right)
         {
-            if (left is null) return right is null;
+            if (left is null)
+                return right is null;
             return left.Equals(right);
         }
 
-        public static bool operator !=(TestClass left, TestClass right)
-        {
-            return !(left == right);
-        }
+        public static bool operator !=(TestClass left, TestClass right) => !(left == right);
     }
 
     [Fact]

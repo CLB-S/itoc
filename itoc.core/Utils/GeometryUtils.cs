@@ -11,10 +11,8 @@ public static class GeometryUtils
     ///     Calculates the area of a triangle defined by three 2D points.
     /// </summary>
     /// <returns>The area of the triangle</returns>
-    public static double CalculateTriangleArea(Vector2 p0, Vector2 p1, Vector2 p2)
-    {
-        return Mathf.Abs((p0.X * (p1.Y - p2.Y) + p1.X * (p2.Y - p0.Y) + p2.X * (p0.Y - p1.Y)) / 2.0);
-    }
+    public static double CalculateTriangleArea(Vector2 p0, Vector2 p1, Vector2 p2) =>
+        Mathf.Abs((p0.X * (p1.Y - p2.Y) + p1.X * (p2.Y - p0.Y) + p2.X * (p0.Y - p1.Y)) / 2.0);
 
     /// <summary>
     ///     Calculates the area of a triangle defined by three 3D points.
@@ -64,7 +62,12 @@ public static class GeometryUtils
     ///     (0,1,0) means the point is at p1,
     ///     (0,0,1) means the point is at p2.
     /// </returns>
-    public static Vector3 GetBarycentricCoordinates(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2)
+    public static Vector3 GetBarycentricCoordinates(
+        Vector2 point,
+        Vector2 p0,
+        Vector2 p1,
+        Vector2 p2
+    )
     {
         // Compute vectors
         var v0 = p2 - p0;
@@ -93,7 +96,13 @@ public static class GeometryUtils
     /// <param name="point">The point to check</param>
     /// <param name="barycentricPos">Output parameter containing the barycentric coordinates</param>
     /// <returns>True if the point is in the triangle, false otherwise</returns>
-    public static bool IsPointInTriangle(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2, out Vector3 barycentricPos)
+    public static bool IsPointInTriangle(
+        Vector2 point,
+        Vector2 p0,
+        Vector2 p1,
+        Vector2 p2,
+        out Vector3 barycentricPos
+    )
     {
         barycentricPos = GetBarycentricCoordinates(point, p0, p1, p2);
         return barycentricPos.X >= 0 && barycentricPos.Y >= 0 && barycentricPos.Z >= 0;
@@ -104,17 +113,20 @@ public static class GeometryUtils
     /// </summary>
     /// <param name="point">The point to check</param>
     /// <returns>True if the point is in the triangle, false otherwise</returns>
-    public static bool IsPointInTriangle(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2)
-    {
-        return IsPointInTriangle(point, p0, p1, p2, out _);
-    }
+    public static bool IsPointInTriangle(Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2) =>
+        IsPointInTriangle(point, p0, p1, p2, out _);
 
     /// <summary>
     ///     Calculates the normal vector of a triangle in 3D space.
     /// </summary>
     /// <param name="faceUp">If true, ensures the normal points upward (Y &gt; 0)</param>
     /// <returns>The normalized normal vector of the triangle</returns>
-    public static Vector3 CalculateTriangleNormal(Vector3 p0, Vector3 p1, Vector3 p2, bool faceUp = true)
+    public static Vector3 CalculateTriangleNormal(
+        Vector3 p0,
+        Vector3 p1,
+        Vector3 p2,
+        bool faceUp = true
+    )
     {
         var u = p1 - p0;
         var v = p2 - p0;

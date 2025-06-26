@@ -7,7 +7,8 @@ namespace ITOC.Core.Registry;
 /// A generic registry for managing game content of a specific type.
 /// </summary>
 /// <typeparam name="T">The type of content managed by this registry</typeparam>
-public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable where T : class
+public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable
+    where T : class
 {
     private readonly Dictionary<Identifier, T> _entries = new();
     private readonly Dictionary<T, Identifier> _reverseEntries = new();
@@ -41,15 +42,13 @@ public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable 
     /// <summary>
     /// Returns a read-only view of all entries in this registry
     /// </summary>
-    public IReadOnlyDictionary<Identifier, T> Entries => new ReadOnlyDictionary<Identifier, T>(_entries);
+    public IReadOnlyDictionary<Identifier, T> Entries =>
+        new ReadOnlyDictionary<Identifier, T>(_entries);
 
     /// <summary>
     /// Creates a new registry with the specified name
     /// </summary>
-    public Registry(Identifier registryName)
-    {
-        RegistryName = registryName;
-    }
+    public Registry(Identifier registryName) => RegistryName = registryName;
 
     /// <summary>
     /// Registers an entry with the specified identifier
@@ -62,13 +61,19 @@ public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable 
     public T Register(Identifier id, T entry)
     {
         if (_isFrozen)
-            throw new InvalidOperationException($"Cannot register entry to frozen registry: {RegistryName}");
+            throw new InvalidOperationException(
+                $"Cannot register entry to frozen registry: {RegistryName}"
+            );
 
-        if (_entries.TryGetValue(id, out T existingEntry))
-            throw new ArgumentException($"Existing entry {existingEntry} with ID {id} is already registered in {RegistryName}");
+        if (_entries.TryGetValue(id, out var existingEntry))
+            throw new ArgumentException(
+                $"Existing entry {existingEntry} with ID {id} is already registered in {RegistryName}"
+            );
 
-        if (_reverseEntries.TryGetValue(entry, out Identifier value))
-            throw new ArgumentException($"Entry {entry} is already registered with ID {value} in {RegistryName}");
+        if (_reverseEntries.TryGetValue(entry, out var value))
+            throw new ArgumentException(
+                $"Entry {entry} is already registered with ID {value} in {RegistryName}"
+            );
 
         _entries[id] = entry;
         _reverseEntries[entry] = id;
@@ -83,10 +88,7 @@ public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable 
     /// </summary>
     /// <param name="id">The identifier of the entry</param>
     /// <returns>The entry, or null if not found</returns>
-    public T Get(Identifier id)
-    {
-        return _entries.TryGetValue(id, out var entry) ? entry : null;
-    }
+    public T Get(Identifier id) => _entries.TryGetValue(id, out var entry) ? entry : null;
 
     /// <summary>
     /// Gets an entry by its identifier, or returns the default value if not found
@@ -94,7 +96,8 @@ public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable 
     /// <param name="id">The identifier of the entry</param>
     /// <param name="defaultValue">The default value to return if the entry is not found</param>
     /// <returns>The entry, or the default value if not found</returns>
-    public T GetOrDefault(Identifier id, T defaultValue) => _entries.TryGetValue(id, out var entry) ? entry : defaultValue;
+    public T GetOrDefault(Identifier id, T defaultValue) =>
+        _entries.TryGetValue(id, out var entry) ? entry : defaultValue;
 
     /// <summary>
     /// Tries to get an entry by its identifier
@@ -152,18 +155,14 @@ public class Registry<T> : IEnumerable<KeyValuePair<Identifier, T>>, IFreezable 
     /// </summary>
     /// <param name="id">The identifier of the entry</param>
     /// <param name="entry">The entry</param>
-    protected virtual void OnEntryRegistered(Identifier id, T entry)
-    {
+    protected virtual void OnEntryRegistered(Identifier id, T entry) =>
         EntryRegistered?.Invoke(this, new RegistryEntryEventArgs<T>(this, id, entry));
-    }
 
     /// <summary>
     /// Called when the registry is frozen
     /// </summary>
-    protected virtual void OnRegistryFrozen()
-    {
+    protected virtual void OnRegistryFrozen() =>
         RegistryFrozen?.Invoke(this, new RegistryFrozenEventArgs<T>(this));
-    }
 
     /// <summary>
     /// Returns an enumerator that iterates through all entries in this registry

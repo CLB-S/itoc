@@ -7,5 +7,5 @@ public enum ItemType
     Weapon,
     Armor,
     Consumable,
-    Material
+    Material,
 }

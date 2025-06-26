@@ -39,7 +39,8 @@ public class TaskManager : IDisposable
     private readonly List<WorkerThread> _workers = new();
 
     // Task queues - one per priority level
-    private readonly ConcurrentDictionary<TaskPriority, ConcurrentQueue<GameTask>> _taskQueues = new();
+    private readonly ConcurrentDictionary<TaskPriority, ConcurrentQueue<GameTask>> _taskQueues =
+        new();
 
     // Task counters for statistics
     private long _totalTasksCreated;
@@ -115,7 +116,8 @@ public class TaskManager : IDisposable
         get => _isPaused;
         set
         {
-            if (_isPaused == value) return;
+            if (_isPaused == value)
+                return;
 
             if (value)
             {
@@ -166,9 +168,10 @@ public class TaskManager : IDisposable
 
         _config = config ?? new TaskManagerConfig();
 
-        _maxWorkerThreads = _config.MaxWorkerThreads > 0
-            ? _config.MaxWorkerThreads
-            : Math.Max(1, System.Environment.ProcessorCount - 1);
+        _maxWorkerThreads =
+            _config.MaxWorkerThreads > 0
+                ? _config.MaxWorkerThreads
+                : Math.Max(1, System.Environment.ProcessorCount - 1);
 
         _autoStart = _config.AutoStart;
 
@@ -183,14 +186,16 @@ public class TaskManager : IDisposable
     /// <summary>
     /// Initializes the TaskManager with the specified configuration.
     /// </summary>
-    /// <param name="maxWorkerThreads">Maximum number of worker threads to use. If 0 or negative, will use Environment.ProcessorCount - 1.</param>
+    /// <param name="maxWorkerThreads">
+    /// Maximum number of worker threads to use. If 0 or negative, will use Environment.ProcessorCount - 1.
+    /// </param>
     /// <param name="autoStart">Whether to automatically start the worker threads after initialization.</param>
     public void Initialize(int maxWorkerThreads = 0, bool autoStart = true)
     {
         var config = new TaskManagerConfig
         {
             MaxWorkerThreads = maxWorkerThreads,
-            AutoStart = autoStart
+            AutoStart = autoStart,
         };
 
         Initialize(config);
@@ -198,7 +203,7 @@ public class TaskManager : IDisposable
 
     private void CreateWorkerThreads()
     {
-        for (int i = 0; i < _maxWorkerThreads; i++)
+        for (var i = 0; i < _maxWorkerThreads; i++)
         {
             var worker = new WorkerThread(this, i, _config.VerboseLogging);
             _workers.Add(worker);
@@ -267,7 +272,9 @@ public class TaskManager : IDisposable
             _newTaskEvent.Set();
 
             if (_config.VerboseLogging)
-                GD.Print($"Dependent task '{task.Name}' enqueued with {task.Dependencies.Count} already completed dependencies.");
+                GD.Print(
+                    $"Dependent task '{task.Name}' enqueued with {task.Dependencies.Count} already completed dependencies."
+                );
 
             return task;
         }
@@ -297,12 +304,15 @@ public class TaskManager : IDisposable
                                 list.Add(task);
                             return list;
                         }
-                    });
+                    }
+                );
             }
         }
 
         if (_config.VerboseLogging)
-            GD.Print($"Dependent task '{task.Name}' registered with {task.Dependencies.Count} dependencies.");
+            GD.Print(
+                $"Dependent task '{task.Name}' registered with {task.Dependencies.Count} dependencies."
+            );
 
         return task;
     }
@@ -321,7 +331,11 @@ public class TaskManager : IDisposable
             return false;
 
         // Try to get a task from the highest priority queue first
-        foreach (TaskPriority priority in Enum.GetValues(typeof(TaskPriority)).Cast<TaskPriority>().OrderByDescending(p => p))
+        foreach (
+            var priority in Enum.GetValues(typeof(TaskPriority))
+                .Cast<TaskPriority>()
+                .OrderByDescending(p => p)
+        )
         {
             if (_taskQueues.TryGetValue(priority, out var queue) && queue.TryDequeue(out task))
                 return true;
@@ -358,7 +372,9 @@ public class TaskManager : IDisposable
             Interlocked.Increment(ref _totalTasksCompleted);
 
             if (_config.VerboseLogging)
-                GD.Print($"Task '{task.Name}' completed successfully in {((TimeSpan)task.ExecutionTime).TotalMilliseconds} ms.");
+                GD.Print(
+                    $"Task '{task.Name}' completed successfully in {((TimeSpan)task.ExecutionTime).TotalMilliseconds} ms."
+                );
 
             // Check if there are any dependent tasks waiting on this task
             CheckAndEnqueueDependentTasks(task);
@@ -388,7 +404,9 @@ public class TaskManager : IDisposable
                 _newTaskEvent.Set();
 
                 if (_config.VerboseLogging)
-                    GD.Print($"Dependent task '{dependentTask.Name}' is now ready for execution as all dependencies have completed.");
+                    GD.Print(
+                        $"Dependent task '{dependentTask.Name}' is now ready for execution as all dependencies have completed."
+                    );
             }
         }
     }
@@ -482,7 +500,8 @@ public class TaskManager : IDisposable
     /// <param name="waitForWorkers">Whether to wait for worker threads to exit.</param>
     public void Shutdown(bool cancelPendingTasks = true, bool waitForWorkers = true)
     {
-        if (_isDisposed || _isShuttingDown) return;
+        if (_isDisposed || _isShuttingDown)
+            return;
 
         _isShuttingDown = true;
         _uptime.Stop();
@@ -508,7 +527,8 @@ public class TaskManager : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+            return;
 
         try
         {
@@ -546,10 +566,8 @@ public class TaskManager : IDisposable
         }
     }
 
-    private void ThrowIfDisposed()
-    {
+    private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(_isDisposed, nameof(TaskManager));
-    }
 
     #endregion
 
@@ -559,21 +577,19 @@ public class TaskManager : IDisposable
     /// Gets the current status of the TaskManager including statistics.
     /// </summary>
     /// <returns>A string containing TaskManager diagnostics.</returns>
-    public string GetStatus()
-    {
-        return $"TaskManager Status:\n" +
-               $"  Uptime: {TimeSpan.FromMilliseconds(_uptime.ElapsedMilliseconds)}\n" +
-               $"  Workers: {WorkerCount} (Active: {_workers.Count(w => w.IsActive)})\n" +
-               $"  Tasks Pending: {PendingTaskCount}\n" +
-               $"  Tasks Active: {ActiveTaskCount}\n" +
-               $"  Tasks Completed: {TotalTasksCompleted}\n" +
-               $"  Tasks Cancelled: {TotalTasksCancelled}\n" +
-               $"  Tasks Failed: {TotalTasksFailed}\n" +
-               $"  Tasks Total: {TotalTasksCreated}\n" +
-               $"  Configuration: {(_config.VerboseLogging ? "Verbose" : "Normal")}, " +
-               $"Worker Threads: {_maxWorkerThreads}, " +
-               $"  State: {(_isPaused ? "Paused" : _isShuttingDown ? "Shutting Down" : "Running")}";
-    }
+    public string GetStatus() =>
+        $"TaskManager Status:\n"
+        + $"  Uptime: {TimeSpan.FromMilliseconds(_uptime.ElapsedMilliseconds)}\n"
+        + $"  Workers: {WorkerCount} (Active: {_workers.Count(w => w.IsActive)})\n"
+        + $"  Tasks Pending: {PendingTaskCount}\n"
+        + $"  Tasks Active: {ActiveTaskCount}\n"
+        + $"  Tasks Completed: {TotalTasksCompleted}\n"
+        + $"  Tasks Cancelled: {TotalTasksCancelled}\n"
+        + $"  Tasks Failed: {TotalTasksFailed}\n"
+        + $"  Tasks Total: {TotalTasksCreated}\n"
+        + $"  Configuration: {(_config.VerboseLogging ? "Verbose" : "Normal")}, "
+        + $"Worker Threads: {_maxWorkerThreads}, "
+        + $"  State: {(_isPaused ? "Paused" : _isShuttingDown ? "Shutting Down" : "Running")}";
 
     #endregion
 }

@@ -24,35 +24,22 @@ public static class ChunkMesher
 
     #region Index Utils
 
-    public static int GetAxisIndex(int axis, int a, int b, int c, int size = CS_P)
-    {
-        return axis switch
+    public static int GetAxisIndex(int axis, int a, int b, int c, int size = CS_P) =>
+        axis switch
         {
             0 => b + a * size + c * size * size,
             1 => b + c * size + a * size * size,
-            _ => c + a * size + b * size * size
+            _ => c + a * size + b * size * size,
         };
-    }
 
-    public static int GetIndex(int x, int y, int z)
-    {
-        return z + x * CS_P + y * CS_P2;
-    }
+    public static int GetIndex(int x, int y, int z) => z + x * CS_P + y * CS_P2;
 
-    public static int GetIndex(Vector3I vec)
-    {
-        return vec.Z + vec.X * CS_P + vec.Y * CS_P2;
-    }
+    public static int GetIndex(Vector3I vec) => vec.Z + vec.X * CS_P + vec.Y * CS_P2;
 
-    public static int GetBlockAxisIndex(int axis, int a, int b, int c)
-    {
-        return GetAxisIndex(axis, a, b, c, CS);
-    }
+    public static int GetBlockAxisIndex(int axis, int a, int b, int c) =>
+        GetAxisIndex(axis, a, b, c, CS);
 
-    public static int GetBlockIndex(int x, int y, int z)
-    {
-        return z + x * CS + y * CS_2;
-    }
+    public static int GetBlockIndex(int x, int y, int z) => z + x * CS + y * CS_2;
 
     public static (int x, int y, int z) GetBlockIndex(int index)
     {
@@ -64,57 +51,67 @@ public static class ChunkMesher
         return (x, y, z);
     }
 
-    public static int GetBlockIndex(Vector3I vec)
-    {
-        return vec.Z + vec.X * CS + vec.Y * CS_2;
-    }
+    public static int GetBlockIndex(Vector3I vec) => vec.Z + vec.X * CS + vec.Y * CS_2;
 
     #endregion
 
 
     #region Mask Utils
 
-    public static void AddOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
-    {
+    public static void AddOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z) =>
         opaqueMask[y * CS_P + x] |= 1UL << z;
-    }
 
-    public static void AddNonOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z)
-    {
+    public static void AddNonOpaqueVoxel(ulong[] opaqueMask, int x, int y, int z) =>
         opaqueMask[y * CS_P + x] &= ~(1UL << z);
-    }
 
     #endregion
 
     #region Quads
 
-    private static ulong GetQuad(ulong x, ulong y, ulong z, ulong w, ulong h, ulong type)
-    {
-        return (type << 32) | (h << 24) | (w << 18) | (z << 12) | (y << 6) | x;
-    }
+    private static ulong GetQuad(ulong x, ulong y, ulong z, ulong w, ulong h, ulong type) =>
+        (type << 32) | (h << 24) | (w << 18) | (z << 12) | (y << 6) | x;
 
-    private static ulong GetQuadV1(ulong x, ulong y, ulong z, ulong type,
-        ulong halvedX, ulong halvedY, ulong halvedZ,
-        ulong offsetX, ulong offsetY, ulong offsetZ,
-        ulong textureId)
-    {
-        return (textureId << 28) |
-            (offsetZ << 27) | (offsetY << 26) | (offsetX << 25) |
-            (halvedZ << 24) | (halvedY << 23) | (halvedX << 22) |
-            (type << 18) | (z << 12) | (y << 6) | x;
-    }
+    private static ulong GetQuadV1(
+        ulong x,
+        ulong y,
+        ulong z,
+        ulong type,
+        ulong halvedX,
+        ulong halvedY,
+        ulong halvedZ,
+        ulong offsetX,
+        ulong offsetY,
+        ulong offsetZ,
+        ulong textureId
+    ) =>
+        (textureId << 28)
+        | (offsetZ << 27)
+        | (offsetY << 26)
+        | (offsetX << 25)
+        | (halvedZ << 24)
+        | (halvedY << 23)
+        | (halvedX << 22)
+        | (type << 18)
+        | (z << 12)
+        | (y << 6)
+        | x;
 
     // TODO: More block types.
-    private static void ParseQuad(Direction dir, Block block, ulong quad,
-        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict)
+    private static void ParseQuad(
+        Direction dir,
+        Block block,
+        ulong quad,
+        Dictionary<(Block, Direction), SurfaceArrayData> surfaceArrayDict
+    )
     {
-        var blockDirPair = block is DirectionalCubeBlock ? (block, dir) : (block, Direction.PositiveY);
+        var blockDirPair =
+            block is DirectionalCubeBlock ? (block, dir) : (block, Direction.PositiveY);
         if (!surfaceArrayDict.ContainsKey(blockDirPair))
             surfaceArrayDict.Add(blockDirPair, new SurfaceArrayData());
         var surfaceArrayData = surfaceArrayDict[blockDirPair];
 
-        var x = quad & 0x3F;         // 6 bits
-        var y = (quad >> 6) & 0x3F;  // 6 bits
+        var x = quad & 0x3F; // 6 bits
+        var y = (quad >> 6) & 0x3F; // 6 bits
         var z = (quad >> 12) & 0x3F; // 6 bits
         var w = (quad >> 18) & 0x3F; // 6 bits (width)
         var h = (quad >> 24) & 0x3F; // 6 bits (height)
@@ -147,13 +144,12 @@ public static class ChunkMesher
         surfaceArrayData.Vertices.AddRange(corners);
 
         var normal = dir.Norm();
-        for (var i = 0; i < 4; i++) surfaceArrayData.Normals.Add(normal);
+        for (var i = 0; i < 4; i++)
+            surfaceArrayData.Normals.Add(normal);
 
         var offset = 0.0014f;
 
-        if (dir == Direction.PositiveZ ||
-            dir == Direction.NegativeZ ||
-            dir == Direction.NegativeY)
+        if (dir == Direction.PositiveZ || dir == Direction.NegativeZ || dir == Direction.NegativeY)
         {
             surfaceArrayData.UVs.Add(new Vector2(offset, h - offset));
             surfaceArrayData.UVs.Add(new Vector2(offset, offset));
@@ -176,52 +172,67 @@ public static class ChunkMesher
         surfaceArrayData.Indices.Add(baseIndex + 3);
     }
 
-    private static Vector3[] GetQuadCorners(Direction dir, float x, float y, float z, float w, float h)
-    {
-        return dir switch
+    private static Vector3[] GetQuadCorners(
+        Direction dir,
+        float x,
+        float y,
+        float z,
+        float w,
+        float h
+    ) =>
+        dir switch
         {
-            Direction.PositiveY => [
+            Direction.PositiveY =>
+            [
                 new(x, y, z),
                 new(x + w, y, z),
                 new(x + w, y, z + h),
-                new(x, y, z + h)],
-            Direction.NegativeY => [
+                new(x, y, z + h),
+            ],
+            Direction.NegativeY =>
+            [
                 new(x - w, y, z),
                 new(x - w, y, z + h),
                 new(x, y, z + h),
-                new(x, y, z)],
-            Direction.PositiveX => [
+                new(x, y, z),
+            ],
+            Direction.PositiveX =>
+            [
                 new(x, y - w, z + h),
                 new(x, y, z + h),
                 new(x, y, z),
-                new(x, y - w, z)],
-            Direction.NegativeX => [
+                new(x, y - w, z),
+            ],
+            Direction.NegativeX =>
+            [
                 new(x, y, z),
                 new(x, y + w, z),
                 new(x, y + w, z + h),
-                new(x, y, z + h)],
-            Direction.PositiveZ => [
+                new(x, y, z + h),
+            ],
+            Direction.PositiveZ =>
+            [
                 new(x - w, y, z),
                 new(x - w, y + h, z),
                 new(x, y + h, z),
-                new(x, y, z)],
-            Direction.NegativeZ => [
+                new(x, y, z),
+            ],
+            Direction.NegativeZ =>
+            [
                 new(x + w, y, z),
                 new(x + w, y + h, z),
                 new(x, y + h, z),
-                new(x, y, z)],
+                new(x, y, z),
+            ],
             _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null),
         };
-    }
 
     #endregion
 
     #region Meshing
 
-    private static bool CanMergeBlock(Block blockA, Block blockB)
-    {
-        return ReferenceEquals(blockA, blockB);
-    }
+    private static bool CanMergeBlock(Block blockA, Block blockB) =>
+        ReferenceEquals(blockA, blockB);
 
     /// <summary>
     /// Perform meshing according to the chunk data.
@@ -253,39 +264,74 @@ public static class ChunkMesher
 
                 // 1 -> Render the face.
                 var columnBits = meshBuffer.OpaqueMask[a * CS_P + b] & ~((1UL << 63) | 1);
-                meshBuffer.FaceMasks[baIndex + 0 * CS_2] = (columnBits & ~meshBuffer.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
-                meshBuffer.FaceMasks[baIndex + 1 * CS_2] = (columnBits & ~meshBuffer.OpaqueMask[aCS_P - CS_P + b]) >> 1; // -Y
-                meshBuffer.FaceMasks[abIndex + 2 * CS_2] = (columnBits & ~meshBuffer.OpaqueMask[aCS_P + b + 1]) >> 1;    // +X
-                meshBuffer.FaceMasks[abIndex + 3 * CS_2] = (columnBits & ~meshBuffer.OpaqueMask[aCS_P + (b - 1)]) >> 1;  // -X
-                meshBuffer.FaceMasks[baIndex + 4 * CS_2] = columnBits & ~(meshBuffer.OpaqueMask[aCS_P + b] >> 1); // +Z
-                meshBuffer.FaceMasks[baIndex + 5 * CS_2] = columnBits & ~(meshBuffer.OpaqueMask[aCS_P + b] << 1); // -Z
+                meshBuffer.FaceMasks[baIndex + 0 * CS_2] =
+                    (columnBits & ~meshBuffer.OpaqueMask[aCS_P + CS_P + b]) >> 1; // +Y
+                meshBuffer.FaceMasks[baIndex + 1 * CS_2] =
+                    (columnBits & ~meshBuffer.OpaqueMask[aCS_P - CS_P + b]) >> 1; // -Y
+                meshBuffer.FaceMasks[abIndex + 2 * CS_2] =
+                    (columnBits & ~meshBuffer.OpaqueMask[aCS_P + b + 1]) >> 1; // +X
+                meshBuffer.FaceMasks[abIndex + 3 * CS_2] =
+                    (columnBits & ~meshBuffer.OpaqueMask[aCS_P + (b - 1)]) >> 1; // -X
+                meshBuffer.FaceMasks[baIndex + 4 * CS_2] =
+                    columnBits & ~(meshBuffer.OpaqueMask[aCS_P + b] >> 1); // +Z
+                meshBuffer.FaceMasks[baIndex + 5 * CS_2] =
+                    columnBits & ~(meshBuffer.OpaqueMask[aCS_P + b] << 1); // -Z
 
                 if (meshBuffer.TransparentMask != null)
                 {
                     // Water top face.
                     // meshData.FaceMasks[baIndex + 0 * CS_2] |= (meshData.TransparentMask[a * CS_P + b] & ~((1UL << 63) | 1) & ~meshData.TransparentMask[aCS_P + CS_P + b]) >> 1; // +Y
 
-                    columnBits = (meshBuffer.TransparentMask[a * CS_P + b] | meshBuffer.OpaqueMask[a * CS_P + b]) &
-                                 ~((1UL << 63) | 1);
+                    columnBits =
+                        (
+                            meshBuffer.TransparentMask[a * CS_P + b]
+                            | meshBuffer.OpaqueMask[a * CS_P + b]
+                        ) & ~((1UL << 63) | 1);
 
-                    meshBuffer.FaceMasks[baIndex + 0 * CS_2] |= (columnBits &
-                                                               ~(meshBuffer.TransparentMask[aCS_P + CS_P + b] |
-                                                                 meshBuffer.OpaqueMask[aCS_P + CS_P + b])) >> 1;
-                    meshBuffer.FaceMasks[baIndex + 1 * CS_2] |= (columnBits &
-                                                               ~(meshBuffer.TransparentMask[aCS_P - CS_P + b] |
-                                                                 meshBuffer.OpaqueMask[aCS_P - CS_P + b])) >> 1;
-                    meshBuffer.FaceMasks[abIndex + 2 * CS_2] |= (columnBits &
-                                                               ~(meshBuffer.TransparentMask[aCS_P + b + 1] |
-                                                                 meshBuffer.OpaqueMask[aCS_P + b + 1])) >> 1;
-                    meshBuffer.FaceMasks[abIndex + 3 * CS_2] |= (columnBits &
-                                                               ~(meshBuffer.TransparentMask[aCS_P + (b - 1)] |
-                                                                 meshBuffer.OpaqueMask[aCS_P + (b - 1)])) >> 1;
-                    meshBuffer.FaceMasks[baIndex + 4 * CS_2] |= columnBits &
-                                                              ~((meshBuffer.TransparentMask[aCS_P + b] >> 1) |
-                                                                (meshBuffer.OpaqueMask[aCS_P + b] >> 1));
-                    meshBuffer.FaceMasks[baIndex + 5 * CS_2] |= columnBits &
-                                                              ~((meshBuffer.TransparentMask[aCS_P + b] << 1) |
-                                                                (meshBuffer.OpaqueMask[aCS_P + b] << 1));
+                    meshBuffer.FaceMasks[baIndex + 0 * CS_2] |=
+                        (
+                            columnBits
+                            & ~(
+                                meshBuffer.TransparentMask[aCS_P + CS_P + b]
+                                | meshBuffer.OpaqueMask[aCS_P + CS_P + b]
+                            )
+                        ) >> 1;
+                    meshBuffer.FaceMasks[baIndex + 1 * CS_2] |=
+                        (
+                            columnBits
+                            & ~(
+                                meshBuffer.TransparentMask[aCS_P - CS_P + b]
+                                | meshBuffer.OpaqueMask[aCS_P - CS_P + b]
+                            )
+                        ) >> 1;
+                    meshBuffer.FaceMasks[abIndex + 2 * CS_2] |=
+                        (
+                            columnBits
+                            & ~(
+                                meshBuffer.TransparentMask[aCS_P + b + 1]
+                                | meshBuffer.OpaqueMask[aCS_P + b + 1]
+                            )
+                        ) >> 1;
+                    meshBuffer.FaceMasks[abIndex + 3 * CS_2] |=
+                        (
+                            columnBits
+                            & ~(
+                                meshBuffer.TransparentMask[aCS_P + (b - 1)]
+                                | meshBuffer.OpaqueMask[aCS_P + (b - 1)]
+                            )
+                        ) >> 1;
+                    meshBuffer.FaceMasks[baIndex + 4 * CS_2] |=
+                        columnBits
+                        & ~(
+                            (meshBuffer.TransparentMask[aCS_P + b] >> 1)
+                            | (meshBuffer.OpaqueMask[aCS_P + b] >> 1)
+                        );
+                    meshBuffer.FaceMasks[baIndex + 5 * CS_2] |=
+                        columnBits
+                        & ~(
+                            (meshBuffer.TransparentMask[aCS_P + b] << 1)
+                            | (meshBuffer.OpaqueMask[aCS_P + b] << 1)
+                        );
                 }
             }
         }
@@ -306,7 +352,8 @@ public static class ChunkMesher
                 for (var forward = 0; forward < CS; forward++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[forward + bitsLocation];
-                    if (bitsHere == 0) continue;
+                    if (bitsHere == 0)
+                        continue;
 
                     while (bitsHere != 0)
                     {
@@ -324,15 +371,29 @@ public static class ChunkMesher
                                 (ulong)meshFront,
                                 (ulong)meshUp,
                                 (ulong)meshLeft,
-                                (ulong)face, 0, 0, 0, 0, 0, 0,
-                                (ulong)block.BlockModel.GetTextureId((Direction)face)),
+                                (ulong)face,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                (ulong)block.BlockModel.GetTextureId((Direction)face)
+                            ),
                             2 or 3 => GetQuadV1(
                                 (ulong)meshUp,
                                 (ulong)meshFront,
                                 (ulong)meshLeft,
-                                (ulong)face, 0, 0, 0, 0, 0, 0,
-                                (ulong)block.BlockModel.GetTextureId((Direction)face)),
-                            _ => 0
+                                (ulong)face,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                (ulong)block.BlockModel.GetTextureId((Direction)face)
+                            ),
+                            _ => 0,
                         };
 
                         meshResult.Quads.Add(quad);
@@ -350,7 +411,8 @@ public static class ChunkMesher
                 for (var right = 0; right < CS; right++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[right + bitsLocation];
-                    if (bitsHere == 0) continue;
+                    if (bitsHere == 0)
+                        continue;
 
                     while (bitsHere != 0)
                     {
@@ -366,8 +428,15 @@ public static class ChunkMesher
                             (ulong)meshLeft,
                             (ulong)meshFront,
                             (ulong)meshUp,
-                            (ulong)face, 0, 0, 0, 0, 0, 0,
-                            (ulong)block.BlockModel.GetTextureId((Direction)face));
+                            (ulong)face,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            (ulong)block.BlockModel.GetTextureId((Direction)face)
+                        );
 
                         meshResult.Quads.Add(quad);
                     }
@@ -378,7 +447,11 @@ public static class ChunkMesher
         return meshResult;
     }
 
-    private static MeshResult MeshMerged(Chunk chunk, MeshBuffer meshBuffer, MesherSettings settings)
+    private static MeshResult MeshMerged(
+        Chunk chunk,
+        MeshBuffer meshBuffer,
+        MesherSettings settings
+    )
     {
         var meshResult = new MeshResult { QuadBlocks = new List<Block>(1000) };
 
@@ -393,9 +466,11 @@ public static class ChunkMesher
                 for (var forward = 0; forward < CS; forward++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[forward + bitsLocation];
-                    if (bitsHere == 0) continue;
+                    if (bitsHere == 0)
+                        continue;
 
-                    var bitsNext = forward + 1 < CS ? meshBuffer.FaceMasks[forward + 1 + bitsLocation] : 0;
+                    var bitsNext =
+                        forward + 1 < CS ? meshBuffer.FaceMasks[forward + 1 + bitsLocation] : 0;
 
                     byte rightMerged = 1;
                     while (bitsHere != 0)
@@ -405,8 +480,10 @@ public static class ChunkMesher
                         var blockB = chunk.GetBlock(axis, forward + 1, bitPos, layer);
                         ref var forwardMergedRef = ref meshBuffer.ForwardMerged[bitPos];
 
-                        if ((bitsNext & (1UL << bitPos)) != 0 &&
-                            (settings.IgnoreBlockType || CanMergeBlock(block, blockB)))
+                        if (
+                            (bitsNext & (1UL << bitPos)) != 0
+                            && (settings.IgnoreBlockType || CanMergeBlock(block, blockB))
+                        )
                         {
                             forwardMergedRef++;
                             bitsHere &= ~(1UL << bitPos);
@@ -416,9 +493,11 @@ public static class ChunkMesher
                         for (var right = bitPos + 1; right < CS; right++)
                         {
                             blockB = chunk.GetBlock(axis, forward, right, layer);
-                            if ((bitsHere & (1UL << right)) == 0 ||
-                                forwardMergedRef != meshBuffer.ForwardMerged[right] ||
-                                (!settings.IgnoreBlockType && !CanMergeBlock(block, blockB)))
+                            if (
+                                (bitsHere & (1UL << right)) == 0
+                                || forwardMergedRef != meshBuffer.ForwardMerged[right]
+                                || (!settings.IgnoreBlockType && !CanMergeBlock(block, blockB))
+                            )
                                 break;
 
                             meshBuffer.ForwardMerged[right] = 0;
@@ -442,15 +521,17 @@ public static class ChunkMesher
                                 meshLeft,
                                 meshLength,
                                 meshWidth,
-                                0),
+                                0
+                            ),
                             2 or 3 => GetQuad(
                                 meshUp,
                                 (ulong)(meshFront + (face == 2 ? meshLength : 0)),
                                 meshLeft,
                                 meshLength,
                                 meshWidth,
-                                0),
-                            _ => 0
+                                0
+                            ),
+                            _ => 0,
                         };
 
                         meshResult.Quads.Add(quad);
@@ -462,7 +543,8 @@ public static class ChunkMesher
                 }
             }
 
-            meshResult.FaceVertexLength[face] = meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
+            meshResult.FaceVertexLength[face] =
+                meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
         }
 
         for (var face = 4; face < 6; face++)
@@ -478,10 +560,13 @@ public static class ChunkMesher
                 for (var right = 0; right < CS; right++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[right + bitsLocation];
-                    if (bitsHere == 0) continue;
+                    if (bitsHere == 0)
+                        continue;
 
-                    var bitsForward = forward < CS - 1 ? meshBuffer.FaceMasks[right + bitsForwardLocation] : 0;
-                    var bitsRight = right < CS - 1 ? meshBuffer.FaceMasks[right + 1 + bitsLocation] : 0;
+                    var bitsForward =
+                        forward < CS - 1 ? meshBuffer.FaceMasks[right + bitsForwardLocation] : 0;
+                    var bitsRight =
+                        right < CS - 1 ? meshBuffer.FaceMasks[right + 1 + bitsLocation] : 0;
                     var rightCS = right * CS;
 
                     while (bitsHere != 0)
@@ -491,21 +576,28 @@ public static class ChunkMesher
 
                         var block = chunk.GetBlock(axis, right, forward, bitPos - 1);
                         var blockB = chunk.GetBlock(axis, right, forward + 1, bitPos - 1);
-                        ref var forwardMergedRef = ref meshBuffer.ForwardMerged[rightCS + (bitPos - 1)];
+                        ref var forwardMergedRef = ref meshBuffer.ForwardMerged[
+                            rightCS + (bitPos - 1)
+                        ];
                         ref var rightMergedRef = ref meshBuffer.RightMerged[bitPos - 1];
 
-                        if (rightMergedRef == 0 &&
-                            (bitsForward & (1UL << bitPos)) != 0 &&
-                            (settings.IgnoreBlockType || CanMergeBlock(block, blockB)))
+                        if (
+                            rightMergedRef == 0
+                            && (bitsForward & (1UL << bitPos)) != 0
+                            && (settings.IgnoreBlockType || CanMergeBlock(block, blockB))
+                        )
                         {
                             forwardMergedRef++;
                             continue;
                         }
 
                         blockB = chunk.GetBlock(axis, right + 1, forward, bitPos - 1);
-                        if ((bitsRight & (1UL << bitPos)) != 0 &&
-                            forwardMergedRef == meshBuffer.ForwardMerged[rightCS + CS + (bitPos - 1)] &&
-                            (settings.IgnoreBlockType || CanMergeBlock(block, blockB)))
+                        if (
+                            (bitsRight & (1UL << bitPos)) != 0
+                            && forwardMergedRef
+                                == meshBuffer.ForwardMerged[rightCS + CS + (bitPos - 1)]
+                            && (settings.IgnoreBlockType || CanMergeBlock(block, blockB))
+                        )
                         {
                             forwardMergedRef = 0;
                             rightMergedRef++;
@@ -535,7 +627,8 @@ public static class ChunkMesher
                 }
             }
 
-            meshResult.FaceVertexLength[face] = meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
+            meshResult.FaceVertexLength[face] =
+                meshResult.Quads.Count - meshResult.FaceVertexBegin[face];
         }
 
         return meshResult;
@@ -571,9 +664,11 @@ public static class ChunkMesher
                 for (var forward = 0; forward < CS; forward++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[forward + bitsLocation];
-                    if (bitsHere == 0) continue;
+                    if (bitsHere == 0)
+                        continue;
 
-                    var bitsNext = forward + 1 < CS ? meshBuffer.FaceMasks[forward + 1 + bitsLocation] : 0;
+                    var bitsNext =
+                        forward + 1 < CS ? meshBuffer.FaceMasks[forward + 1 + bitsLocation] : 0;
 
                     byte rightMerged = 1;
                     while (bitsHere != 0)
@@ -590,8 +685,10 @@ public static class ChunkMesher
 
                         for (var right = bitPos + 1; right < CS; right++)
                         {
-                            if ((bitsHere & (1UL << right)) == 0 ||
-                                forwardMergedRef != meshBuffer.ForwardMerged[right])
+                            if (
+                                (bitsHere & (1UL << right)) == 0
+                                || forwardMergedRef != meshBuffer.ForwardMerged[right]
+                            )
                                 break;
 
                             meshBuffer.ForwardMerged[right] = 0;
@@ -607,21 +704,25 @@ public static class ChunkMesher
                         var meshWidth = rightMerged;
                         var meshLength = forwardMergedRef + 1;
 
-                        Vector3[] quad = face switch
+                        var quad = face switch
                         {
-                            0 or 1 => GetQuadCorners((Direction)face,
+                            0 or 1 => GetQuadCorners(
+                                (Direction)face,
                                 meshFront + (face == 1 ? meshLength : 0),
                                 meshUp,
                                 meshLeft,
                                 meshLength,
-                                meshWidth),
-                            2 or 3 => GetQuadCorners((Direction)face,
+                                meshWidth
+                            ),
+                            2 or 3 => GetQuadCorners(
+                                (Direction)face,
                                 meshUp,
                                 meshFront + (face == 2 ? meshLength : 0),
                                 meshLeft,
                                 meshLength,
-                                meshWidth),
-                            _ => []
+                                meshWidth
+                            ),
+                            _ => [],
                         };
 
                         AddQuad(quad);
@@ -645,10 +746,13 @@ public static class ChunkMesher
                 for (var right = 0; right < CS; right++)
                 {
                     var bitsHere = meshBuffer.FaceMasks[right + bitsLocation];
-                    if (bitsHere == 0) continue;
+                    if (bitsHere == 0)
+                        continue;
 
-                    var bitsForward = forward < CS - 1 ? meshBuffer.FaceMasks[right + bitsForwardLocation] : 0;
-                    var bitsRight = right < CS - 1 ? meshBuffer.FaceMasks[right + 1 + bitsLocation] : 0;
+                    var bitsForward =
+                        forward < CS - 1 ? meshBuffer.FaceMasks[right + bitsForwardLocation] : 0;
+                    var bitsRight =
+                        right < CS - 1 ? meshBuffer.FaceMasks[right + 1 + bitsLocation] : 0;
                     var rightCS = right * CS;
 
                     while (bitsHere != 0)
@@ -657,18 +761,22 @@ public static class ChunkMesher
                         bitsHere &= ~(1UL << bitPos);
 
                         var block = chunk.GetBlock(axis, right, forward, bitPos - 1);
-                        ref var forwardMergedRef = ref meshBuffer.ForwardMerged[rightCS + (bitPos - 1)];
+                        ref var forwardMergedRef = ref meshBuffer.ForwardMerged[
+                            rightCS + (bitPos - 1)
+                        ];
                         ref var rightMergedRef = ref meshBuffer.RightMerged[bitPos - 1];
 
-                        if (rightMergedRef == 0 &&
-                            (bitsForward & (1UL << bitPos)) != 0)
+                        if (rightMergedRef == 0 && (bitsForward & (1UL << bitPos)) != 0)
                         {
                             forwardMergedRef++;
                             continue;
                         }
 
-                        if ((bitsRight & (1UL << bitPos)) != 0 &&
-                            forwardMergedRef == meshBuffer.ForwardMerged[rightCS + CS + (bitPos - 1)])
+                        if (
+                            (bitsRight & (1UL << bitPos)) != 0
+                            && forwardMergedRef
+                                == meshBuffer.ForwardMerged[rightCS + CS + (bitPos - 1)]
+                        )
                         {
                             forwardMergedRef = 0;
                             rightMergedRef++;
@@ -681,7 +789,8 @@ public static class ChunkMesher
                         var meshWidth = 1 + rightMergedRef;
                         var meshLength = 1 + forwardMergedRef;
 
-                        var quad = GetQuadCorners((Direction)face,
+                        var quad = GetQuadCorners(
+                            (Direction)face,
                             face == 4 ? meshLeft + meshWidth : meshLeft,
                             meshFront,
                             meshUp,
@@ -709,22 +818,35 @@ public static class ChunkMesher
 
     public static Mesh GenerateMesh(MeshResult meshResult, Material materialOverride = null)
     {
-        if (meshResult.Quads.Count == 0) return null;
+        if (meshResult.Quads.Count == 0)
+            return null;
 
         var surfaceArrayDict = new Dictionary<(Block, Direction), SurfaceArrayData>();
 
         for (var face = 0; face < 6; face++)
-            for (var i = meshResult.FaceVertexBegin[face];
-                 i < meshResult.FaceVertexBegin[face] + meshResult.FaceVertexLength[face];
-                 i++)
-                ParseQuad((Direction)face, meshResult.QuadBlocks[i], meshResult.Quads[i], surfaceArrayDict);
+        for (
+            var i = meshResult.FaceVertexBegin[face];
+            i < meshResult.FaceVertexBegin[face] + meshResult.FaceVertexLength[face];
+            i++
+        )
+            ParseQuad(
+                (Direction)face,
+                meshResult.QuadBlocks[i],
+                meshResult.Quads[i],
+                surfaceArrayDict
+            );
 
         var _arrayMesh = new ArrayMesh();
         foreach (var ((block, dir), surfaceArrayData) in surfaceArrayDict)
         {
-            _arrayMesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, surfaceArrayData.GetSurfaceArray());
-            _arrayMesh.SurfaceSetMaterial(_arrayMesh.GetSurfaceCount() - 1,
-                materialOverride ?? (block as CubeBlock).BlockModel.GetMaterial(dir));
+            _arrayMesh.AddSurfaceFromArrays(
+                Godot.Mesh.PrimitiveType.Triangles,
+                surfaceArrayData.GetSurfaceArray()
+            );
+            _arrayMesh.SurfaceSetMaterial(
+                _arrayMesh.GetSurfaceCount() - 1,
+                materialOverride ?? (block as CubeBlock).BlockModel.GetMaterial(dir)
+            );
         }
 
         return _arrayMesh;
@@ -736,7 +858,8 @@ public static class ChunkMesher
         // This is not the best approach, but it works though.
         // May use RenderingDevice later to improve it.
 
-        if (meshResult.Quads.Count == 0) return null;
+        if (meshResult.Quads.Count == 0)
+            return null;
 
         // Vertices ArrayMesh
 
@@ -746,13 +869,16 @@ public static class ChunkMesher
 
         var numVertices = meshResult.Quads.Count * 6;
         var arr = new int[numVertices];
-        for (int i = 0; i < numVertices; i++)
+        for (var i = 0; i < numVertices; i++)
             arr[i] = i;
 
         arrays[(int)Godot.Mesh.ArrayType.Index] = arr;
 
-        arrMesh.AddSurfaceFromArrays(Godot.Mesh.PrimitiveType.Triangles, arrays,
-            flags: Godot.Mesh.ArrayFormat.FlagUsesEmptyVertexArray);
+        arrMesh.AddSurfaceFromArrays(
+            Godot.Mesh.PrimitiveType.Triangles,
+            arrays,
+            flags: Godot.Mesh.ArrayFormat.FlagUsesEmptyVertexArray
+        );
 
         arrMesh.CustomAabb = new Aabb(Vector3.Zero, Vector3.One * Chunk.SIZE);
 

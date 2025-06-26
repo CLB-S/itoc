@@ -19,7 +19,8 @@ public class FastNoiseLiteNode : PatternTreeNode
         _noiseGenerator = fastNoiseLite;
         _settings = new FastNoiseLiteSettings
         {
-            CellularDistanceFunction = (CellularDistanceFunction)_noiseGenerator.CellularDistanceFunction,
+            CellularDistanceFunction = (CellularDistanceFunction)
+                _noiseGenerator.CellularDistanceFunction,
             CellularJitter = _noiseGenerator.CellularJitter,
             CellularReturnType = (CellularReturnType)_noiseGenerator.CellularReturnType,
             DomainWarpAmplitude = _noiseGenerator.DomainWarpAmplitude,
@@ -39,7 +40,7 @@ public class FastNoiseLiteNode : PatternTreeNode
             Frequency = _noiseGenerator.Frequency,
             NoiseType = (NoiseType)_noiseGenerator.NoiseType,
             Offset = _noiseGenerator.Offset,
-            Seed = _noiseGenerator.Seed
+            Seed = _noiseGenerator.Seed,
         };
     }
 
@@ -48,18 +49,24 @@ public class FastNoiseLiteNode : PatternTreeNode
         _settings = settings;
         _noiseGenerator = new FastNoiseLite();
         _noiseGenerator.SetCellularDistanceFunction(
-            (FastNoiseLite.CellularDistanceFunctionEnum)settings.CellularDistanceFunction);
+            (FastNoiseLite.CellularDistanceFunctionEnum)settings.CellularDistanceFunction
+        );
         _noiseGenerator.SetCellularJitter(settings.CellularJitter);
-        _noiseGenerator.SetCellularReturnType((FastNoiseLite.CellularReturnTypeEnum)settings.CellularReturnType);
+        _noiseGenerator.SetCellularReturnType(
+            (FastNoiseLite.CellularReturnTypeEnum)settings.CellularReturnType
+        );
         _noiseGenerator.SetDomainWarpAmplitude(settings.DomainWarpAmplitude);
         _noiseGenerator.SetDomainWarpEnabled(settings.DomainWarpEnabled);
         _noiseGenerator.SetDomainWarpFractalGain(settings.DomainWarpFractalGain);
         _noiseGenerator.SetDomainWarpFractalLacunarity(settings.DomainWarpFractalLacunarity);
         _noiseGenerator.SetDomainWarpFractalOctaves(settings.DomainWarpFractalOctaves);
         _noiseGenerator.SetDomainWarpFractalType(
-            (FastNoiseLite.DomainWarpFractalTypeEnum)settings.DomainWarpFractalType);
+            (FastNoiseLite.DomainWarpFractalTypeEnum)settings.DomainWarpFractalType
+        );
         _noiseGenerator.SetDomainWarpFrequency(settings.DomainWarpFrequency);
-        _noiseGenerator.SetDomainWarpType((FastNoiseLite.DomainWarpTypeEnum)settings.DomainWarpType);
+        _noiseGenerator.SetDomainWarpType(
+            (FastNoiseLite.DomainWarpTypeEnum)settings.DomainWarpType
+        );
         _noiseGenerator.SetFractalGain(settings.FractalGain);
         _noiseGenerator.SetFractalLacunarity(settings.FractalLacunarity);
         _noiseGenerator.SetFractalOctaves(settings.FractalOctaves);
@@ -72,15 +79,10 @@ public class FastNoiseLiteNode : PatternTreeNode
         _noiseGenerator.SetSeed(settings.Seed);
     }
 
-    public override double Evaluate(double x, double y)
-    {
-        return _noiseGenerator.GetNoise2D(x, y);
-    }
+    public override double Evaluate(double x, double y) => _noiseGenerator.GetNoise2D(x, y);
 
-    public override double Evaluate(double x, double y, double z)
-    {
-        return _noiseGenerator.GetNoise3D(x, y, z);
-    }
+    public override double Evaluate(double x, double y, double z) =>
+        _noiseGenerator.GetNoise3D(x, y, z);
 }
 
 public class FastNoiseLiteSettings
@@ -198,7 +200,7 @@ public enum NoiseType
     Cellular,
     Perlin,
     ValueCubic,
-    Value
+    Value,
 }
 
 public enum FractalType
@@ -206,7 +208,7 @@ public enum FractalType
     None,
     Fbm,
     Ridged,
-    PingPong
+    PingPong,
 }
 
 public enum CellularDistanceFunction
@@ -214,7 +216,7 @@ public enum CellularDistanceFunction
     Euclidean,
     EuclideanSquared,
     Manhattan,
-    Hybrid
+    Hybrid,
 }
 
 public enum CellularReturnType
@@ -225,19 +227,19 @@ public enum CellularReturnType
     Distance2Add,
     Distance2Sub,
     Distance2Mul,
-    Distance2Div
+    Distance2Div,
 }
 
 public enum DomainWarpType
 {
     Simplex,
     SimplexReduced,
-    BasicGrid
+    BasicGrid,
 }
 
 public enum DomainWarpFractalType
 {
     None,
     Progressive,
-    Independent
+    Independent,
 }

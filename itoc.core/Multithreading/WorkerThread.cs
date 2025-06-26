@@ -72,7 +72,7 @@ internal class WorkerThread : IDisposable
         {
             Name = $"TaskWorker-{id}",
             IsBackground = true, // Make sure the thread doesn't prevent app shutdown
-            Priority = ThreadPriority.Normal
+            Priority = ThreadPriority.Normal,
         };
 
         _idleTimer.Start();
@@ -87,7 +87,8 @@ internal class WorkerThread : IDisposable
     /// </summary>
     public void Start()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+            return;
 
         if (!_isActive)
         {
@@ -103,7 +104,8 @@ internal class WorkerThread : IDisposable
     /// </summary>
     public void RequestStop()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+            return;
 
         _cts.Cancel();
     }
@@ -113,7 +115,8 @@ internal class WorkerThread : IDisposable
     /// </summary>
     public void Join()
     {
-        if (_isDisposed || !_isActive) return;
+        if (_isDisposed || !_isActive)
+            return;
 
         if (_thread.IsAlive)
         {
@@ -158,7 +161,10 @@ internal class WorkerThread : IDisposable
                         _currentTask.Execute();
 
                         // Notify the task manager that the task has completed
-                        _taskManager.NotifyTaskCompletion(_currentTask, _currentTask.State == TaskState.Completed);
+                        _taskManager.NotifyTaskCompletion(
+                            _currentTask,
+                            _currentTask.State == TaskState.Completed
+                        );
                     }
                     catch (Exception ex)
                     {
@@ -209,7 +215,8 @@ internal class WorkerThread : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_isDisposed) return;
+        if (_isDisposed)
+            return;
 
         _isDisposed = true;
 

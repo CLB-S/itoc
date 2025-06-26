@@ -4,7 +4,6 @@ using System.Text;
 using Godot;
 using ITOC.Core;
 using ITOC.Core.Utils;
-using ITOC.Core.WorldGeneration;
 using ITOC.Core.WorldGeneration.Vanilla;
 
 namespace ITOC;
@@ -13,15 +12,12 @@ public partial class GuiInfo : RichTextLabel
 {
     private Process _process;
 
-    public override void _Ready()
-    {
-        _process = Process.GetCurrentProcess();
-    }
-
+    public override void _Ready() => _process = Process.GetCurrentProcess();
 
     public override void _PhysicsProcess(double delta)
     {
-        if (!Visible) return;
+        if (!Visible)
+            return;
 
         // Performance
         var fps = Performance.GetMonitor(Performance.Monitor.TimeFps);
@@ -50,15 +46,22 @@ public partial class GuiInfo : RichTextLabel
         var worldSettings = GameController.Instance.CurrentWorld.Settings;
         var playerPos = Vector3.Zero; // TODO: GameController.Instance.CurrentWorld.PlayerPos;
 
-        var normalizedPos = worldSettings is VanillaWorldSettings settings ?
-            (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / settings.Bounds.Size +
-            Vector2.One / 2 : Vector2.One / 2;
+        var normalizedPos = worldSettings is VanillaWorldSettings settings
+            ? (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter)
+                / settings.Bounds.Size
+                + Vector2.One / 2
+            : Vector2.One / 2;
 
         var latitude = -Mathf.Lerp(-90, 90, normalizedPos.Y);
         var longitude = Mathf.Lerp(-180, 180, normalizedPos.X);
         var localTime = OrbitalUtils.LocalTime(worldTime, longitude, worldSettings.MinutesPerDay);
-        var (sunriseTime, sunsetTime) = OrbitalUtils.CalculateSunriseSunset(worldTime, latitude,
-            worldSettings.OrbitalInclinationAngle, worldSettings.OrbitalRevolutionDays, worldSettings.MinutesPerDay);
+        var (sunriseTime, sunsetTime) = OrbitalUtils.CalculateSunriseSunset(
+            worldTime,
+            latitude,
+            worldSettings.OrbitalInclinationAngle,
+            worldSettings.OrbitalRevolutionDays,
+            worldSettings.MinutesPerDay
+        );
 
         var debugTextBuilder = new StringBuilder();
         debugTextBuilder.AppendLine("[b]Debug Info[/b]");
@@ -66,26 +69,32 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine($"[color=yellow]Draw Calls:[/color] {drawCalls}");
         debugTextBuilder.AppendLine($"[color=yellow]Vertices:[/color] {vertices}");
         debugTextBuilder.AppendLine(
-            $"[color=yellow]Static Mem:[/color] {BytesToString(memory)}/{BytesToString(memoryMax)}");
+            $"[color=yellow]Static Mem:[/color] {BytesToString(memory)}/{BytesToString(memoryMax)}"
+        );
         // debugTextBuilder.AppendLine($"[color=yellow]Chunk Mem:[/color] {BytesToString(chunkMem)}");
-        debugTextBuilder.AppendLine($"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}");
-        debugTextBuilder.AppendLine($"[color=cyan]Chunk:[/color] {chunkIndex.X}, {chunkIndex.Y}, {chunkIndex.Z}");
         debugTextBuilder.AppendLine(
-            $"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
+            $"[color=cyan]XYZ:[/color] {camPos.X:0.00}, {camPos.Y:0.00}, {camPos.Z:0.00}"
+        );
+        debugTextBuilder.AppendLine(
+            $"[color=cyan]Chunk:[/color] {chunkIndex.X}, {chunkIndex.Y}, {chunkIndex.Z}"
+        );
+        debugTextBuilder.AppendLine(
+            $"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°"
+        );
 
         // if (GameController.Instance.CurrentWorld.ChunkColumns.TryGetValue(new Vector2I(chunkIndex.X, chunkIndex.Z), out var chunkColumn))
         //     debugTextBuilder.AppendLine(
         //         $"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn.GetBiomeWeights(camPos.X, camPos.Z))}");
 
         debugTextBuilder.AppendLine(
-            $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
+            $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})"
+        );
         // debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {GameController.Instance.CurrentWorld.Chunks.Count}");
         // debugTextBuilder.AppendLine($"[color=Greenyellow]ChunkColumn Num:[/color] {GameController.Instance.CurrentWorld.ChunkColumns.Count}");
         debugTextBuilder.AppendLine($"[color=green]Time:[/color] {worldTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Local Time:[/color] {localTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Sunrise:[/color] {sunriseTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Sunset:[/color] {sunsetTime:0.00}");
-
 
         Text = debugTextBuilder.ToString();
     }

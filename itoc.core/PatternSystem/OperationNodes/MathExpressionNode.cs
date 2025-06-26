@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using MathEvaluation.Context;
 using MathEvaluation.Extensions;
 
@@ -13,7 +11,6 @@ public class MathExpressionNode : PatternTreeNode, IOperator
     public IEnumerable<PatternTreeNode> Children => _children;
 
     public string MathExpression { get; }
-
 
     /// <summary>
     ///     Creates a new instance of the MathNode class with given math expression.
@@ -73,7 +70,10 @@ public class MathExpressionNode : PatternTreeNode, IOperator
         MathExpression = mathExpression;
     }
 
-    protected double PerformOperation(IEnumerable<double> values, Dictionary<string, double> paramDict)
+    protected double PerformOperation(
+        IEnumerable<double> values,
+        Dictionary<string, double> paramDict
+    )
     {
         var valuesArray = values.ToArray();
 
@@ -86,13 +86,14 @@ public class MathExpressionNode : PatternTreeNode, IOperator
 
     public override double Evaluate(double x, double y)
     {
-        if (_children.Count == 0) return MathExpression.Evaluate(new { Px = x, Py = y }, _mathContext);
+        if (_children.Count == 0)
+            return MathExpression.Evaluate(new { Px = x, Py = y }, _mathContext);
 
         var values = _children.Select(child => child.Evaluate(x, y));
         var dict = new Dictionary<string, double>(_children.Count + 1 + 2)
         {
             ["Px"] = x,
-            ["Py"] = y
+            ["Py"] = y,
         };
 
         return PerformOperation(values, dict);
@@ -100,14 +101,23 @@ public class MathExpressionNode : PatternTreeNode, IOperator
 
     public override double Evaluate(double x, double y, double z)
     {
-        if (_children.Count == 0) return MathExpression.Evaluate(new { Px = x, Py = y, Pz = z }, _mathContext);
+        if (_children.Count == 0)
+            return MathExpression.Evaluate(
+                new
+                {
+                    Px = x,
+                    Py = y,
+                    Pz = z,
+                },
+                _mathContext
+            );
 
         var values = _children.Select(child => child.Evaluate(x, y, z));
         var dict = new Dictionary<string, double>(_children.Count + 1 + 3)
         {
             ["Px"] = x,
             ["Py"] = y,
-            ["Pz"] = z
+            ["Pz"] = z,
         };
 
         return PerformOperation(values, dict);

@@ -15,21 +15,30 @@ public class VanillaChunkColumnGenerationPass1(ChunkManager chunkManager) : IPas
         var task = new ActionTask(
             () =>
             {
-                for (int i = -Expansion; i <= Expansion; i++)
+                for (var i = -Expansion; i <= Expansion; i++)
                 {
-                    for (int j = -Expansion; j <= Expansion; j++)
+                    for (var j = -Expansion; j <= Expansion; j++)
                     {
-                        var neighborColumnPos = new Vector2I(chunkColumnPos.X + i, chunkColumnPos.Y + j);
+                        var neighborColumnPos = new Vector2I(
+                            chunkColumnPos.X + i,
+                            chunkColumnPos.Y + j
+                        );
                         var column = chunkManager.ChunkColumns[neighborColumnPos];
                         var topChunk = column.Chunks.Values.MaxBy(c => c.Index.Y);
-                        topChunk.SetBlock(31 + i * 2, 60, 31 + j * 2, BlockManager.Instance.GetBlock("itoc:debug"));
+                        topChunk.SetBlock(
+                            31 + i * 2,
+                            60,
+                            31 + j * 2,
+                            BlockManager.Instance.GetBlock("itoc:debug")
+                        );
                     }
                 }
             },
-            "SecondaryPass");
+            "SecondaryPass"
+        );
 
         task.Completed += (sender, args) =>
-            PassCompleted?.Invoke(this, new PassEventArgs(Pass, chunkColumnPos)); // TODO: Check this. Potential high perf cost. 
+            PassCompleted?.Invoke(this, new PassEventArgs(Pass, chunkColumnPos)); // TODO: Check this. Potential high perf cost.
 
         return task;
     }

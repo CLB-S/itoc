@@ -16,13 +16,7 @@ public class PatternTree : PatternTreeNode
         RootNode = root;
     }
 
-    public override double Evaluate(double x, double y)
-    {
-        return RootNode.Evaluate(x, y);
-    }
+    public override double Evaluate(double x, double y) => RootNode.Evaluate(x, y);
 
-    public override double Evaluate(double x, double y, double z)
-    {
-        return RootNode.Evaluate(x, y, z);
-    }
+    public override double Evaluate(double x, double y, double z) => RootNode.Evaluate(x, y, z);
 }

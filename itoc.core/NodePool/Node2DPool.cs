@@ -6,12 +6,10 @@ namespace ITOC.Core.NodePool;
 /// Specialized node pool for Node2D instances with additional features for 2D positioning
 /// </summary>
 /// <typeparam name="T">The type of Node2D to pool</typeparam>
-public class Node2DPool<T> : NodePool<T> where T : Node2D
+public class Node2DPool<T> : NodePool<T>
+    where T : Node2D
 {
-    protected override void SetVisibility(T node, bool visible)
-    {
-        node.Visible = visible;
-    }
+    protected override void SetVisibility(T node, bool visible) => node.Visible = visible;
 
     /// <summary>
     /// Creates a new Node2DPool
@@ -30,10 +28,9 @@ public class Node2DPool<T> : NodePool<T> where T : Node2D
         int maxSize = 0,
         bool autoExpand = true,
         Action<T> resetAction = null,
-        Action<T> initializeAction = null)
-        : base(scene, parent, initialSize, maxSize, autoExpand, resetAction, initializeAction)
-    {
-    }
+        Action<T> initializeAction = null
+    )
+        : base(scene, parent, initialSize, maxSize, autoExpand, resetAction, initializeAction) { }
 
     /// <summary>
     /// Creates a new Node2DPool with direct node instances instead of a scene
@@ -52,10 +49,10 @@ public class Node2DPool<T> : NodePool<T> where T : Node2D
         int maxSize = 0,
         bool autoExpand = true,
         Action<T> resetAction = null,
-        Action<T> initializeAction = null)
+        Action<T> initializeAction = null
+    )
         : base(nodeFactory, parent, initialSize, maxSize, autoExpand, resetAction, initializeAction)
-    {
-    }
+    { }
 
     /// <summary>
     /// Gets a node from the pool and positions it at the specified coordinates

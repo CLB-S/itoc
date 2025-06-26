@@ -99,9 +99,7 @@ public class CommandDispatcherTests
     {
         // Arrange
         var dispatcher = new CommandDispatcher();
-        var command = CommandBuilder.Create("parent")
-            .Then("child")
-            .Build();
+        var command = CommandBuilder.Create("parent").Then("child").Build();
         dispatcher.RegisterCommand(command);
 
         // Act
@@ -117,7 +115,8 @@ public class CommandDispatcherTests
     {
         // Arrange
         var dispatcher = new CommandDispatcher();
-        var command = CommandBuilder.Create("test")
+        var command = CommandBuilder
+            .Create("test")
             .WithArgument("arg1", new StringArgumentType())
             .WithArgument("arg2", new IntegerArgumentType())
             .Build();
@@ -137,7 +136,8 @@ public class CommandDispatcherTests
     {
         // Arrange
         var dispatcher = new CommandDispatcher();
-        var command = CommandBuilder.Create("test")
+        var command = CommandBuilder
+            .Create("test")
             .WithArgument("required", new StringArgumentType())
             .Build();
         dispatcher.RegisterCommand(command);
@@ -154,9 +154,10 @@ public class CommandDispatcherTests
     public async Task ExecuteAsync_ExecutesCommand()
     {
         // Arrange
-        bool executed = false;
+        var executed = false;
         var dispatcher = new CommandDispatcher();
-        var command = CommandBuilder.Create("test")
+        var command = CommandBuilder
+            .Create("test")
             .Executes(_ =>
             {
                 executed = true;
@@ -178,14 +179,18 @@ public class CommandDispatcherTests
     {
         // Arrange
         var dispatcher = new CommandDispatcher();
-        var command = CommandBuilder.Create("test", permission: "test.permission")
+        var command = CommandBuilder
+            .Create("test", permission: "test.permission")
             .Executes(_ => Task.FromResult(CommandResult.Success))
             .Build();
         dispatcher.RegisterCommand(command);
 
         // Act
         var resultNoPermission = await dispatcher.ExecuteAsync("test", new TestPermissionHolder());
-        var resultWithPermission = await dispatcher.ExecuteAsync("test", new TestPermissionHolder("test.permission"));
+        var resultWithPermission = await dispatcher.ExecuteAsync(
+            "test",
+            new TestPermissionHolder("test.permission")
+        );
 
         // Assert
         Assert.Equal(CommandResult.PermissionDenied, resultNoPermission);
@@ -284,7 +289,9 @@ public class CommandDispatcherTests
     public void SplitArguments_HandlesMixedQuoteTypes()
     {
         // Arrange & Act
-        var result = CommandDispatcher.SplitArguments("command \"outer 'inner' quotes\" 'outer \"inner\" quotes'");
+        var result = CommandDispatcher.SplitArguments(
+            "command \"outer 'inner' quotes\" 'outer \"inner\" quotes'"
+        );
 
         // Assert
         Assert.Equal(3, result.Length);

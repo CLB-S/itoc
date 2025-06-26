@@ -3,7 +3,6 @@ using ITOC.Core.Utils;
 namespace ITOC.Test.BitPacking;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -22,7 +21,7 @@ public class BitPackedArrayTest
         Assert.Equal(500, array.SizeInBits);
 
         // Verify all values are initialized to 0
-        for (int i = 0; i < array.Count; i++)
+        for (var i = 0; i < array.Count; i++)
         {
             Assert.Equal(0u, array[i]);
         }
@@ -32,7 +31,7 @@ public class BitPackedArrayTest
     public void TestConstructWithValues()
     {
         uint[] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        int bitsPerValue = 4; // Can represent values up to 15
+        var bitsPerValue = 4; // Can represent values up to 15
 
         var array = new BitPackedArray<uint>(values, bitsPerValue);
 
@@ -40,7 +39,7 @@ public class BitPackedArrayTest
         Assert.Equal(bitsPerValue, array.BitsPerValue);
 
         // Verify all values match the original array
-        for (int i = 0; i < array.Count; i++)
+        for (var i = 0; i < array.Count; i++)
         {
             Assert.Equal(values[i], array[i]);
         }
@@ -113,7 +112,7 @@ public class BitPackedArrayTest
         array.Fill(15);
 
         // Verify all elements are set to the value
-        for (int i = 0; i < array.Count; i++)
+        for (var i = 0; i < array.Count; i++)
         {
             Assert.Equal(15u, array[i]);
         }
@@ -122,7 +121,7 @@ public class BitPackedArrayTest
         array.Fill(7);
 
         // Verify all elements are set to the new value
-        for (int i = 0; i < array.Count; i++)
+        for (var i = 0; i < array.Count; i++)
         {
             Assert.Equal(7u, array[i]);
         }
@@ -135,23 +134,23 @@ public class BitPackedArrayTest
     public void TestCopyTo()
     {
         uint[] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        int bitsPerValue = 4;
+        var bitsPerValue = 4;
 
         var array = new BitPackedArray<uint>(values, bitsPerValue);
 
         // Copy to a new array
-        uint[] destination = new uint[10];
+        var destination = new uint[10];
         array.CopyTo(destination);
 
         // Verify the copy
         Assert.Equal(values, destination);
 
         // Copy to an array with an offset
-        uint[] destination2 = new uint[15];
+        var destination2 = new uint[15];
         array.CopyTo(destination2, 5);
 
         // Verify the offset copy
-        for (int i = 0; i < values.Length; i++)
+        for (var i = 0; i < values.Length; i++)
         {
             Assert.Equal(values[i], destination2[i + 5]);
         }
@@ -161,18 +160,18 @@ public class BitPackedArrayTest
     public void TestGetPackedData()
     {
         uint[] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        int bitsPerValue = 4;
+        var bitsPerValue = 4;
 
         var array = new BitPackedArray<uint>(values, bitsPerValue);
 
         // Get the packed data
-        byte[] packedData = array.GetPackedData();
+        var packedData = array.GetPackedData();
 
         // Create a new array from the packed data
         var array2 = new BitPackedArray<uint>(packedData, values.Length, bitsPerValue);
 
         // Verify the new array has the same values
-        for (int i = 0; i < values.Length; i++)
+        for (var i = 0; i < values.Length; i++)
         {
             Assert.Equal(values[i], array2[i]);
         }
@@ -182,12 +181,12 @@ public class BitPackedArrayTest
     public void TestToArray()
     {
         uint[] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        int bitsPerValue = 4;
+        var bitsPerValue = 4;
 
         var array = new BitPackedArray<uint>(values, bitsPerValue);
 
         // Convert to array
-        uint[] copy = array.ToArray();
+        var copy = array.ToArray();
 
         // Verify the array copy
         Assert.Equal(values, copy);
@@ -205,7 +204,7 @@ public class BitPackedArrayTest
         Assert.Equal(15ul, array.MaxValue); // Max representable: 2^4 - 1 = 15
 
         // Verify values
-        for (int i = 0; i < values.Length; i++)
+        for (var i = 0; i < values.Length; i++)
         {
             Assert.Equal(values[i], array[i]);
         }
@@ -215,7 +214,7 @@ public class BitPackedArrayTest
     public void TestResize()
     {
         uint[] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        int bitsPerValue = 4;
+        var bitsPerValue = 4;
 
         var array = new BitPackedArray<uint>(values, bitsPerValue);
 
@@ -226,7 +225,7 @@ public class BitPackedArrayTest
         Assert.Equal(bitsPerValue, smaller.BitsPerValue);
 
         // Verify first 5 values are preserved
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             Assert.Equal(values[i], smaller[i]);
         }
@@ -238,13 +237,13 @@ public class BitPackedArrayTest
         Assert.Equal(bitsPerValue, larger.BitsPerValue);
 
         // Verify original values are preserved
-        for (int i = 0; i < values.Length; i++)
+        for (var i = 0; i < values.Length; i++)
         {
             Assert.Equal(values[i], larger[i]);
         }
 
         // Verify new elements are initialized to 0
-        for (int i = values.Length; i < 15; i++)
+        for (var i = values.Length; i < 15; i++)
         {
             Assert.Equal(0u, larger[i]);
         }
@@ -254,12 +253,12 @@ public class BitPackedArrayTest
     public void TestEnumeration()
     {
         uint[] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        int bitsPerValue = 4;
+        var bitsPerValue = 4;
 
         var array = new BitPackedArray<uint>(values, bitsPerValue);
 
         // Enumerate and collect to list
-        List<uint> enumerated = array.ToList();
+        var enumerated = array.ToList();
 
         // Verify enumeration
         Assert.Equal(values, enumerated);
@@ -272,20 +271,20 @@ public class BitPackedArrayTest
         const int count = 1000;
 
         // Byte array at 8 bits per value
-        byte[] regularArray = new byte[count];
-        int regularSize = regularArray.Length;
+        var regularArray = new byte[count];
+        var regularSize = regularArray.Length;
 
         // BitPackedArray at 4 bits per value
         var bitArray4 = new BitPackedArray<uint>(count, 4);
-        int packedSize4 = bitArray4.SizeInBytes;
+        var packedSize4 = bitArray4.SizeInBytes;
 
         // BitPackedArray at 2 bits per value
         var bitArray2 = new BitPackedArray<uint>(count, 2);
-        int packedSize2 = bitArray2.SizeInBytes;
+        var packedSize2 = bitArray2.SizeInBytes;
 
         // BitPackedArray at 1 bit per value
         var bitArray1 = new BitPackedArray<uint>(count, 1);
-        int packedSize1 = bitArray1.SizeInBytes;
+        var packedSize1 = bitArray1.SizeInBytes;
 
         // Verify sizes
         Assert.Equal(count, regularSize); // Regular array: 1 byte per value
@@ -300,12 +299,12 @@ public class BitPackedArrayTest
         // Test powers of 2 that align with byte boundaries for Fill optimization
         uint[] sizes = { 8, 16, 32, 64 };
 
-        foreach (uint size in sizes)
+        foreach (var size in sizes)
         {
             var array = new BitPackedArray<ulong>(100, (int)size);
             array.Fill(42); // This should use the optimized Fill method
 
-            for (int i = 0; i < array.Count; i++)
+            for (var i = 0; i < array.Count; i++)
             {
                 Assert.Equal(42u, array[i]);
             }

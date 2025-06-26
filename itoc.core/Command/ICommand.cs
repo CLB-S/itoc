@@ -9,7 +9,7 @@ public enum CommandResult
     Failure,
     SyntaxError,
     PermissionDenied,
-    NotFound
+    NotFound,
 }
 
 /// <summary>

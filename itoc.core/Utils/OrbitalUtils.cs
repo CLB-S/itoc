@@ -8,7 +8,11 @@ public static class OrbitalUtils
     ///     Calculates the local time in seconds。
     /// </summary>
     /// <param name="longitude"> The longitude in degrees. [-180 180]</param>
-    public static double LocalTime(double currentTimeSeconds, double longitude, double minutesPerDay)
+    public static double LocalTime(
+        double currentTimeSeconds,
+        double longitude,
+        double minutesPerDay
+    )
     {
         var T_day = minutesPerDay * 60;
         var timeInDay = currentTimeSeconds % T_day;
@@ -27,9 +31,14 @@ public static class OrbitalUtils
     /// <param name="latitude"> The latitude in degrees. [-90 90]</param>
     /// <param name="longitude"> The longitude in degrees. [-180 180]</param>
     /// <returns> The solar elevation and azimuth angles in degrees.</returns>
-    public static (double SolarElevation, double SolarAzimuth) CalculateSunPosition(double currentTimeSeconds,
-        double latitude, double longitude, double orbitalInclinationAngle, double orbitalRevolutionDays,
-        double minutesPerDay)
+    public static (double SolarElevation, double SolarAzimuth) CalculateSunPosition(
+        double currentTimeSeconds,
+        double latitude,
+        double longitude,
+        double orbitalInclinationAngle,
+        double orbitalRevolutionDays,
+        double minutesPerDay
+    )
     {
         var T_orbital = orbitalRevolutionDays * minutesPerDay * 60;
         var T_day = minutesPerDay * 60;
@@ -45,8 +54,9 @@ public static class OrbitalUtils
 
         var lat_rad = latitude * Mathf.Pi / 180;
 
-        var sin_h = Mathf.Sin(lat_rad) * Mathf.Sin(delta_rad) +
-                    Mathf.Cos(lat_rad) * Mathf.Cos(delta_rad) * Mathf.Cos(H_rad);
+        var sin_h =
+            Mathf.Sin(lat_rad) * Mathf.Sin(delta_rad)
+            + Mathf.Cos(lat_rad) * Mathf.Cos(delta_rad) * Mathf.Cos(H_rad);
         sin_h = Mathf.Clamp(sin_h, -1.0, 1.0);
         var h_rad = Mathf.Asin(sin_h);
         var solarElevation = h_rad * 180 / Mathf.Pi;
@@ -55,8 +65,9 @@ public static class OrbitalUtils
         var cos_h = Mathf.Cos(h_rad);
         if (Mathf.Abs(cos_h) >= 1e-6)
         {
-            var cos_A = Mathf.Sin(delta_rad) * Mathf.Cos(lat_rad) -
-                        Mathf.Cos(delta_rad) * Mathf.Sin(lat_rad) * Mathf.Cos(H_rad);
+            var cos_A =
+                Mathf.Sin(delta_rad) * Mathf.Cos(lat_rad)
+                - Mathf.Cos(delta_rad) * Mathf.Sin(lat_rad) * Mathf.Cos(H_rad);
             cos_A /= cos_h;
             var sin_A = -Mathf.Cos(delta_rad) * Mathf.Sin(H_rad) / cos_h;
             var A_rad = Mathf.Atan2(sin_A, cos_A);
@@ -72,8 +83,13 @@ public static class OrbitalUtils
     ///     Calculates the sunrise and sunset times in seconds.
     /// </summary>
     /// <param name="latitude"> The latitude in degrees. [-90 90]</param>
-    public static (double? SunriseTime, double? SunsetTime) CalculateSunriseSunset(double currentTimeSeconds,
-        double latitude, double orbitalInclinationAngle, double orbitalRevolutionDays, double minutesPerDay)
+    public static (double? SunriseTime, double? SunsetTime) CalculateSunriseSunset(
+        double currentTimeSeconds,
+        double latitude,
+        double orbitalInclinationAngle,
+        double orbitalRevolutionDays,
+        double minutesPerDay
+    )
     {
         var T_orbital = orbitalRevolutionDays * minutesPerDay * 60;
         var T_day = minutesPerDay * 60;
@@ -103,8 +119,5 @@ public static class OrbitalUtils
         return (sunriseTime, sunsetTime);
     }
 
-    private static double Mod(double x, double m)
-    {
-        return (x % m + m) % m;
-    }
+    private static double Mod(double x, double m) => (x % m + m) % m;
 }

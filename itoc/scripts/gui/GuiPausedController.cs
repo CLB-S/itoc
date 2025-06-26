@@ -1,6 +1,3 @@
-using Godot;
-using ITOC.Core;
-
 namespace ITOC;
 
 public partial class GuiPausedController : GuiController
@@ -11,13 +8,8 @@ public partial class GuiPausedController : GuiController
         GuiManager.Instance.GuiControllers[GuiState.Paused] = this;
     }
 
-    public void OnBackToGameButtonPressed()
-    {
-        GuiManager.Instance.CloseCurrentUI();
-    }
+    public void OnBackToGameButtonPressed() => GuiManager.Instance.CloseCurrentUI();
 
-    public void OnQuitGameButtonPressed()
-    {
+    public void OnQuitGameButtonPressed() =>
         GetTree().Root.PropagateNotification((int)NotificationWMCloseRequest);
-    }
 }

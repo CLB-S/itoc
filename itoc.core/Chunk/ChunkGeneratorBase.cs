@@ -48,13 +48,18 @@ public abstract class ChunkGeneratorBase
     /// <summary>
     /// All enqueued generation tasks will be processed in order. SO, don't enqueue too many tasks at once,
     /// </summary>
-    public void EnqueueSurfaceChunksGeneration(Vector2I chunkColumnIndex, Action<Vector2I> onComplete = null)
+    public void EnqueueSurfaceChunksGeneration(
+        Vector2I chunkColumnIndex,
+        Action<Vector2I> onComplete = null
+    )
     {
         lock (_lock)
         {
             // Don't queue if already active or pending
-            if (_activeGenerationTasks.Contains(chunkColumnIndex) ||
-                _pendingGenerationQueue.Contains(chunkColumnIndex))
+            if (
+                _activeGenerationTasks.Contains(chunkColumnIndex)
+                || _pendingGenerationQueue.Contains(chunkColumnIndex)
+            )
                 return;
 
             // Don't queue if already generated
@@ -82,9 +87,13 @@ public abstract class ChunkGeneratorBase
 
             lock (_lock)
             {
-                if (_pendingGenerationQueue.Count == 0 ||
-                    (_maxConcurrentChunkGenerationTasks > 0 &&
-                     _activeGenerationTasks.Count >= _maxConcurrentChunkGenerationTasks))
+                if (
+                    _pendingGenerationQueue.Count == 0
+                    || (
+                        _maxConcurrentChunkGenerationTasks > 0
+                        && _activeGenerationTasks.Count >= _maxConcurrentChunkGenerationTasks
+                    )
+                )
                     break;
 
                 chunkColumnIndex = _pendingGenerationQueue.Dequeue();
@@ -119,7 +128,9 @@ public abstract class ChunkGeneratorBase
         lock (_lock)
         {
             if (!_activeGenerationTasks.Remove(chunkColumnIndex))
-                GD.PrintErr($"Warning: Chunk {chunkColumnIndex} was not in active tasks when notifying ready");
+                GD.PrintErr(
+                    $"Warning: Chunk {chunkColumnIndex} was not in active tasks when notifying ready"
+                );
 
             // Get completion callback if exists
             if (_completionCallbacks.TryGetValue(chunkColumnIndex, out callback))

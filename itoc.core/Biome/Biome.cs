@@ -1,4 +1,3 @@
-using System;
 using Godot;
 
 public class Biome : IEquatable<Biome>
@@ -12,8 +11,16 @@ public class Biome : IEquatable<Biome>
     public double MaxHeight { get; }
     public Color Color { get; private set; }
 
-    public Biome(string id, double minTemp, double maxTemp, double minPrecip, double maxPrecip,
-        double minHeight, double maxHeight, Color color)
+    public Biome(
+        string id,
+        double minTemp,
+        double maxTemp,
+        double minPrecip,
+        double maxPrecip,
+        double minHeight,
+        double maxHeight,
+        Color color
+    )
     {
         Id = id;
         MinTemperature = minTemp;
@@ -25,15 +32,13 @@ public class Biome : IEquatable<Biome>
         Color = color;
     }
 
-    public bool MatchesConditions(double temperature, double precipitation, double height)
-    {
-        return temperature >= MinTemperature && temperature <= MaxTemperature &&
-               precipitation >= MinPrecipitation && precipitation <= MaxPrecipitation &&
-               height >= MinHeight && height <= MaxHeight;
-    }
+    public bool MatchesConditions(double temperature, double precipitation, double height) =>
+        temperature >= MinTemperature
+        && temperature <= MaxTemperature
+        && precipitation >= MinPrecipitation
+        && precipitation <= MaxPrecipitation
+        && height >= MinHeight
+        && height <= MaxHeight;
 
-    public bool Equals(Biome other)
-    {
-        return other.Id == Id;
-    }
+    public bool Equals(Biome other) => other.Id == Id;
 }

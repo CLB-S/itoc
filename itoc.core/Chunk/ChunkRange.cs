@@ -24,40 +24,40 @@ public class ChunkRange
         ChunkRadius = chunkRadius;
     }
 
-    public IEnumerable<Vector2I> ChunkColumns()
-        => ChunkColumnRange(Center, ChunkColumnRadius);
+    public IEnumerable<Vector2I> ChunkColumns() => ChunkColumnRange(Center, ChunkColumnRadius);
 
-    public IEnumerable<(Vector2I, int)> ChunkColumnsSorted()
-        => ChunkColumnRangeSorted(Center, ChunkColumnRadius);
+    public IEnumerable<(Vector2I, int)> ChunkColumnsSorted() =>
+        ChunkColumnRangeSorted(Center, ChunkColumnRadius);
 
     public IEnumerable<Vector3I> Chunks() => Chunks(Center, ChunkRadius);
 
-    public bool ContainsChunkColumnAt(Vector2I index)
-        => InChunkColumnRange(index, CenterIndex, ChunkColumnRadius);
+    public bool ContainsChunkColumnAt(Vector2I index) =>
+        InChunkColumnRange(index, CenterIndex, ChunkColumnRadius);
 
-    public bool ContainsChunkColumnAt(Vector2 position)
-        => ContainsChunkColumnAt(World.WorldToChunkIndex(position));
+    public bool ContainsChunkColumnAt(Vector2 position) =>
+        ContainsChunkColumnAt(World.WorldToChunkIndex(position));
 
-    public bool ContainsChunkColumnAt(Vector3 position)
-        => ContainsChunkColumnAt(World.WorldToChunkIndex(new Vector2(position.X, position.Z)));
+    public bool ContainsChunkColumnAt(Vector3 position) =>
+        ContainsChunkColumnAt(World.WorldToChunkIndex(new Vector2(position.X, position.Z)));
 
-    public bool ContainsChunkColumnAt(Vector3I position)
-        => ContainsChunkColumnAt(World.WorldToChunkIndex(new Vector2(position.X, position.Z)));
+    public bool ContainsChunkColumnAt(Vector3I position) =>
+        ContainsChunkColumnAt(World.WorldToChunkIndex(new Vector2(position.X, position.Z)));
 
-    public bool ContainsChunkAt(Vector3I position)
-        => InChunkRange(position, CenterIndex, ChunkRadius);
-    public bool ContainsChunkAt(Vector3 position)
-        => InChunkRange(World.WorldPositionToChunkIndex(position), CenterIndex, ChunkRadius);
+    public bool ContainsChunkAt(Vector3I position) =>
+        InChunkRange(position, CenterIndex, ChunkRadius);
+
+    public bool ContainsChunkAt(Vector3 position) =>
+        InChunkRange(World.WorldPositionToChunkIndex(position), CenterIndex, ChunkRadius);
 
     #region Static Methods
 
     public static IEnumerable<Vector2I> ChunkColumnRange(Vector2 center, int radius)
     {
         var centerIndex = World.WorldToChunkIndex(center);
-        for (int x = -radius; x <= radius; x++)
-            for (int y = -radius; y <= radius; y++)
-                if ((x * x + y * y) <= radius * radius)
-                    yield return new Vector2I(centerIndex.X + x, centerIndex.Y + y);
+        for (var x = -radius; x <= radius; x++)
+        for (var y = -radius; y <= radius; y++)
+            if ((x * x + y * y) <= radius * radius)
+                yield return new Vector2I(centerIndex.X + x, centerIndex.Y + y);
     }
 
     /// <returns>
@@ -69,16 +69,16 @@ public class ChunkRange
         var centerIndex = World.WorldToChunkIndex(center);
         var positionDistPairs = new List<(Vector2I, int)>();
 
-        for (int x = -radius; x <= radius; x++)
-            for (int y = -radius; y <= radius; y++)
+        for (var x = -radius; x <= radius; x++)
+        for (var y = -radius; y <= radius; y++)
+        {
+            var distanceSquared = x * x + y * y;
+            if (distanceSquared <= radius * radius)
             {
-                var distanceSquared = x * x + y * y;
-                if (distanceSquared <= radius * radius)
-                {
-                    var chunkIndex = new Vector2I(centerIndex.X + x, centerIndex.Y + y);
-                    positionDistPairs.Add((chunkIndex, distanceSquared));
-                }
+                var chunkIndex = new Vector2I(centerIndex.X + x, centerIndex.Y + y);
+                positionDistPairs.Add((chunkIndex, distanceSquared));
             }
+        }
 
         positionDistPairs.Sort((a, b) => a.Item2.CompareTo(b.Item2));
         return positionDistPairs;
@@ -87,10 +87,10 @@ public class ChunkRange
     public static IEnumerable<Vector2I> ChunkColumnRange(Vector3 center, int radius)
     {
         var centerIndex = World.WorldPositionToChunkIndex(center);
-        for (int x = -radius; x <= radius; x++)
-            for (int y = -radius; y <= radius; y++)
-                if ((x * x + y * y) <= radius * radius)
-                    yield return new Vector2I(centerIndex.X + x, centerIndex.Z + y);
+        for (var x = -radius; x <= radius; x++)
+        for (var y = -radius; y <= radius; y++)
+            if ((x * x + y * y) <= radius * radius)
+                yield return new Vector2I(centerIndex.X + x, centerIndex.Z + y);
     }
 
     /// <returns>
@@ -102,16 +102,16 @@ public class ChunkRange
         var centerIndex = World.WorldPositionToChunkIndex(center);
         var positionDistPairs = new List<(Vector2I, int)>();
 
-        for (int x = -radius; x <= radius; x++)
-            for (int y = -radius; y <= radius; y++)
+        for (var x = -radius; x <= radius; x++)
+        for (var y = -radius; y <= radius; y++)
+        {
+            var distanceSquared = x * x + y * y;
+            if (distanceSquared <= radius * radius)
             {
-                var distanceSquared = x * x + y * y;
-                if (distanceSquared <= radius * radius)
-                {
-                    var chunkIndex = new Vector2I(centerIndex.X + x, centerIndex.Z + y);
-                    positionDistPairs.Add((chunkIndex, distanceSquared));
-                }
+                var chunkIndex = new Vector2I(centerIndex.X + x, centerIndex.Z + y);
+                positionDistPairs.Add((chunkIndex, distanceSquared));
             }
+        }
 
         positionDistPairs.Sort((a, b) => a.Item2.CompareTo(b.Item2));
         return positionDistPairs;
@@ -125,18 +125,18 @@ public class ChunkRange
         else if (radius == 1)
         {
             // 3x3x3 box
-            for (int x = -radius; x <= radius; x++)
-                for (int y = -radius; y <= radius; y++)
-                    for (int z = -radius; z <= radius; z++)
-                        yield return centerIndex + new Vector3I(x, y, z);
+            for (var x = -radius; x <= radius; x++)
+            for (var y = -radius; y <= radius; y++)
+            for (var z = -radius; z <= radius; z++)
+                yield return centerIndex + new Vector3I(x, y, z);
         }
         else
         {
-            for (int x = -radius; x <= radius; x++)
-                for (int y = -radius; y <= radius; y++)
-                    for (int z = -radius; z <= radius; z++)
-                        if ((x * x + y * y + z * z) <= radius * radius)
-                            yield return centerIndex + new Vector3I(x, y, z);
+            for (var x = -radius; x <= radius; x++)
+            for (var y = -radius; y <= radius; y++)
+            for (var z = -radius; z <= radius; z++)
+                if ((x * x + y * y + z * z) <= radius * radius)
+                    yield return centerIndex + new Vector3I(x, y, z);
         }
     }
 
@@ -156,27 +156,27 @@ public class ChunkRange
         else if (radius == 1)
         {
             // 3x3x3 box
-            for (int x = -radius; x <= radius; x++)
-                for (int y = -radius; y <= radius; y++)
-                    for (int z = -radius; z <= radius; z++)
-                    {
-                        var chunkIndex = centerIndex + new Vector3I(x, y, z);
-                        positionDistPairs.Add((chunkIndex, x * x + y * y + z * z));
-                    }
+            for (var x = -radius; x <= radius; x++)
+            for (var y = -radius; y <= radius; y++)
+            for (var z = -radius; z <= radius; z++)
+            {
+                var chunkIndex = centerIndex + new Vector3I(x, y, z);
+                positionDistPairs.Add((chunkIndex, x * x + y * y + z * z));
+            }
         }
         else
         {
-            for (int x = -radius; x <= radius; x++)
-                for (int y = -radius; y <= radius; y++)
-                    for (int z = -radius; z <= radius; z++)
-                    {
-                        var distanceSquared = x * x + y * y + z * z;
-                        if (distanceSquared <= radius * radius)
-                        {
-                            var chunkIndex = centerIndex + new Vector3I(x, y, z);
-                            positionDistPairs.Add((chunkIndex, distanceSquared));
-                        }
-                    }
+            for (var x = -radius; x <= radius; x++)
+            for (var y = -radius; y <= radius; y++)
+            for (var z = -radius; z <= radius; z++)
+            {
+                var distanceSquared = x * x + y * y + z * z;
+                if (distanceSquared <= radius * radius)
+                {
+                    var chunkIndex = centerIndex + new Vector3I(x, y, z);
+                    positionDistPairs.Add((chunkIndex, distanceSquared));
+                }
+            }
         }
 
         positionDistPairs.Sort((a, b) => a.Item2.CompareTo(b.Item2));
@@ -210,5 +210,4 @@ public class ChunkRange
     }
 
     #endregion
-
 }

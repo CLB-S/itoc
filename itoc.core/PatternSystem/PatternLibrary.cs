@@ -49,58 +49,75 @@ public class PatternLibrary
 
     private void RegisterBuiltInPatterns()
     {
-        RegisterPattern(new PatternTreeBuilder("mountain", "Mountain With Ridges")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.Simplex,
-                Frequency = 0.002,
-                FractalType = FractalType.Ridged,
-                FractalOctaves = 1
-            })
-            .Multiply(new FastNoiseLiteNode(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.SimplexSmooth,
-                FractalType = FractalType.None,
-                Frequency = 0.0015
-            }).Max(-0.6).Add(0.8))
-            .Add(new FastNoiseLiteNode(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.Simplex,
-                Frequency = 0.004,
-                FractalOctaves = 4,
-                DomainWarpEnabled = true,
-                DomainWarpAmplitude = 150,
-                DomainWarpFractalType = DomainWarpFractalType.None,
-                DomainWarpFrequency = 0.002
-            }))
-            .Multiply(30)
-            .Build());
+        RegisterPattern(
+            new PatternTreeBuilder("mountain", "Mountain With Ridges")
+                .WithFastNoiseLite(
+                    new FastNoiseLiteSettings
+                    {
+                        NoiseType = NoiseType.Simplex,
+                        Frequency = 0.002,
+                        FractalType = FractalType.Ridged,
+                        FractalOctaves = 1,
+                    }
+                )
+                .Multiply(new FastNoiseLiteNode(
+                        new FastNoiseLiteSettings
+                        {
+                            NoiseType = NoiseType.SimplexSmooth,
+                            FractalType = FractalType.None,
+                            Frequency = 0.0015,
+                        }
+                    ).Max(-0.6).Add(0.8))
+                .Add(
+                    new FastNoiseLiteNode(
+                        new FastNoiseLiteSettings
+                        {
+                            NoiseType = NoiseType.Simplex,
+                            Frequency = 0.004,
+                            FractalOctaves = 4,
+                            DomainWarpEnabled = true,
+                            DomainWarpAmplitude = 150,
+                            DomainWarpFractalType = DomainWarpFractalType.None,
+                            DomainWarpFrequency = 0.002,
+                        }
+                    )
+                )
+                .Multiply(30)
+                .Build()
+        );
 
-        RegisterPattern(new PatternTreeBuilder("hill", "Hill")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.Simplex,
-                Frequency = 0.004,
-                FractalOctaves = 4,
-                DomainWarpEnabled = true,
-                DomainWarpAmplitude = 150,
-                DomainWarpFractalType = DomainWarpFractalType.None,
-                DomainWarpFrequency = 0.002
-            })
-            .Multiply(20)
-            .Build());
+        RegisterPattern(
+            new PatternTreeBuilder("hill", "Hill")
+                .WithFastNoiseLite(
+                    new FastNoiseLiteSettings
+                    {
+                        NoiseType = NoiseType.Simplex,
+                        Frequency = 0.004,
+                        FractalOctaves = 4,
+                        DomainWarpEnabled = true,
+                        DomainWarpAmplitude = 150,
+                        DomainWarpFractalType = DomainWarpFractalType.None,
+                        DomainWarpFrequency = 0.002,
+                    }
+                )
+                .Multiply(20)
+                .Build()
+        );
 
-
-        RegisterPattern(new PatternTreeBuilder("plain", "Plain")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                NoiseType = NoiseType.Perlin,
-                // Frequency = 0.01,
-                FractalOctaves = 2
-            })
-            .Multiply(Mathf.Pi / 2)
-            .ApplyOperation(SingleOperationType.Sin)
-            .Multiply(10)
-            .Build());
+        RegisterPattern(
+            new PatternTreeBuilder("plain", "Plain")
+                .WithFastNoiseLite(
+                    new FastNoiseLiteSettings
+                    {
+                        NoiseType = NoiseType.Perlin,
+                        // Frequency = 0.01,
+                        FractalOctaves = 2,
+                    }
+                )
+                .Multiply(Mathf.Pi / 2)
+                .ApplyOperation(SingleOperationType.Sin)
+                .Multiply(10)
+                .Build()
+        );
     }
 }

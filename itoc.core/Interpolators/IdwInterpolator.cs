@@ -9,14 +9,20 @@ public class IdwInterpolator
     private readonly int _numNeighbors;
     private readonly double _power;
 
-    public IdwInterpolator(IEnumerable<Vector2> positions, IEnumerable<double> heights, double power = 2,
-        int numNeighbors = 20)
+    public IdwInterpolator(
+        IEnumerable<Vector2> positions,
+        IEnumerable<double> heights,
+        double power = 2,
+        int numNeighbors = 20
+    )
     {
         var positionsList = positions.ToList();
         var heightsList = heights.ToList();
 
         if (positionsList.Count != heightsList.Count)
-            throw new ArgumentException("Positions and heights must have the same number of elements.");
+            throw new ArgumentException(
+                "Positions and heights must have the same number of elements."
+            );
 
         var pointsData = positions.Select(p => new[] { p.X, p.Y }).ToArray();
 
@@ -29,7 +35,8 @@ public class IdwInterpolator
     private static double L2Norm(double[] x, double[] y)
     {
         double dist = 0;
-        for (var i = 0; i < x.Length; i++) dist += (x[i] - y[i]) * (x[i] - y[i]);
+        for (var i = 0; i < x.Length; i++)
+            dist += (x[i] - y[i]) * (x[i] - y[i]);
 
         return dist;
     }

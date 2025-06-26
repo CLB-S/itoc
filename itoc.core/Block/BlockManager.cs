@@ -1,6 +1,6 @@
 using Godot;
-using ITOC.Core.Registry;
 using ITOC.Core.BlockModels;
+using ITOC.Core.Registry;
 
 namespace ITOC.Core;
 
@@ -10,7 +10,6 @@ public class BlockManager
     public static BlockManager Instance => _instance ??= new BlockManager();
 
     // private readonly Dictionary<string, Block> _blocks = new();
-
 
     /// <summary>
     /// The block registry
@@ -42,18 +41,51 @@ public class BlockManager
     private void RegisterDefaultBlocks()
     {
         RegisterBlock(Block.Air);
-        RegisterBlock(new CubeBlock("itoc:debug", "Debug Block", new CubeAllModel("res://assets/blocks/debug.png")));
-        RegisterBlock(new CubeBlock("itoc:stone", "Stone", new CubeAllModel("res://assets/blocks/stone.png")));
-        RegisterBlock(new CubeBlock("itoc:dirt", "Dirt", new CubeAllModel("res://assets/blocks/dirt.png")));
-        RegisterBlock(new CubeBlock("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png")));
-        RegisterBlock(new CubeBlock("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png")));
+        RegisterBlock(
+            new CubeBlock(
+                "itoc:debug",
+                "Debug Block",
+                new CubeAllModel("res://assets/blocks/debug.png")
+            )
+        );
+        RegisterBlock(
+            new CubeBlock("itoc:stone", "Stone", new CubeAllModel("res://assets/blocks/stone.png"))
+        );
+        RegisterBlock(
+            new CubeBlock("itoc:dirt", "Dirt", new CubeAllModel("res://assets/blocks/dirt.png"))
+        );
+        RegisterBlock(
+            new CubeBlock("itoc:sand", "Sand", new CubeAllModel("res://assets/blocks/sand.png"))
+        );
+        RegisterBlock(
+            new CubeBlock("itoc:snow", "Snow", new CubeAllModel("res://assets/blocks/snow.png"))
+        );
 
-        var waterMaterial = ResourceLoader.Load<Material>("res://assets/materials/water_material.tres");
-        RegisterBlock(new CubeBlock("itoc:water", "Water", new CubeAllModel(waterMaterial), BlockProperties.Transparent));
-        RegisterBlock(new DirectionalCubeBlock("itoc:grass_block", "Grass Block", new CubeBottomTopModel("res://assets/blocks/grass_block/round.png", "res://assets/blocks/dirt.png", "res://assets/blocks/grass_block/top.png"),
-            null, Direction.PositiveY));
+        var waterMaterial = ResourceLoader.Load<Material>(
+            "res://assets/materials/water_material.tres"
+        );
+        RegisterBlock(
+            new CubeBlock(
+                "itoc:water",
+                "Water",
+                new CubeAllModel(waterMaterial),
+                BlockProperties.Transparent
+            )
+        );
+        RegisterBlock(
+            new DirectionalCubeBlock(
+                "itoc:grass_block",
+                "Grass Block",
+                new CubeBottomTopModel(
+                    "res://assets/blocks/grass_block/round.png",
+                    "res://assets/blocks/dirt.png",
+                    "res://assets/blocks/grass_block/top.png"
+                ),
+                null,
+                Direction.PositiveY
+            )
+        );
     }
-
 
     public void RegisterBlock(Block block)
     {
@@ -76,13 +108,7 @@ public class BlockManager
     /// </summary>
     /// <param name="blockId">The ID of the block</param>
     /// <returns>The block, or null if not found</returns>
-    public Block GetBlock(Identifier blockId)
-    {
-        return BlockRegistry.Get(blockId); // TODO: Air block and default block.
-    }
+    public Block GetBlock(Identifier blockId) => BlockRegistry.Get(blockId); // TODO: Air block and default block.
 
-    public int GetBlockCount()
-    {
-        return BlockRegistry.Count;
-    }
+    public int GetBlockCount() => BlockRegistry.Count;
 }

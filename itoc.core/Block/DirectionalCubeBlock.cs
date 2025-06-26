@@ -6,7 +6,13 @@ public class DirectionalCubeBlock : CubeBlock
 {
     private Direction _direction;
 
-    public DirectionalCubeBlock(Identifier id, string name, CubeDirectionalModel blockModel, BlockProperties properties = null, Direction? freezeDirection = null)
+    public DirectionalCubeBlock(
+        Identifier id,
+        string name,
+        CubeDirectionalModel blockModel,
+        BlockProperties properties = null,
+        Direction? freezeDirection = null
+    )
         : base(id, name, blockModel, properties)
     {
         FreezeDirection = freezeDirection;
@@ -28,7 +34,8 @@ public class DirectionalCubeBlock : CubeBlock
         get => FreezeDirection ?? _direction;
         set
         {
-            if (FreezeDirection != null) return;
+            if (FreezeDirection != null)
+                return;
 
             _direction = value;
             if (BlockModel is CubeDirectionalModel cubeModel)

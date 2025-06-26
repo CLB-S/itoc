@@ -4,16 +4,17 @@ namespace ITOC.Core.Utils;
 
 public static class ColorUtils
 {
-    public static Color RandomColorHSV()
-    {
-        return Color.FromHsv(GD.Randf(), (float)GD.RandRange(0.2, 0.6), (float)GD.RandRange(0.9, 1.0));
-    }
+    public static Color RandomColorHSV() =>
+        Color.FromHsv(GD.Randf(), (float)GD.RandRange(0.2, 0.6), (float)GD.RandRange(0.9, 1.0));
 
     public static Color RandomColorHSV(ulong seed)
     {
-        var rng = new RandomNumberGenerator();
-        rng.Seed = seed;
-        return Color.FromHsv((float)rng.Randf(), (float)rng.RandfRange(0.2f, 0.6f), (float)rng.RandfRange(0.9f, 1.0f));
+        var rng = new RandomNumberGenerator { Seed = seed };
+        return Color.FromHsv(
+            (float)rng.Randf(),
+            (float)rng.RandfRange(0.2f, 0.6f),
+            (float)rng.RandfRange(0.9f, 1.0f)
+        );
     }
 
     /// <summary>

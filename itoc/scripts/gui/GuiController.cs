@@ -9,7 +9,7 @@ public enum GuiState
     Paused,
     Inventory,
     Settings,
-    Dialogue
+    Dialogue,
 }
 
 public partial class GuiController : Control
@@ -40,8 +40,6 @@ public partial class GuiController : Control
         return false;
     }
 
-    protected void UpdateMouseState()
-    {
+    protected void UpdateMouseState() =>
         Input.MouseMode = Visible ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Captured;
-    }
 }

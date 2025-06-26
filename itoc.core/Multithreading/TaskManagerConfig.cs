@@ -63,9 +63,8 @@ public class TaskManagerConfig
     /// Creates a default configuration for a development environment.
     /// </summary>
     /// <returns>A development-oriented configuration.</returns>
-    public static TaskManagerConfig Development()
-    {
-        return new TaskManagerConfig
+    public static TaskManagerConfig Development() =>
+        new TaskManagerConfig
         {
             MaxWorkerThreads = 0, // Auto
             AutoStart = true,
@@ -73,17 +72,15 @@ public class TaskManagerConfig
             IdleThreadTimeoutMs = 0, // Never suspend threads
             StatisticsLoggingPeriodMs = 10000, // Log statistics every 10 seconds
             TaskTimeoutMs = 30000, // 30 seconds task timeout
-            CaptureTaskStackTraces = true
+            CaptureTaskStackTraces = true,
         };
-    }
 
     /// <summary>
     /// Creates a default configuration for a production environment.
     /// </summary>
     /// <returns>A production-oriented configuration.</returns>
-    public static TaskManagerConfig Production()
-    {
-        return new TaskManagerConfig
+    public static TaskManagerConfig Production() =>
+        new TaskManagerConfig
         {
             MaxWorkerThreads = 0, // Auto
             AutoStart = true,
@@ -91,17 +88,15 @@ public class TaskManagerConfig
             IdleThreadTimeoutMs = 60000, // Suspend threads after 1 minute of inactivity
             StatisticsLoggingPeriodMs = 0, // Don't log statistics
             TaskTimeoutMs = 0, // Never timeout tasks
-            CaptureTaskStackTraces = false
+            CaptureTaskStackTraces = false,
         };
-    }
 
     /// <summary>
     /// Creates a configuration optimized for background processing with minimal resource usage.
     /// </summary>
     /// <returns>A low-resource configuration.</returns>
-    public static TaskManagerConfig LowResource()
-    {
-        return new TaskManagerConfig
+    public static TaskManagerConfig LowResource() =>
+        new TaskManagerConfig
         {
             MaxWorkerThreads = Math.Max(1, Environment.ProcessorCount / 2),
             AutoStart = true,
@@ -109,17 +104,15 @@ public class TaskManagerConfig
             IdleThreadTimeoutMs = 10000, // Suspend threads after 10 seconds of inactivity
             StatisticsLoggingPeriodMs = 0, // Don't log statistics
             TaskTimeoutMs = 0, // Never timeout tasks
-            CaptureTaskStackTraces = false
+            CaptureTaskStackTraces = false,
         };
-    }
 
     /// <summary>
     /// Creates a configuration optimized for maximum performance.
     /// </summary>
     /// <returns>A high-performance configuration.</returns>
-    public static TaskManagerConfig HighPerformance()
-    {
-        return new TaskManagerConfig
+    public static TaskManagerConfig HighPerformance() =>
+        new TaskManagerConfig
         {
             MaxWorkerThreads = Math.Max(1, Environment.ProcessorCount),
             AutoStart = true,
@@ -127,7 +120,6 @@ public class TaskManagerConfig
             IdleThreadTimeoutMs = 0, // Never suspend threads
             StatisticsLoggingPeriodMs = 0, // Don't log statistics
             TaskTimeoutMs = 0, // Never timeout tasks
-            CaptureTaskStackTraces = false
+            CaptureTaskStackTraces = false,
         };
-    }
 }

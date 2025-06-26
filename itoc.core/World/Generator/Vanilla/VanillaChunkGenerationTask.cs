@@ -15,7 +15,8 @@ public class VanillaChunkGenerationTask : GameTask
         ChunkColumn chunkColumn,
         Action<Chunk> callback = null,
         string name = null,
-        TaskPriority priority = TaskPriority.Normal)
+        TaskPriority priority = TaskPriority.Normal
+    )
         : base(name, priority)
     {
         ChunkIndex = index;
@@ -38,33 +39,38 @@ public class VanillaChunkGenerationTask : GameTask
         // var blockUpdates = new List<(Vector3I Position, Block Block)>();
 
         for (var x = 0; x < Chunk.SIZE; x++)
-            for (var z = 0; z < Chunk.SIZE; z++)
+        for (var z = 0; z < Chunk.SIZE; z++)
+        {
+            var height = Mathf.FloorToInt(ChunkColumn.HeightMap[x, z]);
+
+            // Calculate slope steepness
+            // var maxSlope = CalculateSlope(x, z);
+
+            // var baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
+            for (var y = 0; y < Chunk.SIZE; y++)
             {
-                var height = Mathf.FloorToInt(ChunkColumn.HeightMap[x, z]);
-
-                // Calculate slope steepness
-                // var maxSlope = CalculateSlope(x, z);
-
-                // var baseDirtDepth = Mathf.Clamp(4 - Mathf.FloorToInt(maxSlope), 1, 4);
-                for (var y = 0; y < Chunk.SIZE; y++)
+                var actualY = ChunkIndex.Y * Chunk.SIZE + y;
+                if (actualY <= height)
                 {
-                    var actualY = ChunkIndex.Y * Chunk.SIZE + y;
-                    if (actualY <= height)
-                    {
-                        var blockType = ((x + z) % 2 == 0) ? "itoc:debug" : DetermineBlockType(actualY, height, 0, 4);
-                        blocks[Chunk.GetBlockIndex(x, y, z)] = BlockManager.Instance.GetBlock(blockType);
-                        // blockUpdates.Add((new Vector3I(x, y, z), blockType));
-                        // _chunk.SetBlock(x, y, z, blockType);
-                    }
-                    else if (actualY <= 0)
-                    {
-                        blocks[Chunk.GetBlockIndex(x, y, z)] = waterBlock;
+                    var blockType =
+                        ((x + z) % 2 == 0)
+                            ? "itoc:debug"
+                            : DetermineBlockType(actualY, height, 0, 4);
+                    blocks[Chunk.GetBlockIndex(x, y, z)] = BlockManager.Instance.GetBlock(
+                        blockType
+                    );
+                    // blockUpdates.Add((new Vector3I(x, y, z), blockType));
+                    // _chunk.SetBlock(x, y, z, blockType);
+                }
+                else if (actualY <= 0)
+                {
+                    blocks[Chunk.GetBlockIndex(x, y, z)] = waterBlock;
 
-                        // blockUpdates.Add((new Vector3I(x, y, z), waterBlock));
-                        // _chunk.SetBlock(x, y, z, waterBlock);
-                    }
+                    // blockUpdates.Add((new Vector3I(x, y, z), waterBlock));
+                    // _chunk.SetBlock(x, y, z, waterBlock);
                 }
             }
+        }
 
         var chunk = new Chunk(ChunkIndex, blocks);
         return chunk;
@@ -73,7 +79,12 @@ public class VanillaChunkGenerationTask : GameTask
         // _chunk.SetRange(blockUpdates);
     }
 
-    private static string DetermineBlockType(int actualY, int height, double maxSlope, int dirtDepth)
+    private static string DetermineBlockType(
+        int actualY,
+        int height,
+        double maxSlope,
+        int dirtDepth
+    )
     {
         // Depth-based layers
         if (actualY > height - dirtDepth)

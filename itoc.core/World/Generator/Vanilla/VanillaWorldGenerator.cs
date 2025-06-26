@@ -40,11 +40,9 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
     public PatternLibrary PatternLibrary { get; private set; }
     public double MaxHeight { get; private set; }
 
-
     public IReadOnlyDictionary<int, CellData> CellDatas => _cellDatas;
     public IReadOnlyCollection<Edge> CellEdges => _voronoiEdges;
     public IReadOnlyList<Vector2> SamplePoints => _points;
-
 
     public IReadOnlySet<int> Lakes => _fluvialEroder.Lakes;
     public IReadOnlyDictionary<int, int> Receivers => _fluvialEroder.Receivers;
@@ -53,27 +51,35 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
     #endregion
 
     public VanillaWorldGenerator(VanillaWorldSettings settings = null)
-        : base(settings ?? new VanillaWorldSettings())
-    {
-    }
+        : base(settings ?? new VanillaWorldSettings()) { }
 
     protected override void InitializePipeline()
     {
-        _generationPipeline.AddLast(new WorldGenerationStep("initialize_resources", InitializeResources));
-        _generationPipeline.AddLast(new WorldGenerationStep("generate_sample_points", GenerateSamplePoints));
-        _generationPipeline.AddLast(new WorldGenerationStep("initialize_cell_datas", InitializeCellDatas));
-        _generationPipeline.AddLast(new WorldGenerationStep("initialize_tectonics", InitializeTectonicProperties));
+        _generationPipeline.AddLast(
+            new WorldGenerationStep("initialize_resources", InitializeResources)
+        );
+        _generationPipeline.AddLast(
+            new WorldGenerationStep("generate_sample_points", GenerateSamplePoints)
+        );
+        _generationPipeline.AddLast(
+            new WorldGenerationStep("initialize_cell_datas", InitializeCellDatas)
+        );
+        _generationPipeline.AddLast(
+            new WorldGenerationStep("initialize_tectonics", InitializeTectonicProperties)
+        );
         _generationPipeline.AddLast(new WorldGenerationStep("calculate_uplifts", CalculateUplifts));
         _generationPipeline.AddLast(new WorldGenerationStep("find_river_mouths", FindRiverMouths));
-        _generationPipeline.AddLast(new WorldGenerationStep("process_fluvial_erosion", ProcessFluvialErosion));
-        _generationPipeline.AddLast(new WorldGenerationStep("adjust_temperature", AdjustTemperatureAccordingToHeight));
+        _generationPipeline.AddLast(
+            new WorldGenerationStep("process_fluvial_erosion", ProcessFluvialErosion)
+        );
+        _generationPipeline.AddLast(
+            new WorldGenerationStep("adjust_temperature", AdjustTemperatureAccordingToHeight)
+        );
         _generationPipeline.AddLast(new WorldGenerationStep("set_biomes", SetBiomes));
     }
 
-    protected override ChunkGeneratorBase InitializeChunkGenerator()
-    {
-        return new VanillaChunkGenerator(this);
-    }
+    protected override ChunkGeneratorBase InitializeChunkGenerator() =>
+        new VanillaChunkGenerator(this);
 
     #region Preperations
 
@@ -83,50 +89,61 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
         PatternLibrary = new PatternLibrary((int)Settings.Seed);
 
         _platePattern = new PatternTreeBuilder("plate_pattern", "Plate Pattern")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                Seed = (int)$"plate{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.Cellular,
-                Frequency = Settings.NoiseFrequency,
-                CellularReturnType = CellularReturnType.CellValue,
-                DomainWarpEnabled = true,
-                DomainWarpAmplitude = 0.75 / Settings.NoiseFrequency,
-                DomainWarpFrequency = Settings.NoiseFrequency,
-                DomainWarpFractalType = DomainWarpFractalType.None,
-                FractalType = FractalType.None
-            })
+            .WithFastNoiseLite(
+                new FastNoiseLiteSettings
+                {
+                    Seed = (int)$"plate{Settings.Seed}".Hash(),
+                    NoiseType = NoiseType.Cellular,
+                    Frequency = Settings.NoiseFrequency,
+                    CellularReturnType = CellularReturnType.CellValue,
+                    DomainWarpEnabled = true,
+                    DomainWarpAmplitude = 0.75 / Settings.NoiseFrequency,
+                    DomainWarpFrequency = Settings.NoiseFrequency,
+                    DomainWarpFractalType = DomainWarpFractalType.None,
+                    FractalType = FractalType.None,
+                }
+            )
             .Build();
 
         _upliftPattern = new PatternTreeBuilder("uplift_pattern", "Uplift Pattern")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                Seed = (int)$"uplift{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.Perlin,
-                FractalType = FractalType.None,
-                Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency
-            })
+            .WithFastNoiseLite(
+                new FastNoiseLiteSettings
+                {
+                    Seed = (int)$"uplift{Settings.Seed}".Hash(),
+                    NoiseType = NoiseType.Perlin,
+                    FractalType = FractalType.None,
+                    Frequency = Settings.NoiseFrequency * Settings.UpliftNoiseFrequency,
+                }
+            )
             .Build();
 
         _temperaturePattern = new PatternTreeBuilder("temperature_pattern", "Temperature Pattern")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                Seed = (int)$"temperature{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.Perlin,
-                FractalOctaves = 3,
-                Frequency = Settings.NoiseFrequency * Settings.TemperatureNoiseFrequency
-            })
+            .WithFastNoiseLite(
+                new FastNoiseLiteSettings
+                {
+                    Seed = (int)$"temperature{Settings.Seed}".Hash(),
+                    NoiseType = NoiseType.Perlin,
+                    FractalOctaves = 3,
+                    Frequency = Settings.NoiseFrequency * Settings.TemperatureNoiseFrequency,
+                }
+            )
             .ScaleXBy(3)
             .Multiply(Settings.TemperatureNoiseIntensity)
             .Build();
 
-        _precipitationPattern = new PatternTreeBuilder("precipitation_pattern", "Precipitation Pattern")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                Seed = (int)$"precipitation{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.SimplexSmooth,
-                FractalOctaves = 3,
-                Frequency = Settings.NoiseFrequency * Settings.PrecipitationNoiseFrequency
-            })
+        _precipitationPattern = new PatternTreeBuilder(
+            "precipitation_pattern",
+            "Precipitation Pattern"
+        )
+            .WithFastNoiseLite(
+                new FastNoiseLiteSettings
+                {
+                    Seed = (int)$"precipitation{Settings.Seed}".Hash(),
+                    NoiseType = NoiseType.SimplexSmooth,
+                    FractalOctaves = 3,
+                    Frequency = Settings.NoiseFrequency * Settings.PrecipitationNoiseFrequency,
+                }
+            )
             .ScaleXBy(2)
             .Multiply(1.3)
             .Subtract(0.3)
@@ -135,14 +152,16 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
             .Build();
 
         _domainWarpPattern = new PatternTreeBuilder("domain_warp_pattern", "Domain Warp Pattern")
-            .WithFastNoiseLite(new FastNoiseLiteSettings
-            {
-                Seed = (int)$"domain_warp{Settings.Seed}".Hash(),
-                NoiseType = NoiseType.Perlin,
-                // FractalType = FractalType.None,
-                FractalOctaves = 2,
-                Frequency = Settings.DomainWarpFrequency
-            })
+            .WithFastNoiseLite(
+                new FastNoiseLiteSettings
+                {
+                    Seed = (int)$"domain_warp{Settings.Seed}".Hash(),
+                    NoiseType = NoiseType.Perlin,
+                    // FractalType = FractalType.None,
+                    FractalOctaves = 2,
+                    Frequency = Settings.DomainWarpFrequency,
+                }
+            )
             .Multiply(Settings.DomainWarpIntensity)
             .Build();
 
@@ -151,9 +170,18 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
 
     private void GenerateSamplePoints()
     {
-        _points = FastPoissonDiskSampling.Sampling(Settings.Bounds.Position, Settings.Bounds.End,
-            Settings.MinimumCellDistance, _rng, Settings.PoisosonDiskSamplingIterations);
-        _edgePointsMap = RepeatPointsRoundEdges(_points, Settings.Bounds, 2 * Settings.MinimumCellDistance);
+        _points = FastPoissonDiskSampling.Sampling(
+            Settings.Bounds.Position,
+            Settings.Bounds.End,
+            Settings.MinimumCellDistance,
+            _rng,
+            Settings.PoisosonDiskSamplingIterations
+        );
+        _edgePointsMap = RepeatPointsRoundEdges(
+            _points,
+            Settings.Bounds,
+            2 * Settings.MinimumCellDistance
+        );
 
         _delaunator = new Delaunator(_points.ToArray());
         _voronoiEdges = _delaunator.GetVoronoiEdgesBasedOnCentroids().ToArray();
@@ -173,7 +201,10 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                 continue;
 
             var latitude = GetLatitude(pos);
-            var precipitationNoiseValue = _precipitationPattern.EvaluateSeamlessX(pos, Settings.Bounds);
+            var precipitationNoiseValue = _precipitationPattern.EvaluateSeamlessX(
+                pos,
+                Settings.Bounds
+            );
             var temperatureNoiseValue = _temperaturePattern.EvaluateSeamlessX(pos, Settings.Bounds);
 
             _cellDatas[_cells[i].Index] = new CellData
@@ -181,11 +212,15 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                 Cell = _cells[i],
                 Position = pos,
                 Area = GeometryUtils.CalculatePolygonArea(_cells[i].Points),
-                Precipitation = ClimateUtils.GetPrecipitation(latitude, Settings.MaxPrecipitation) *
-                                (1 + precipitationNoiseValue),
+                Precipitation =
+                    ClimateUtils.GetPrecipitation(latitude, Settings.MaxPrecipitation)
+                    * (1 + precipitationNoiseValue),
                 Temperature =
-                    ClimateUtils.GetTemperature(latitude, Settings.EquatorialTemperature, Settings.PolarTemperature) +
-                    temperatureNoiseValue
+                    ClimateUtils.GetTemperature(
+                        latitude,
+                        Settings.EquatorialTemperature,
+                        Settings.PolarTemperature
+                    ) + temperatureNoiseValue,
             };
         }
 
@@ -194,30 +229,36 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
             if (_cellDatas.ContainsKey(_delaunator.Triangles[i]))
                 _triangleIndicesMap[_delaunator.Triangles[i]] = i;
 
-        var pointsData = _cellDatas.Keys.Select(i =>
-        {
-            var mappedX = 2 * Mathf.Pi * _points[i].X / Settings.Bounds.Size.X;
-            return new[]
+        var pointsData = _cellDatas
+            .Keys.Select(i =>
             {
-                Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
-                _points[i].Y
-            };
-        }).ToArray();
+                var mappedX = 2 * Mathf.Pi * _points[i].X / Settings.Bounds.Size.X;
+                return new[]
+                {
+                    Mathf.Cos(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                    Mathf.Sin(mappedX) * Settings.Bounds.Size.X * 0.5 / Mathf.Pi,
+                    _points[i].Y,
+                };
+            })
+            .ToArray();
 
         static double l2Norm(double[] x, double[] y)
         {
             double dist = 0;
-            for (var i = 0; i < x.Length; i++) dist += (x[i] - y[i]) * (x[i] - y[i]);
+            for (var i = 0; i < x.Length; i++)
+                dist += (x[i] - y[i]) * (x[i] - y[i]);
             return dist;
         }
 
-        _cellDatasKdTree = new KDTree<double, int>(3, pointsData, _cellDatas.Keys.ToArray(), l2Norm);
+        _cellDatasKdTree = new KDTree<double, int>(
+            3,
+            pointsData,
+            _cellDatas.Keys.ToArray(),
+            l2Norm
+        );
 
         _cellArea = (double)Settings.Bounds.Size.X * Settings.Bounds.Size.Y / _cellDatas.Count;
-
     }
-
 
     #endregion
 
@@ -231,28 +272,31 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
         return PlateType.Continent;
     }
 
-    private void InitializeTectonicProperties()
-    {
+    private void InitializeTectonicProperties() =>
         // Use Parallel.ForEach to process cells in parallel
-        Parallel.ForEach(_cellDatas, cellDataPair =>
-        {
-            var i = cellDataPair.Key;
-            var cellData = cellDataPair.Value;
+        Parallel.ForEach(
+            _cellDatas,
+            cellDataPair =>
+            {
+                var i = cellDataPair.Key;
+                var cellData = cellDataPair.Value;
 
-            // Create a thread-local RNG instance
-            using var rng = new RandomNumberGenerator();
+                // Create a thread-local RNG instance
+                using var rng = new RandomNumberGenerator();
 
-            var noiseValue = _platePattern.EvaluateSeamlessX(cellData.Position, Settings.Bounds);
-            var seed = noiseValue.ToString().Hash();
-            rng.Seed = seed;
-            var r = rng.Randf() * Settings.MaxTectonicMovement;
-            var phi = rng.Randf() * Mathf.Pi * 2;
-            cellData.TectonicMovement = new Vector2(Mathf.Cos(phi), Mathf.Sin(phi)) * r;
-            cellData.PlateType = RandomPlateType(rng);
-            cellData.PlateSeed = seed;
-        });
-    }
-
+                var noiseValue = _platePattern.EvaluateSeamlessX(
+                    cellData.Position,
+                    Settings.Bounds
+                );
+                var seed = noiseValue.ToString().Hash();
+                rng.Seed = seed;
+                var r = rng.Randf() * Settings.MaxTectonicMovement;
+                var phi = rng.Randf() * Mathf.Pi * 2;
+                cellData.TectonicMovement = new Vector2(Mathf.Cos(phi), Mathf.Sin(phi)) * r;
+                cellData.PlateType = RandomPlateType(rng);
+                cellData.PlateSeed = seed;
+            }
+        );
 
     #endregion
 
@@ -266,7 +310,8 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
         {
             var f = _upliftPattern.EvaluateSeamlessX(cell.Position, Settings.Bounds);
 
-            cell.Uplift += uplift * Settings.MaxUplift * (1 + (1 - f) * Settings.UpliftNoiseIntensity);
+            cell.Uplift +=
+                uplift * Settings.MaxUplift * (1 + (1 - f) * Settings.UpliftNoiseIntensity);
             _initialAltitudeIndices.Add(cell.Index);
         }
 
@@ -275,14 +320,19 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
         {
             var cellPId = _delaunator.Triangles[edge.Index];
             var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
-            if (_cellDatas.TryGetValue(cellPId, out var cellP) && _cellDatas.TryGetValue(cellQId, out var cellQ))
+            if (
+                _cellDatas.TryGetValue(cellPId, out var cellP)
+                && _cellDatas.TryGetValue(cellQId, out var cellQ)
+            )
             {
-                if (cellP.TectonicMovement == cellQ.TectonicMovement) continue;
+                if (cellP.TectonicMovement == cellQ.TectonicMovement)
+                    continue;
 
                 // [-1, 1]
                 var l = cellP.Position - cellQ.Position;
-                var relativeMovement = (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l)) /
-                                       (2 * l.Length() * Settings.MaxTectonicMovement);
+                var relativeMovement =
+                    (cellQ.TectonicMovement.Dot(l) - cellP.TectonicMovement.Dot(l))
+                    / (2 * l.Length() * Settings.MaxTectonicMovement);
 
                 if (Mathf.Abs(relativeMovement) < 0.5)
                     relativeMovement = Mathf.Pow(relativeMovement * 2, 3) / 2;
@@ -298,7 +348,10 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                 cellQ.RoundPlateJunction = true;
 
                 double uplift;
-                if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Continent)
+                if (
+                    cellP.PlateType == PlateType.Continent
+                    && cellQ.PlateType == PlateType.Continent
+                )
                 {
                     if (relativeMovement < 0)
                     {
@@ -323,7 +376,10 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                     SetInitialUplift(cellP, uplift);
                     SetInitialUplift(cellQ, uplift);
                 }
-                else if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
+                else if (
+                    cellP.PlateType == PlateType.Continent
+                    && cellQ.PlateType == PlateType.Oceans
+                )
                 {
                     if (relativeMovement < 0)
                     {
@@ -332,7 +388,12 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                     }
                     else
                     {
-                        uplift = 1 - 0.75 * (1 - relativeMovement) * (1 - relativeMovement) * (1 - relativeMovement);
+                        uplift =
+                            1
+                            - 0.75
+                                * (1 - relativeMovement)
+                                * (1 - relativeMovement)
+                                * (1 - relativeMovement);
                         SetInitialUplift(cellP, uplift);
 
                         // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
@@ -340,7 +401,10 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                         // cellQ.Uplift += altitude;
                     }
                 }
-                else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
+                else if (
+                    cellP.PlateType == PlateType.Oceans
+                    && cellQ.PlateType == PlateType.Continent
+                )
                 {
                     if (relativeMovement < 0)
                     {
@@ -349,7 +413,12 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
                     }
                     else
                     {
-                        uplift = 1 - 0.75 * (1 - relativeMovement) * (1 - relativeMovement) * (1 - relativeMovement);
+                        uplift =
+                            1
+                            - 0.75
+                                * (1 - relativeMovement)
+                                * (1 - relativeMovement)
+                                * (1 - relativeMovement);
                         SetInitialUplift(cellQ, uplift);
 
                         // var altitude = Mathf.Pow(relativeMovement, 3) / 2f + 0.5f;
@@ -377,14 +446,20 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
             var currentCell = _cellDatas[currentIndex];
             var parentHeight = currentCell.Uplift;
 
-            var propagatedHeight = parentHeight *
-                                   Mathf.Pow(Settings.UpliftPropagationDecrement,
-                                       Settings.NormalizedMinimumCellDistance);
+            var propagatedHeight =
+                parentHeight
+                * Mathf.Pow(
+                    Settings.UpliftPropagationDecrement,
+                    Settings.NormalizedMinimumCellDistance
+                );
             if (Mathf.Abs(propagatedHeight) < 0.01f)
                 continue;
 
             foreach (var neighborIndex in GetNeighborCellIndices(currentIndex))
-                if (!used.Contains(neighborIndex) && _cellDatas[neighborIndex].PlateType == PlateType.Continent)
+                if (
+                    !used.Contains(neighborIndex)
+                    && _cellDatas[neighborIndex].PlateType == PlateType.Continent
+                )
                 {
                     var neighbor = _cellDatas[neighborIndex];
                     var mod = sharpness == 0 ? 1.0f : 1.0f + (_rng.Randf() - 0.5) * sharpness;
@@ -409,14 +484,20 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
         {
             var cellPId = _delaunator.Triangles[edge.Index];
             var cellQId = _delaunator.Triangles[_delaunator.Halfedges[edge.Index]];
-            if (_cellDatas.TryGetValue(cellPId, out var cellP) && _cellDatas.TryGetValue(cellQId, out var cellQ))
+            if (
+                _cellDatas.TryGetValue(cellPId, out var cellP)
+                && _cellDatas.TryGetValue(cellQId, out var cellQ)
+            )
             {
                 if (cellP.PlateType == PlateType.Continent && cellQ.PlateType == PlateType.Oceans)
                 {
                     cellP.IsRiverMouth = true;
                     _riverMouths.Add(cellP.Index);
                 }
-                else if (cellP.PlateType == PlateType.Oceans && cellQ.PlateType == PlateType.Continent)
+                else if (
+                    cellP.PlateType == PlateType.Oceans
+                    && cellQ.PlateType == PlateType.Continent
+                )
                 {
                     cellQ.IsRiverMouth = true;
                     _riverMouths.Add(cellQ.Index);
@@ -437,7 +518,13 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
             DefaultCellArea = _cellArea,
         };
 
-        _fluvialEroder = new FluvialEroder(_cellDatas, _riverMouths, eroderSettings, GetNeighborCells, UniformDistance);
+        _fluvialEroder = new FluvialEroder(
+            _cellDatas,
+            _riverMouths,
+            eroderSettings,
+            GetNeighborCells,
+            UniformDistance
+        );
         _fluvialEroder.OnProgressReport += ReportProgress;
 
         _fluvialEroder.Erode();
@@ -452,35 +539,46 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
     {
         ReportProgress("Adjusting temperature");
 
-        Parallel.ForEach(_cellDatas.Values, cell =>
-        {
-            if (cell.Height > 0)
-                cell.Temperature -= cell.Height * Settings.TemperatureGradientWithAltitude;
-        });
+        Parallel.ForEach(
+            _cellDatas.Values,
+            cell =>
+            {
+                if (cell.Height > 0)
+                    cell.Temperature -= cell.Height * Settings.TemperatureGradientWithAltitude;
+            }
+        );
     }
 
     private void SetBiomes()
     {
         ReportProgress("Setting biomes");
 
-        Parallel.ForEach(_cellDatas.Values, cell =>
-        {
-            cell.Biome = BiomeLibrary.Instance.GetBiomeForConditions(cell.Temperature, cell.Precipitation,
-                cell.Height);
-        });
+        Parallel.ForEach(
+            _cellDatas.Values,
+            cell =>
+            {
+                cell.Biome = BiomeLibrary.Instance.GetBiomeForConditions(
+                    cell.Temperature,
+                    cell.Precipitation,
+                    cell.Height
+                );
+            }
+        );
     }
 
     #endregion
 
     #region Height Map
 
-    protected virtual double NoiseOverlay(double x, double y)
-    {
-        return _heightPattern.Evaluate(x, y);
-    }
+    protected virtual double NoiseOverlay(double x, double y) => _heightPattern.Evaluate(x, y);
 
-    public double GetRawHeight(double x, double y, bool loopDivision = true, bool domainWarping = false,
-        bool noiseOverlay = false)
+    public double GetRawHeight(
+        double x,
+        double y,
+        bool loopDivision = true,
+        bool domainWarping = false,
+        bool noiseOverlay = false
+    )
     {
         var point = new Vector2(x, y);
         if (domainWarping)
@@ -500,9 +598,15 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
             var p1 = _points[i1];
             var p2 = _points[i2];
 
-            height = LinearInterpolator.Interpolate(p0, p1, p2,
-                CellDatas[i0].Height, CellDatas[i1].Height, CellDatas[i2].Height,
-                new Vector2(x, y));
+            height = LinearInterpolator.Interpolate(
+                p0,
+                p1,
+                p2,
+                CellDatas[i0].Height,
+                CellDatas[i1].Height,
+                CellDatas[i2].Height,
+                new Vector2(x, y)
+            );
         }
 
         if (noiseOverlay)
@@ -510,35 +614,43 @@ public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
         return height;
     }
 
-    public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
-        int upscaleLevel = 2)
+    public double[,] CalculateHeightMap(
+        int resolutionX,
+        int resolutionY,
+        Rect2I bounds,
+        bool parallel = false,
+        int upscaleLevel = 2
+    )
     {
         if (State != WorldGenerationState.Ready)
             throw new InvalidOperationException("World generation is not completed yet.");
 
-        return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, (x, y) => GetRawHeight(x, y),
-            parallel, upscaleLevel);
+        return HeightMapUtils.ConstructHeightMap(
+            resolutionX,
+            resolutionY,
+            bounds,
+            (x, y) => GetRawHeight(x, y),
+            parallel,
+            upscaleLevel
+        );
     }
 
-    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY)
-    {
-        return CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
-    }
+    public double[,] CalculateFullHeightMap(int resolutionX, int resolutionY) =>
+        CalculateHeightMap(resolutionX, resolutionY, Settings.Bounds, true);
 
     public ImageTexture GetFullHeightMapImageTexture(int resolutionX, int resolutionY)
     {
         var heightMap = CalculateFullHeightMap(resolutionX, resolutionY);
         var image = Image.CreateEmpty(resolutionX, resolutionY, false, Image.Format.Rgb8);
         for (var x = 0; x < resolutionX; x++)
-            for (var y = 0; y < resolutionY; y++)
-            {
-                var h = (float)(0.5 * (1 + heightMap[x, y] / MaxHeight));
-                image.SetPixel(x, y, new Color(h, h, h));
-            }
+        for (var y = 0; y < resolutionY; y++)
+        {
+            var h = (float)(0.5 * (1 + heightMap[x, y] / MaxHeight));
+            image.SetPixel(x, y, new Color(h, h, h));
+        }
 
         return ImageTexture.CreateFromImage(image);
     }
 
     #endregion
-
 }

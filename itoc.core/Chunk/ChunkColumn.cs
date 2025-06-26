@@ -27,7 +27,9 @@ public class ChunkColumn
         set
         {
             if (_isSurfaceChunksGenerated)
-                throw new InvalidOperationException("Surface chunks have already been generated for this column.");
+                throw new InvalidOperationException(
+                    "Surface chunks have already been generated for this column."
+                );
 
             _isSurfaceChunksGenerated = value;
         }
@@ -36,9 +38,7 @@ public class ChunkColumn
     // Biome map storage using Palette system
     private readonly PaletteArray<Biome> _biomes;
 
-    private ChunkColumn()
-    {
-    }
+    private ChunkColumn() { }
 
     public ChunkColumn(Vector2I index, PaletteArray<Biome> biomes)
     {
@@ -60,10 +60,7 @@ public class ChunkColumn
         return index;
     }
 
-    private Biome GetBiomeFromPalette(int x, int z)
-    {
-        return _biomes[GetBiomeIndex(x, z)];
-    }
+    private Biome GetBiomeFromPalette(int x, int z) => _biomes[GetBiomeIndex(x, z)];
 
     /// <summary>
     ///     Get the interpolated biome weights at the given normalized position within the chunk
@@ -91,14 +88,22 @@ public class ChunkColumn
         var bottomRightBiome = GetBiomeFromPalette(x1, z1);
 
         // Calculate weights for each corner
-        var weightTopLeft =
-            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z0, 2)), 0);
-        var weightTopRight =
-            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z0, 2)), 0);
-        var weightBottomLeft =
-            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z1, 2)), 0);
-        var weightBottomRight =
-            Mathf.Max(1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z1, 2)), 0);
+        var weightTopLeft = Mathf.Max(
+            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z0, 2)),
+            0
+        );
+        var weightTopRight = Mathf.Max(
+            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z0, 2)),
+            0
+        );
+        var weightBottomLeft = Mathf.Max(
+            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z1, 2)),
+            0
+        );
+        var weightBottomRight = Mathf.Max(
+            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z1, 2)),
+            0
+        );
         var totalWeight = weightTopLeft + weightTopRight + weightBottomLeft + weightBottomRight;
 
         // Add weights to the dictionary
@@ -110,9 +115,14 @@ public class ChunkColumn
         return biomeWeights;
     }
 
-    private static void AddOrUpdateWeight(Dictionary<Biome, double> weights, Biome biome, double weight)
+    private static void AddOrUpdateWeight(
+        Dictionary<Biome, double> weights,
+        Biome biome,
+        double weight
+    )
     {
-        if (weight <= 0) return;
+        if (weight <= 0)
+            return;
 
         if (weights.ContainsKey(biome))
             weights[biome] += weight;

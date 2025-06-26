@@ -18,8 +18,5 @@ public partial class WorldNode : Node
         AddChild(chunkInstantiator);
     }
 
-    public override void _PhysicsProcess(double delta)
-    {
-        _world.OnPhysicsProcess(delta);
-    }
+    public override void _PhysicsProcess(double delta) => _world.OnPhysicsProcess(delta);
 }

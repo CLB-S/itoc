@@ -56,7 +56,8 @@ public partial class CommandConsole : Node
     private void RegisterCommands()
     {
         // Teleport command
-        var teleportCommand = CommandBuilder.Create("tp", "Teleport to coordinates or to another player", "command.teleport")
+        var teleportCommand = CommandBuilder
+            .Create("tp", "Teleport to coordinates or to another player", "command.teleport")
             .WithArgument("x", new FloatArgumentType(), "X coordinate")
             .WithArgument("y", new FloatArgumentType(), "Y coordinate")
             .WithArgument("z", new FloatArgumentType(), "Z coordinate")
@@ -78,10 +79,16 @@ public partial class CommandConsole : Node
         _commandDispatcher.RegisterCommand(teleportCommand);
 
         // Give command with custom item type
-        var giveCommand = CommandBuilder.Create("give", "Give an item to a player", "command.give")
+        var giveCommand = CommandBuilder
+            .Create("give", "Give an item to a player", "command.give")
             .WithArgument("player", new PlayerArgumentType(), "Player name")
             .WithArgument("item", new ItemArgumentType(), "Item to give")
-            .WithOptionalArgument("amount", new IntegerArgumentType(1, 100), 1, "Amount to give (1-100)")
+            .WithOptionalArgument(
+                "amount",
+                new IntegerArgumentType(1, 100),
+                1,
+                "Amount to give (1-100)"
+            )
             .Executes(context =>
             {
                 var player = (string)context.Arguments["player"];
@@ -99,7 +106,8 @@ public partial class CommandConsole : Node
         _commandDispatcher.RegisterCommand(giveCommand);
 
         // Time command with enum type
-        var timeCommand = CommandBuilder.Create("time", "Change the game time", "command.time")
+        var timeCommand = CommandBuilder
+            .Create("time", "Change the game time", "command.time")
             .WithArgument("value", new EnumArgumentType<TimeOfDay>(), "Time of day")
             .Executes(context =>
             {
@@ -116,59 +124,66 @@ public partial class CommandConsole : Node
         _commandDispatcher.RegisterCommand(timeCommand);
 
         // Team command
-        var teamCommand = CommandBuilder.Create("team", "Manage teams", "command.team")
+        var teamCommand = CommandBuilder
+            .Create("team", "Manage teams", "command.team")
             .Then("create", "Create a new team", "command.team.create")
-                .WithArgument("name", new StringArgumentType(), "Team name")
-                .WithOptionalArgument("color", new StringArgumentType(), "white", "Team color")
-                .Executes(context =>
-                {
-                    var name = (string)context.Arguments["name"];
-                    var color = (string)context.Arguments["color"];
+            .WithArgument("name", new StringArgumentType(), "Team name")
+            .WithOptionalArgument("color", new StringArgumentType(), "white", "Team color")
+            .Executes(context =>
+            {
+                var name = (string)context.Arguments["name"];
+                var color = (string)context.Arguments["color"];
 
-                    LogOutput($"Created team '{name}' with color '{color}'");
-                    return CommandResult.Success;
-                })
+                LogOutput($"Created team '{name}' with color '{color}'");
+                return CommandResult.Success;
+            })
             .EndCommand()
             .Then("add", "Add a player to a team", "command.team.add")
-                .WithArgument("team", new StringArgumentType(), "Team name")
-                .WithArgument("player", new StringArgumentType(), "Player name")
-                .Executes(context =>
-                {
-                    var team = (string)context.Arguments["team"];
-                    var player = (string)context.Arguments["player"];
+            .WithArgument("team", new StringArgumentType(), "Team name")
+            .WithArgument("player", new StringArgumentType(), "Player name")
+            .Executes(context =>
+            {
+                var team = (string)context.Arguments["team"];
+                var player = (string)context.Arguments["player"];
 
-                    LogOutput($"Added player '{player}' to team '{team}'");
-                    return CommandResult.Success;
-                })
+                LogOutput($"Added player '{player}' to team '{team}'");
+                return CommandResult.Success;
+            })
             .EndCommand()
             .Then("remove", "Remove a player from their team", "command.team.remove")
-                .WithArgument("player", new StringArgumentType(), "Player name")
-                .Executes(context =>
-                {
-                    var player = (string)context.Arguments["player"];
+            .WithArgument("player", new StringArgumentType(), "Player name")
+            .Executes(context =>
+            {
+                var player = (string)context.Arguments["player"];
 
-                    LogOutput($"Removed player '{player}' from their team");
-                    return CommandResult.Success;
-                })
+                LogOutput($"Removed player '{player}' from their team");
+                return CommandResult.Success;
+            })
             .EndCommand()
             .Then("list", "List all teams or members of a team", "command.team.list")
-                .WithOptionalArgument("team", new StringArgumentType(), null, "Team name (optional)")
-                .Executes(context =>
-                {
-                    if (context.Arguments.TryGetValue("team", out var team) && team != null)
-                        LogOutput($"Listing members of team '{team}'");
-                    else
-                        LogOutput("Listing all teams");
+            .WithOptionalArgument("team", new StringArgumentType(), null, "Team name (optional)")
+            .Executes(context =>
+            {
+                if (context.Arguments.TryGetValue("team", out var team) && team != null)
+                    LogOutput($"Listing members of team '{team}'");
+                else
+                    LogOutput("Listing all teams");
 
-                    return CommandResult.Success;
-                })
+                return CommandResult.Success;
+            })
             .Build();
 
         _commandDispatcher.RegisterCommand(teamCommand);
 
         // Help command
-        var helpCommand = CommandBuilder.Create("help", "Show available commands", "command.help", "?")
-            .WithOptionalArgument("command", new StringArgumentType(), null, "Command to get help for")
+        var helpCommand = CommandBuilder
+            .Create("help", "Show available commands", "command.help", "?")
+            .WithOptionalArgument(
+                "command",
+                new StringArgumentType(),
+                null,
+                "Command to get help for"
+            )
             .Executes(context =>
             {
                 if (context.Arguments.TryGetValue("command", out var cmdName) && cmdName != null)
@@ -195,10 +210,7 @@ public partial class CommandConsole : Node
         _commandDispatcher.RegisterCommand(helpCommand);
     }
 
-    private void OnInputTextChanged(string text)
-    {
-        UpdateSuggestions(text);
-    }
+    private void OnInputTextChanged(string text) => UpdateSuggestions(text);
 
     private async void OnInputSubmitted(string text)
     {
@@ -269,7 +281,7 @@ public partial class CommandConsole : Node
 
     private void RelocateSuggestionsList(string text)
     {
-        // Reset size to zero to get auto-sizing right. 
+        // Reset size to zero to get auto-sizing right.
         _suggestionsList.Size = Vector2.Zero;
 
         var font = _inputLineEdit.GetThemeDefaultFont();
@@ -302,6 +314,6 @@ public partial class CommandConsole : Node
         Afternoon,
         Dusk,
         Night,
-        Midnight
+        Midnight,
     }
 }

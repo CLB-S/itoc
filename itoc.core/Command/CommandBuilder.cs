@@ -7,10 +7,8 @@ public class CommandBuilder
 {
     private CommandNode _currentNode;
 
-    private CommandBuilder(CommandNode node)
-    {
+    private CommandBuilder(CommandNode node) =>
         _currentNode = node ?? throw new ArgumentNullException(nameof(node));
-    }
 
     /// <summary>
     /// Starts building a new command
@@ -20,10 +18,12 @@ public class CommandBuilder
     /// <param name="permission">Permission required to use the command</param>
     /// <param name="aliases">Alternative names for the command</param>
     /// <returns>A new command builder</returns>
-    public static CommandBuilder Create(string name, string description = "", string permission = null, params string[] aliases)
-    {
-        return new CommandBuilder(new CommandNode(name, description, permission, aliases));
-    }
+    public static CommandBuilder Create(
+        string name,
+        string description = "",
+        string permission = null,
+        params string[] aliases
+    ) => new CommandBuilder(new CommandNode(name, description, permission, aliases));
 
     /// <summary>
     /// Adds a subcommand to the current command
@@ -33,7 +33,12 @@ public class CommandBuilder
     /// <param name="permission">Permission required to use the subcommand</param>
     /// <param name="aliases">Alternative names for the subcommand</param>
     /// <returns>A builder for the subcommand</returns>
-    public CommandBuilder Then(string name, string description = "", string permission = null, params string[] aliases)
+    public CommandBuilder Then(
+        string name,
+        string description = "",
+        string permission = null,
+        params string[] aliases
+    )
     {
         var subCommand = new CommandNode(name, description, permission, aliases);
         _currentNode.Then(subCommand);
@@ -48,12 +53,21 @@ public class CommandBuilder
     /// <param name="description">Description of the argument</param>
     /// <param name="suggestionsOverride">Optional override for suggestions</param>
     /// <returns>This builder</returns>
-    public CommandBuilder WithArgument(string name, IArgumentType type, string description = "", string[] suggestionsOverride = null)
+    public CommandBuilder WithArgument(
+        string name,
+        IArgumentType type,
+        string description = "",
+        string[] suggestionsOverride = null
+    )
     {
         if (_currentNode.Arguments.Count != 0 && !_currentNode.Arguments[^1].IsRequired)
-            throw new InvalidOperationException("Cannot add a required argument after an optional one. Use WithOptionalArgument for optional arguments.");
+            throw new InvalidOperationException(
+                "Cannot add a required argument after an optional one. Use WithOptionalArgument for optional arguments."
+            );
 
-        _currentNode.WithArgument(new CommandArgument(name, type, description, suggestionsOverride, true));
+        _currentNode.WithArgument(
+            new CommandArgument(name, type, description, suggestionsOverride, true)
+        );
         return this;
     }
 
@@ -66,9 +80,17 @@ public class CommandBuilder
     /// <param name="description">Description of the argument</param>
     /// <param name="suggestionsOverride">Optional override for suggestions</param>
     /// <returns>This builder</returns>
-    public CommandBuilder WithOptionalArgument(string name, IArgumentType type, object defaultValue, string description = "", string[] suggestionsOverride = null)
+    public CommandBuilder WithOptionalArgument(
+        string name,
+        IArgumentType type,
+        object defaultValue,
+        string description = "",
+        string[] suggestionsOverride = null
+    )
     {
-        _currentNode.WithArgument(new CommandArgument(name, type, description, suggestionsOverride, false, defaultValue));
+        _currentNode.WithArgument(
+            new CommandArgument(name, type, description, suggestionsOverride, false, defaultValue)
+        );
         return this;
     }
 
@@ -88,21 +110,19 @@ public class CommandBuilder
     /// </summary>
     /// <param name="executor">Function to execute when the command is run</param>
     /// <returns>This builder</returns>
-    public CommandBuilder Executes(Func<CommandContext, CommandResult> executor)
-    {
-        return Executes(ctx => Task.FromResult(executor(ctx)));
-    }
+    public CommandBuilder Executes(Func<CommandContext, CommandResult> executor) =>
+        Executes(ctx => Task.FromResult(executor(ctx)));
 
     /// <summary>
     /// Returns to the parent command builder
     /// </summary>
     /// <returns>The parent command builder</returns>
-    public CommandBuilder EndCommand()
-    {
-        return _currentNode.Parent == null
-            ? throw new InvalidOperationException("This is a root command, there is no parent to return to")
+    public CommandBuilder EndCommand() =>
+        _currentNode.Parent == null
+            ? throw new InvalidOperationException(
+                "This is a root command, there is no parent to return to"
+            )
             : new CommandBuilder(_currentNode.Parent);
-    }
 
     /// <summary>
     /// Builds and returns the command node

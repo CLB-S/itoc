@@ -29,9 +29,7 @@ public class CompositeTask : GameTask
     /// <param name="name">The name of the task.</param>
     /// <param name="priority">The priority of the task.</param>
     public CompositeTask(string name = null, TaskPriority priority = TaskPriority.Normal)
-        : base(name, priority)
-    {
-    }
+        : base(name, priority) { }
 
     /// <summary>
     /// Adds a task to be executed as part of this composite task.
@@ -41,7 +39,9 @@ public class CompositeTask : GameTask
     public CompositeTask AddTask(GameTask task)
     {
         if (_isBuilt)
-            throw new InvalidOperationException("Cannot modify task structure after build has been called.");
+            throw new InvalidOperationException(
+                "Cannot modify task structure after build has been called."
+            );
 
         ArgumentNullException.ThrowIfNull(task);
 
@@ -68,7 +68,9 @@ public class CompositeTask : GameTask
     public CompositeTask AddDependency(GameTask prerequisiteTask, GameTask dependentTask)
     {
         if (_isBuilt)
-            throw new InvalidOperationException("Cannot modify task structure after build has been called.");
+            throw new InvalidOperationException(
+                "Cannot modify task structure after build has been called."
+            );
 
         ArgumentNullException.ThrowIfNull(prerequisiteTask);
         ArgumentNullException.ThrowIfNull(dependentTask);
@@ -156,7 +158,10 @@ public class CompositeTask : GameTask
             try
             {
                 // Update progress
-                ReportProgress((_completedTasks * 100) / _totalTasks, $"Executing sub-task {_completedTasks + 1} of {_totalTasks}: {currentTask.Name}");
+                ReportProgress(
+                    (_completedTasks * 100) / _totalTasks,
+                    $"Executing sub-task {_completedTasks + 1} of {_totalTasks}: {currentTask.Name}"
+                );
 
                 // Reset the task state if needed
                 if (currentTask.State != TaskState.Created)
@@ -174,7 +179,9 @@ public class CompositeTask : GameTask
                     // Special handling for failed tasks
                     if (currentTask.State == TaskState.Failed)
                     {
-                        throw new InvalidOperationException($"Sub-task '{currentTask.Name}' failed: {currentTask.Exception?.Message} \n {currentTask.Exception?.StackTrace}");
+                        throw new InvalidOperationException(
+                            $"Sub-task '{currentTask.Name}' failed: {currentTask.Exception?.Message} \n {currentTask.Exception?.StackTrace}"
+                        );
                     }
                     continue;
                 }
@@ -208,7 +215,9 @@ public class CompositeTask : GameTask
         // Check if all tasks completed
         if (_completedTasks < _totalTasks)
         {
-            throw new InvalidOperationException($"Not all sub-tasks completed. Expected {_totalTasks}, but only {_completedTasks} finished.");
+            throw new InvalidOperationException(
+                $"Not all sub-tasks completed. Expected {_totalTasks}, but only {_completedTasks} finished."
+            );
         }
 
         ReportProgress(100, "All sub-tasks completed successfully");
@@ -244,7 +253,10 @@ public class CompositeTask : GameTask
             {
                 foreach (var dependentId in dependents)
                 {
-                    if (!visited.Contains(dependentId) && IsCyclicUtil(dependentId, visited, recursionStack))
+                    if (
+                        !visited.Contains(dependentId)
+                        && IsCyclicUtil(dependentId, visited, recursionStack)
+                    )
                     {
                         return true;
                     }

@@ -12,7 +12,8 @@ public class World : NodeAdapter
     public ChunkManager ChunkManager => Generator.ChunkGenerator.ChunkManager;
     public WorldSettings Settings => Generator.WorldSettings; // TODO: Revise this later.
 
-    public World(Node node, IWorldGenerator generator) : base(node)
+    public World(Node node, IWorldGenerator generator)
+        : base(node)
     {
         Generator = generator;
 
@@ -51,7 +52,8 @@ public class World : NodeAdapter
     public Block GetBlockAt(Vector3I position)
     {
         var chunk = GetChunkAt(WorldPositionToChunkIndex(position));
-        if (chunk == null) return null;
+        if (chunk == null)
+            return null;
 
         var localPos = WorldToLocalPosition(position);
         return chunk.GetBlock(localPos.X, localPos.Y, localPos.Z);
@@ -60,10 +62,15 @@ public class World : NodeAdapter
     public Block GetBlockAt(Vector3 worldPos)
     {
         var chunk = GetChunkAt(worldPos);
-        if (chunk == null) return null;
+        if (chunk == null)
+            return null;
 
         var localPos = WorldToLocalPosition(worldPos);
-        return chunk.GetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z));
+        return chunk.GetBlock(
+            Mathf.FloorToInt(localPos.X),
+            Mathf.FloorToInt(localPos.Y),
+            Mathf.FloorToInt(localPos.Z)
+        );
     }
 
     #endregion
@@ -80,10 +87,16 @@ public class World : NodeAdapter
     public void SetBlock(Vector3 worldPos, Block block)
     {
         var chunk = GetChunkAt(worldPos);
-        if (chunk == null) return;
+        if (chunk == null)
+            return;
 
         var localPos = WorldToLocalPosition(worldPos);
-        chunk.SetBlock(Mathf.FloorToInt(localPos.X), Mathf.FloorToInt(localPos.Y), Mathf.FloorToInt(localPos.Z), block);
+        chunk.SetBlock(
+            Mathf.FloorToInt(localPos.X),
+            Mathf.FloorToInt(localPos.Y),
+            Mathf.FloorToInt(localPos.Z),
+            block
+        );
     }
 
     #endregion
@@ -91,49 +104,35 @@ public class World : NodeAdapter
 
     #region Utility methods
 
-    public static Vector3I WorldPositionToChunkIndex(Vector3 worldPos)
-    {
-        return new Vector3I(
+    public static Vector3I WorldPositionToChunkIndex(Vector3 worldPos) =>
+        new Vector3I(
             Mathf.FloorToInt(worldPos.X / Chunk.SIZE),
             Mathf.FloorToInt(worldPos.Y / Chunk.SIZE),
             Mathf.FloorToInt(worldPos.Z / Chunk.SIZE)
         );
-    }
 
-    public static Vector3I WorldToLocalPosition(Vector3I worldPos)
-    {
-        return new Vector3I(
+    public static Vector3I WorldToLocalPosition(Vector3I worldPos) =>
+        new Vector3I(
             Mathf.PosMod(worldPos.X, Chunk.SIZE),
             Mathf.PosMod(worldPos.Y, Chunk.SIZE),
             Mathf.PosMod(worldPos.Z, Chunk.SIZE)
         );
-    }
 
-    public static Vector3 WorldToLocalPosition(Vector3 worldPos)
-    {
-        return new Vector3(
+    public static Vector3 WorldToLocalPosition(Vector3 worldPos) =>
+        new Vector3(
             Mathf.PosMod(worldPos.X, Chunk.SIZE),
             Mathf.PosMod(worldPos.Y, Chunk.SIZE),
             Mathf.PosMod(worldPos.Z, Chunk.SIZE)
         );
-    }
 
-    public static Vector2I WorldToChunkIndex(Vector2 worldPos)
-    {
-        return new Vector2I(
+    public static Vector2I WorldToChunkIndex(Vector2 worldPos) =>
+        new Vector2I(
             Mathf.FloorToInt(worldPos.X / Chunk.SIZE),
             Mathf.FloorToInt(worldPos.Y / Chunk.SIZE)
         );
-    }
 
-    public static Vector2 WorldToLocalPosition(Vector2 worldPos)
-    {
-        return new Vector2(
-            Mathf.PosMod(worldPos.X, Chunk.SIZE),
-            Mathf.PosMod(worldPos.Y, Chunk.SIZE)
-        );
-    }
+    public static Vector2 WorldToLocalPosition(Vector2 worldPos) =>
+        new Vector2(Mathf.PosMod(worldPos.X, Chunk.SIZE), Mathf.PosMod(worldPos.Y, Chunk.SIZE));
 
     #endregion
-
 }

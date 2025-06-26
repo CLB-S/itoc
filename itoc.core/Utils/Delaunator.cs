@@ -64,7 +64,8 @@ public class Delaunator
 
     public Delaunator(Vector2[] points)
     {
-        if (points.Length < 3) throw new ArgumentOutOfRangeException("Need at least 3 points");
+        if (points.Length < 3)
+            throw new ArgumentOutOfRangeException("Need at least 3 points");
 
         Points = points;
         coords = new double[Points.Length * 2];
@@ -100,10 +101,14 @@ public class Delaunator
         {
             var x = coords[2 * i];
             var y = coords[2 * i + 1];
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
+            if (x < minX)
+                minX = x;
+            if (y < minY)
+                minY = y;
+            if (x > maxX)
+                maxX = x;
+            if (y > maxY)
+                maxY = y;
             ids[i] = i;
         }
 
@@ -134,7 +139,8 @@ public class Delaunator
         // find the point closest to the seed
         for (var i = 0; i < n; i++)
         {
-            if (i == i0) continue;
+            if (i == i0)
+                continue;
             var d = Dist(i0x, i0y, coords[2 * i], coords[2 * i + 1]);
             if (d < minDist && d > 0)
             {
@@ -151,7 +157,8 @@ public class Delaunator
         // find the third point which forms the smallest circumcircle with the first two
         for (var i = 0; i < n; i++)
         {
-            if (i == i0 || i == i1) continue;
+            if (i == i0 || i == i1)
+                continue;
             var r = Circumradius(i0x, i0y, i1x, i1y, coords[2 * i], coords[2 * i + 1]);
             if (r < minRadius)
             {
@@ -184,7 +191,8 @@ public class Delaunator
         this.cy = center.Y;
 
         var dists = new double[n];
-        for (var i = 0; i < n; i++) dists[i] = Dist(coords[2 * i], coords[2 * i + 1], center.X, center.Y);
+        for (var i = 0; i < n; i++)
+            dists[i] = Dist(coords[2 * i], coords[2 * i + 1], center.X, center.Y);
 
         // sort the points by distance from the seed triangle circumcenter
         Quicksort(ids, dists, 0, n - 1);
@@ -218,12 +226,14 @@ public class Delaunator
             var y = coords[2 * i + 1];
 
             // skip near-duplicate points
-            if (k > 0 && Mathf.Abs(x - xp) <= EPSILON && Mathf.Abs(y - yp) <= EPSILON) continue;
+            if (k > 0 && Mathf.Abs(x - xp) <= EPSILON && Mathf.Abs(y - yp) <= EPSILON)
+                continue;
             xp = x;
             yp = y;
 
             // skip seed triangle points
-            if (i == i0 || i == i1 || i == i2) continue;
+            if (i == i0 || i == i1 || i == i2)
+                continue;
 
             // find a visible edge on the convex hull using edge hash
             var start = 0;
@@ -231,15 +241,17 @@ public class Delaunator
             {
                 var key = HashKey(x, y);
                 start = hullHash[(key + j) % hashSize];
-                if (start != -1 && start != hullNext[start]) break;
+                if (start != -1 && start != hullNext[start])
+                    break;
             }
-
 
             start = hullPrev[start];
             var e = start;
             var q = hullNext[e];
 
-            while (!Orient(x, y, coords[2 * e], coords[2 * e + 1], coords[2 * q], coords[2 * q + 1]))
+            while (
+                !Orient(x, y, coords[2 * e], coords[2 * e + 1], coords[2 * q], coords[2 * q + 1])
+            )
             {
                 e = q;
                 if (e == start)
@@ -251,7 +263,8 @@ public class Delaunator
                 q = hullNext[e];
             }
 
-            if (e == int.MaxValue) continue; // likely a near-duplicate point; skip it
+            if (e == int.MaxValue)
+                continue; // likely a near-duplicate point; skip it
 
             // add the first triangle from the point
             var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
@@ -265,7 +278,16 @@ public class Delaunator
             var next = hullNext[e];
             q = hullNext[next];
 
-            while (Orient(x, y, coords[2 * next], coords[2 * next + 1], coords[2 * q], coords[2 * q + 1]))
+            while (
+                Orient(
+                    x,
+                    y,
+                    coords[2 * next],
+                    coords[2 * next + 1],
+                    coords[2 * q],
+                    coords[2 * q + 1]
+                )
+            )
             {
                 t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
                 hullTri[i] = Legalize(t + 2);
@@ -281,7 +303,9 @@ public class Delaunator
             {
                 q = hullPrev[e];
 
-                while (Orient(x, y, coords[2 * q], coords[2 * q + 1], coords[2 * e], coords[2 * e + 1]))
+                while (
+                    Orient(x, y, coords[2 * q], coords[2 * q + 1], coords[2 * e], coords[2 * e + 1])
+                )
                 {
                     t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
                     Legalize(t + 2);
@@ -373,7 +397,8 @@ public class Delaunator
             if (b == -1)
             {
                 // convex hull edge
-                if (i == 0) break;
+                if (i == 0)
+                    break;
                 a = EDGE_STACK[--i];
                 continue;
             }
@@ -388,10 +413,15 @@ public class Delaunator
             var p1 = Triangles[bl];
 
             var illegal = InCircle(
-                coords[2 * p0], coords[2 * p0 + 1],
-                coords[2 * pr], coords[2 * pr + 1],
-                coords[2 * pl], coords[2 * pl + 1],
-                coords[2 * p1], coords[2 * p1 + 1]);
+                coords[2 * p0],
+                coords[2 * p0 + 1],
+                coords[2 * pr],
+                coords[2 * pr + 1],
+                coords[2 * pl],
+                coords[2 * pl + 1],
+                coords[2 * p1],
+                coords[2 * p1 + 1]
+            );
 
             if (illegal)
             {
@@ -423,11 +453,13 @@ public class Delaunator
                 var br = b0 + (b + 1) % 3;
 
                 // don't worry about hitting the cap: it can only happen on extremely degenerate input
-                if (i < EDGE_STACK.Length) EDGE_STACK[i++] = br;
+                if (i < EDGE_STACK.Length)
+                    EDGE_STACK[i++] = br;
             }
             else
             {
-                if (i == 0) break;
+                if (i == 0)
+                    break;
                 a = EDGE_STACK[--i];
             }
         }
@@ -435,7 +467,16 @@ public class Delaunator
         return ar;
     }
 
-    private static bool InCircle(double ax, double ay, double bx, double by, double cx, double cy, double px, double py)
+    private static bool InCircle(
+        double ax,
+        double ay,
+        double bx,
+        double by,
+        double cx,
+        double cy,
+        double px,
+        double py
+    )
     {
         var dx = ax - px;
         var dy = ay - py;
@@ -448,9 +489,7 @@ public class Delaunator
         var bp = ex * ex + ey * ey;
         var cp = fx * fx + fy * fy;
 
-        return dx * (ey * cp - bp * fy) -
-            dy * (ex * cp - bp * fx) +
-            ap * (ex * fy - ey * fx) < 0;
+        return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
     }
 
     private int AddTriangle(int i0, int i1, int i2, int a, int b, int c)
@@ -472,13 +511,12 @@ public class Delaunator
     private void Link(int a, int b)
     {
         Halfedges[a] = b;
-        if (b != -1) Halfedges[b] = a;
+        if (b != -1)
+            Halfedges[b] = a;
     }
 
-    private int HashKey(double x, double y)
-    {
-        return Mathf.FloorToInt(PseudoAngle(x - cx, y - cy) * hashSize) % hashSize;
-    }
+    private int HashKey(double x, double y) =>
+        Mathf.FloorToInt(PseudoAngle(x - cx, y - cy) * hashSize) % hashSize;
 
     private static double PseudoAngle(double dx, double dy)
     {
@@ -495,7 +533,8 @@ public class Delaunator
                 var temp = ids[i];
                 var tempDist = dists[temp];
                 var j = i - 1;
-                while (j >= left && dists[ids[j]] > tempDist) ids[j + 1] = ids[j--];
+                while (j >= left && dists[ids[j]] > tempDist)
+                    ids[j + 1] = ids[j--];
                 ids[j + 1] = temp;
             }
         }
@@ -505,9 +544,12 @@ public class Delaunator
             var i = left + 1;
             var j = right;
             Swap(ids, median, i);
-            if (dists[ids[left]] > dists[ids[right]]) Swap(ids, left, right);
-            if (dists[ids[i]] > dists[ids[right]]) Swap(ids, i, right);
-            if (dists[ids[left]] > dists[ids[i]]) Swap(ids, left, i);
+            if (dists[ids[left]] > dists[ids[right]])
+                Swap(ids, left, right);
+            if (dists[ids[i]] > dists[ids[right]])
+                Swap(ids, i, right);
+            if (dists[ids[left]] > dists[ids[i]])
+                Swap(ids, left, i);
 
             var temp = ids[i];
             var tempDist = dists[temp];
@@ -523,7 +565,8 @@ public class Delaunator
                     j--;
                 } while (dists[ids[j]] > tempDist);
 
-                if (j < i) break;
+                if (j < i)
+                    break;
                 Swap(ids, i, j);
             }
 
@@ -550,12 +593,17 @@ public class Delaunator
         arr[j] = tmp;
     }
 
-    private static bool Orient(double px, double py, double qx, double qy, double rx, double ry)
-    {
-        return (qy - py) * (rx - qx) - (qx - px) * (ry - qy) < 0;
-    }
+    private static bool Orient(double px, double py, double qx, double qy, double rx, double ry) =>
+        (qy - py) * (rx - qx) - (qx - px) * (ry - qy) < 0;
 
-    private static double Circumradius(double ax, double ay, double bx, double by, double cx, double cy)
+    private static double Circumradius(
+        double ax,
+        double ay,
+        double bx,
+        double by,
+        double cx,
+        double cy
+    )
     {
         var dx = bx - ax;
         var dy = by - ay;
@@ -569,7 +617,14 @@ public class Delaunator
         return x * x + y * y;
     }
 
-    private static Vector2 Circumcenter(double ax, double ay, double bx, double by, double cx, double cy)
+    private static Vector2 Circumcenter(
+        double ax,
+        double ay,
+        double bx,
+        double by,
+        double cx,
+        double cy
+    )
     {
         var dx = bx - ax;
         var dy = by - ay;
@@ -597,7 +652,8 @@ public class Delaunator
 
     public IEnumerable<Triangle> GetTriangles()
     {
-        for (var t = 0; t < Triangles.Length / 3; t++) yield return new Triangle(t, GetTrianglePoints(t));
+        for (var t = 0; t < Triangles.Length / 3; t++)
+            yield return new Triangle(t, GetTrianglePoints(t));
     }
 
     public IEnumerable<Edge> GetEdges()
@@ -613,7 +669,8 @@ public class Delaunator
 
     public IEnumerable<Edge> GetVoronoiEdges(Func<int, Vector2> triangleVerticeSelector = null)
     {
-        if (triangleVerticeSelector == null) triangleVerticeSelector = x => GetCentroid(x);
+        if (triangleVerticeSelector == null)
+            triangleVerticeSelector = x => GetCentroid(x);
         for (var e = 0; e < Triangles.Length; e++)
             if (e < Halfedges[e])
             {
@@ -623,19 +680,17 @@ public class Delaunator
             }
     }
 
-    public IEnumerable<Edge> GetVoronoiEdgesBasedOnCircumCenter()
-    {
-        return GetVoronoiEdges(GetTriangleCircumcenter);
-    }
+    public IEnumerable<Edge> GetVoronoiEdgesBasedOnCircumCenter() =>
+        GetVoronoiEdges(GetTriangleCircumcenter);
 
-    public IEnumerable<Edge> GetVoronoiEdgesBasedOnCentroids()
-    {
-        return GetVoronoiEdges(GetCentroid);
-    }
+    public IEnumerable<Edge> GetVoronoiEdgesBasedOnCentroids() => GetVoronoiEdges(GetCentroid);
 
-    public IEnumerable<VoronoiCell> GetVoronoiCells(Func<int, Vector2> triangleVerticeSelector = null)
+    public IEnumerable<VoronoiCell> GetVoronoiCells(
+        Func<int, Vector2> triangleVerticeSelector = null
+    )
     {
-        if (triangleVerticeSelector == null) triangleVerticeSelector = x => GetCentroid(x);
+        if (triangleVerticeSelector == null)
+            triangleVerticeSelector = x => GetCentroid(x);
 
         var seen = new HashSet<int>();
         var vertices = new List<Vector2>(10); // Keep it outside the loop, reuse capacity, less resizes.
@@ -655,49 +710,39 @@ public class Delaunator
         }
     }
 
-    public IEnumerable<VoronoiCell> GetVoronoiCellsBasedOnCircumcenters()
-    {
-        return GetVoronoiCells(GetTriangleCircumcenter);
-    }
+    public IEnumerable<VoronoiCell> GetVoronoiCellsBasedOnCircumcenters() =>
+        GetVoronoiCells(GetTriangleCircumcenter);
 
-    public IEnumerable<VoronoiCell> GetVoronoiCellsBasedOnCentroids()
-    {
-        return GetVoronoiCells(GetCentroid);
-    }
+    public IEnumerable<VoronoiCell> GetVoronoiCellsBasedOnCentroids() =>
+        GetVoronoiCells(GetCentroid);
 
-    public IEnumerable<Edge> GetHullEdges()
-    {
-        return CreateHull(GetHullPoints());
-    }
+    public IEnumerable<Edge> GetHullEdges() => CreateHull(GetHullPoints());
 
-    public Vector2[] GetHullPoints()
-    {
-        return Array.ConvertAll(Hull, x => Points[x]);
-    }
+    public Vector2[] GetHullPoints() => Array.ConvertAll(Hull, x => Points[x]);
 
     public Vector2[] GetTrianglePoints(int t)
     {
         var points = new List<Vector2>();
-        foreach (var p in PointsOfTriangle(t)) points.Add(Points[p]);
+        foreach (var p in PointsOfTriangle(t))
+            points.Add(Points[p]);
         return points.ToArray();
     }
 
     public Vector2[] GetRellaxedPoints()
     {
         var points = new List<Vector2>();
-        foreach (var cell in GetVoronoiCellsBasedOnCircumcenters()) points.Add(GetCentroid(cell.Points));
+        foreach (var cell in GetVoronoiCellsBasedOnCircumcenters())
+            points.Add(GetCentroid(cell.Points));
         return points.ToArray();
     }
 
-    public IEnumerable<Edge> GetEdgesOfTriangle(int t)
-    {
-        return CreateHull(EdgesOfTriangle(t).Select(e => Points[Triangles[e]]));
-    }
+    public IEnumerable<Edge> GetEdgesOfTriangle(int t) =>
+        CreateHull(EdgesOfTriangle(t).Select(e => Points[Triangles[e]]));
 
-    public static IEnumerable<Edge> CreateHull(IEnumerable<Vector2> points)
-    {
-        return points.Zip(points.Skip(1).Append(points.FirstOrDefault()), (a, b) => new Edge(0, a, b)).OfType<Edge>();
-    }
+    public static IEnumerable<Edge> CreateHull(IEnumerable<Vector2> points) =>
+        points
+            .Zip(points.Skip(1).Append(points.FirstOrDefault()), (a, b) => new Edge(0, a, b))
+            .OfType<Edge>();
 
     public Vector2 GetTriangleCircumcenter(int t)
     {
@@ -711,10 +756,8 @@ public class Delaunator
         return GetCentroid(vertices);
     }
 
-    public static Vector2 GetCircumcenter(Vector2 a, Vector2 b, Vector2 c)
-    {
-        return Circumcenter(a.X, a.Y, b.X, b.Y, c.X, c.Y);
-    }
+    public static Vector2 GetCircumcenter(Vector2 a, Vector2 b, Vector2 c) =>
+        Circumcenter(a.X, a.Y, b.X, b.Y, c.X, c.Y);
 
     public static Vector2 GetCentroid(Vector2[] points)
     {
@@ -743,32 +786,41 @@ public class Delaunator
 
     public void ForEachTriangle(Action<Triangle> callback)
     {
-        foreach (var triangle in GetTriangles()) callback?.Invoke(triangle);
+        foreach (var triangle in GetTriangles())
+            callback?.Invoke(triangle);
     }
 
     public void ForEachTriangleEdge(Action<Edge> callback)
     {
-        foreach (var edge in GetEdges()) callback?.Invoke(edge);
+        foreach (var edge in GetEdges())
+            callback?.Invoke(edge);
     }
 
     public void ForEachVoronoiEdge(Action<Edge> callback)
     {
-        foreach (var edge in GetVoronoiEdges()) callback?.Invoke(edge);
+        foreach (var edge in GetVoronoiEdges())
+            callback?.Invoke(edge);
     }
 
     public void ForEachVoronoiCellBasedOnCentroids(Action<VoronoiCell> callback)
     {
-        foreach (var cell in GetVoronoiCellsBasedOnCentroids()) callback?.Invoke(cell);
+        foreach (var cell in GetVoronoiCellsBasedOnCentroids())
+            callback?.Invoke(cell);
     }
 
     public void ForEachVoronoiCellBasedOnCircumcenters(Action<VoronoiCell> callback)
     {
-        foreach (var cell in GetVoronoiCellsBasedOnCircumcenters()) callback?.Invoke(cell);
+        foreach (var cell in GetVoronoiCellsBasedOnCircumcenters())
+            callback?.Invoke(cell);
     }
 
-    public void ForEachVoronoiCell(Action<VoronoiCell> callback, Func<int, Vector2> triangleVertexSelector = null)
+    public void ForEachVoronoiCell(
+        Action<VoronoiCell> callback,
+        Func<int, Vector2> triangleVertexSelector = null
+    )
     {
-        foreach (var cell in GetVoronoiCells(triangleVertexSelector)) callback?.Invoke(cell);
+        foreach (var cell in GetVoronoiCells(triangleVertexSelector))
+            callback?.Invoke(cell);
     }
 
     #endregion ForEachMethods
@@ -794,7 +846,8 @@ public class Delaunator
     /// </summary>
     public IEnumerable<int> PointsOfTriangle(int t)
     {
-        foreach (var edge in EdgesOfTriangle(t)) yield return Triangles[edge];
+        foreach (var edge in EdgesOfTriangle(t))
+            yield return Triangles[edge];
     }
 
     /// <summary>
@@ -808,37 +861,26 @@ public class Delaunator
         foreach (var e in triangleEdges)
         {
             var opposite = Halfedges[e];
-            if (opposite >= 0) adjacentTriangles.Add(TriangleOfEdge(opposite));
+            if (opposite >= 0)
+                adjacentTriangles.Add(TriangleOfEdge(opposite));
         }
 
         return adjacentTriangles;
     }
 
-    public static int NextHalfedge(int e)
-    {
-        return e % 3 == 2 ? e - 2 : e + 1;
-    }
+    public static int NextHalfedge(int e) => e % 3 == 2 ? e - 2 : e + 1;
 
-    public static int PreviousHalfedge(int e)
-    {
-        return e % 3 == 0 ? e + 2 : e - 1;
-    }
+    public static int PreviousHalfedge(int e) => e % 3 == 0 ? e + 2 : e - 1;
 
     /// <summary>
     ///     Returns the three half-edges of a given triangle id.
     /// </summary>
-    public static int[] EdgesOfTriangle(int t)
-    {
-        return new[] { 3 * t, 3 * t + 1, 3 * t + 2 };
-    }
+    public static int[] EdgesOfTriangle(int t) => new[] { 3 * t, 3 * t + 1, 3 * t + 2 };
 
     /// <summary>
     ///     Returns the triangle id of a given half-edge.
     /// </summary>
-    public static int TriangleOfEdge(int e)
-    {
-        return e / 3;
-    }
+    public static int TriangleOfEdge(int e) => e / 3;
 
     #endregion Methods based on index
 }

@@ -19,7 +19,7 @@ public class PatternTreeJsonExample
             Frequency = 0.02,
             FractalType = FractalType.Fbm,
             FractalOctaves = 4,
-            Seed = 42
+            Seed = 42,
         };
         var noiseNode = new FastNoiseLiteNode(noiseSettings);
 
@@ -52,7 +52,8 @@ public class PatternTreeJsonExample
         var loadedTree = PatternTreeJsonConverter.Deserialize(json);
 
         // Demonstrate that the loaded tree gives the same results as the original
-        double x = 10.5, y = 20.3;
+        double x = 10.5,
+            y = 20.3;
         var originalValue = tree.Evaluate(x, y);
         var loadedValue = loadedTree.Evaluate(x, y);
 
@@ -77,7 +78,8 @@ public class PatternTreeJsonExample
         var loadedTree = PatternTreeJsonUtility.LoadFromFile(filePath);
 
         // Demonstrate that the loaded tree gives the same results as the original
-        double x = 10.5, y = 20.3;
+        double x = 10.5,
+            y = 20.3;
         var originalValue = tree.Evaluate(x, y);
         var loadedValue = loadedTree.Evaluate(x, y);
 
@@ -102,7 +104,9 @@ public class PatternTreeJsonExample
         var loadedTree = PatternTreeJsonUtility.LoadFromGodotResource(filePath);
 
         // Demonstrate that the loaded tree gives the same results as the original
-        double x = 10.5, y = 20.3, z = 5.2;
+        double x = 10.5,
+            y = 20.3,
+            z = 5.2;
         var originalValue = tree.Evaluate(x, y, z);
         var loadedValue = loadedTree.Evaluate(x, y, z);
 
@@ -122,7 +126,7 @@ public class PatternTreeJsonExample
             NoiseType = NoiseType.Perlin,
             Frequency = 0.02,
             FractalType = FractalType.Fbm,
-            Seed = 42
+            Seed = 42,
         };
         var noiseNode1 = new FastNoiseLiteNode(noiseSettings1);
 
@@ -131,7 +135,7 @@ public class PatternTreeJsonExample
             NoiseType = NoiseType.Cellular,
             Frequency = 0.03,
             FractalType = FractalType.Ridged,
-            Seed = 123
+            Seed = 123,
         };
         var noiseNode2 = new FastNoiseLiteNode(noiseSettings2);
 
@@ -140,11 +144,7 @@ public class PatternTreeJsonExample
 
         // Apply a multi-child operation with additional constant nodes
         var multiNode = new MultiChildOperationNode(
-            [
-                mathNode,
-                new ConstantNode(0.2),
-                new ConstantNode(0.3)
-            ]
+            [mathNode, new ConstantNode(0.2), new ConstantNode(0.3)]
         );
 
         // Serialize to JSON
@@ -154,7 +154,9 @@ public class PatternTreeJsonExample
 
         // Deserialize and test
         var loadedTree = PatternTreeJsonConverter.Deserialize(json);
-        double x = 15.7, y = 22.3, z = 8.9;
+        double x = 15.7,
+            y = 22.3,
+            z = 8.9;
         var originalValue = multiNode.Evaluate(x, y, z);
         var loadedValue = loadedTree.Evaluate(x, y, z);
 
@@ -175,7 +177,7 @@ public class PatternTreeJsonExample
             Frequency = 0.02,
             FractalType = FractalType.Fbm,
             FractalOctaves = 4,
-            Seed = 42
+            Seed = 42,
         };
         var noiseNode = new FastNoiseLiteNode(noiseSettings);
 
@@ -246,7 +248,10 @@ public class PatternTreeJsonExample
             {
                 GD.Print($"Deserialized DualOperationType: {loadedDualNode.OperationType}");
 
-                if (loadedDualNode.Children.FirstOrDefault() is SingleChildOperationNode loadedSingleNode)
+                if (
+                    loadedDualNode.Children.FirstOrDefault()
+                    is SingleChildOperationNode loadedSingleNode
+                )
                     GD.Print($"Deserialized SingleOperationType: {loadedSingleNode.OperationType}");
             }
         }
@@ -278,7 +283,9 @@ public class PatternTreeJsonExample
             GD.Print($"Name: {loadedPatternTree.Name}");
 
             // Demonstrate that the tree correctly evaluates
-            double x = 12.3, y = 45.6, z = 7.8;
+            double x = 12.3,
+                y = 45.6,
+                z = 7.8;
             var originalValue = patternTree.Evaluate(x, y, z);
             var loadedValue = loadedPatternTree.Evaluate(x, y, z);
 
@@ -298,26 +305,25 @@ public class PatternTreeJsonExample
     public void DemonstratePatternTreeDirectoryOperations(string directory = "user://patterns")
     {
         // Create directory if it doesn't exist
-        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+        if (!Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
 
         // Create and save several pattern trees
         var patternTrees = new PatternTree[]
         {
-            new(
-                "terrain_height",
-                "Terrain Height Pattern",
-                CreateSamplePatternTree()
-            ),
+            new("terrain_height", "Terrain Height Pattern", CreateSamplePatternTree()),
             new(
                 "temperature",
                 "Temperature Pattern",
                 new MathExpressionNode(
-                    new FastNoiseLiteNode(new FastNoiseLiteSettings
-                    {
-                        NoiseType = NoiseType.Perlin,
-                        Frequency = 0.01,
-                        Seed = 123
-                    }),
+                    new FastNoiseLiteNode(
+                        new FastNoiseLiteSettings
+                        {
+                            NoiseType = NoiseType.Perlin,
+                            Frequency = 0.01,
+                            Seed = 123,
+                        }
+                    ),
                     "x * 0.5 + 0.5" // Normalize to 0-1 range
                 )
             ),
@@ -325,15 +331,17 @@ public class PatternTreeJsonExample
                 "moisture",
                 "Moisture Pattern",
                 new DualChildOperationNode(
-                    new FastNoiseLiteNode(new FastNoiseLiteSettings
-                    {
-                        NoiseType = NoiseType.Simplex,
-                        Frequency = 0.02,
-                        Seed = 456
-                    }),
+                    new FastNoiseLiteNode(
+                        new FastNoiseLiteSettings
+                        {
+                            NoiseType = NoiseType.Simplex,
+                            Frequency = 0.02,
+                            Seed = 456,
+                        }
+                    ),
                     new ConstantNode(0.2)
                 )
-            )
+            ),
         };
 
         // Save all pattern trees

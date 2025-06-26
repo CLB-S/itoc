@@ -64,7 +64,9 @@ public static class PatternTreeJsonUtility
         if (file != null)
             file.StoreString(json);
         else
-            GD.PrintErr($"Failed to save pattern tree to {filePath}. Error: {FileAccess.GetOpenError()}");
+            GD.PrintErr(
+                $"Failed to save pattern tree to {filePath}. Error: {FileAccess.GetOpenError()}"
+            );
     }
 
     /// <summary>
@@ -81,7 +83,9 @@ public static class PatternTreeJsonUtility
             return PatternTreeJsonConverter.Deserialize(json);
         }
 
-        GD.PrintErr($"Failed to load pattern tree from {filePath}. Error: {FileAccess.GetOpenError()}");
+        GD.PrintErr(
+            $"Failed to load pattern tree from {filePath}. Error: {FileAccess.GetOpenError()}"
+        );
         return null;
     }
 
@@ -109,8 +113,11 @@ public static class PatternTreeJsonUtility
     public static PatternTree LoadPatternTree(string filePath)
     {
         var node = LoadFromFile(filePath);
-        if (node is PatternTree patternTree) return patternTree;
-        throw new InvalidOperationException($"File {filePath} does not contain a valid PatternTree");
+        if (node is PatternTree patternTree)
+            return patternTree;
+        throw new InvalidOperationException(
+            $"File {filePath} does not contain a valid PatternTree"
+        );
     }
 
     /// <summary>
@@ -135,8 +142,11 @@ public static class PatternTreeJsonUtility
     public static PatternTree LoadPatternTreeFromGodotResource(string filePath)
     {
         var node = LoadFromGodotResource(filePath);
-        if (node is PatternTree patternTree) return patternTree;
-        throw new InvalidOperationException($"File {filePath} does not contain a valid PatternTree");
+        if (node is PatternTree patternTree)
+            return patternTree;
+        throw new InvalidOperationException(
+            $"File {filePath} does not contain a valid PatternTree"
+        );
     }
 
     /// <summary>
@@ -145,7 +155,10 @@ public static class PatternTreeJsonUtility
     /// <param name="directory">Directory to load patterns from</param>
     /// <param name="searchPattern">Search pattern for files (default: *.pattern)</param>
     /// <returns>Array of loaded PatternTree objects</returns>
-    public static PatternTree[] LoadAllPatternTrees(string directory, string searchPattern = "*.pattern")
+    public static PatternTree[] LoadAllPatternTrees(
+        string directory,
+        string searchPattern = "*.pattern"
+    )
     {
         if (!Directory.Exists(directory))
             return Array.Empty<PatternTree>();

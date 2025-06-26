@@ -14,10 +14,13 @@ public class SceneSwitcher : NodeAdapter
     public Node CurrentScene { get; set; }
     public static SceneSwitcher Instance { get; private set; }
 
-    public SceneSwitcher(Node node) : base(node)
+    public SceneSwitcher(Node node)
+        : base(node)
     {
         if (Instance != null)
-            throw new Exception("SceneSwitcher instance already exists. Only one instance is allowed.");
+            throw new Exception(
+                "SceneSwitcher instance already exists. Only one instance is allowed."
+            );
 
         Instance = this;
     }
@@ -42,18 +45,21 @@ public class SceneSwitcher : NodeAdapter
 
         // The solution is to defer the load to a later time, when
         // we can be sure that no code from the current scene is running:
-        Callable.From(new Action(() =>
-        {
-            // It is now safe to remove the current scene.
-            CurrentScene.Free();
+        Callable
+            .From(
+                new Action(() =>
+                {
+                    // It is now safe to remove the current scene.
+                    CurrentScene.Free();
 
-            var nextScene = GD.Load<PackedScene>(path);
-            CurrentScene = nextScene.Instantiate();
-            Node.GetTree().Root.AddChild(CurrentScene);
-            Node.GetTree().CurrentScene = CurrentScene;
+                    var nextScene = GD.Load<PackedScene>(path);
+                    CurrentScene = nextScene.Instantiate();
+                    Node.GetTree().Root.AddChild(CurrentScene);
+                    Node.GetTree().CurrentScene = CurrentScene;
 
-            GD.Print($"Scene switched to: {path}");
-        }
-        )).CallDeferred();
+                    GD.Print($"Scene switched to: {path}");
+                })
+            )
+            .CallDeferred();
     }
 }

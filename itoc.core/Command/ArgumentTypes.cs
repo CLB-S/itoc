@@ -7,10 +7,12 @@ public abstract class ArgumentTypeBase : IArgumentType
 {
     public abstract string TypeName { get; }
     public abstract bool TryParse(string input, out object result);
-    public virtual IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
-    {
-        return Enumerable.Empty<string>();
-    }
+
+    public virtual IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    ) => Enumerable.Empty<string>();
 }
 
 /// <summary>
@@ -51,7 +53,11 @@ public class IntegerArgumentType : ArgumentTypeBase
         return true;
     }
 
-    public override IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
+    public override IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    )
     {
         if (_min == null && _max == null)
             return [$"<{argName}:int>"];
@@ -97,7 +103,11 @@ public class FloatArgumentType : ArgumentTypeBase
         return true;
     }
 
-    public override IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
+    public override IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    )
     {
         if (_min == null && _max == null)
             return [$"<{argName}:float>"];
@@ -140,7 +150,11 @@ public class BoolArgumentType : ArgumentTypeBase
         return false;
     }
 
-    public override IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
+    public override IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    )
     {
         if (string.IsNullOrEmpty(currentInput))
             return _allValues;
@@ -163,16 +177,18 @@ public class StringArgumentType : ArgumentTypeBase
         return true;
     }
 
-    public override IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
-    {
-        return [$"<{argName}:str>"];
-    }
+    public override IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    ) => [$"<{argName}:str>"];
 }
 
 /// <summary>
 /// Argument type for enumeration values
 /// </summary>
-public class EnumArgumentType<T> : ArgumentTypeBase where T : Enum
+public class EnumArgumentType<T> : ArgumentTypeBase
+    where T : Enum
 {
     private readonly Dictionary<string, T> _valueMap;
     private readonly string[] _names;
@@ -208,7 +224,11 @@ public class EnumArgumentType<T> : ArgumentTypeBase where T : Enum
         return false;
     }
 
-    public override IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
+    public override IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    )
     {
         if (string.IsNullOrEmpty(currentInput))
             return _names;
@@ -242,7 +262,8 @@ public class OptionsArgumentType : ArgumentTypeBase
             return false;
 
         var match = _options.FirstOrDefault(o =>
-            o.Equals(input, StringComparison.OrdinalIgnoreCase));
+            o.Equals(input, StringComparison.OrdinalIgnoreCase)
+        );
 
         if (match != null)
         {
@@ -253,7 +274,11 @@ public class OptionsArgumentType : ArgumentTypeBase
         return false;
     }
 
-    public override IEnumerable<string> GetSuggestions(string argName, string currentInput, object context = null)
+    public override IEnumerable<string> GetSuggestions(
+        string argName,
+        string currentInput,
+        object context = null
+    )
     {
         if (string.IsNullOrEmpty(currentInput))
             return _options;

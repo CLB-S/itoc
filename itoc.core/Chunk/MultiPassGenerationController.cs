@@ -21,7 +21,7 @@ public class MultiPassGenerationController
     private readonly IPass[] _passes;
     private readonly ConcurrentDictionary<Vector2I, int[]> _multiPassMarkers = new();
 
-    // This may should be linked to something like a chunk manager. 
+    // This may should be linked to something like a chunk manager.
     private readonly ConcurrentDictionary<Vector2I, bool> _executedPass0Positions = new();
 
     public MultiPassGenerationController(params IPass[] passes)
@@ -42,7 +42,9 @@ public class MultiPassGenerationController
         for (var i = 0; i < PassCount; i++)
         {
             if (passes[i].Pass != i)
-                throw new ArgumentException($"Passes must be in order. Pass {i} is not in the correct order.");
+                throw new ArgumentException(
+                    $"Passes must be in order. Pass {i} is not in the correct order."
+                );
 
             PassExpansions[i] = passes[i].Expansion;
             if (PassExpansions[i] < 0)
@@ -60,11 +62,11 @@ public class MultiPassGenerationController
                 else
                 {
                     for (var i = -expansion; i <= expansion; i++)
-                        for (var j = -expansion; j <= expansion; j++)
-                        {
-                            var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
-                            IncreaseMultiPassCompletionMarker(chunkIndex, args.Pass);
-                        }
+                    for (var j = -expansion; j <= expansion; j++)
+                    {
+                        var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
+                        IncreaseMultiPassCompletionMarker(chunkIndex, args.Pass);
+                    }
                 }
             };
         }
@@ -84,16 +86,15 @@ public class MultiPassGenerationController
             else
             {
                 for (var i = -expansion; i <= expansion; i++)
-                    for (var j = -expansion; j <= expansion; j++)
-                    {
-                        var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
-                        IncreaseMultiPassAccessibleMarker(chunkIndex, args.Pass + 1);
-                    }
+                for (var j = -expansion; j <= expansion; j++)
+                {
+                    var chunkIndex = args.ChunkColumnPos + new Vector2I(i, j);
+                    IncreaseMultiPassAccessibleMarker(chunkIndex, args.Pass + 1);
+                }
             }
         };
 
-        PassAccessible += (sender, args) =>
-            _passes[args.Pass].ExecuteAt(args.ChunkColumnPos);
+        PassAccessible += (sender, args) => _passes[args.Pass].ExecuteAt(args.ChunkColumnPos);
     }
 
     public int GetTotalExpansionForCompletion()
@@ -178,11 +179,14 @@ public class MultiPassGenerationController
     /// <param name="targetPosition">The target position to generate</param>
     /// <param name="totalExpansion">The total expansion required</param>
     /// <returns>Collection of positions where pass 0 should be executed</returns>
-    private IEnumerable<Vector2I> GetRequiredPass0Positions(Vector2I targetPosition, int totalExpansion)
+    private IEnumerable<Vector2I> GetRequiredPass0Positions(
+        Vector2I targetPosition,
+        int totalExpansion
+    )
     {
         for (var i = -totalExpansion; i <= totalExpansion; i++)
-            for (var j = -totalExpansion; j <= totalExpansion; j++)
-                yield return targetPosition + new Vector2I(i, j);
+        for (var j = -totalExpansion; j <= totalExpansion; j++)
+            yield return targetPosition + new Vector2I(i, j);
     }
 }
 

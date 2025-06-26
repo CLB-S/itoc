@@ -18,7 +18,9 @@ public interface IPermissionHolder
 /// </summary>
 public class SimplePermissionHolder : IPermissionHolder
 {
-    private readonly HashSet<string> _permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _permissions = new HashSet<string>(
+        StringComparer.OrdinalIgnoreCase
+    );
 
     /// <summary>
     /// Creates a new permission holder with the given permissions
@@ -45,10 +47,7 @@ public class SimplePermissionHolder : IPermissionHolder
     /// Removes a permission from this holder
     /// </summary>
     /// <param name="permission">The permission to remove</param>
-    public void RemovePermission(string permission)
-    {
-        _permissions.Remove(permission);
-    }
+    public void RemovePermission(string permission) => _permissions.Remove(permission);
 
     /// <summary>
     /// Checks if this holder has the specified permission

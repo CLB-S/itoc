@@ -19,7 +19,8 @@ public class FluvialEroder(
     HashSet<int> riverMouths,
     FluvialEroderSettings settings,
     Func<CellData, IEnumerable<CellData>> getNeighborCellsFunc,
-    Func<Vector2, Vector2, double> distanceFunc = null)
+    Func<Vector2, Vector2, double> distanceFunc = null
+)
 {
     private int _iterationCount;
     private readonly Dictionary<int, int> _receivers = new(); // Maps node indices to their receiver node indices
@@ -37,10 +38,8 @@ public class FluvialEroder(
     public IReadOnlyDictionary<int, double> Drainages => _drainages;
 
     public event Action<string> OnProgressReport;
-    private void ReportProgress(string message)
-    {
-        OnProgressReport?.Invoke(message);
-    }
+
+    private void ReportProgress(string message) => OnProgressReport?.Invoke(message);
 
     private void PrepareStreamGraph()
     {
@@ -73,32 +72,36 @@ public class FluvialEroder(
         var receiverPairs = new ConcurrentBag<(int CellIndex, int ReceiverIndex)>();
         var lakes = new ConcurrentBag<int>();
 
-        Parallel.ForEach(cellDatas.Values, cell =>
-        {
-            if (cell.PlateType != PlateType.Continent)
-                return; // Skip non-continental cells
+        Parallel.ForEach(
+            cellDatas.Values,
+            cell =>
+            {
+                if (cell.PlateType != PlateType.Continent)
+                    return; // Skip non-continental cells
 
-            var lowestNeighbor = GetLowestNeighbor(cell);
-            if (lowestNeighbor != cell)
-                receiverPairs.Add((cell.Index, lowestNeighbor.Index));
-            else
-                lakes.Add(cell.Index);
-        });
+                var lowestNeighbor = GetLowestNeighbor(cell);
+                if (lowestNeighbor != cell)
+                    receiverPairs.Add((cell.Index, lowestNeighbor.Index));
+                else
+                    lakes.Add(cell.Index);
+            }
+        );
 
         // Update _receivers and _children sequentially
-        foreach (var pair in receiverPairs)
+        foreach (var (CellIndex, ReceiverIndex) in receiverPairs)
         {
-            _receivers[pair.CellIndex] = pair.ReceiverIndex;
-            if (!_children.TryGetValue(pair.ReceiverIndex, out var childrenList))
+            _receivers[CellIndex] = ReceiverIndex;
+            if (!_children.TryGetValue(ReceiverIndex, out var childrenList))
             {
                 childrenList = new List<int>();
-                _children[pair.ReceiverIndex] = childrenList;
+                _children[ReceiverIndex] = childrenList;
             }
 
-            childrenList.Add(pair.CellIndex);
+            childrenList.Add(CellIndex);
         }
 
-        foreach (var lakeIndex in lakes) _lakes.Add(lakeIndex);
+        foreach (var lakeIndex in lakes)
+            _lakes.Add(lakeIndex);
     }
 
     private CellData GetLowestNeighbor(CellData cell)
@@ -123,11 +126,17 @@ public class FluvialEroder(
     {
         _lakeIdentifiers.Clear();
         // Assign lake identifiers to all nodes in each lake's drainage area
-        Parallel.ForEach(_lakes, lakeIndex => AssignLakeIdentifiers(lakeIndex, lakeIndex, _lakeIdentifiers));
+        Parallel.ForEach(
+            _lakes,
+            lakeIndex => AssignLakeIdentifiers(lakeIndex, lakeIndex, _lakeIdentifiers)
+        );
     }
 
-
-    private void AssignLakeIdentifiers(int nodeIndex, int lakeId, ConcurrentDictionary<int, int> lakeIdentifiers)
+    private void AssignLakeIdentifiers(
+        int nodeIndex,
+        int lakeId,
+        ConcurrentDictionary<int, int> lakeIdentifiers
+    )
     {
         // Use a queue for breadth-first traversal to avoid stack overflow
         var queue = new Queue<int>();
@@ -153,7 +162,6 @@ public class FluvialEroder(
         }
     }
 
-
     private void ProcessLakeOverflow()
     {
         // ReportProgress("Processing lake overflow");
@@ -169,7 +177,10 @@ public class FluvialEroder(
 
         // All outflows of a lake. Dictionary<int sourceLakeId, Dictionary<int targetLakeId, (int sourceNode, int targetNode, double passHeight)>>
         var lakeOutflowGraph =
-            new Dictionary<int, Dictionary<int, (int sourceNode, int targetNode, double passHeight)>>();
+            new Dictionary<
+                int,
+                Dictionary<int, (int sourceNode, int targetNode, double passHeight)>
+            >();
 
         // For each cell in a lake
         foreach (var cell in cellDatas.Values)
@@ -188,7 +199,8 @@ public class FluvialEroder(
                 if (!_lakeIdentifiers.TryGetValue(neighbor.Index, out var targetLakeId))
                     continue; // Skip if the neighbor is not in a lake
 
-                if (targetLakeId == sourceLakeId) continue;
+                if (targetLakeId == sourceLakeId)
+                    continue;
 
                 if (!lakeOutflowGraph.ContainsKey(sourceLakeId))
                     lakeOutflowGraph[sourceLakeId] = new Dictionary<int, (int, int, double)>();
@@ -200,11 +212,19 @@ public class FluvialEroder(
                 if (lakeOutflowGraph[sourceLakeId].TryGetValue(targetLakeId, out var existingPass))
                 {
                     if (passHeight < existingPass.passHeight)
-                        lakeOutflowGraph[sourceLakeId][targetLakeId] = (cell.Index, neighbor.Index, passHeight);
+                        lakeOutflowGraph[sourceLakeId][targetLakeId] = (
+                            cell.Index,
+                            neighbor.Index,
+                            passHeight
+                        );
                 }
                 else
                 {
-                    lakeOutflowGraph[sourceLakeId][targetLakeId] = (cell.Index, neighbor.Index, passHeight);
+                    lakeOutflowGraph[sourceLakeId][targetLakeId] = (
+                        cell.Index,
+                        neighbor.Index,
+                        passHeight
+                    );
                 }
             }
         }
@@ -215,15 +235,22 @@ public class FluvialEroder(
         var lakeTrees = new Dictionary<int, (int targetLake, int targetNode)>(); // Maps lake ID to its receiver lake ID
 
         // Identify all unique lake IDs
-        foreach (var lakeId in riverMouths) lakeTrees[lakeId] = (-1, -1); // -1 indicates a root lake (no receiver)
+        foreach (var lakeId in riverMouths)
+            lakeTrees[lakeId] = (-1, -1); // -1 indicates a root lake (no receiver)
 
         // Create a list of all lake connections sorted by pass height
         var sortedConnections =
-            new List<(int sourceLake, int targetLake, int sourceNode, int targetNode, double passHeight)>();
+            new List<(
+                int sourceLake,
+                int targetLake,
+                int sourceNode,
+                int targetNode,
+                double passHeight
+            )>();
 
         foreach (var (sourceLakeId, outflows) in lakeOutflowGraph)
-            foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
-                sortedConnections.Add((sourceLakeId, targetLakeId, sourceNode, targetNode, passHeight));
+        foreach (var (targetLakeId, (sourceNode, targetNode, passHeight)) in outflows)
+            sortedConnections.Add((sourceLakeId, targetLakeId, sourceNode, targetNode, passHeight));
 
         // Sort connections by pass height (ascending)
         sortedConnections.Sort((a, b) => a.passHeight.CompareTo(b.passHeight));
@@ -370,15 +397,21 @@ public class FluvialEroder(
             var receiver = cellDatas[receiverIndex];
 
             // Calculate the slope between this node and its receiver
-            var distance = distanceFunc == null ? cell.Position.DistanceTo(receiver.Position) :
-                distanceFunc(cell.Position, receiver.Position);
+            var distance =
+                distanceFunc == null
+                    ? cell.Position.DistanceTo(receiver.Position)
+                    : distanceFunc(cell.Position, receiver.Position);
 
             // Skip if distance is zero to avoid division by zero
-            if (distance < 0.001f) continue;
+            if (distance < 0.001f)
+                continue;
 
             // Get the drainage area for this node
-            // Instead of using drainage, drainage area will generate higher mountains at low latitudes.  
-            var drainageArea = _drainageAreas.GetValueOrDefault(cell.Index, settings.DefaultCellArea);
+            // Instead of using drainage, drainage area will generate higher mountains at low latitudes.
+            var drainageArea = _drainageAreas.GetValueOrDefault(
+                cell.Index,
+                settings.DefaultCellArea
+            );
 
             // Apply uplift
             var uplift = cell.Uplift > 0.01f ? cell.Uplift : 0.01;
@@ -388,15 +421,21 @@ public class FluvialEroder(
 
             // Calculate the new height using the implicit scheme from the paper
             var oldHeight = cell.Height;
-            var newHeight = (oldHeight + dt * (uplift + erosionTerm * receiver.Height)) / (1 + erosionTerm * dt);
+            var newHeight =
+                (oldHeight + dt * (uplift + erosionTerm * receiver.Height))
+                / (1 + erosionTerm * dt);
 
             // Apply thermal erosion correction: limit the maximum slope
-            var maxSlopeHeight = receiver.Height + distance * Mathf.Tan(Mathf.DegToRad(settings.MaxErosionSlopeAngle));
-            if (newHeight > maxSlopeHeight) newHeight = maxSlopeHeight;
+            var maxSlopeHeight =
+                receiver.Height
+                + distance * Mathf.Tan(Mathf.DegToRad(settings.MaxErosionSlopeAngle));
+            if (newHeight > maxSlopeHeight)
+                newHeight = maxSlopeHeight;
 
             // Update the height
             cell.Height = newHeight;
-            if (newHeight > MaxHeight) MaxHeight = newHeight;
+            if (newHeight > MaxHeight)
+                MaxHeight = newHeight;
 
             // Track the maximum change for convergence check
             var change = Mathf.Abs(newHeight - oldHeight);
@@ -405,13 +444,16 @@ public class FluvialEroder(
         }
 
         // Check for convergence
-        _powerEquationConverged = maxChange < settings.ErosionConvergenceThreshold ||
-                                  ++_iterationCount >= settings.MaxErosionIterations;
+        _powerEquationConverged =
+            maxChange < settings.ErosionConvergenceThreshold
+            || ++_iterationCount >= settings.MaxErosionIterations;
 
-        ReportProgress($"""
-                        [{_iterationCount}/{settings.MaxErosionIterations}] Stream power equation solved.
-                        Max height change: {maxChange:f4}. Total change: {totalChange:f2}
-                        """);
+        ReportProgress(
+            $"""
+            [{_iterationCount}/{settings.MaxErosionIterations}] Stream power equation solved.
+            Max height change: {maxChange:f4}. Total change: {totalChange:f2}
+            """
+        );
 
         if (_powerEquationConverged)
             ReportProgress($"Stream power equation converged. Max height {MaxHeight:f2}.");

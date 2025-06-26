@@ -7,7 +7,10 @@ namespace ITOC.Core;
 /// </summary>
 public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifier>
 {
-    private static readonly Regex NamespaceRegex = new(@"^[a-zA-Z0-9_\-.]+$", RegexOptions.Compiled);
+    private static readonly Regex NamespaceRegex = new(
+        @"^[a-zA-Z0-9_\-.]+$",
+        RegexOptions.Compiled
+    );
     private static readonly Regex PathRegex = new(@"^[a-zA-Z0-9_\-.]+$", RegexOptions.Compiled);
 
     public const string ItocNamespace = "itoc";
@@ -49,7 +52,10 @@ public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifi
         else
         {
             // Namespace must be specified explicitly.
-            throw new ArgumentException($"Invalid identifier format: '{identifier}'. Expected format is 'namespace:path'", nameof(identifier));
+            throw new ArgumentException(
+                $"Invalid identifier format: '{identifier}'. Expected format is 'namespace:path'",
+                nameof(identifier)
+            );
         }
 
         ValidateNamespace(@namespace);
@@ -65,7 +71,10 @@ public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifi
             throw new ArgumentException("Namespace cannot be null or empty", nameof(@namespace));
 
         if (!NamespaceRegex.IsMatch(@namespace))
-            throw new ArgumentException($"Invalid namespace format: '{@namespace}'. Namespace can only contain lowercase letters, numbers, underscores, hyphens, and periods", nameof(@namespace));
+            throw new ArgumentException(
+                $"Invalid namespace format: '{@namespace}'. Namespace can only contain lowercase letters, numbers, underscores, hyphens, and periods",
+                nameof(@namespace)
+            );
     }
 
     private static void ValidatePath(string path)
@@ -74,30 +83,41 @@ public readonly struct Identifier : IEquatable<Identifier>, IComparable<Identifi
             throw new ArgumentException("Path cannot be null or empty", nameof(path));
 
         if (!PathRegex.IsMatch(path))
-            throw new ArgumentException($"Invalid path format: '{path}'. Path can only contain lowercase letters, numbers, underscores, hyphens, periods, and forward slashes", nameof(path));
+            throw new ArgumentException(
+                $"Invalid path format: '{path}'. Path can only contain lowercase letters, numbers, underscores, hyphens, periods, and forward slashes",
+                nameof(path)
+            );
     }
 
     public bool Equals(Identifier other) =>
-        string.Equals(Namespace, other.Namespace) &&
-        string.Equals(Path, other.Path);
+        string.Equals(Namespace, other.Namespace) && string.Equals(Path, other.Path);
 
-    public override bool Equals(object obj) =>
-        obj is Identifier other && Equals(other);
+    public override bool Equals(object obj) => obj is Identifier other && Equals(other);
 
-    public override int GetHashCode() =>
-        HashCode.Combine(Namespace, Path);
+    public override int GetHashCode() => HashCode.Combine(Namespace, Path);
 
     public int CompareTo(Identifier other)
     {
-        var namespaceComparison = string.Compare(Namespace, other.Namespace, StringComparison.Ordinal);
-        return namespaceComparison != 0 ? namespaceComparison : string.Compare(Path, other.Path, StringComparison.Ordinal);
+        var namespaceComparison = string.Compare(
+            Namespace,
+            other.Namespace,
+            StringComparison.Ordinal
+        );
+        return namespaceComparison != 0
+            ? namespaceComparison
+            : string.Compare(Path, other.Path, StringComparison.Ordinal);
     }
 
     public static bool operator ==(Identifier left, Identifier right) => left.Equals(right);
+
     public static bool operator !=(Identifier left, Identifier right) => !left.Equals(right);
+
     public static bool operator <(Identifier left, Identifier right) => left.CompareTo(right) < 0;
+
     public static bool operator >(Identifier left, Identifier right) => left.CompareTo(right) > 0;
+
     public static bool operator <=(Identifier left, Identifier right) => left.CompareTo(right) <= 0;
+
     public static bool operator >=(Identifier left, Identifier right) => left.CompareTo(right) >= 0;
 
     /// <summary>

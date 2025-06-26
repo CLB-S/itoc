@@ -23,7 +23,7 @@ public enum SingleOperationType
     SquareRoot,
     Cube,
     CubeRoot,
-    Log10
+    Log10,
 }
 
 public class SingleChildOperationNode : PatternTreeNode, IOperator
@@ -33,16 +33,14 @@ public class SingleChildOperationNode : PatternTreeNode, IOperator
     public IEnumerable<PatternTreeNode> Children => [_child];
     public SingleOperationType OperationType { get; protected set; }
 
-    public SingleChildOperationNode(PatternTreeNode child,
-        SingleOperationType operationType)
+    public SingleChildOperationNode(PatternTreeNode child, SingleOperationType operationType)
     {
         _child = child;
         OperationType = operationType;
     }
 
-    protected virtual double PerformOperation(double value)
-    {
-        return OperationType switch
+    protected virtual double PerformOperation(double value) =>
+        OperationType switch
         {
             SingleOperationType.Abs => Math.Abs(value),
             SingleOperationType.Negate => -value,
@@ -65,13 +63,13 @@ public class SingleChildOperationNode : PatternTreeNode, IOperator
             SingleOperationType.SquareRoot => Math.Sqrt(value),
             SingleOperationType.Cube => value * value * value,
             SingleOperationType.CubeRoot => Math.Pow(value, 1.0 / 3.0),
-            _ => value
+            _ => value,
         };
-    }
 
     public override double Evaluate(double x, double y)
     {
-        if (_child == null) return 0;
+        if (_child == null)
+            return 0;
 
         var value = _child.Evaluate(x, y);
         return PerformOperation(value);
@@ -79,7 +77,8 @@ public class SingleChildOperationNode : PatternTreeNode, IOperator
 
     public override double Evaluate(double x, double y, double z)
     {
-        if (_child == null) return 0;
+        if (_child == null)
+            return 0;
 
         var value = _child.Evaluate(x, y, z);
         return PerformOperation(value);
