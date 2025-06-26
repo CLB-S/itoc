@@ -5,15 +5,16 @@ using Godot;
 using ITOC.Core;
 using ITOC.Core.NodePool;
 using ITOC.Core.Multithreading;
+using ITOC.Core.Entity;
 
 namespace ITOC;
 
+// Per client.
 public partial class ChunkInstantiator : Node3D
 {
     #region Fields
 
     // Player and world tracking
-    private World _world;
     private Vector3 _playerPosition = Vector3.Zero;
     private Vector3I _playerChunkIndex = Vector3I.Zero;
 
@@ -72,19 +73,16 @@ public partial class ChunkInstantiator : Node3D
 
     #region Initialization
 
-    public ChunkInstantiator(World world)
+    public ChunkInstantiator(Player player, ChunkManager chunkManager)
     {
-        _world = world;
-        _world.OnPlayerMoved += (s, pos) => UpdatePlayerPosition(pos);
-
-        _world.OnPlayerMovedHalfAChunk += (s, pos) =>
+        player.OnChunkLoadingTriggered += (s, pos) =>
         {
+            UpdatePlayerPosition(pos);
             UpdateVisibilityForAll();
             UpdateCollisionShapesForAll();
         };
 
-        // World.OnChunkGenerated is multi-threaded.
-        _world.OnChunkGenerated += (s, chunk) => AddChunk(chunk);
+        chunkManager.OnChunkReady += (s, chunk) => AddChunk(chunk);
     }
 
     public override void _Ready()
@@ -116,7 +114,7 @@ public partial class ChunkInstantiator : Node3D
     private void InitializeLods()
     {
         // Initialize LOD dictionaries
-        _maxLodLevel = GameControllerNode.Instance.Settings.MaxLodLevel;
+        _maxLodLevel = GameController.Instance.Settings.MaxLodLevel;
         for (int lod = 0; lod <= _maxLodLevel; lod++)
             _lodChunkMeshes[lod] = new ConcurrentDictionary<Vector3I, ChunkMesh>();
 
@@ -325,7 +323,7 @@ public partial class ChunkInstantiator : Node3D
 
     private void UpdateLodThreshoulds()
     {
-        double pixelThreshold = GameControllerNode.Instance.Settings.LodPixelThreshold;
+        double pixelThreshold = GameController.Instance.Settings.LodPixelThreshold;
 
         // Calculate distance thresholds for each LOD level
         for (int lod = 0; lod < _maxLodLevel; lod++)
@@ -498,7 +496,7 @@ public partial class ChunkInstantiator : Node3D
         if (chunkMesh.Lod != 0)
             return;
 
-        var physicsDistance = GameControllerNode.Instance.Settings.PhysicsDistance;
+        var physicsDistance = GameController.Instance.Settings.PhysicsDistance;
         bool shouldHaveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) <= physicsDistance;
         bool shouldRemoveCollision = chunkMesh.Index.DistanceTo(_playerChunkIndex) >= physicsDistance + 1;
 
