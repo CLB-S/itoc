@@ -2,5 +2,6 @@
   "explorer.fileNesting.patterns": {
     "*.cs": "${capture}.cs.uid"
   },
-  "explorer.fileNesting.enabled": true
+  "explorer.fileNesting.enabled": true,
+  "dotnet.defaultSolution": "itoc.sln"
 }
