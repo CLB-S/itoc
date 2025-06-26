@@ -4,13 +4,13 @@ namespace ITOC.Core;
 
 public abstract class ChunkGeneratorBase
 {
-    protected readonly ChunkManager _chunkManager;
+    public ChunkManager ChunkManager { get; private set; }
 
     private int _maxConcurrentChunkGenerationTasks = 1;
     private readonly Queue<Vector2I> _pendingGenerationQueue = new();
     private readonly HashSet<Vector2I> _activeGenerationTasks = new();
     private readonly Dictionary<Vector2I, Action<Vector2I>> _completionCallbacks = new();
-    private readonly object _queueLock = new();
+    private readonly object _lock = new object();
 
     /// <summary>
     /// The maximum number of concurrent chunk generation tasks that can be run at the same time.
@@ -18,21 +18,31 @@ public abstract class ChunkGeneratorBase
     /// </summary>
     public int MaxConcurrentChunkGenerationTasks
     {
-        get => _maxConcurrentChunkGenerationTasks;
+        get
+        {
+            lock (_lock)
+            {
+                return _maxConcurrentChunkGenerationTasks;
+            }
+        }
         set
         {
             if (value < 0)
                 throw new ArgumentException("Max concurrent tasks cannot be negative.");
-            _maxConcurrentChunkGenerationTasks = value;
+
+            lock (_lock)
+            {
+                _maxConcurrentChunkGenerationTasks = value;
+            }
         }
     }
 
     public EventHandler<Vector2I> OnSurfaceChunksGenerated;
 
-    public ChunkGeneratorBase(ChunkManager chunkManager)
+    public ChunkGeneratorBase()
     {
-        _chunkManager = chunkManager ?? throw new ArgumentNullException(nameof(chunkManager));
-        _chunkManager.LinkChunkGenerator(this);
+        ChunkManager = new ChunkManager();
+        ChunkManager.LinkChunkGenerator(this);
     }
 
     /// <summary>
@@ -40,64 +50,87 @@ public abstract class ChunkGeneratorBase
     /// </summary>
     public void EnqueueSurfaceChunksGeneration(Vector2I chunkColumnIndex, Action<Vector2I> onComplete = null)
     {
-        lock (_queueLock)
+        lock (_lock)
         {
             // Don't queue if already active or pending
             if (_activeGenerationTasks.Contains(chunkColumnIndex) ||
                 _pendingGenerationQueue.Contains(chunkColumnIndex))
                 return;
 
+            // Don't queue if already generated
+            if (ChunkManager.IsSurfaceChunksGeneratedAt(chunkColumnIndex))
+            {
+                onComplete?.Invoke(chunkColumnIndex);
+                return;
+            }
+
             _pendingGenerationQueue.Enqueue(chunkColumnIndex);
+            // GD.Print($"Enqueued surface chunk generation for {chunkColumnIndex}");
 
             if (onComplete != null)
                 _completionCallbacks[chunkColumnIndex] = onComplete;
-
-            ProcessGenerationQueue();
         }
+
+        ProcessGenerationQueue();
     }
 
     private void ProcessGenerationQueue()
     {
-        while (_pendingGenerationQueue.Count > 0 &&
-               (_maxConcurrentChunkGenerationTasks == 0 ||
-                _activeGenerationTasks.Count < _maxConcurrentChunkGenerationTasks))
+        while (true)
         {
-            var chunkColumnIndex = _pendingGenerationQueue.Dequeue();
+            Vector2I chunkColumnIndex;
 
-            if (_chunkManager.IsSurfaceChunksGeneratedAt(_pendingGenerationQueue.Peek()))
+            lock (_lock)
             {
-                // Invoke completion callback if exists
-                if (_completionCallbacks.TryGetValue(chunkColumnIndex, out var callback))
+                if (_pendingGenerationQueue.Count == 0 ||
+                    (_maxConcurrentChunkGenerationTasks > 0 &&
+                     _activeGenerationTasks.Count >= _maxConcurrentChunkGenerationTasks))
+                    break;
+
+                chunkColumnIndex = _pendingGenerationQueue.Dequeue();
+
+                // Double-check if already generated (could have been generated while in queue)
+                if (ChunkManager.IsSurfaceChunksGeneratedAt(chunkColumnIndex))
                 {
-                    _completionCallbacks.Remove(chunkColumnIndex);
-                    callback?.Invoke(chunkColumnIndex);
+                    // Invoke completion callback if exists
+                    if (_completionCallbacks.TryGetValue(chunkColumnIndex, out var callback))
+                    {
+                        _completionCallbacks.Remove(chunkColumnIndex);
+                        callback?.Invoke(chunkColumnIndex);
+                    }
+
+                    continue;
                 }
 
-                continue;
+                _activeGenerationTasks.Add(chunkColumnIndex);
             }
 
-            _activeGenerationTasks.Add(chunkColumnIndex);
-
+            GD.Print($"Processing surface chunk generation for {chunkColumnIndex}");
             GenerateSurfaceChunks(chunkColumnIndex);
         }
     }
 
     protected void NotifySurfaceChunksReady(Vector2I chunkColumnIndex)
     {
-        lock (_queueLock)
+        GD.Print($"Surface chunks ready for {chunkColumnIndex}");
+
+        Action<Vector2I> callback = null;
+
+        lock (_lock)
         {
-            _activeGenerationTasks.Remove(chunkColumnIndex);
+            if (!_activeGenerationTasks.Remove(chunkColumnIndex))
+                GD.PrintErr($"Warning: Chunk {chunkColumnIndex} was not in active tasks when notifying ready");
 
-            // Invoke completion callback if exists
-            if (_completionCallbacks.TryGetValue(chunkColumnIndex, out var callback))
-            {
+            // Get completion callback if exists
+            if (_completionCallbacks.TryGetValue(chunkColumnIndex, out callback))
                 _completionCallbacks.Remove(chunkColumnIndex);
-                callback?.Invoke(chunkColumnIndex);
-            }
-
-            OnSurfaceChunksGenerated?.Invoke(this, chunkColumnIndex);
-            ProcessGenerationQueue();
         }
+
+        // Invoke callback outside of lock to prevent potential deadlocks
+        callback?.Invoke(chunkColumnIndex);
+        OnSurfaceChunksGenerated?.Invoke(this, chunkColumnIndex);
+
+        ProcessGenerationQueue();
     }
 
     /// <summary>

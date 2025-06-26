@@ -9,6 +9,16 @@ public class ChunkManager
     public readonly Dictionary<Vector3I, Chunk> Chunks = new();
     public readonly Dictionary<Vector2I, ChunkColumn> ChunkColumns = new();
 
+
+    #region Events
+
+    public event EventHandler<Chunk> OnChunkReady;
+
+    // TODO: Revise Chunk updating events.
+    // public event EventHandler<Chunk> OnChunkUpdated; 
+
+    #endregion
+
     public void LinkChunkGenerator(ChunkGeneratorBase chunkGenerator)
     {
         if (_chunkGenerator != null)
@@ -30,6 +40,7 @@ public class ChunkManager
         {
             chunk.State = ChunkState.Ready;
             chunk.OnBlockUpdated += OnChunkBlockUpdated;
+            OnChunkReady?.Invoke(this, chunk);
         }
     }
 
