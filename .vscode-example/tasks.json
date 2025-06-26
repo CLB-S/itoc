@@ -5,14 +5,19 @@
       "label": "build",
       "command": "dotnet",
       "type": "process",
-      "args": ["build"],
+      "args": [
+        "build"
+      ],
       "problemMatcher": "$msCompile"
     },
     {
       "label": "test",
       "command": "dotnet",
       "type": "process",
-      "args": ["test", "itoc.test"],
+      "args": [
+        "test",
+        "itoc.test"
+      ],
       "problemMatcher": []
     }
   ]
