@@ -5,40 +5,21 @@ namespace ITOC;
 
 public partial class WorldNode : Node
 {
-    public World World { get; private set; }
-
-    public bool DebugDrawChunkBounds = false;
-
-    private PackedScene _debugCube;
-    // private ChunkFactory _chunkFactory;
-
-    private PlayerController _player;
-    private bool _playerSpawned; // TODO: Spawn player. Implement `GetHeight(Vector2 pos)`
-
-    private ChunkInstantiator _chunkInstantiator;
-
+    private World _world;
 
     public override void _Ready()
     {
-        World = new World(GameControllerNode.Instance.GameController);
+        _world = new World(this, GameController.Instance.WorldGenerator);
 
-        _player = GetNode<PlayerController>("../Player");
+        GameController.Instance.CurrentWorld = _world;
 
-        _debugCube = ResourceLoader.Load<PackedScene>("res://assets/meshes/debug_cube.tscn");
-
-        _chunkInstantiator = new ChunkInstantiator(World);
-        AddChild(_chunkInstantiator);
+        var playerNode = GetNode<PlayerNode>("../Player");
+        var chunkInstantiator = new ChunkInstantiator(playerNode.Player, _world.ChunkManager);
+        AddChild(chunkInstantiator);
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        World.PhysicsProcess(delta);
-    }
-
-    public void SpawnDebugCube(Vector3I pos)
-    {
-        var cube = _debugCube.Instantiate() as Node3D;
-        cube.Position = pos + Vector3.One * 0.5;
-        CallDeferred(Node.MethodName.AddChild, cube);
+        _world.OnPhysicsProcess(delta);
     }
 }
