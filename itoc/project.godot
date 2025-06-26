@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+SceneSwitcherNode="*res://scripts/SceneSwitcherNode.cs"
 GameControllerNode="*res://scripts/GameControllerNode.cs"
 GuiManager="*res://scripts/gui/GuiManager.cs"
 CameraHelper="*res://scripts/camera/CameraHelper.cs"
