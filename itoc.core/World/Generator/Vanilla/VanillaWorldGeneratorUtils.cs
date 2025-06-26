@@ -190,7 +190,7 @@ public partial class VanillaWorldGenerator
     /// <returns>An enumerable of the nearest cell data</returns>
     public IEnumerable<CellData> GetCellDatasNearby(double x, double y, int numNeighbors = 1)
     {
-        if (State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.Ready)
             throw new InvalidOperationException("Cell datas are not initialized yet.");
 
         var mappedX = 2 * Mathf.Pi * x / Settings.Bounds.Size.X;

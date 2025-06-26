@@ -7,6 +7,7 @@ using Godot;
 using ITOC.Core;
 using ITOC.Core.Utils;
 using ITOC.Core.WorldGeneration;
+using ITOC.Core.WorldGeneration.Vanilla;
 using Array = Godot.Collections.Array;
 
 namespace ITOC;
@@ -56,7 +57,7 @@ public partial class WorldTest : Node2D
     public bool DrawInterpolatedHeightMap;
     public bool DrawWinds;
 
-    private WorldGenerator _worldGenerator => GameControllerNode.Instance.WorldGenerator as WorldGenerator;
+    private VanillaWorldGenerator _worldGenerator => GameController.Instance.WorldGenerator as VanillaWorldGenerator;
     private int _heightMapResolution = 1000;
     private Vector2 _scalingFactor;
 
@@ -95,14 +96,14 @@ public partial class WorldTest : Node2D
         _heightmapGradient = ResourceLoader.Load<Gradient>("res://assets/gradients/heightmap_gradient.tres");
 
         _scalingFactor = DrawingRect.Size / _worldGenerator.Settings.Bounds.Size;
-        _worldGenerator.ProgressUpdatedEvent += (_, args) => Log(args.Message);
-        _worldGenerator.GenerationStartedEvent += (_, _) =>
+        _worldGenerator.ProgressUpdated += (_, args) => Log(args.Message);
+        _worldGenerator.PreGenerationStarted += (_, _) =>
         {
             CallDeferred(MethodName.SetGenerateMapButtonAvailability, false);
             CallDeferred(MethodName.SetStartGameButtonAvailability, false);
         };
 
-        _worldGenerator.GenerationCompletedEvent += (_, _) =>
+        _worldGenerator.Ready += (_, _) =>
         {
             CalculatePolygonMeshes();
 
@@ -111,19 +112,19 @@ public partial class WorldTest : Node2D
             CallDeferred(CanvasItem.MethodName.QueueRedraw);
         };
 
-        _worldGenerator.GenerationFailedEvent += (_, ex) =>
+        _worldGenerator.GenerationFailed += (_, ex) =>
         {
             CallDeferred(MethodName.SetGenerateMapButtonAvailability, true);
             Log($"[color=red]Generation failed:[/color]\n{ex.Message}");
         };
 
-        Task.Run(_worldGenerator.GenerateWorldAsync);
+        Task.Run(_worldGenerator.BeginWorldPreGeneration);
     }
 
     public override void _Input(InputEvent @event)
     {
         if (@event is InputEventMouseButton mouseButtonEvent)
-            if (mouseButtonEvent.IsPressed() && _worldGenerator.State == WorldGenerationState.Completed)
+            if (mouseButtonEvent.IsPressed() && _worldGenerator.State == WorldGenerationState.Ready)
             {
                 var mousePos = GetGlobalMousePosition();
                 if (!DrawingRect.HasPoint(mousePos)) return;
@@ -333,7 +334,7 @@ public partial class WorldTest : Node2D
             }
 
         // Draw stream graph
-        if (DrawRivers && _worldGenerator.State == WorldGenerationState.Completed)
+        if (DrawRivers && _worldGenerator.State == WorldGenerationState.Ready)
         {
             // Access the stream graph data from the world generator
             var receivers = _worldGenerator.Receivers;
@@ -397,7 +398,7 @@ public partial class WorldTest : Node2D
         }
 
         // Draw wind vectors
-        if (DrawWinds && _worldGenerator.State == WorldGenerationState.Completed)
+        if (DrawWinds && _worldGenerator.State == WorldGenerationState.Ready)
         {
             var windSettings = new WindSettings();
             using var rng = new RandomNumberGenerator();
@@ -464,12 +465,12 @@ public partial class WorldTest : Node2D
 
     public void OnRegenerateButtonPressed()
     {
-        Task.Run(_worldGenerator.GenerateWorldAsync);
+        Task.Run(_worldGenerator.BeginWorldPreGeneration);
     }
 
     public void OnGenerateHeightMapButtonPressed()
     {
-        if (_worldGenerator.State == WorldGenerationState.Completed)
+        if (_worldGenerator.State == WorldGenerationState.Ready)
             GenerateFullHeightMap();
     }
 
@@ -494,10 +495,10 @@ public partial class WorldTest : Node2D
 
     public void OnStartGameButtonPressed()
     {
-        if (_worldGenerator.State == WorldGenerationState.Completed)
+        if (_worldGenerator.State == WorldGenerationState.Ready)
         {
             StartGameButton.Disabled = true;
-            GameControllerNode.Instance.GotoWorldScene();
+            GameController.Instance.GotoWorldScene();
         }
     }
 

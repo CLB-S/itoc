@@ -8,13 +8,12 @@ public class VanillaChunkGenerator : ChunkGeneratorBase
     private readonly VanillaWorldGenerator _generator;
     private readonly MultiPassGenerationController _multiPassController;
 
-    public VanillaChunkGenerator(ChunkManager chunkManager, VanillaWorldGenerator generator)
-        : base(chunkManager)
+    public VanillaChunkGenerator(VanillaWorldGenerator generator)
     {
         _generator = generator ?? throw new ArgumentNullException(nameof(generator));
 
-        var pass0 = new VanillaChunkColumnGenerationPass0(this, _chunkManager);
-        var pass1 = new VanillaChunkColumnGenerationPass1(_chunkManager);
+        var pass0 = new VanillaChunkColumnGenerationPass0(this, ChunkManager);
+        var pass1 = new VanillaChunkColumnGenerationPass1(ChunkManager);
 
         _multiPassController = new(pass0, pass1);
         _multiPassController.AllPassesCompleted += (_, e) => NotifySurfaceChunksReady(e);

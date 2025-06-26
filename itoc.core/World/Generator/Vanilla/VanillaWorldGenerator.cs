@@ -10,7 +10,7 @@ namespace ITOC.Core.WorldGeneration.Vanilla;
 /// <summary>
 /// Default limited sample points based world generator.
 /// </summary>
-public partial class VanillaWorldGenerator : WorldGeneratorBase
+public partial class VanillaWorldGenerator : MultiStepWorldGeneratorBase
 {
     #region Fields and Properties
 
@@ -68,6 +68,11 @@ public partial class VanillaWorldGenerator : WorldGeneratorBase
         _generationPipeline.AddLast(new WorldGenerationStep("process_fluvial_erosion", ProcessFluvialErosion));
         _generationPipeline.AddLast(new WorldGenerationStep("adjust_temperature", AdjustTemperatureAccordingToHeight));
         _generationPipeline.AddLast(new WorldGenerationStep("set_biomes", SetBiomes));
+    }
+
+    protected override ChunkGeneratorBase InitializeChunkGenerator()
+    {
+        return new VanillaChunkGenerator(this);
     }
 
     #region Preperations
@@ -508,7 +513,7 @@ public partial class VanillaWorldGenerator : WorldGeneratorBase
     public double[,] CalculateHeightMap(int resolutionX, int resolutionY, Rect2I bounds, bool parallel = false,
         int upscaleLevel = 2)
     {
-        if (State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.Ready)
             throw new InvalidOperationException("World generation is not completed yet.");
 
         return HeightMapUtils.ConstructHeightMap(resolutionX, resolutionY, bounds, (x, y) => GetRawHeight(x, y),

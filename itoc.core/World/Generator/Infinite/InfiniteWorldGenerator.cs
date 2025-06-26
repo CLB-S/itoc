@@ -6,10 +6,16 @@ using ITOC.Core.Utils;
 
 namespace ITOC.Core.WorldGeneration.Infinite;
 
-public class InfiniteWorldGenerator : WorldGeneratorBase
+// TODO: Use IWorldGenerator instead.
+public class InfiniteWorldGenerator : MultiStepWorldGeneratorBase
 {
     private PatternTreeNode _debugHeightPattern;
     private PatternTreeNode _debugHeightPattern1;
+
+    protected override ChunkGeneratorBase InitializeChunkGenerator()
+    {
+        throw new NotImplementedException();
+    }
 
     protected override void InitializePipeline()
     {
@@ -37,24 +43,24 @@ public class InfiniteWorldGenerator : WorldGeneratorBase
         return pattern1.Evaluate(x, y) * weight + pattern2.Evaluate(x, y) * (1.0 - weight);
     }
 
-    public override ChunkColumn GenerateChunkColumnMetadata(Vector2I chunkColumnIndex)
-    {
-        // Biome
-        var defaultBiome = BiomeLibrary.Instance.GetBiome("plain");
-        var size = ChunkColumn.BIOME_MAP_SIZE * ChunkColumn.BIOME_MAP_SIZE;
-        var biomes = new PaletteArray<Biome>(size, defaultBiome);
+    // public override ChunkColumn GenerateChunkColumnMetadata(Vector2I chunkColumnIndex)
+    // {
+    //     // Biome
+    //     var defaultBiome = BiomeLibrary.Instance.GetBiome("plain");
+    //     var size = ChunkColumn.BIOME_MAP_SIZE * ChunkColumn.BIOME_MAP_SIZE;
+    //     var biomes = new PaletteArray<Biome>(size, defaultBiome);
 
-        var chunkColumn = new ChunkColumn(chunkColumnIndex, biomes);
+    //     var chunkColumn = new ChunkColumn(chunkColumnIndex, biomes);
 
-        // Height map
-        var getHeight = new Func<double, double, double>((x, y) =>
-        {
-            var weight = Mathf.Clamp(x, 0, 200) / 200.0;
-            return MergePatterns(x, y, _debugHeightPattern, _debugHeightPattern1, weight);
-        });
+    //     // Height map
+    //     var getHeight = new Func<double, double, double>((x, y) =>
+    //     {
+    //         var weight = Mathf.Clamp(x, 0, 200) / 200.0;
+    //         return MergePatterns(x, y, _debugHeightPattern, _debugHeightPattern1, weight);
+    //     });
 
-        var heightMap = CalculateChunkHeightMap(chunkColumnIndex, getHeight);
-        chunkColumn.SetHeightMap(heightMap);
-        return chunkColumn;
-    }
+    //     var heightMap = CalculateChunkHeightMap(chunkColumnIndex, getHeight);
+    //     chunkColumn.SetHeightMap(heightMap);
+    //     return chunkColumn;
+    // }
 }

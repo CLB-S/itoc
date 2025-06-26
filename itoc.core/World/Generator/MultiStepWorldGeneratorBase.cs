@@ -23,21 +23,7 @@ public class WorldGenerationStep
     }
 }
 
-public enum WorldGenerationState
-{
-    NotStarted,
-    Generating,
-    Completed,
-    Failed
-}
-
-public class GenerationProgressEventArgs : EventArgs
-{
-    public string Message { get; set; }
-    public WorldGenerationState CurrentState { get; set; }
-}
-
-public abstract class WorldGeneratorBase : IWorldGenerator
+public abstract class MultiStepWorldGeneratorBase : IWorldGenerator
 {
     private readonly Stopwatch _stopwatch = new();
     private readonly object _stateLock = new();
@@ -51,23 +37,26 @@ public abstract class WorldGeneratorBase : IWorldGenerator
     public ChunkGeneratorBase ChunkGenerator { get; protected set; }
 
     // Events
-    public event EventHandler<GenerationProgressEventArgs> ProgressUpdatedEvent;
-    public event EventHandler GenerationStartedEvent;
-    public event EventHandler GenerationCompletedEvent;
-    public event EventHandler<Exception> GenerationFailedEvent;
 
-    public WorldGeneratorBase(WorldSettings settings = null)
+    public event EventHandler<GenerationProgressEventArgs> ProgressUpdated;
+    public event EventHandler PreGenerationStarted;
+    public event EventHandler Ready;
+    public event EventHandler<Exception> GenerationFailed;
+
+    public MultiStepWorldGeneratorBase(WorldSettings settings = null)
     {
         WorldSettings = settings ?? new WorldSettings();
 
         InitializePipeline();
+        ChunkGenerator = InitializeChunkGenerator();
     }
 
     protected abstract void InitializePipeline();
+    protected abstract ChunkGeneratorBase InitializeChunkGenerator();
 
     public void AddGenerationStepAfter(WorldGenerationStep step, string afterStepId)
     {
-        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Ready)
             throw new InvalidOperationException("Cannot add steps after generation has started.");
 
         var node = _generationPipeline.First;
@@ -87,7 +76,7 @@ public abstract class WorldGeneratorBase : IWorldGenerator
 
     public void AddGenerationStepBefore(WorldGenerationStep step, string beforeStepId)
     {
-        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Ready)
             throw new InvalidOperationException("Cannot add steps after generation has started.");
 
         var node = _generationPipeline.First;
@@ -109,7 +98,7 @@ public abstract class WorldGeneratorBase : IWorldGenerator
     {
         // TODO: Dependency check
 
-        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Ready)
             throw new InvalidOperationException("Cannot remove steps after generation has started.");
 
         var node = _generationPipeline.First;
@@ -127,7 +116,7 @@ public abstract class WorldGeneratorBase : IWorldGenerator
 
     public void AppendGenerationStep(WorldGenerationStep step)
     {
-        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Ready)
             throw new InvalidOperationException("Cannot add steps after generation has started.");
 
         _generationPipeline.AddLast(step);
@@ -135,25 +124,25 @@ public abstract class WorldGeneratorBase : IWorldGenerator
 
     public void PrependGenerationStep(WorldGenerationStep step)
     {
-        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.NotStarted && State != WorldGenerationState.Ready)
             throw new InvalidOperationException("Cannot add steps after generation has started.");
 
         _generationPipeline.AddFirst(step);
     }
 
-    public async Task GenerateWorldAsync()
+    public void BeginWorldPreGeneration()
     {
         try
         {
             lock (_stateLock)
             {
-                if (State == WorldGenerationState.Completed)
+                if (State == WorldGenerationState.Ready)
                     ReportProgress("Warning: World generation has already been completed. Regenerating...");
 
-                State = WorldGenerationState.Generating;
+                State = WorldGenerationState.PreGeneration;
             }
 
-            GenerationStartedEvent?.Invoke(this, EventArgs.Empty);
+            PreGenerationStarted?.Invoke(this, EventArgs.Empty);
             _stopwatch.Restart();
 
             var currentNode = _generationPipeline.First;
@@ -161,7 +150,7 @@ public abstract class WorldGeneratorBase : IWorldGenerator
             {
                 var step = currentNode.Value;
                 ReportProgress($"Executing step {step.Id}.");
-                await Task.Run(step.Action);
+                step.Action?.Invoke();
                 ReportProgress($"Step {step.Id} completed.");
                 currentNode = currentNode.Next;
             }
@@ -176,7 +165,7 @@ public abstract class WorldGeneratorBase : IWorldGenerator
 
     protected void ReportProgress(string message)
     {
-        ProgressUpdatedEvent?.Invoke(this, new GenerationProgressEventArgs
+        ProgressUpdated?.Invoke(this, new GenerationProgressEventArgs
         {
             Message = $"[{_stopwatch.Elapsed.TotalSeconds:F2}s] {message}",
             CurrentState = State
@@ -192,20 +181,20 @@ public abstract class WorldGeneratorBase : IWorldGenerator
     private void CompleteGeneration()
     {
         _stopwatch.Stop();
-        UpdateState(WorldGenerationState.Completed);
+        UpdateState(WorldGenerationState.Ready);
         ReportProgress("Generation completed");
-        GenerationCompletedEvent?.Invoke(this, EventArgs.Empty);
+        Ready?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleError(Exception ex)
     {
         UpdateState(WorldGenerationState.Failed);
-        GenerationFailedEvent?.Invoke(this, ex);
+        GenerationFailed?.Invoke(this, ex);
     }
 
     public virtual double[,] CalculateChunkHeightMap(Vector2I chunkColumnIndex, Func<double, double, double> getHeight)
     {
-        if (State != WorldGenerationState.Completed)
+        if (State != WorldGenerationState.Ready)
             throw new InvalidOperationException("World generation is not completed yet.");
 
         var rect = new Rect2I(chunkColumnIndex * Chunk.SIZE, Chunk.SIZE, Chunk.SIZE);

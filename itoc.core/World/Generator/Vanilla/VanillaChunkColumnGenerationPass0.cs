@@ -50,6 +50,7 @@ public class VanillaChunkColumnGenerationPass0 : IPass
                 var chunkTask = new VanillaChunkGenerationTask(chunkIndex, result,
                     ChunkGenerationCallback, "ChunkGenerationTask-" + chunkIndex);
                 TaskManager.Instance.EnqueueTask(chunkTask);
+                tasks.Add(chunkTask);
             }
 
             var dependentTask = new DependentTask(
@@ -72,7 +73,7 @@ public class VanillaChunkColumnGenerationPass0 : IPass
         // var playerPosition = new Vector2I(World.PlayerChunk.X, World.PlayerChunk.Z);
         if (!_chunkManager.Chunks.ContainsKey(index) && _chunkManager.ChunkColumns.TryGetValue(indexXZ, out var chunkColumn))
         {
-            _chunkManager.Chunks[index] = result;
+            _chunkManager.Chunks[index] = result; // TODO: Move to ChunkManager?
             chunkColumn.Chunks[index] = result;
             // CallDeferred(Node.MethodName.AddChild, chunk);
             // World.UpdateNeighborMesherMasks(chunk);
