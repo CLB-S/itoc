@@ -5,6 +5,7 @@ using Godot;
 using ITOC.Core;
 using ITOC.Core.Utils;
 using ITOC.Core.WorldGeneration;
+using ITOC.Core.WorldGeneration.Vanilla;
 
 namespace ITOC;
 
@@ -45,11 +46,11 @@ public partial class GuiInfo : RichTextLabel
         var chunkIndex = World.WorldPositionToChunkIndex(camPos);
 
         // Time
-        var worldTime = GameControllerNode.Instance.CurrentWorld.Time;
-        var worldSettings = GameControllerNode.Instance.CurrentWorld.Settings;
-        var playerPos = GameControllerNode.Instance.CurrentWorld.PlayerPos;
+        var worldTime = GameController.Instance.CurrentWorld.Time;
+        var worldSettings = GameController.Instance.CurrentWorld.Settings;
+        var playerPos = Vector3.Zero; // TODO: GameController.Instance.CurrentWorld.PlayerPos;
 
-        var normalizedPos = worldSettings is WorldGeneratorSettings settings ?
+        var normalizedPos = worldSettings is VanillaWorldSettings settings ?
             (new Vector2(playerPos.X, playerPos.Z) - worldSettings.WorldCenter) / settings.Bounds.Size +
             Vector2.One / 2 : Vector2.One / 2;
 
@@ -72,14 +73,14 @@ public partial class GuiInfo : RichTextLabel
         debugTextBuilder.AppendLine(
             $"[color=cyan]Longitude:[/color] {longitude:0.00}° [color=cyan]Latitude:[/color] {latitude:0.00}°");
 
-        if (GameControllerNode.Instance.CurrentWorld.ChunkColumns.TryGetValue(new Vector2I(chunkIndex.X, chunkIndex.Z), out var chunkColumn))
-            debugTextBuilder.AppendLine(
-                $"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn.GetBiomeWeights(camPos.X, camPos.Z))}");
+        // if (GameController.Instance.CurrentWorld.ChunkColumns.TryGetValue(new Vector2I(chunkIndex.X, chunkIndex.Z), out var chunkColumn))
+        //     debugTextBuilder.AppendLine(
+        //         $"[color=cyan]Biome:[/color] {BiomeWeightsToString(chunkColumn.GetBiomeWeights(camPos.X, camPos.Z))}");
 
         debugTextBuilder.AppendLine(
             $"[color=cyan]Facing:[/color] {camFacing.X:0.00}, {camFacing.Y:0.00}, {camFacing.Z:0.00} ({camFacingDirName})");
-        debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {GameControllerNode.Instance.CurrentWorld.Chunks.Count}");
-        debugTextBuilder.AppendLine($"[color=Greenyellow]ChunkColumn Num:[/color] {GameControllerNode.Instance.CurrentWorld.ChunkColumns.Count}");
+        // debugTextBuilder.AppendLine($"[color=Greenyellow]Chunk Num:[/color] {GameController.Instance.CurrentWorld.Chunks.Count}");
+        // debugTextBuilder.AppendLine($"[color=Greenyellow]ChunkColumn Num:[/color] {GameController.Instance.CurrentWorld.ChunkColumns.Count}");
         debugTextBuilder.AppendLine($"[color=green]Time:[/color] {worldTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Local Time:[/color] {localTime:0.00}");
         debugTextBuilder.AppendLine($"[color=green]Sunrise:[/color] {sunriseTime:0.00}");

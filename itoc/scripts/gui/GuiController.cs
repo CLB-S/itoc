@@ -1,4 +1,5 @@
 using Godot;
+using ITOC.Core;
 
 namespace ITOC;
 
@@ -20,14 +21,14 @@ public partial class GuiController : Control
         ProcessMode = ProcessModeEnum.Always;
         Visible = true;
         if (ShouldPauseGame())
-            GameControllerNode.Instance.PauseGame();
+            GameController.Instance.PauseGame();
         UpdateMouseState();
     }
 
     public virtual void OnExit()
     {
         Visible = false;
-        GameControllerNode.Instance.ResumeGame();
+        GameController.Instance.ResumeGame();
         UpdateMouseState();
     }
 
