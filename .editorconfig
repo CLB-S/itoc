@@ -14,7 +14,7 @@ indent_style = space
 indent_size = 4
 end_of_line = lf
 
-[*.{md,markdown,json,js,csproj,fsproj,targets,targets,props}]
+[*.{md,yml,yaml,markdown,json,js,csproj,fsproj,targets,targets,props}]
 indent_style = space
 indent_size = 2
 end_of_line = lf
