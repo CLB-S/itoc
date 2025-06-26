@@ -1,23 +1,23 @@
 const int[6] QUAD_INDICES_MAP = {
-	0,1,2,0,2,3
+    0,1,2,0,2,3
 };
 
 const vec2[4] QUAD_UVS = {
-	vec2(0,1),
-	vec2(0,0),
-	vec2(1,0),
-	vec2(1,1)
+    vec2(0,1),
+    vec2(0,0),
+    vec2(1,0),
+    vec2(1,1)
 };
 
 #define INV_SQRT_2 0.7071067811865475
 
 const vec3[12] QUAD_NORMS = {
-	vec3(0,1,0),  // +y
-	vec3(0,-1,0), // -y
-	vec3(1,0,0),  // +x
-	vec3(-1,0,0), // -x
+    vec3(0,1,0),  // +y
+    vec3(0,-1,0), // -y
+    vec3(1,0,0),  // +x
+    vec3(-1,0,0), // -x
     vec3(0,0,1),  // +z
-	vec3(0,0,-1), // -z
+    vec3(0,0,-1), // -z
     vec3(INV_SQRT_2,0,INV_SQRT_2),   // +xz
     vec3(-INV_SQRT_2,0,-INV_SQRT_2), // -xz
     vec3(0,INV_SQRT_2,INV_SQRT_2),   // +yz
@@ -50,28 +50,28 @@ const vec3[48] QUAD_VERTICES = {
     vec3(0,1,1),
     vec3(0,0,1),
     // +z
-	vec3(0,0,0),
-	vec3(0,1,0),
-	vec3(1,1,0),
-	vec3(1,0,0),
-	// -z
-	vec3(1,0,0),
-	vec3(1,1,0),
-	vec3(0,1,0),
-	vec3(0,0,0),
+    vec3(0,0,0),
+    vec3(0,1,0),
+    vec3(1,1,0),
+    vec3(1,0,0),
+    // -z
+    vec3(1,0,0),
+    vec3(1,1,0),
+    vec3(0,1,0),
+    vec3(0,0,0),
 
     // bevels //
 
     // +xz
-	vec3(0,0,1),
-	vec3(0,1,1),
-	vec3(1,1,0),
-	vec3(1,0,0),
+    vec3(0,0,1),
+    vec3(0,1,1),
+    vec3(1,1,0),
+    vec3(1,0,0),
     // -xz
-	vec3(1,0,0),
-	vec3(1,1,0),
-	vec3(0,1,1),
-	vec3(0,0,1),
+    vec3(1,0,0),
+    vec3(1,1,0),
+    vec3(0,1,1),
+    vec3(0,0,1),
     // +yz
     vec3(0,0,1),
     vec3(0,1,0),
@@ -99,7 +99,7 @@ struct QuadData {
     int type; // 0 to 11 for +y, -y, +x, -x, +z, -z, +xz, -xz, +yz, -yz, +xy, -xy
     vec3 scale;
     vec3 offset_in_block;
-	int texture_index;
+    int texture_index;
 };
 
 const uint QUAD_DATA_LENGTH = 28u;
@@ -144,7 +144,7 @@ QuadData parse_quad_data(uint low, uint high) {
 
     quad_data.offset_in_block = offset_in_block;
 
-	quad_data.texture_index = int((low >> 28u) | ((high & 0xFFu) << 4u));
+    quad_data.texture_index = int((low >> 28u) | ((high & 0xFFu) << 4u));
 
     return quad_data;
 }
@@ -157,7 +157,7 @@ vec3 get_quad_vertex(QuadData quad, int index) {
 vec2 get_quad_uv(QuadData quad, int index, ivec2 atlas_count) {
     vec2 uv = QUAD_UVS[index];
     vec2 scaler = vec2(1.0 / float(atlas_count.x), 1.0 / float(atlas_count.y));
-	uv *= 0.996 * scaler;
+    uv *= 0.996 * scaler;
     uv += 0.002 * scaler; // Add a small offset to avoid seams
     int atlas_x = quad.texture_index % atlas_count.x;
     int atlas_y = quad.texture_index / atlas_count.x;

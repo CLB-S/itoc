@@ -10,35 +10,35 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "itoc.core", "itoc.core\itoc.core.csproj", "{52C657B4-E837-4B09-BE1B-E1A7071A2B08}"
 EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		ExportDebug|Any CPU = ExportDebug|Any CPU
-		ExportRelease|Any CPU = ExportRelease|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6D010806-6247-48C0-875F-8ED8CA4E2966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D010806-6247-48C0-875F-8ED8CA4E2966}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
-		{6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
-		{6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
-		{6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
-		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
-		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
-		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
-		{13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
-		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
-		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
-		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
-		{52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {BD74C5AB-0DC2-40AF-A511-BE77C0A37CFD}
-	EndGlobalSection
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        ExportDebug|Any CPU = ExportDebug|Any CPU
+        ExportRelease|Any CPU = ExportRelease|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {6D010806-6247-48C0-875F-8ED8CA4E2966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {6D010806-6247-48C0-875F-8ED8CA4E2966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+        {6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+        {6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+        {6D010806-6247-48C0-875F-8ED8CA4E2966}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+        {13A77802-C1C2-CB98-0F05-128D6630FEBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {13A77802-C1C2-CB98-0F05-128D6630FEBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+        {13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+        {13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+        {13A77802-C1C2-CB98-0F05-128D6630FEBF}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+        {52C657B4-E837-4B09-BE1B-E1A7071A2B08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {52C657B4-E837-4B09-BE1B-E1A7071A2B08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+        {52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+        {52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+        {52C657B4-E837-4B09-BE1B-E1A7071A2B08}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+    GlobalSection(ExtensibilityGlobals) = postSolution
+        SolutionGuid = {BD74C5AB-0DC2-40AF-A511-BE77C0A37CFD}
+    EndGlobalSection
 EndGlobal

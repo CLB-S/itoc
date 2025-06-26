@@ -37,7 +37,7 @@ void fragment() {
         if (int(J.x / M.x) % 2 > 0) {                 // Alternate row offset
             X.y += 1.15;
         }
-		
+        
         // Calculate wave transformation based on time
         float t = tanh(-0.2 * (J.x + J.y) + mod(2.0 * TIME, 15.0) - 1.6) * 0.785;
 
