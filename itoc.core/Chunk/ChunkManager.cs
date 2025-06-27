@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Godot;
 
 namespace ITOC.Core;
@@ -6,8 +7,8 @@ public class ChunkManager
 {
     private ChunkGeneratorBase _chunkGenerator;
 
-    public readonly Dictionary<Vector3I, Chunk> Chunks = new();
-    public readonly Dictionary<Vector2I, ChunkColumn> ChunkColumns = new();
+    public readonly ConcurrentDictionary<Vector3I, Chunk> Chunks = new();
+    public readonly ConcurrentDictionary<Vector2I, ChunkColumn> ChunkColumns = new();
 
     #region Events
 
