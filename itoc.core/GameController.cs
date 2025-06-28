@@ -16,6 +16,11 @@ public class GameController : NodeAdapter
 
     public static GameController Instance { get; private set; }
 
+    /// <summary>
+    /// Called before the game quited.
+    /// </summary>
+    public event EventHandler OnGameQuitting;
+
     public GameController(Node node)
         : base(node)
     {
@@ -59,13 +64,16 @@ public class GameController : NodeAdapter
 
     public void QuitGame()
     {
+        GD.Print("Game quitting...");
+
+        OnGameQuitting?.Invoke(this, EventArgs.Empty);
+
         // Save settings on quit
         Settings.Save();
 
         TaskManager.Instance.Shutdown();
         TaskManager.Instance.Dispose();
 
-        GD.Print("Quitting game.");
         Node.GetTree().Quit();
     }
 
@@ -82,5 +90,11 @@ public class GameController : NodeAdapter
             Node.GetTree().Paused = false;
             TaskManager.Instance.Resume();
         }
+    }
+
+    public override void OnNotification(int what)
+    {
+        if (what == Node.NotificationWMCloseRequest)
+            QuitGame();
     }
 }

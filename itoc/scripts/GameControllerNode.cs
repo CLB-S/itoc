@@ -8,12 +8,9 @@ public partial class GameControllerNode : Node
 {
     public GameController GameController { get; private set; }
 
-    public override void _Ready()
-    {
-        GameController = new GameController(this);
+    public GameControllerNode() => GameController = new GameController(this);
 
-        GameController.OnReady();
-    }
+    public override void _Ready() => GameController.OnReady();
 
     public void PauseGame()
     {
@@ -30,9 +27,5 @@ public partial class GameControllerNode : Node
         }
     }
 
-    public override void _Notification(int what)
-    {
-        if (what == NotificationWMCloseRequest)
-            GameController.QuitGame();
-    }
+    public override void _Notification(int what) => GameController.OnNotification(what);
 }

@@ -90,8 +90,6 @@ public class Player : NodeAdapter
         _orientation = Node.GetNode<Node3D>("Orientation");
 
         _currentSpeed = MoveSpeed;
-
-        base.OnReady();
     }
 
     public override void OnInput(InputEvent @event)
@@ -115,8 +113,6 @@ public class Player : NodeAdapter
         }
 
         // HandleInventoryHotbarInput(@event);
-
-        base.OnInput(@event);
     }
 
     public override void OnPhysicsProcess(double delta)
@@ -134,8 +130,6 @@ public class Player : NodeAdapter
         HandleBlockInteractions();
 
         HandleChunkLoading();
-
-        base.OnPhysicsProcess(delta);
     }
 
     private void HandleChunkLoading()

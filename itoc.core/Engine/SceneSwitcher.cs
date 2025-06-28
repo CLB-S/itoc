@@ -29,8 +29,6 @@ public class SceneSwitcher : NodeAdapter
     {
         Viewport root = Node.GetTree().Root;
         CurrentScene = root.GetChild(-1);
-
-        base.OnReady();
     }
 
     public void GotoScene(string path)

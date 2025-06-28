@@ -20,12 +20,7 @@ public class World : NodeAdapter
         Time = Settings.MinutesPerDay * 60.0f / 3; // 8:00 AM
     }
 
-    public override void OnPhysicsProcess(double delta)
-    {
-        Time += delta;
-
-        base.OnPhysicsProcess(delta);
-    }
+    public override void OnPhysicsProcess(double delta) => Time += delta;
 
     #region Get
     // TODO: Revise.
