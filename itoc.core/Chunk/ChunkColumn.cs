@@ -12,7 +12,7 @@ public class ChunkColumn
     public Vector2I Index;
 
     /// <summary>
-    ///     [Chunk.SIZE, Chunk.SIZE], 62x62
+    /// [Chunk.SIZE, Chunk.SIZE], 62x62
     /// </summary>
     public double[,] HeightMap;
 
@@ -62,8 +62,14 @@ public class ChunkColumn
 
     private Biome GetBiomeFromPalette(int x, int z) => _biomes[GetBiomeIndex(x, z)];
 
+    private static double CubicInterp(double a, double b, double t)
+    {
+        var smoothT = t * t * (3.0 - 2.0 * t); // smoothstep function
+        return a + smoothT * (b - a);
+    }
+
     /// <summary>
-    ///     Get the interpolated biome weights at the given normalized position within the chunk
+    /// Get the interpolated biome weights at the given normalized position within the chunk
     /// </summary>
     /// <param name="x">world position x</param>
     /// <param name="z">world position z</param>
@@ -87,23 +93,26 @@ public class ChunkColumn
         var bottomLeftBiome = GetBiomeFromPalette(x0, z1);
         var bottomRightBiome = GetBiomeFromPalette(x1, z1);
 
-        // Calculate weights for each corner
-        var weightTopLeft = Mathf.Max(
-            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z0, 2)),
-            0
-        );
-        var weightTopRight = Mathf.Max(
-            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z0, 2)),
-            0
-        );
-        var weightBottomLeft = Mathf.Max(
-            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x0, 2) + Mathf.Pow(normalizedZ - z1, 2)),
-            0
-        );
-        var weightBottomRight = Mathf.Max(
-            1 - Mathf.Sqrt(Mathf.Pow(normalizedX - x1, 2) + Mathf.Pow(normalizedZ - z1, 2)),
-            0
-        );
+        // Bicubic interpolation using smoothstep
+        // TODO: Still not perfect and have aliasing effect
+
+        var dx = normalizedX - x0;
+        var dz = normalizedZ - z0;
+
+        // Calculate weights using bilinear or bicubic interpolation
+        double weightTopLeft,
+            weightTopRight,
+            weightBottomLeft,
+            weightBottomRight;
+
+        var interpX = CubicInterp(0, 1, dx);
+        var interpZ = CubicInterp(0, 1, dz);
+
+        weightTopLeft = (1.0 - interpX) * (1.0 - interpZ);
+        weightTopRight = interpX * (1.0 - interpZ);
+        weightBottomLeft = (1.0 - interpX) * interpZ;
+        weightBottomRight = interpX * interpZ;
+
         var totalWeight = weightTopLeft + weightTopRight + weightBottomLeft + weightBottomRight;
 
         // Add weights to the dictionary

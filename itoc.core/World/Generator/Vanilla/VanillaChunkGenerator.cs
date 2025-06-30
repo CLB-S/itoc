@@ -32,7 +32,7 @@ public class VanillaChunkGenerator : ChunkGeneratorBase
             var point =
                 chunkColumnIndex * Chunk.SIZE
                 + new Vector2(x, z) * Chunk.SIZE / (ChunkColumn.BIOME_MAP_SIZE - 1);
-            point = _generator.Warp(point);
+            // point = _generator.Warp(point);
 
             var cell = _generator.GetCellDatasNearby(point).First();
             biomes[ChunkColumn.GetBiomeIndex(x, z)] = cell.Biome;

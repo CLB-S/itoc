@@ -52,10 +52,7 @@ public class VanillaChunkGenerationTask : GameTask
                 var actualY = ChunkIndex.Y * Chunk.SIZE + y;
                 if (actualY <= height)
                 {
-                    var blockType =
-                        ((x + z) % 2 == 0)
-                            ? "itoc:debug"
-                            : DetermineBlockType(actualY, height, 0, 4);
+                    var blockType = DetermineBlockType(actualY, height, 0, 4);
                     blocks[Chunk.GetBlockIndex(x, y, z)] = BlockManager.Instance.GetBlock(
                         blockType
                     );
