@@ -42,7 +42,8 @@ public class ChunkLoadingSource
         var chunkColumnRange = ChunkRange.ChunkColumnsSorted();
         _surfaceChunksQueue = new Queue<(Vector2I, int)>(chunkColumnRange);
 
-        for (var i = 0; i < ChunkGenerator.MaxConcurrentChunkGenerationTasks + 2; i++)
+        var maxTasks = (int)Math.Ceiling(ChunkGenerator.MaxConcurrentChunkGenerationTasks / 2.0);
+        for (var i = 0; i < maxTasks; i++)
             EnqueueSurfaceChunksGeneration();
     }
 }

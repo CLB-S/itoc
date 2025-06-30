@@ -6,7 +6,7 @@ public abstract class ChunkGeneratorBase
 {
     public ChunkManager ChunkManager { get; private set; }
 
-    private int _maxConcurrentChunkGenerationTasks = 1;
+    private int _maxConcurrentChunkGenerationTasks = 3;
     private readonly Queue<Vector2I> _pendingGenerationQueue = new();
     private readonly HashSet<Vector2I> _activeGenerationTasks = new();
     private readonly Dictionary<Vector2I, Action<Vector2I>> _completionCallbacks = new();
@@ -21,9 +21,7 @@ public abstract class ChunkGeneratorBase
         get
         {
             lock (_lock)
-            {
                 return _maxConcurrentChunkGenerationTasks;
-            }
         }
         set
         {
@@ -31,9 +29,7 @@ public abstract class ChunkGeneratorBase
                 throw new ArgumentException("Max concurrent tasks cannot be negative.");
 
             lock (_lock)
-            {
                 _maxConcurrentChunkGenerationTasks = value;
-            }
         }
     }
 
@@ -114,15 +110,12 @@ public abstract class ChunkGeneratorBase
                 _activeGenerationTasks.Add(chunkColumnIndex);
             }
 
-            GD.Print($"Processing surface chunk generation for {chunkColumnIndex}");
             GenerateSurfaceChunks(chunkColumnIndex);
         }
     }
 
     protected void NotifySurfaceChunksReady(Vector2I chunkColumnIndex)
     {
-        GD.Print($"Surface chunks ready for {chunkColumnIndex}");
-
         Action<Vector2I> callback = null;
 
         lock (_lock)
