@@ -241,6 +241,32 @@ public class NodePool<T>
         PrewarmPool(nodesToAdd);
     }
 
+    /// <summary>
+    /// Executes an action on each active and inactive node in the pool
+    /// </summary>
+    /// <param name="action">The action to execute on each node</param>
+    public void ForeachManagedNode(Action<T> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        foreach (var node in _activeNodes)
+            action(node);
+
+        foreach (var node in _inactiveNodes)
+            action(node);
+    }
+
+    /// <summary>
+    /// Executes an action on each active node in the pool
+    /// </summary>
+    /// <param name="action">The action to execute on each active node</param>
+    public void ForeachActiveNode(Action<T> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        foreach (var node in _activeNodes)
+            action(node);
+    }
+
     private T CreateNewInstance()
     {
         if (_scene == null && _nodeFactory == null)
@@ -255,7 +281,7 @@ public class NodePool<T>
 
     private void PrepareNodeForPool(T node)
     {
-        _parent.AddChild(node);
+        _parent.CallDeferred(Node.MethodName.AddChild, node);
         SetVisibility(node, false);
     }
 }
