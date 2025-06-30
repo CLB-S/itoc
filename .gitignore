@@ -3,6 +3,9 @@
 .vs/
 .aider*
 
+launchSettings.json
+*.csproj.user
+
 # .NET specific ignores
 obj/
 bin/
