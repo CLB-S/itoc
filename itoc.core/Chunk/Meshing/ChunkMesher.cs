@@ -9,6 +9,10 @@ namespace ITOC.Core.ChunkMeshing;
 
 public static class ChunkMesher
 {
+    private static readonly Lazy<Shader> _shader = new(() =>
+        ResourceLoader.Load<Shader>("res://assets/shaders/quads.gdshader")
+    );
+
     #region Constants
 
     // Should be same as Chunk.SIZE
@@ -836,20 +840,20 @@ public static class ChunkMesher
                 surfaceArrayDict
             );
 
-        var _arrayMesh = new ArrayMesh();
+        var arrayMesh = new ArrayMesh();
         foreach (var ((block, dir), surfaceArrayData) in surfaceArrayDict)
         {
-            _arrayMesh.AddSurfaceFromArrays(
+            arrayMesh.AddSurfaceFromArrays(
                 Godot.Mesh.PrimitiveType.Triangles,
                 surfaceArrayData.GetSurfaceArray()
             );
-            _arrayMesh.SurfaceSetMaterial(
-                _arrayMesh.GetSurfaceCount() - 1,
+            arrayMesh.SurfaceSetMaterial(
+                arrayMesh.GetSurfaceCount() - 1,
                 materialOverride ?? (block as CubeBlock).BlockModel.GetMaterial(dir)
             );
         }
 
-        return _arrayMesh;
+        return arrayMesh;
     }
 
     public static Mesh GenerateMeshV1(MeshResult meshResult)
@@ -891,8 +895,7 @@ public static class ChunkMesher
 
         // Meterial
 
-        var shader = ResourceLoader.Load<Shader>("res://assets/shaders/quads.gdshader");
-        var material = new ShaderMaterial { Shader = shader };
+        var material = new ShaderMaterial { Shader = _shader.Value };
 
         material.SetShaderParameter("quads_buff", bufferTexture);
         material.SetShaderParameter("quads_buff_width", width);

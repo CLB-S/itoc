@@ -86,6 +86,7 @@ public partial class ChunkInstantiator : Node3D
         };
 
         chunkManager.OnChunkReady += (s, chunk) => AddChunk(chunk);
+        GameController.Instance.OnGameQuitting += (s, e) => OnQuiting();
     }
 
     public override void _Ready()
@@ -104,10 +105,7 @@ public partial class ChunkInstantiator : Node3D
             () => new MeshInstance3D(),
             this,
             100,
-            resetAction: (node) =>
-            {
-                node.Mesh.SurfaceSetMaterial(0, null);
-            }
+            resetAction: node => node.Mesh = null
         );
 
         _collisionBodyPool = new Node3DPool<StaticBody3D>(
@@ -481,6 +479,7 @@ public partial class ChunkInstantiator : Node3D
         chunkMesh.MeshInstance.Mesh = chunkMesh.Chunk.GetMesh(
             _wireframedMesh ? _wireframeMaterial : null
         );
+
         chunkMesh.MeshInstance.Visible = true;
         chunkMesh.MeshInstance.Scale = Vector3.One * (1 << chunkMesh.Lod);
         chunkMesh.State = ChunkMeshState.Rendered;
@@ -577,32 +576,18 @@ public partial class ChunkInstantiator : Node3D
 
     public void Cleanup()
     {
-        // Clean up base chunk meshes (LOD 0)
-        foreach (var chunkMesh in _lodChunkMeshes[0].Values)
-        {
-            if (chunkMesh.MeshInstance != null)
-                _meshPool.Release(chunkMesh.MeshInstance);
-
-            if (chunkMesh.CollisionBody != null)
-                _collisionBodyPool.Release(chunkMesh.CollisionBody);
-        }
+        _meshPool.ReleaseAll();
+        _collisionBodyPool.ReleaseAll();
+        _debugMeshPool.ReleaseAll();
 
         _lodChunkMeshes[0].Clear();
 
         // Clean up LOD chunk meshes
         for (var lod = 1; lod <= _maxLodLevel; lod++)
         {
-            foreach (var lodMesh in _lodChunkMeshes[lod].Values)
-            {
-                if (lodMesh.MeshInstance != null)
-                    _meshPool.Release(lodMesh.MeshInstance);
-            }
             _lodChunkMeshes[lod].Clear();
             _lodChunks[lod].Clear();
         }
-
-        // Clean up debug meshes
-        _debugMeshPool.ReleaseAll();
     }
 
     #endregion
@@ -684,10 +669,26 @@ public partial class ChunkInstantiator : Node3D
 
     #region Existing
 
-    public override void _Notification(int what)
+    private void OnQuiting()
     {
-        if (what == NotificationPredelete)
-            _meshPool.ReleaseAll();
+        // TODO: See https://github.com/godotengine/godot/issues/106469
+        // Segfaults when loading meshes on task threads · Issue #106469 · godotengine/godot
+
+        // GD.Print("ChunkInstantiator: Cleaning up node pools...");
+        // foreach (var node in _meshPool.ActiveNodes)
+        // node.Mesh.SurfaceSetMaterial(0, null);
+
+        // _meshPool.ForeachManagedNode(node => node.Mesh?.SurfaceGetMaterial(0)?.Dispose());
+
+        // foreach (var item in GetChildren())
+        // {
+        //     if (item is MeshInstance3D meshInstance)
+        //         meshInstance.Mesh?.SurfaceGetMaterial(0)?.Dispose();
+        // }
+
+        // Free();
+
+        // GD.Print("ChunkInstantiator: Cleaning up done.");
     }
 
     #endregion
