@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Friflo.Engine.ECS" Version="3.4.2" />
     <PackageReference Include="MathEvaluator" Version="2.3.0" />
     <PackageReference Include="Supercluster.KDTree.Standard" Version="1.0.5" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
