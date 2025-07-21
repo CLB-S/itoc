@@ -1,5 +1,6 @@
 using Godot;
 using ITOC.Core.Engine;
+using ITOC.Core.Item;
 using ITOC.Core.Multithreading;
 using ITOC.Core.WorldGeneration;
 using ITOC.Core.WorldGeneration.Vanilla;
@@ -37,6 +38,9 @@ public class GameController : NodeAdapter
 
         // TaskManager.Instance.Initialize(TaskManagerConfig.Development());
         TaskManager.Instance.Initialize(TaskManagerConfig.Production());
+
+        // Debug
+        var a = ItemManager.Instance;
     }
 
     public override void OnReady()
