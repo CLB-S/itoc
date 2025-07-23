@@ -1,26 +1,15 @@
 root=true
 
-[*]
-indent_style = space
-indent_size = 4
-
 [*.cshtml]
 indent_style = space
 indent_size = 4
 end_of_line = lf
 
-[*.{fs,fsx,yml}]
-indent_style = space
-indent_size = 4
-end_of_line = lf
-
-[*.{md,yml,yaml,markdown,json,js,csproj,fsproj,targets,targets,props}]
-indent_style = space
-indent_size = 2
-end_of_line = lf
-
 # Dotnet code style settings:
 [*.{cs,vb}]
+
+indent_style = space
+indent_size = 4
 
 # ---
 # naming conventions https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-naming-conventions
@@ -120,15 +109,3 @@ resharper_csharp_braces_for_fixed=required_for_multiline
 resharper_csharp_braces_for_ifelse=required_for_multiline
 
 resharper_csharp_accessor_owner_body=expression_body
-
-[Jenkinsfile]
-indent_style = space
-indent_size = 2
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true
-insert_final_newline = true
-
-[*.{sh,bat,ps1}]
-trim_trailing_whitespace=true
-insert_final_newline=true
